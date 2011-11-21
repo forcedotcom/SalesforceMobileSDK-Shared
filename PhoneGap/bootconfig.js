@@ -4,6 +4,10 @@
 // Replace the values below with your own app configuration values.
 //-----------------------------------------------------------------
 
+// When debugMode is true, logToConsole() messages will be written to a
+// "debug console" section of the page.
+var debugMode = false;
+
 // The client ID value specified for your remote access object that defines
 // your application in Salesforce.
 var remoteAccessConsumerKey = "___VARIABLE_publicKey___";
