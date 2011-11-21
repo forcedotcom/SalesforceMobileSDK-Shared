@@ -18,6 +18,9 @@
     <script src="forcetk.js"></script>       
 
     <script type="text/javascript" charset="utf-8">
+    
+    // The version of the REST API you wish to use in your app.
+    var apiVersion = "v23.0";
 
 
 	// If you want to prevent dragging, uncomment this section
@@ -76,7 +79,7 @@
         document.addEventListener("resume", onAppResume,false);
 
         forcetkClient = new forcetk.Client(creds.clientId, creds.loginUrl);
-        forcetkClient.setSessionToken(creds.accessToken, creds.apiVersion, creds.instanceUrl);
+        forcetkClient.setSessionToken(creds.accessToken, apiVersion, creds.instanceUrl);
         forcetkClient.setRefreshToken(creds.refreshToken);
         forcetkClient.setUserAgentString(creds.userAgent);
 
