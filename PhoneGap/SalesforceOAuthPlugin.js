@@ -12,6 +12,7 @@ var SalesforceOAuthPlugin = {
     *   clientId
 	* 	userId
 	* 	orgId
+    *   loginUrl
 	* 	instanceUrl
 	* 	userAgent
 	*/
@@ -31,6 +32,7 @@ var SalesforceOAuthPlugin = {
      *   clientId
      *   userId
      *   orgId
+     *   loginUrl
      *   instanceUrl
      *   userAgent
      */
