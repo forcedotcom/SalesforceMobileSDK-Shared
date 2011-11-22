@@ -4,6 +4,10 @@
 // Replace the values below with your own app configuration values.
 //-----------------------------------------------------------------
 
+// When debugMode is true, logToConsole() messages will be written to a
+// "debug console" section of the page.
+var debugMode = false;
+
 // The client ID value specified for your remote access object that defines
 // your application in Salesforce.
 var remoteAccessConsumerKey = "___VARIABLE_publicKey___";
@@ -29,14 +33,6 @@ var startPage = "";  // Used for local REST-based"index.html" PhoneGap app.
 // generally a good idea for Visualforce pages.  For REST-based apps we recommend using
 // onAppResume to refresh if needed.
 var autoRefreshOnForeground = false; //Use true for Visualforce-based apps
-    
-// This application retrieves login host information from the app's settings, using
-// SalesforceOAuthPlugin.getLoginHost().  If you wish to supply the login host using
-// another implementation, be sure to specify it in the OAuthProperties settings that
-// are passed to SalesforceOAuthPlugin.authenticate().  See the receivedLoginHost()
-// method.
-//
-// var loginHost = "login.salesforce.com";
     
 //-----------------------------------------------------------------
 // End configuration block
