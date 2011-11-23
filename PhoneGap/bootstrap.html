@@ -69,9 +69,8 @@
             
             // Authenticate via the Salesforce OAuth plugin.
             var oauthProperties = new OAuthProperties(remoteAccessConsumerKey, 
-                                                      oauthRedirectURI,
+                                                      oauthRedirectURI, 
                                                       oauthScopes, 
-                                                      userAccountIdentifier, 
                                                       autoRefreshOnForeground);
             SalesforceOAuthPlugin.authenticate(loginSuccess, loginFailure, oauthProperties);
         }
