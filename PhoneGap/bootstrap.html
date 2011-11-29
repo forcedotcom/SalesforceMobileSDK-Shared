@@ -83,14 +83,12 @@
             logToConsole("loginSuccess");
             var fullAppUrl;
             if (startPage == "") {
-                fullAppUrl = (navigator.device.platform == "Android" 
-                		? "file:///android_asset/www/index.html" 
-                		: "file:///www/index.html"); 
+                fullAppUrl =  SalesforceOAuthPlugin.buildDefaultLocalUrl();
             } else {
                 fullAppUrl = SalesforceOAuthPlugin.buildAppUrl(startPage, oauthCredentials);
             }
             logToConsole("fullAppUrl: " + fullAppUrl);
-            navigator.app.loadUrl(fullAppUrl , {clearHistory:true});
+            SalesforceOAuthPlugin.loadUrl(fullAppUrl);
         }
             
         /**
