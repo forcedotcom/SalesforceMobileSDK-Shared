@@ -49,6 +49,7 @@
          */
         function log(section, txt) {
             $(section).append("<p>" + txt + "</p>");
+            console.log("jslog:" + txt);
         }
         
         /**
@@ -82,12 +83,14 @@
             logToConsole("loginSuccess");
             var fullAppUrl;
             if (startPage == "") {
-                fullAppUrl = "index.html";
+                fullAppUrl = (navigator.device.platform == "Android" 
+                		? "file:///android_asset/www/index.html" 
+                		: "file:///www/index.html"); 
             } else {
                 fullAppUrl = SalesforceOAuthPlugin.buildAppUrl(startPage, oauthCredentials);
             }
             logToConsole("fullAppUrl: " + fullAppUrl);
-            location.href = fullAppUrl;
+            navigator.app.loadUrl(fullAppUrl , {clearHistory:true});
         }
             
         /**
