@@ -19,16 +19,16 @@ var oauthRedirectURI = "___VARIABLE_redirectURL___";
 // The authorization/access scope(s) you wish to define for your application.
 var oauthScopes = ["visualforce","api"];
 
-// The start page of the application.  This is the [pagePath] portion of
-// http://[host]/[pagePath].  Leave blank to use the local index.html page.
-var startPage = "";  // Used for local REST-based"index.html" PhoneGap app.
-//var startPage = "apex/BasicVFPage"; //used for Visualforce-based apps
-
+// The start data associated with the application.  Use LocalAppStartData for a "local"
+// PhoneGap-based application, and RemoteAppStartData for a Visualforce-based
+// application.  The default representations are below, or you can look at the data
+// classes in SFUtility.js to see how you can further customize your options.
+var startData = new LocalAppStartData();  // Used for local REST-based "index.html" PhoneGap apps.
+//var startData = new RemoteAppStartData("/apex/BasicVFPage"); // Used for Visualforce-based apps.
 
 // Whether the container app should automatically refresh our oauth session on app foreground:
 // generally a good idea.
-var autoRefreshOnForeground = true; 
-    
+var autoRefreshOnForeground = true;
 
 //-----------------------------------------------------------------
 // End configuration block

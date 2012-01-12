@@ -30,12 +30,45 @@
         function onDeviceReady() {
             logToConsole("onDeviceReady called: PhoneGap is ready.");
             
-            // Authenticate via the Salesforce OAuth plugin.
-            var oauthProperties = new OAuthProperties(remoteAccessConsumerKey, 
-                                                      oauthRedirectURI, 
-                                                      oauthScopes, 
-                                                      autoRefreshOnForeground);
-            SalesforceOAuthPlugin.authenticate(loginSuccess, loginFailure, oauthProperties);
+            // Validate the start data configuration.
+            if (!isValidStartData(startData)) {
+                return;
+            }
+            
+            if (startData.shouldAuthenticate) {
+                // Authenticate via the Salesforce OAuth plugin.
+                var oauthProperties = new OAuthProperties(remoteAccessConsumerKey, 
+                                                          oauthRedirectURI, 
+                                                          oauthScopes, 
+                                                          autoRefreshOnForeground);
+                SalesforceOAuthPlugin.authenticate(loginSuccess, loginFailure, oauthProperties);
+            } else {
+                if (startData instanceof LocalAppStartData) {
+                    loadUrl(buildLocalUrl(startData.appStartUrl));
+                } else {
+                    loadUrl(startData.appStartUrl);
+                }
+            }
+        }
+            
+        /**
+         * Validates that the start data conforms to the business rules.
+         */
+        function isValidStartData(startData) {
+            if (!(startData instanceof LocalAppStartData || startData instanceof RemoteAppStartData)) {
+                logError("startData is not a valid object type.  Expecting LocalAppStartData or RemoteAppStartData.");
+                return false;
+            }
+            
+            if (startData instanceof RemoteAppStartData
+                && startData.isAbsoluteUrl === false
+                && startData.shouldAuthenticate === false) {
+                logError("startData.isAbsoluteUrl and startData.shouldAuthenticate cannot both be false for a remote app.  "
+                         + "The instance URL determined from authentication is used to build the absolute URL.");
+                return false;
+            }
+            
+            return true;
         }
             
         /**
@@ -44,13 +77,17 @@
         function loginSuccess(oauthCredentials) {
             logToConsole("loginSuccess");
             var fullAppUrl;
-            if (startPage == "") {
-                fullAppUrl =  SalesforceOAuthPlugin.buildDefaultLocalUrl();
-            } else {
-                fullAppUrl = SalesforceOAuthPlugin.buildAppUrl(startPage, oauthCredentials);
+            if (startData instanceof LocalAppStartData) {
+                fullAppUrl =  buildLocalUrl(startData.appStartUrl);
+            } else if (startData instanceof RemoteAppStartData) {
+                if (startData.isAbsoluteUrl) {
+                    fullAppUrl = startData.appStartUrl;
+                } else {
+                    fullAppUrl = buildAppUrl(oauthCredentials.instanceUrl, startData.appStartUrl);
+                }
             }
             logToConsole("fullAppUrl: " + fullAppUrl);
-            SalesforceOAuthPlugin.loadUrl(fullAppUrl);
+            loadUrl(fullAppUrl);
         }
             
         /**
