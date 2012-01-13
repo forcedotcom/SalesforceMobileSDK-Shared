@@ -62,7 +62,7 @@ buildLocalUrl: function(page) {
 /**
  * Creates a fullly qualified URL from server and page information.
  * Example:
- *   var fullUrl = buildAppUrl("https://na1.salesforce.com", "apex/MyVisualForcePage");
+ *   var fullUrl = SFHybridApp.buildAppUrl("https://na1.salesforce.com", "apex/MyVisualForcePage");
  *
  *   server - The server URL prefix.
  *   page   - The page information to append to the server.
