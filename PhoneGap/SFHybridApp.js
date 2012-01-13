@@ -3,41 +3,45 @@
  * Note: This JS module assumes the inclusion of a) the PhoneGap JS libraries and
  * b) the jQuery libraries.
  */
+ 
+if (SFHybridApp == undefined) {
 
-var appStartTime = new Date();  // Used for debug timing measurements.
+var SFHybridApp = {
+
+appStartTime: new Date(),  // Used for debug timing measurements.
 
 /**
  * Logs debug messages to a "debug console" section of the page.  Only
  * shows when debugMode (above) is set to true.
  *   txt - The text (html) to log to the console.
  */
-function logToConsole(txt) {
+logToConsole: function(txt) {
     if ((typeof debugMode !== "undefined") && (debugMode === true)) {
         $("#console").css("display", "block");
-        log("#console", txt);
+        SFHybridApp.log("#console", txt);
     }
-}
+},
         
 /**
  * Use to log error messages to an "error console" section of the page.
  *   txt - The text (html) to log to the console.
  */
-function logError(txt) {
+logError: function(txt) {
     $("#errors").css("display", "block");
-    log("#errors", txt);
-}
+    SFHybridApp.log("#errors", txt);
+},
         
 /**
  * Logs text to a given section of the page.
  *   section - HTML section (CSS-identified) to log to.
  *   txt - The text (html) to log.
  */
-function log(section, txt) {
+log: function(section, txt) {
     console.log("jslog:" + txt);
     var now = new Date();
-    var fullTxt = "<p><i><b>* At " + (now.getTime() - appStartTime.getTime()) + "ms:</b></i> " + txt + "</p>";
+    var fullTxt = "<p><i><b>* At " + (now.getTime() - SFHybridApp.appStartTime.getTime()) + "ms:</b></i> " + txt + "</p>";
     $(section).append(fullTxt);
-}
+},
 
 /**
  * Creates the local URL to load.
@@ -46,14 +50,14 @@ function log(section, txt) {
  * Returns:
  *   The local URL start page for the app.
  */
-function buildLocalUrl(page) {
+buildLocalUrl: function(page) {
     if (navigator.device.platform == "Android") {
-        return buildAppUrl("file:///android_asset/www", page);
+        return SFHybridApp.buildAppUrl("file:///android_asset/www", page);
     }
     else {
         return page; 
     }
-}
+},
 
 /**
  * Creates a fullly qualified URL from server and page information.
@@ -65,7 +69,7 @@ function buildLocalUrl(page) {
  * Returns:
  *   Full URL to the user's page, e.g. https://na1.salesforce.com/apex/MyVisualForcePage.
  */
-function buildAppUrl(server, page) {
+buildAppUrl: function(server, page) {
     var trimmedServer = $.trim(server);
     var trimmedPage = $.trim(page);
     if (trimmedServer === "")
@@ -83,20 +87,20 @@ function buildAppUrl(server, page) {
         trimmedPage = "/" + trimmedPage;
     
     return trimmedServer + trimmedPage;
-}
+},
 
 /**
  * Load the given URL, using PhoneGap on Android, and loading directly on other platforms.
  *   fullAppUrl       - The URL to load.
  */
-function loadUrl(fullAppUrl) {
+loadUrl: function(fullAppUrl) {
     if (navigator.device.platform == "Android") {
         navigator.app.loadUrl(fullAppUrl , {clearHistory:true});
     }
     else {
         location.href = fullAppUrl;
     }
-}
+},
 
 /**
  * RemoteAppStartData data object - Represents the data associated with bootstrapping a
@@ -109,16 +113,16 @@ function loadUrl(fullAppUrl) {
  *   shouldAuthenticate - Optional - Whether or not to authenticate prior to loading the
  *                                   application.  Defaults to true.
  */
-function RemoteAppStartData(appStartUrl, isAbsoluteUrl, shouldAuthenticate) {
+RemoteAppStartData: function(appStartUrl, isAbsoluteUrl, shouldAuthenticate) {
     if (typeof appStartUrl !== "string" || $.trim(appStartUrl) === "") {
-        logError("appStartUrl cannot be empty");
+        SFHybridApp.logError("appStartUrl cannot be empty");
         return;
     }
     this.appStartUrl = appStartUrl;
     this.isRemoteApp = true;
     this.isAbsoluteUrl = (typeof isAbsoluteUrl !== "boolean" ? false : isAbsoluteUrl);
     this.shouldAuthenticate = (typeof shouldAuthenticate !== "boolean" ? true : shouldAuthenticate);
-}
+},
 
 /**
  * LocalAppStartData data object - Represents the data associated with bootstrapping a
@@ -130,9 +134,13 @@ function RemoteAppStartData(appStartUrl, isAbsoluteUrl, shouldAuthenticate) {
  *   shouldAuthenticate - Optional - Whether or not to authenticate prior to loading the
  *                                   application.  Defaults to true.
  */
-function LocalAppStartData(appStartUrl, shouldAuthenticate) {
+LocalAppStartData: function(appStartUrl, shouldAuthenticate) {
     this.appStartUrl = (typeof appStartUrl !== "string" || $.trim(appStartUrl) === "" ? "index.html" : appStartUrl);
     this.isRemoteApp = false;
     this.isAbsoluteUrl = false;
     this.shouldAuthenticate = (typeof shouldAuthenticate !== "boolean" ? true : shouldAuthenticate);
+}
+
+};
+
 }
