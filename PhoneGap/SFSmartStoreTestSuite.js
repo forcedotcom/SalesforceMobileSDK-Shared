@@ -26,8 +26,8 @@
 
 /*
 A test suite for SmartStore
-This file assumes that qunit.js has been previously loaded, as well as SFUtility.js.
-To display results you'll need to load qunit.css and SFUtility.css as well.
+This file assumes that qunit.js has been previously loaded, as well as SFHybridApp.js.
+To display results you'll need to load qunit.css and SFHybridApp.css as well.
 */
 if (typeof SmartStoreTestSuite === 'undefined') { 
 
@@ -62,7 +62,7 @@ SmartStoreTestSuite.prototype.startTests = function() {
 		var val = self[key];
 		if (typeof val === 'function') {
 			if (key.indexOf("test") === 0) {
-				//logToConsole("should run: " + key); 
+				//SFHybridApp.logToConsole("should run: " + key); 
 				this.allTests.push(key);
 				this.stateOfTestByName[key] = this.IDLE_TEST_STATE;
 			}
@@ -79,9 +79,9 @@ SmartStoreTestSuite.prototype.startTests = function() {
 	
 	
 	this.allTests.forEach(function(methName){
-		logToConsole("Queueing: " + methName);
+		SFHybridApp.logToConsole("Queueing: " + methName);
 		QUnit.asyncTest(methName, function() {
-			logToConsole("Running " + methName);
+			SFHybridApp.logToConsole("Running " + methName);
 			self.currentTestName = methName;
 			self.stateOfTestByName[methName] = self.RUNNING_TEST_STATE;
 			self[methName]();
@@ -93,7 +93,7 @@ SmartStoreTestSuite.prototype.startTests = function() {
 };
 
 SmartStoreTestSuite.prototype.setTestFailedByName = function(name,error) {
-	logToConsole("test '" + name + "' failed with error: " + error);
+	SFHybridApp.logToConsole("test '" + name + "' failed with error: " + error);
 	this.stateOfTestByName[name] = this.FAIL_TEST_STATE;
 	//inform qunit that this test failed and unpause qunit
 	QUnit.ok(false, name);
@@ -102,7 +102,7 @@ SmartStoreTestSuite.prototype.setTestFailedByName = function(name,error) {
 
 SmartStoreTestSuite.prototype.setTestSuccessByName = function(name) {
 	this.stateOfTestByName[name] = this.SUCCESS_TEST_STATE;
-	logToConsole("test '" + name + "' succeeded");
+	SFHybridApp.logToConsole("test '" + name + "' succeeded");
 	//inform qunit that this test passed and unpause qunit
 	QUnit.ok(true, name);
 	QUnit.start();
@@ -113,14 +113,14 @@ SmartStoreTestSuite.prototype.registerDefaultSoup = function(cb) {
 	var self = this;
     navigator.smartstore.registerSoup(this.defaultSoupName, this.defaultSoupIndexes,
 		function(soup) { 
-			logToConsole("onSuccessRegSoup: " + soup);
+			SFHybridApp.logToConsole("onSuccessRegSoup: " + soup);
 			self.currentSoup = soup; 
 			if (cb !== null) {
 				 cb(soup);
 			}
 		}, 
 		function(param) { 
-			logToConsole("onErrorRegSoup: " + param);
+			SFHybridApp.logToConsole("onErrorRegSoup: " + param);
 			if (cb !== null)  {
 				cb(null);
 			}
@@ -129,7 +129,7 @@ SmartStoreTestSuite.prototype.registerDefaultSoup = function(cb) {
 };
 
 SmartStoreTestSuite.prototype.stuffTestSoup = function(cb) {
-	//logToConsole("stuffTestSoup " + (typeof cb));
+	//SFHybridApp.logToConsole("stuffTestSoup " + (typeof cb));
     
 	var myEntry1 = { Name: "Todd Stellanova", Id: "00300A",  attributes:{type:"Contact"} };
     var myEntry2 = { Name: "Pro Bono Bonobo",  Id: "00300B", attributes:{type:"Contact"}  };
@@ -144,18 +144,18 @@ SmartStoreTestSuite.prototype.addEntriesToTestSoup = function(entries,cb) {
 
     navigator.smartstore.upsertSoupEntries(this.defaultSoupName,entries,
 		function(param) {
-		    logToConsole("onSuccessUpsert: " + param);
+		    SFHybridApp.logToConsole("onSuccessUpsert: " + param);
 			cb(param);
 		},
 		function(param) {
-		    logToConsole("onErrorUpsert: " + param);
+		    SFHybridApp.logToConsole("onErrorUpsert: " + param);
 			cb(null);
 		}
 	);
 };
 
 SmartStoreTestSuite.prototype.addGeneratedEntriesToTestSoup = function(nEntries, cb) {
-	logToConsole("addGeneratedEntriesToTestSoup " + nEntries);
+	SFHybridApp.logToConsole("addGeneratedEntriesToTestSoup " + nEntries);
  
 	var entries = [];
 	for (var i = 0; i < nEntries; i++) {
@@ -174,7 +174,7 @@ TEST registerSoup
 SmartStoreTestSuite.prototype.testRegisterSoup = function() {
 	var self = this;
 	this.registerDefaultSoup(function(soup) {
-		logToConsole("registerDefaultSoup done: " + soup);
+		SFHybridApp.logToConsole("registerDefaultSoup done: " + soup);
 		if (soup === null) {
 			self.setTestFailedByName("testRegisterSoup","null soup returned");
 		} else {
@@ -252,7 +252,7 @@ SmartStoreTestSuite.prototype.continueRetrieveSoupEntry = function(cursor)  {
 			self.setTestSuccessByName("testRetrieveSoupEntry");
 		},
 		function(param) { 
-			logToConsole("onErrorRetrieveEntry: " + param);
+			SFHybridApp.logToConsole("onErrorRetrieveEntry: " + param);
 			self.setTestFailedByName("testRetrieveSoupEntry",param);
 		}
 	);
@@ -307,7 +307,7 @@ SmartStoreTestSuite.prototype.continueRemoveFromSoup2 = function(status) {
 			self.setTestSuccessByName("testRemoveFromSoup");
 		},
 		function(param) { 
-			logToConsole("onErrorQuerySoup: " + param);
+			SFHybridApp.logToConsole("onErrorQuerySoup: " + param);
 			self.setTestFailedByName("testRemoveFromSoup",param);
 		}
 	);
@@ -338,7 +338,7 @@ SmartStoreTestSuite.prototype.continueQuerySoup = function(cursor) {
 			self.setTestSuccessByName("testSmartStoreQuerySoup");
 		},
 		function(param) { 
-			logToConsole("onErrorQuerySoup: " + param);
+			SFHybridApp.logToConsole("onErrorQuerySoup: " + param);
 			self.setTestFailedByName("testSmartStoreQuerySoup",param);
 		}
 	);
@@ -378,7 +378,7 @@ SmartStoreTestSuite.prototype.continueManipulateCursor = function(cursor) {
 			self.forwardCursorToEnd(cursor);
 		},
 		function(param) { 
-			logToConsole("onErrorQuerySoup: " + param);
+			SFHybridApp.logToConsole("onErrorQuerySoup: " + param);
 			self.setTestFailedByName("testManipulateCursor",param);
 		}
 	);
@@ -398,7 +398,7 @@ SmartStoreTestSuite.prototype.forwardCursorToEnd = function(cursor) {
 			var nEntries = nextCursor.currentPageOrderedEntries.length;
 			
 			if (pageCount < nextCursor.totalPages) {
-				logToConsole("pageCount:" + pageCount + " of " + nextCursor.totalPages);
+				SFHybridApp.logToConsole("pageCount:" + pageCount + " of " + nextCursor.totalPages);
 				QUnit.equal(nEntries,nextCursor.pageSize,"nEntries matches pageSize [" + nextCursor.currentPageIndex + "]" );
 				
 				self.forwardCursorToEnd(nextCursor);
@@ -407,7 +407,7 @@ SmartStoreTestSuite.prototype.forwardCursorToEnd = function(cursor) {
 				var remainder = self.NUM_CURSOR_MANIPULATION_ENTRIES % nextCursor.pageSize;
 				if (remainder > 0) {
 					expectedCurEntries = remainder;
-					logToConsole("remainder: " + remainder);
+					SFHybridApp.logToConsole("remainder: " + remainder);
 				}
 				
 				QUnit.equal(nextCursor.currentPageIndex,nextCursor.totalPages-1,"final pageIndex correct");
@@ -417,7 +417,7 @@ SmartStoreTestSuite.prototype.forwardCursorToEnd = function(cursor) {
 			}
 		},
 		function(param) {
-			logToConsole("onErrorNextPage: " + param);
+			SFHybridApp.logToConsole("onErrorNextPage: " + param);
 			self.setTestFailedByName("testManipulateCursor",param);
 		}
 	);
