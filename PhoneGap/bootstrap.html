@@ -56,14 +56,14 @@
          */
         function isValidStartData(startData) {
             if (!(startData instanceof SFHybridApp.LocalAppStartData || startData instanceof SFHybridApp.RemoteAppStartData)) {
-                logError("startData is not a valid object type.  Expecting SFHybridApp.LocalAppStartData or SFHybridApp.RemoteAppStartData.");
+                SFHybridApp.logError("startData is not a valid object type.  Expecting SFHybridApp.LocalAppStartData or SFHybridApp.RemoteAppStartData.");
                 return false;
             }
             
-            if (startData instanceof SFHybridApp.RemoteAppStartData
+            if ((startData instanceof SFHybridApp.RemoteAppStartData)
                 && startData.isAbsoluteUrl === false
                 && startData.shouldAuthenticate === false) {
-                logError("startData.isAbsoluteUrl and startData.shouldAuthenticate cannot both be false for a remote app.  "
+                SFHybridApp.logError("startData.isAbsoluteUrl and startData.shouldAuthenticate cannot both be false for a remote app.  "
                          + "The instance URL determined from authentication is used to build the absolute URL.");
                 return false;
             }
@@ -75,7 +75,7 @@
          * Success callback for the SalesforceOAuthPlugin.authenticate() method.
          */
         function loginSuccess(oauthCredentials) {
-            logToConsole("loginSuccess");
+            SFHybridApp.logToConsole("loginSuccess");
             var fullAppUrl;
             if (startData instanceof SFHybridApp.LocalAppStartData) {
                 fullAppUrl =  SFHybridApp.buildLocalUrl(startData.appStartUrl);
