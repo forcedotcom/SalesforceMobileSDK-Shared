@@ -43,6 +43,10 @@ var SmartStoreTestSuite = function () {
                    ];
 	this.currentSoup = null;
 	
+    this.numTestsFinished = 0;
+    this.numFailedTests = 0;
+    this.numPassedTests = 0;
+    
 	this.IDLE_TEST_STATE = 'idle';
 	this.RUNNING_TEST_STATE = 'running';
 	this.FAIL_TEST_STATE = 'fail';
@@ -95,6 +99,10 @@ SmartStoreTestSuite.prototype.startTests = function() {
 SmartStoreTestSuite.prototype.setTestFailedByName = function(name,error) {
 	SFHybridApp.logToConsole("test '" + name + "' failed with error: " + error);
 	this.stateOfTestByName[name] = this.FAIL_TEST_STATE;
+    
+    this.numTestsFinished++;
+    this.numFailedTests++;
+
 	//inform qunit that this test failed and unpause qunit
 	QUnit.ok(false, name);
 	QUnit.start();
@@ -102,6 +110,9 @@ SmartStoreTestSuite.prototype.setTestFailedByName = function(name,error) {
 
 SmartStoreTestSuite.prototype.setTestSuccessByName = function(name) {
 	this.stateOfTestByName[name] = this.SUCCESS_TEST_STATE;
+    this.numTestsFinished++;
+    this.numPassedTests++;
+
 	SFHybridApp.logToConsole("test '" + name + "' succeeded");
 	//inform qunit that this test passed and unpause qunit
 	QUnit.ok(true, name);
