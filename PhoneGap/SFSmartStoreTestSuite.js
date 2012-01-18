@@ -217,25 +217,22 @@ SmartStoreTestSuite.prototype.testUpsertSoupEntries = function()  {
 	var self = this;
 	navigator.smartstore.removeSoup(this.defaultSoupName);
     this.registerDefaultSoup(null);
-	this.addGeneratedEntriesToTestSoup(7,function(cursor) {
-			self.continueUpsertSoupEntries(cursor);
+	this.addGeneratedEntriesToTestSoup(7,function(entries) {
+			self.continueUpsertSoupEntries(entries);
 		});
 };
 
-SmartStoreTestSuite.prototype.continueUpsertSoupEntries = function(cursor) {
+SmartStoreTestSuite.prototype.continueUpsertSoupEntries = function(entries) {
 	var self = this;	
-	QUnit.equal(cursor.totalPages,1,"totalPages correct");
-	QUnit.equal(cursor.currentPageOrderedEntries.length, 7);
+	QUnit.equal(entries.length, 7);
 	//upsert another batch
-	this.addGeneratedEntriesToTestSoup(12,function(nextCursor) {
-			self.continueUpsertSoupEntries2(nextCursor);
+	this.addGeneratedEntriesToTestSoup(12,function(entries) {
+			self.continueUpsertSoupEntries2(entries);
 		});
 };
  
-SmartStoreTestSuite.prototype.continueUpsertSoupEntries2 = function(cursor)  {
-	QUnit.equal(cursor.totalPages,2,"totalPages correct");
-	QUnit.equal(cursor.currentPageOrderedEntries.length, cursor.pageSize);
-	
+SmartStoreTestSuite.prototype.continueUpsertSoupEntries2 = function(entries)  {
+	QUnit.equal(entries.length, 12);
 	this.setTestSuccessByName("testUpsertSoupEntries");
 }; 
 
@@ -247,14 +244,14 @@ SmartStoreTestSuite.prototype.testRetrieveSoupEntry = function()  {
     
 	navigator.smartstore.removeSoup(this.defaultSoupName);
 	this.registerDefaultSoup(null);
-	this.stuffTestSoup(function(cursor) {
-		self.continueRetrieveSoupEntry(cursor);
+	this.stuffTestSoup(function(entries) {
+		self.continueRetrieveSoupEntry(entries);
 	});	
 };
 
-SmartStoreTestSuite.prototype.continueRetrieveSoupEntry = function(cursor)  {
+SmartStoreTestSuite.prototype.continueRetrieveSoupEntry = function(entries)  {
 	var self = this; 
-	var originalEntry = cursor.currentPageOrderedEntries[0];
+	var originalEntry = entries[0];
 	var soupEntryId = originalEntry._soupEntryId;
 	
 	navigator.smartstore.retrieveSoupEntry(this.defaultSoupName,soupEntryId,
@@ -280,20 +277,18 @@ SmartStoreTestSuite.prototype.testRemoveFromSoup = function()  {
     
 	navigator.smartstore.removeSoup(this.defaultSoupName);
 	this.registerDefaultSoup(null);
-	this.stuffTestSoup(function(cursor) {
-		self.continueRemoveFromSoup(cursor);
+	this.stuffTestSoup(function(entries) {
+		self.continueRemoveFromSoup(entries);
 	});
 
 };
 
-SmartStoreTestSuite.prototype.continueRemoveFromSoup = function(cursor) {
+SmartStoreTestSuite.prototype.continueRemoveFromSoup = function(entries) {
 	var self = this,  soupEntryIds = [];
-
-	var nEntries = cursor.currentPageOrderedEntries.length;
-	QUnit.equal(nEntries,3,"currentPageOrderedEntries correct");
-
-	for (var i = cursor.currentPageOrderedEntries.length - 1; i >= 0; i--) {
-		var entry = cursor.currentPageOrderedEntries[i];
+	QUnit.equal(entries.length,3);
+	
+	for (var i = entries.length - 1; i >= 0; i--) {
+		var entry = entries[i];
 		soupEntryIds.push(entry._soupEntryId);
 	}
 	
@@ -330,14 +325,16 @@ TEST querySoup
 */
 SmartStoreTestSuite.prototype.testQuerySoup = function()  {
 	var self = this;
-	this.stuffTestSoup(function(cursor) {
-		self.continueQuerySoup(cursor);
+	navigator.smartstore.removeSoup(this.defaultSoupName);
+	this.registerDefaultSoup(null);
+	this.stuffTestSoup(function(entries) {
+		self.continueQuerySoup(entries);
 	});
 };
 
-SmartStoreTestSuite.prototype.continueQuerySoup = function(cursor) {
+SmartStoreTestSuite.prototype.continueQuerySoup = function(entries) {
 	var self = this;
-	QUnit.notEqual(cursor,null,"stuffTestSoup OK");
+	QUnit.equal(entries.length,3);
 	
     var querySpec = new SoupQuerySpec("Name","Robot");
     querySpec.pageSize = 25;
@@ -346,7 +343,7 @@ SmartStoreTestSuite.prototype.continueQuerySoup = function(cursor) {
 			QUnit.equal(cursor.totalPages,1,"totalPages correct");
 			var nEntries = cursor.currentPageOrderedEntries.length;
 			QUnit.equal(nEntries,1,"currentPageOrderedEntries correct");
-			self.setTestSuccessByName("testSmartStoreQuerySoup");
+			self.setTestSuccessByName("testQuerySoup");
 		},
 		function(param) { 
 			SFHybridApp.logToConsole("onErrorQuerySoup: " + param);
@@ -366,15 +363,15 @@ SmartStoreTestSuite.prototype.testManipulateCursor = function()  {
 	var self = this;
 	navigator.smartstore.removeSoup(this.defaultSoupName);
 	this.registerDefaultSoup(null);
-	this.addGeneratedEntriesToTestSoup(self.NUM_CURSOR_MANIPULATION_ENTRIES,function(cursor) {
-		self.continueManipulateCursor(cursor);
+	this.addGeneratedEntriesToTestSoup(self.NUM_CURSOR_MANIPULATION_ENTRIES,function(entries) {
+		self.continueManipulateCursor(entries);
 	});
 };
 
 
-SmartStoreTestSuite.prototype.continueManipulateCursor = function(cursor) {
+SmartStoreTestSuite.prototype.continueManipulateCursor = function(entries) {
 	var self = this;
-	QUnit.notEqual(cursor,null,"addGeneratedEntriesToTestSoup OK");
+	QUnit.equal(entries.length, self.NUM_CURSOR_MANIPULATION_ENTRIES);
 			
     var querySpec = new SoupQuerySpec("Name",null);
 
