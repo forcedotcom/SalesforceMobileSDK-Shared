@@ -61,7 +61,7 @@ SmartStoreTestSuite.prototype.startTests = function() {
 	//collect a list of test methods by introspection
 	var key, self = this;
 	
-	for ( key in self) {
+	for (key in self) {
 		//we specifically don't check hasOwnProperty here, to grab proto methods
 		var val = self[key];
 		if (typeof val === 'function') {
@@ -237,9 +237,9 @@ SmartStoreTestSuite.prototype.continueUpsertSoupEntries2 = function(entries)  {
 }; 
 
 /*
-TEST retrieveSoupEntry
+TEST retrieveSoupEntries
 */
-SmartStoreTestSuite.prototype.testRetrieveSoupEntry = function()  {
+SmartStoreTestSuite.prototype.testRetrieveSoupEntries = function()  {
 	var self = this; 
     
 	navigator.smartstore.removeSoup(this.defaultSoupName);
@@ -254,14 +254,15 @@ SmartStoreTestSuite.prototype.continueRetrieveSoupEntry = function(entries)  {
 	var originalEntry = entries[0];
 	var soupEntryId = originalEntry._soupEntryId;
 	
-	navigator.smartstore.retrieveSoupEntry(this.defaultSoupName,soupEntryId,
-		function(entry) {
-			QUnit.equal(soupEntryId,entry._soupEntryId,"soupEntryIds match");
-			self.setTestSuccessByName("testRetrieveSoupEntry");
+	navigator.smartstore.retrieveSoupEntries(this.defaultSoupName,[soupEntryId],
+		function(entries) {
+		    QUnit.equal(1, entries.length);
+			QUnit.equal(soupEntryId,entries[0]._soupEntryId,"soupEntryIds match");
+			self.setTestSuccessByName("testRetrieveSoupEntries");
 		},
 		function(param) { 
-			SFHybridApp.logToConsole("onErrorRetrieveEntry: " + param);
-			self.setTestFailedByName("testRetrieveSoupEntry",param);
+			SFHybridApp.logToConsole("onErrorRetrieveEntries: " + param);
+			self.setTestFailedByName("testRetrieveSoupEntries",param);
 		}
 	);
 };
