@@ -138,13 +138,13 @@ SmartStore.prototype.querySoup = function (soupName,querySpec,successCB,errorCB)
                   );
 };
 
-SmartStore.prototype.retrieveSoupEntry = function (soupName,soupEntryId,successCB,errorCB) {
-    SFHybridApp.logToConsole("SmartStore.retrieveSoupEntry: '" + soupName + "' soupEntryId: " + soupEntryId);
+SmartStore.prototype.retrieveSoupEntries = function (soupName,entryIds,successCB,errorCB) {
+    SFHybridApp.logToConsole("SmartStore.retrieveSoupEntry: '" + soupName + "' entryIds: " + entryIds);
     
     PhoneGap.exec(successCB, errorCB, 
                   "com.salesforce.smartstore",
-                  "pgRetrieveSoupEntry",
-                  [{"soupName":soupName,"soupEntryId":soupEntryId}]
+                  "pgRetrieveSoupEntries",
+                  [{"soupName":soupName,"entryIds":entryIds}]
                   );
 };
 
@@ -171,7 +171,7 @@ SmartStore.prototype.removeFromSoup = function (soupName,entryIds,successCB,erro
 //====== Cursor manipulation ======
     
 SmartStore.prototype.moveCursorToPageIndex = function (cursor,newPageIndex,successCB,errorCB) {
-    SFHybridApp.logToConsole("moveCursorToPageIndex " + newPageIndex);
+    SFHybridApp.logToConsole("moveCursorToPageIndex: " + cursor.cursorId + " 'newPageIndex: " + newPageIndex);
 
     PhoneGap.exec(successCB, errorCB, 
     "com.salesforce.smartstore",
@@ -197,6 +197,17 @@ SmartStore.prototype.moveCursorToPreviousPage = function (cursor,successCB,error
 
     this.moveCursorToPageIndex(cursor,newPageIndex,successCB,errorCB);
 };
+
+SmartStore.prototype.closeCursor = function (cursor,successCB,errorCB) {
+    SFHybridApp.logToConsole("closeCursor: " + cursor.cursorId);
+
+    PhoneGap.exec(successCB, errorCB, 
+    "com.salesforce.smartstore",
+    "pgCloseCursor",
+    [{"cursorId":cursor.cursorId}]
+    );
+};
+
 
 //======Plugin creation / installation ======
     
