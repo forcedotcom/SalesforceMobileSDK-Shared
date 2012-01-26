@@ -203,7 +203,7 @@ SmartStoreTestSuite.prototype.testRemoveFromSoup = function()  {
 		}
 		
 		navigator.smartstore.removeFromSoup(self.defaultSoupName, soupEntryIds, 
-			function(param) {
+			function(status) {
 				QUnit.equal(status, "OK", "removeFromSoup OK");
 				
 				var querySpec = new SoupQuerySpec("Name", null);
