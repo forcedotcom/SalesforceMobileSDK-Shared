@@ -102,6 +102,7 @@ SFTestSuite.prototype.startTest = function(methName) {
 		self.preRun(methName);
 		self.runTest(methName);
 	});
+    
 	QUnit.start();//start qunit now that all tests are queued
 };
 
@@ -123,19 +124,19 @@ SFTestSuite.prototype.runTest= function (methName) {
 	this[methName]();
 };
 
+    
 /**
  * Method called to report that the current test failed
  */
 SFTestSuite.prototype.setTestFailed = function(error) {
-	SFHybridApp.logToConsole("In setTestFailedByName: currentTestName=" + this.currentTestName + " , error=" + error);
+	SFHybridApp.logToConsole("In setTestFailed: currentTestName=" + this.currentTestName + " , error=" + error);
 
 	// update stats
 	this.stateOfTestByName[this.currentTestName] = this.FAIL_TEST_STATE;    
     this.numTestsFinished++;
     this.numFailedTests++;
 
-    // let test runner know
-    if (navigator.testrunner) navigator.testrunner.onTestComplete(this.currentTestName, false, error);
+    // navigator.testrunner.onTestComplete will be called back by QUnit.testDone
     
 	// inform qunit that this test failed and unpause qunit
 	QUnit.ok(false, this.currentTestName);
@@ -146,19 +147,35 @@ SFTestSuite.prototype.setTestFailed = function(error) {
  * Method called to report that the current test succeeded
  */
 SFTestSuite.prototype.setTestSuccess = function() {
-	SFHybridApp.logToConsole("In setTestSuccessByName: currentTestName=" + this.currentTestName);
+	SFHybridApp.logToConsole("In setTestSuccess: currentTestName=" + this.currentTestName);
 
 	// update stats
 	this.stateOfTestByName[this.currentTestName] = this.SUCCESS_TEST_STATE;
     this.numTestsFinished++;
     this.numPassedTests++;
 
-    // let test runner know	
-    if (navigator.testrunner) navigator.testrunner.onTestComplete(this.currentTestName, true, "");
+    // navigator.testrunner.onTestComplete will be called back by QUnit.testDone
 	
-	// inform qunit that this test passed and unpause qunit
-	QUnit.ok(true, this.currentTestName);
+	// unpause qunit
 	QUnit.start();
 };
 
+    
+    
+QUnit.testDone = function(status) {
+    SFHybridApp.logToConsole("testDone: " + status.name + " failed: " + status.failed + " passed: " + status.passed);
+    if (status.failed > 0) {
+        var failMsg = "failed asserts: " + status.failed;
+        //self.setTestFailed("failed asserts: " + status.failed);
+        // let test runner know	
+        if (navigator.testrunner) {
+            navigator.testrunner.onTestComplete(status.name, false, failMsg);
+        }
+    } else {
+        
+        if (navigator.testrunner) {
+            navigator.testrunner.onTestComplete(status.name, true, "");
+        }
+    }
+};
 }
