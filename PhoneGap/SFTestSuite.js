@@ -163,7 +163,7 @@ SFTestSuite.prototype.setTestSuccess = function() {
     
     
 QUnit.testDone = function(status) {
-    SFHybridApp.logToConsole("testDone: " + status.name + "failed: " + status.failed + " passed: " + status.passed);
+    SFHybridApp.logToConsole("testDone: " + status.name + " failed: " + status.failed + " passed: " + status.passed);
     if (status.failed > 0) {
         var failMsg = "failed asserts: " + status.failed;
         //self.setTestFailed("failed asserts: " + status.failed);
