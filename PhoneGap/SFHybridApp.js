@@ -37,7 +37,7 @@ logError: function(txt) {
  *   txt - The text (html) to log.
  */
 log: function(section, txt) {
-    console.log("jslog:" + txt);
+    console.log("jslog: " + txt);
     var now = new Date();
     var fullTxt = "<p><i><b>* At " + (now.getTime() - SFHybridApp.appStartTime.getTime()) + "ms:</b></i> " + txt + "</p>";
     $(section).append(fullTxt);
