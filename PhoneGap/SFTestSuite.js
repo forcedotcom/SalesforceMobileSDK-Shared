@@ -98,7 +98,7 @@ SFTestSuite.prototype.startTest = function(methName) {
 	QUnit.init();
 	QUnit.stop();//don't start running tests til they're all queued
 	QUnit.module(this.module);
-	QUnit.test(methName, function() {
+	QUnit.asyncTest(methName, function() {
 		self.preRun(methName);
 		self.runTest(methName);
 	});
