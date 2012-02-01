@@ -176,8 +176,13 @@ SmartStoreTestSuite.prototype.testRetrieveSoupEntries = function()  {
 		navigator.smartstore.retrieveSoupEntries(self.defaultSoupName, [soupEntry2Id, soupEntry0Id], 
 			function(retrievedEntries) {
 			    QUnit.equal(retrievedEntries.length, 2);
-				QUnit.equal(soupEntry2Id, retrievedEntries[0]._soupEntryId);
-				QUnit.equal(soupEntry0Id, retrievedEntries[1]._soupEntryId);
+                                                 
+                var entryIdArray = new Array();
+                for (var i = 0; i < retrievedEntries.length; i++) {
+                    entryIdArray[i] = retrievedEntries[i]._soupEntryId;
+                }
+                self.collectionContains(entryIdArray, soupEntry0Id);
+                self.collectionContains(entryIdArray, soupEntry2Id);
 				self.setTestSuccess();
 			}, 
 			function(param) { self.setTestFailed("retrieveSoupEntries failed: " + param); }

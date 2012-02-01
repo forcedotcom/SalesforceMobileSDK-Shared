@@ -138,7 +138,7 @@ SFTestSuite.prototype.setTestFailed = function(error) {
     if (navigator.testrunner) navigator.testrunner.onTestComplete(this.currentTestName, false, error);
     
 	// inform qunit that this test failed and unpause qunit
-	QUnit.ok(false, this.currentTestName);
+	QUnit.ok(false, error);
 	QUnit.start();
 };
 
@@ -159,6 +159,24 @@ SFTestSuite.prototype.setTestSuccess = function() {
 	// inform qunit that this test passed and unpause qunit
 	QUnit.ok(true, this.currentTestName);
 	QUnit.start();
+};
+
+/**
+ * Method to test for the existence of a value in a collection.
+ */
+SFTestSuite.prototype.collectionContains = function(collection, value) {
+    var foundValue = false;
+    for (var key in collection) {
+        if (value === collection[key]) {
+            foundValue = true;
+            break;
+        }
+    }
+    if (foundValue) {
+        this.setTestSuccess();
+    } else {
+        this.setTestFailed("Value '" + value + "' not found in collection.");
+    }
 };
 
 }
