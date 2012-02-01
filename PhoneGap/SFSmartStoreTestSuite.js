@@ -51,13 +51,11 @@ SmartStoreTestSuite.prototype.constructor = SmartStoreTestSuite;
  * For each test, we first remove and re-add the default soup
  */
 SmartStoreTestSuite.prototype.runTest= function (methName) {
-	SFHybridApp.logToConsole("In runTest: methName=" + methName);
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.runTest: methName=" + methName);
 	var self = this;
 	
 	self.removeDefaultSoup(function() {
-		SFHybridApp.logToConsole("In Here 1" + new Date());
 		self.registerDefaultSoup(function() {
-			SFHybridApp.logToConsole("In Here 2" + new Date());
 			self[methName]();
 		});
 	});
@@ -67,10 +65,18 @@ SmartStoreTestSuite.prototype.runTest= function (methName) {
  * Helper method that creates default soup
  */
 SmartStoreTestSuite.prototype.registerDefaultSoup = function(callback) {
-	SFHybridApp.logToConsole("In registerDefaultSoup");
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.registerDefaultSoup");
+	this.registerSoup(this.defaultSoupName, this.defaultSoupIndexes, callback);
+};
+
+/**
+ * Helper method that creates soup
+ */
+SmartStoreTestSuite.prototype.registerSoup = function(soupName, soupIndexes, callback) {
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.registerSoup: soupName=" + soupName);
 	
 	var self = this;
-    navigator.smartstore.registerSoup(self.defaultSoupName, self.defaultSoupIndexes, 
+    navigator.smartstore.registerSoup(soupName, soupIndexes, 
 		function(soup) { 
 			SFHybridApp.logToConsole("registerSoup succeeded");
 			if (callback !== null) callback(soup);
@@ -80,19 +86,44 @@ SmartStoreTestSuite.prototype.registerDefaultSoup = function(callback) {
 };
 
 /**
+ * Helper method that check if soup exists
+ */
+SmartStoreTestSuite.prototype.soupExists = function(soupName, callback) {
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.soupExists: soupName=" + soupName);
+	
+	var self = this;
+    navigator.smartstore.soupExists(soupName,  
+		function(exists) { 
+			SFHybridApp.logToConsole("soupExists succeeded");
+			if (callback !== null) callback(exists);
+		}, 
+		function(param) { self.setTestFailed("soupExists failed: " + param); }
+      );
+};
+
+
+/**
  * Helper method that drops default soup
  */
 SmartStoreTestSuite.prototype.removeDefaultSoup = function(callback) {
-	SFHybridApp.logToConsole("In removeDefaultSoup");
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.removeDefaultSoup");
+	this.removeSoup(this.defaultSoupName, callback);
+};
+
+/**
+ * Helper method that drops soup
+ */
+SmartStoreTestSuite.prototype.removeSoup = function(soupName, callback) {
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.removeSoup: soupName=" + soupName);
 	
 	var self = this;
-    navigator.smartstore.removeSoup(self.defaultSoupName,  
+    navigator.smartstore.removeSoup(soupName, 
 		function() { 
-			SFHybridApp.logToConsole("removeSoup succeeded" + new Date());
+			SFHybridApp.logToConsole("removeSoup succeeded");
 			if (callback !== null) callback();
 		}, 
 		function(param) {
-			SFHybridApp.logToConsole("removeSoup failed" + new Date());
+			SFHybridApp.logToConsole("removeSoup failed");
 			self.setTestFailed("removeSoup failed: " + param); }
       );
 };
@@ -101,7 +132,7 @@ SmartStoreTestSuite.prototype.removeDefaultSoup = function(callback) {
  * Helper method that adds three soup entries to default soup
  */
 SmartStoreTestSuite.prototype.stuffTestSoup = function(callback) {
-	SFHybridApp.logToConsole("In stuffTestSoup");
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.stuffTestSoup");
 	
 	var myEntry1 = { Name: "Todd Stellanova", Id: "00300A",  attributes:{type:"Contact"} };
     var myEntry2 = { Name: "Pro Bono Bonobo",  Id: "00300B", attributes:{type:"Contact"}  };
@@ -115,7 +146,7 @@ SmartStoreTestSuite.prototype.stuffTestSoup = function(callback) {
  * Helper method that adds n soup entries to default soup
  */
 SmartStoreTestSuite.prototype.addGeneratedEntriesToTestSoup = function(nEntries, callback) {
-	SFHybridApp.logToConsole("In addGeneratedEntriesToTestSoup: nEntries=" + nEntries);
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.addGeneratedEntriesToTestSoup: nEntries=" + nEntries);
  
 	var entries = [];
 	for (var i = 0; i < nEntries; i++) {
@@ -131,7 +162,7 @@ SmartStoreTestSuite.prototype.addGeneratedEntriesToTestSoup = function(nEntries,
  * Helper method that adds soup entries to default soup
  */
 SmartStoreTestSuite.prototype.addEntriesToTestSoup = function(entries, callback) {
-	SFHybridApp.logToConsole("In addEntriesToTestSoup: entries.length=" + entries.length);
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.addEntriesToTestSoup: entries.length=" + entries.length);
 
 	var self = this;
     navigator.smartstore.upsertSoupEntries(self.defaultSoupName, entries, 
@@ -144,10 +175,50 @@ SmartStoreTestSuite.prototype.addEntriesToTestSoup = function(entries, callback)
 };
 
 /** 
+ * TEST registerSoup / hasSoup/ removeSoup 
+ */
+SmartStoreTestSuite.prototype.testRegisterRemoveSoup = function()  {
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testRegisterRemoveSoup");
+	var soupName = "soupForTestRegisterRemoveSoup";
+
+	var self = this;
+
+	// Start clean
+	self.removeSoup(soupName,
+		function() {
+			// Check soup does not exist
+			self.soupExists(soupName,
+				function(exists) {
+					QUnit.equals(exists, false, "soup should not already exist");
+					// Create soup
+					self.registerSoup(soupName, self.defaultSoupIndexes, 
+						function(soup) {
+							// Check soup now exists
+							self.soupExists(soupName,
+								function(exists) {
+									QUnit.equals(exists, true, "soup should now exist");
+									// Remove soup
+									self.removeSoup(soupName,  
+										function(soup) {
+											// Check soup no longer exists
+											self.soupExists(soupName,
+												function(exists) {
+													QUnit.equals(exists, false, "soup should no longer exist");
+													self.setTestSuccess();
+												});
+										});
+								});
+						});
+				});
+	});
+}; 
+
+
+/** 
  * TEST upsertSoupEntries
  */
 SmartStoreTestSuite.prototype.testUpsertSoupEntries = function()  {
-	SFHybridApp.logToConsole("In testUpsertSoupEntries");
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testUpsertSoupEntries");
 
 	var self = this;
 	self.addGeneratedEntriesToTestSoup(7, function(entries) {
@@ -165,7 +236,7 @@ SmartStoreTestSuite.prototype.testUpsertSoupEntries = function()  {
  * TEST retrieveSoupEntries
  */
 SmartStoreTestSuite.prototype.testRetrieveSoupEntries = function()  {
-	SFHybridApp.logToConsole("In testRetrieveSoupEntries");
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testRetrieveSoupEntries");
 	
 	var self = this; 
 	self.stuffTestSoup(function(entries) {
@@ -195,7 +266,7 @@ SmartStoreTestSuite.prototype.testRetrieveSoupEntries = function()  {
  * TEST removeFromSoup
  */
 SmartStoreTestSuite.prototype.testRemoveFromSoup = function()  {
-	SFHybridApp.logToConsole("In testRemoveFromSoup");	
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testRemoveFromSoup");	
 	
 	var self = this; 
 	self.stuffTestSoup(function(entries) {
@@ -230,7 +301,7 @@ SmartStoreTestSuite.prototype.testRemoveFromSoup = function()  {
 TEST querySoup
 */
 SmartStoreTestSuite.prototype.testQuerySoup = function()  {
-	SFHybridApp.logToConsole("In testQuerySoup");	
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testQuerySoup");	
 	
 	var self = this;
 	self.stuffTestSoup(function(entries) {
@@ -243,7 +314,7 @@ SmartStoreTestSuite.prototype.testQuerySoup = function()  {
 				QUnit.equal(cursor.totalPages, 1, "totalPages correct");
 				var nEntries = cursor.currentPageOrderedEntries.length;
 				QUnit.equal(nEntries, 1, "currentPageOrderedEntries correct");
-				self.setTestSuccess("testQuerySoup");
+				self.setTestSuccess();
 			}, 
 			function(param) { self.setTestFailed("querySoup: " + param); }
 	    );
@@ -256,7 +327,7 @@ SmartStoreTestSuite.prototype.testQuerySoup = function()  {
  * TEST testManipulateCursor
  */
 SmartStoreTestSuite.prototype.testManipulateCursor = function()  {
-	SFHybridApp.logToConsole("In testManipulateCursor");	
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testManipulateCursor");	
 	
 	var self = this;
 	this.addGeneratedEntriesToTestSoup(self.NUM_CURSOR_MANIPULATION_ENTRIES, function(entries) {
@@ -284,7 +355,7 @@ SmartStoreTestSuite.prototype.testManipulateCursor = function()  {
  * Used by testManipulateCursor
  */
 SmartStoreTestSuite.prototype.forwardCursorToEnd = function(cursor) {
-	SFHybridApp.logToConsole("In forwardCursorToEnd");	
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.forwardCursorToEnd");	
 	
 	var self = this;
 	

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, salesforce.com, inc.
+ * Copyright (c) 2012, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -124,6 +124,16 @@ SmartStore.prototype.removeSoup = function (soupName, successCB, errorCB) {
     PhoneGap.exec(successCB, errorCB, 
                   "com.salesforce.smartstore", 
                   "pgRemoveSoup", 
+                  [{"soupName":soupName}]
+                  );                  
+};
+
+SmartStore.prototype.soupExists = function (soupName, successCB, errorCB) {
+    SFHybridApp.logToConsole("SmartStore.soupExists: " + soupName );
+    
+    PhoneGap.exec(successCB, errorCB, 
+                  "com.salesforce.smartstore", 
+                  "pgSoupExists", 
                   [{"soupName":soupName}]
                   );                  
 };

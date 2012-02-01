@@ -98,10 +98,11 @@ SFTestSuite.prototype.startTest = function(methName) {
 	QUnit.init();
 	QUnit.stop();//don't start running tests til they're all queued
 	QUnit.module(this.module);
-	QUnit.test(methName, function() {
+	QUnit.asyncTest(methName, function() {
 		self.preRun(methName);
 		self.runTest(methName);
 	});
+    
 	QUnit.start();//start qunit now that all tests are queued
 };
 
@@ -123,19 +124,19 @@ SFTestSuite.prototype.runTest= function (methName) {
 	this[methName]();
 };
 
+    
 /**
  * Method called to report that the current test failed
  */
 SFTestSuite.prototype.setTestFailed = function(error) {
-	SFHybridApp.logToConsole("In setTestFailedByName: currentTestName=" + this.currentTestName + " , error=" + error);
+	SFHybridApp.logToConsole("In setTestFailed: currentTestName=" + this.currentTestName + " , error=" + error);
 
 	// update stats
 	this.stateOfTestByName[this.currentTestName] = this.FAIL_TEST_STATE;    
     this.numTestsFinished++;
     this.numFailedTests++;
 
-    // let test runner know
-    if (navigator.testrunner) navigator.testrunner.onTestComplete(this.currentTestName, false, error);
+    // navigator.testrunner.onTestComplete will be called back by QUnit.testDone
     
 	// inform qunit that this test failed and unpause qunit
 	QUnit.ok(false, error);
@@ -146,18 +147,16 @@ SFTestSuite.prototype.setTestFailed = function(error) {
  * Method called to report that the current test succeeded
  */
 SFTestSuite.prototype.setTestSuccess = function() {
-	SFHybridApp.logToConsole("In setTestSuccessByName: currentTestName=" + this.currentTestName);
+	SFHybridApp.logToConsole("In setTestSuccess: currentTestName=" + this.currentTestName);
 
 	// update stats
 	this.stateOfTestByName[this.currentTestName] = this.SUCCESS_TEST_STATE;
     this.numTestsFinished++;
     this.numPassedTests++;
 
-    // let test runner know	
-    if (navigator.testrunner) navigator.testrunner.onTestComplete(this.currentTestName, true, "");
+    // navigator.testrunner.onTestComplete will be called back by QUnit.testDone
 	
-	// inform qunit that this test passed and unpause qunit
-	QUnit.ok(true, this.currentTestName);
+	// unpause qunit
 	QUnit.start();
 };
 
@@ -176,6 +175,22 @@ SFTestSuite.prototype.collectionContains = function(collection, value) {
         this.setTestSuccess();
     } else {
         this.setTestFailed("Value '" + value + "' not found in collection.");
+    }
+};
+
+QUnit.testDone = function(status) {
+    var statsMsg = " failed: " + status.failed + " passed: " + status.passed;
+    SFHybridApp.logToConsole("testDone: " + status.name + statsMsg);
+    if ((status.failed > 0) || (status.passed === 0)) {
+        // let test runner know	
+        if (navigator.testrunner) {
+            navigator.testrunner.onTestComplete(status.name, false, statsMsg);
+        }
+    } else {
+        
+        if (navigator.testrunner) {
+            navigator.testrunner.onTestComplete(status.name, true, "");
+        }
     }
 };
 
