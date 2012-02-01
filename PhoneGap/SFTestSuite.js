@@ -163,13 +163,12 @@ SFTestSuite.prototype.setTestSuccess = function() {
     
     
 QUnit.testDone = function(status) {
-    SFHybridApp.logToConsole("testDone: " + status.name + " failed: " + status.failed + " passed: " + status.passed);
-    if (status.failed > 0) {
-        var failMsg = "failed asserts: " + status.failed;
-        //self.setTestFailed("failed asserts: " + status.failed);
+    var statsMsg = " failed: " + status.failed + " passed: " + status.passed;
+    SFHybridApp.logToConsole("testDone: " + status.name + statsMsg);
+    if ((status.failed > 0) || (status.passed === 0)) {
         // let test runner know	
         if (navigator.testrunner) {
-            navigator.testrunner.onTestComplete(status.name, false, failMsg);
+            navigator.testrunner.onTestComplete(status.name, false, statsMsg);
         }
     } else {
         
