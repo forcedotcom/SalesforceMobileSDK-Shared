@@ -203,7 +203,7 @@ SmartStoreTestSuite.prototype.testRegisterRemoveSoup = function()  {
 											self.soupExists(soupName,
 												function(exists) {
 													QUnit.equals(exists, false, "soup should no longer exist");
-                                                    QUnit.start();
+                                                    self.finalizeTest();
 												});
 										});
 								});
@@ -226,7 +226,7 @@ SmartStoreTestSuite.prototype.testUpsertSoupEntries = function()  {
 		//upsert another batch
 		self.addGeneratedEntriesToTestSoup(12, function(entries) {
 			QUnit.equal(entries.length, 12);
-            QUnit.start();
+            self.finalizeTest();
 		});
 	});
 }; 
@@ -253,7 +253,7 @@ SmartStoreTestSuite.prototype.testRetrieveSoupEntries = function()  {
                 }
                 self.collectionContains(entryIdArray, soupEntry0Id);
                 self.collectionContains(entryIdArray, soupEntry2Id);
-                QUnit.start();
+                self.finalizeTest();
 			}, 
 			function(param) { self.setAssertionFailed("retrieveSoupEntries failed: " + param); }
 		);
@@ -286,7 +286,7 @@ SmartStoreTestSuite.prototype.testRemoveFromSoup = function()  {
 					function(cursor) {
 						var nEntries = cursor.currentPageOrderedEntries.length;
 						QUnit.equal(nEntries, 0, "currentPageOrderedEntries correct");
-                        QUnit.start();
+                        self.finalizeTest();
 					}, 
 					function(param) { self.setAssertionFailed("querySoup: " + param); }
 				);
@@ -313,7 +313,7 @@ SmartStoreTestSuite.prototype.testQuerySoup = function()  {
 				QUnit.equal(cursor.totalPages, 1, "totalPages correct");
 				var nEntries = cursor.currentPageOrderedEntries.length;
 				QUnit.equal(nEntries, 1, "currentPageOrderedEntries correct");
-                QUnit.start();
+                self.finalizeTest();
 			}, 
 			function(param) { self.setAssertionFailed("querySoup: " + param); }
 	    );
@@ -380,7 +380,7 @@ SmartStoreTestSuite.prototype.forwardCursorToEnd = function(cursor) {
 				QUnit.equal(nextCursor.currentPageIndex, nextCursor.totalPages-1, "final pageIndex correct");
 				QUnit.equal(nEntries, expectedCurEntries, "last page nEntries matches");
 				
-                QUnit.start();
+                self.finalizeTest();
 			}
 		}, 
 		function(param) { self.setAssertionFailed("moveCursorToNextPage: " + param); }

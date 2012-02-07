@@ -171,6 +171,16 @@ SFTestSuite.prototype.runTest= function (methName) {
 	SFHybridApp.logToConsole("In runTest: methName=" + methName);
 	this[methName]();
 };
+
+/**
+ * Method to run after a test completes.
+ *
+ * Currently, this just unblocks QUnit to run the next test.  But other test clean-up logic could
+ * go in here as well.
+ */
+SFTestSuite.prototype.finalizeTest = function() {
+    QUnit.start();
+};
     
 /**
  * Method called to report that the current test failed
