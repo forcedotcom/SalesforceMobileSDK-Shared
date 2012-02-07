@@ -35,16 +35,15 @@ if (typeof SmartStoreTestSuite === 'undefined') {
  * Constructor for SmartStoreTestSuite
  */
 var SmartStoreTestSuite = function () {
-	SFTestSuite.call(this);
+	SFTestSuite.call(this, "smartstore");
 
-	this.module = "smartstore";
 	this.defaultSoupName = "myPeopleSoup";
 	this.defaultSoupIndexes = [{path:"Name", type:"string"}, {path:"Id", type:"string"}];
 	this.NUM_CURSOR_MANIPULATION_ENTRIES = 103;
 };
 
 // We are sub-classing SFTestSuite
-SmartStoreTestSuite.prototype = new SFTestSuite;
+SmartStoreTestSuite.prototype = new SFTestSuite();
 SmartStoreTestSuite.prototype.constructor = SmartStoreTestSuite;
 
 /*
@@ -81,7 +80,7 @@ SmartStoreTestSuite.prototype.registerSoup = function(soupName, soupIndexes, cal
 			SFHybridApp.logToConsole("registerSoup succeeded");
 			if (callback !== null) callback(soup);
 		}, 
-		function(param) { self.setTestFailed("registerSoup failed: " + param); }
+		function(param) { self.setAssertionFailed("registerSoup failed: " + param); }
       );
 };
 
@@ -97,7 +96,7 @@ SmartStoreTestSuite.prototype.soupExists = function(soupName, callback) {
 			SFHybridApp.logToConsole("soupExists succeeded");
 			if (callback !== null) callback(exists);
 		}, 
-		function(param) { self.setTestFailed("soupExists failed: " + param); }
+		function(param) { self.setAssertionFailed("soupExists failed: " + param); }
       );
 };
 
@@ -124,7 +123,7 @@ SmartStoreTestSuite.prototype.removeSoup = function(soupName, callback) {
 		}, 
 		function(param) {
 			SFHybridApp.logToConsole("removeSoup failed");
-			self.setTestFailed("removeSoup failed: " + param); }
+			self.setAssertionFailed("removeSoup failed: " + param); }
       );
 };
 
@@ -170,7 +169,7 @@ SmartStoreTestSuite.prototype.addEntriesToTestSoup = function(entries, callback)
 		    SFHybridApp.logToConsole("addEntriesToTestSoup of " + upsertedEntries.length + " entries succeeded");
 			callback(upsertedEntries);
 		}, 
-		function(param) { self.setTestFailed("upsertSoupEntries failed: " + param); }
+		function(param) { self.setAssertionFailed("upsertSoupEntries failed: " + param); }
 	);
 };
 
@@ -204,7 +203,7 @@ SmartStoreTestSuite.prototype.testRegisterRemoveSoup = function()  {
 											self.soupExists(soupName,
 												function(exists) {
 													QUnit.equals(exists, false, "soup should no longer exist");
-													self.setTestSuccess();
+                                                    self.finalizeTest();
 												});
 										});
 								});
@@ -227,7 +226,7 @@ SmartStoreTestSuite.prototype.testUpsertSoupEntries = function()  {
 		//upsert another batch
 		self.addGeneratedEntriesToTestSoup(12, function(entries) {
 			QUnit.equal(entries.length, 12);
-			self.setTestSuccess();
+            self.finalizeTest();
 		});
 	});
 }; 
@@ -247,11 +246,16 @@ SmartStoreTestSuite.prototype.testRetrieveSoupEntries = function()  {
 		navigator.smartstore.retrieveSoupEntries(self.defaultSoupName, [soupEntry2Id, soupEntry0Id], 
 			function(retrievedEntries) {
 			    QUnit.equal(retrievedEntries.length, 2);
-				QUnit.equal(soupEntry2Id, retrievedEntries[0]._soupEntryId);
-				QUnit.equal(soupEntry0Id, retrievedEntries[1]._soupEntryId);
-				self.setTestSuccess();
+                                                 
+                var entryIdArray = new Array();
+                for (var i = 0; i < retrievedEntries.length; i++) {
+                    entryIdArray[i] = retrievedEntries[i]._soupEntryId;
+                }
+                self.collectionContains(entryIdArray, soupEntry0Id);
+                self.collectionContains(entryIdArray, soupEntry2Id);
+                self.finalizeTest();
 			}, 
-			function(param) { self.setTestFailed("retrieveSoupEntries failed: " + param); }
+			function(param) { self.setAssertionFailed("retrieveSoupEntries failed: " + param); }
 		);
 	});
 };
@@ -282,12 +286,12 @@ SmartStoreTestSuite.prototype.testRemoveFromSoup = function()  {
 					function(cursor) {
 						var nEntries = cursor.currentPageOrderedEntries.length;
 						QUnit.equal(nEntries, 0, "currentPageOrderedEntries correct");
-						self.setTestSuccess();
+                        self.finalizeTest();
 					}, 
-					function(param) { self.setTestFailed("querySoup: " + param); }
+					function(param) { self.setAssertionFailed("querySoup: " + param); }
 				);
 			}, 
-			function(param) { self.setTestFailed("removeFromSoup: " + param); }
+			function(param) { self.setAssertionFailed("removeFromSoup: " + param); }
 		);
 	});
 };
@@ -309,9 +313,9 @@ SmartStoreTestSuite.prototype.testQuerySoup = function()  {
 				QUnit.equal(cursor.totalPages, 1, "totalPages correct");
 				var nEntries = cursor.currentPageOrderedEntries.length;
 				QUnit.equal(nEntries, 1, "currentPageOrderedEntries correct");
-				self.setTestSuccess();
+                self.finalizeTest();
 			}, 
-			function(param) { self.setTestFailed("querySoup: " + param); }
+			function(param) { self.setAssertionFailed("querySoup: " + param); }
 	    );
 	});
 };
@@ -340,7 +344,7 @@ SmartStoreTestSuite.prototype.testManipulateCursor = function()  {
 							
 				self.forwardCursorToEnd(cursor);
 			}, 
-			function(param) { self.setTestFailed("querySoup: " + param); }
+			function(param) { self.setAssertionFailed("querySoup: " + param); }
 		);
 	});
 };
@@ -376,10 +380,10 @@ SmartStoreTestSuite.prototype.forwardCursorToEnd = function(cursor) {
 				QUnit.equal(nextCursor.currentPageIndex, nextCursor.totalPages-1, "final pageIndex correct");
 				QUnit.equal(nEntries, expectedCurEntries, "last page nEntries matches");
 				
-				self.setTestSuccess();
+                self.finalizeTest();
 			}
 		}, 
-		function(param) { self.setTestFailed("moveCursorToNextPage: " + param); }
+		function(param) { self.setAssertionFailed("moveCursorToNextPage: " + param); }
 	);
 };
 
