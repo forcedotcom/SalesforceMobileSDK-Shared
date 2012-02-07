@@ -43,7 +43,7 @@ var SmartStoreTestSuite = function () {
 };
 
 // We are sub-classing SFTestSuite
-SmartStoreTestSuite.prototype = new SFTestSuite;
+SmartStoreTestSuite.prototype = new SFTestSuite();
 SmartStoreTestSuite.prototype.constructor = SmartStoreTestSuite;
 
 /*

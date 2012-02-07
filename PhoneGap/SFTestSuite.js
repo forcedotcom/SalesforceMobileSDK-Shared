@@ -84,6 +84,11 @@ if (typeof SFTestSuite === 'undefined') {
  * Constructor
  */
 var SFTestSuite = function (moduleName) {
+    // If module name is undefined, don't initialize the object.  Probably the inheritance
+    // prototype call.
+    if (typeof moduleName === 'undefined')
+        return;
+    
 	this.module = new SFTestModule(moduleName);
     SFTestModuleCollection.collection[moduleName] = this.module;
 	this.allTests = [];
