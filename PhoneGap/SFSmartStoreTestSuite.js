@@ -313,7 +313,11 @@ SmartStoreTestSuite.prototype.testQuerySoup = function()  {
 				QUnit.equal(cursor.totalPages, 1, "totalPages correct");
 				var nEntries = cursor.currentPageOrderedEntries.length;
 				QUnit.equal(nEntries, 1, "currentPageOrderedEntries correct");
-                self.finalizeTest();
+                
+                navigator.smartstore.closeCursor(cursor,
+                    function(param) { QUnit.ok(true,"closeCursor ok"); self.finalizeTest(); },
+                    function(param) { self.setAssertionFailed("closeCursor: " + param); }
+                    );
 			}, 
 			function(param) { self.setAssertionFailed("querySoup: " + param); }
 	    );
