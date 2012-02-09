@@ -96,7 +96,9 @@ SmartStoreTestSuite.prototype.soupExists = function(soupName, callback) {
 			SFHybridApp.logToConsole("soupExists succeeded");
 			if (callback !== null) callback(exists);
 		}, 
-		function(param) { self.setAssertionFailed("soupExists failed: " + param); }
+		function(param) { 
+			self.setAssertionFailed("soupExists failed: " + param); 
+		}
       );
 };
 
@@ -242,6 +244,38 @@ SmartStoreTestSuite.prototype.testRegisterBogusSoup = function()  {
 	);
 }
 
+
+/** 
+ * TEST registerSoup
+ */
+SmartStoreTestSuite.prototype.testRegisterSoupNoIndices = function()  {
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testRegisterSoupNoIndices");
+
+	var soupName = "soupForRegisterNoIndices";
+	var self = this;
+
+	// Start clean
+	self.removeSoup(soupName,
+		function() {
+			// Check soup does not exist
+			self.soupExists(soupName,
+				function(exists) {
+					QUnit.equals(exists, false, "soup should not already exist");
+					// Create soup
+					navigator.smartstore.registerSoup(soupName, [], 
+						function(soupName2) {
+							self.setAssertionFailed("registerSoup should fail with bogus indices " + soupName2);
+						},
+						function() {            
+							QUnit.ok(true,"registerSoup should fail with bogus indices");
+							self.finalizeTest();
+						}
+					);
+				}
+			);
+		}
+	);
+}
 
 /** 
  * TEST upsertSoupEntries
