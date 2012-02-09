@@ -191,23 +191,33 @@ SmartStoreTestSuite.prototype.testRegisterRemoveSoup = function()  {
 					QUnit.equals(exists, false, "soup should not already exist");
 					// Create soup
 					self.registerSoup(soupName, self.defaultSoupIndexes, 
-						function(soup) {
+						function(soupName2) {
+                            QUnit.equals(soupName2,soupName,"registered soup OK");
 							// Check soup now exists
 							self.soupExists(soupName,
 								function(exists) {
 									QUnit.equals(exists, true, "soup should now exist");
-									// Remove soup
-									self.removeSoup(soupName,  
-										function(soup) {
-											// Check soup no longer exists
-											self.soupExists(soupName,
-												function(exists) {
-													QUnit.equals(exists, false, "soup should no longer exist");
-                                                    self.finalizeTest();
-												});
-										});
+                                    // Attempt to register the same soup again
+                                    self.registerSoup(soupName, self.defaultSoupIndexes,
+                                        function(soupName3) {
+                                            QUnit.equals(soupName3,soupName,"re-registered existing soup OK");
+                                            // Remove soup
+                                            self.removeSoup(soupName,  
+                                                function() {
+                                                    // Check soup no longer exists
+                                                    self.soupExists(soupName,
+                                                        function(exists) {
+                                                            QUnit.equals(exists, false, "soup should no longer exist");
+                                                            self.finalizeTest();
+                                                        });
+                                                });
+                                        },
+                                        function(err) {QUnit.ok(false,"re-registering existing soup failed " + err);}
+                                        );
 								});
-						});
+						},
+                        function(err) {QUnit.ok(false,"self.registerSoup failed " + err);}
+                        );
 				});
 	});
 }; 
