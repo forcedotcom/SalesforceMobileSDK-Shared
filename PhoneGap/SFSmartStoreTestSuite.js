@@ -451,8 +451,9 @@ SmartStoreTestSuite.prototype.testQuerySoupBadQuerySpec = function()  {
 	self.stuffTestSoup(function(entries) {
 		QUnit.equal(entries.length, 3);
 		
-	    var querySpec = new SoupQuerySpec("Color", "Green");//nonexistent index
-	    querySpec.pageSize = 25;
+		//query on a nonexistent index
+		var querySpec =  {indexPath:"bottlesOfBeer", matchKey:99, order:"descending"};
+
 	    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
 			function(cursor) {
 				self.setAssertionFailed("querySoup with bogus querySpec should fail");
