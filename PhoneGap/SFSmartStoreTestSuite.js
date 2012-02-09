@@ -143,11 +143,12 @@ SmartStoreTestSuite.prototype.stuffTestSoup = function(callback) {
 	this.addEntriesToTestSoup(entries, callback);
 };
 
+
 /**
- * Helper method that adds n soup entries to default soup
- */
-SmartStoreTestSuite.prototype.addGeneratedEntriesToTestSoup = function(nEntries, callback) {
-	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.addGeneratedEntriesToTestSoup: nEntries=" + nEntries);
+* Helper method that addss entry to the named soup
+*/
+SmartStoreTestSuite.prototype.addGeneratedEntriesToSoup = function(soupName, nEntries, callback) {
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.addGeneratedEntriesToSoup: " + soupName + " nEntries=" + nEntries);
  
 	var entries = [];
 	for (var i = 0; i < nEntries; i++) {
@@ -155,8 +156,32 @@ SmartStoreTestSuite.prototype.addGeneratedEntriesToTestSoup = function(nEntries,
 		entries.push(myEntry);
 	}
 	
-	this.addEntriesToTestSoup(entries, callback);
-	
+	this.addEntriesToSoup(soupName, entries, callback);
+};
+
+/**
+ * Helper method that adds soup entries to the named soup
+ */
+SmartStoreTestSuite.prototype.addEntriesToSoup = function(soupName, entries, callback) {
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.addEntriesToSoup: " + soupName + " entries.length=" + entries.length);
+
+	var self = this;
+    navigator.smartstore.upsertSoupEntries(soupName, entries, 
+		function(upsertedEntries) {
+		    SFHybridApp.logToConsole("addEntriesToSoup of " + upsertedEntries.length + " entries succeeded");
+			callback(upsertedEntries);
+		}, 
+		function(param) { self.setAssertionFailed("upsertSoupEntries failed: " + param); }
+	);
+};
+
+
+/**
+ * Helper method that adds n soup entries to default soup
+ */
+SmartStoreTestSuite.prototype.addGeneratedEntriesToTestSoup = function(nEntries, callback) {
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.addGeneratedEntriesToTestSoup: nEntries=" + nEntries);
+	this.addGeneratedEntriesToSoup(this.defaultSoupName,nEntries,callback);	
 };
 
 /**
@@ -164,15 +189,7 @@ SmartStoreTestSuite.prototype.addGeneratedEntriesToTestSoup = function(nEntries,
  */
 SmartStoreTestSuite.prototype.addEntriesToTestSoup = function(entries, callback) {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.addEntriesToTestSoup: entries.length=" + entries.length);
-
-	var self = this;
-    navigator.smartstore.upsertSoupEntries(self.defaultSoupName, entries, 
-		function(upsertedEntries) {
-		    SFHybridApp.logToConsole("addEntriesToTestSoup of " + upsertedEntries.length + " entries succeeded");
-			callback(upsertedEntries);
-		}, 
-		function(param) { self.setAssertionFailed("upsertSoupEntries failed: " + param); }
-	);
+	this.addEntriesToSoup(this.defaultSoupName,entries,callback);	
 };
 
 /** 
@@ -242,7 +259,7 @@ SmartStoreTestSuite.prototype.testRegisterBogusSoup = function()  {
 			self.finalizeTest();
 		}
 	);
-}
+};
 
 
 /** 
@@ -309,6 +326,27 @@ SmartStoreTestSuite.prototype.testUpsertSoupEntries = function()  {
 	});
 }; 
 
+
+/** 
+ * TEST upsertSoupEntries
+ */
+SmartStoreTestSuite.prototype.testUpsertToNonexistentSoup = function()  {
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testUpsertToNonexistentSoup");
+
+	var self = this;
+	var entries = [{a:1},{a:2},{a:3}];
+	
+    navigator.smartstore.upsertSoupEntries("nonexistentSoup", entries, 
+		function(upsertedEntries) {
+			self.setAssertionFailed("upsertSoupEntries should fail with nonexistent soup ");
+		},
+		function() {            
+			QUnit.ok(true,"upsertSoupEntries should fail with nonexistent soup");
+			self.finalizeTest();
+		}
+	);
+};
+	
 /**
  * TEST retrieveSoupEntries
  */
