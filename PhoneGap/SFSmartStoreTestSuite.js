@@ -412,9 +412,9 @@ SmartStoreTestSuite.prototype.testRemoveFromSoup = function()  {
 	});
 };
 
-/* 
-TEST querySoup
-*/
+/**
+ * TEST querySoup
+ */
 SmartStoreTestSuite.prototype.testQuerySoup = function()  {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testQuerySoup");	
 	
@@ -441,6 +441,29 @@ SmartStoreTestSuite.prototype.testQuerySoup = function()  {
 };
 
 
+/**
+ * TEST querySoup
+ */
+SmartStoreTestSuite.prototype.testQuerySoupBadQuerySpec = function()  {
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testQuerySoupBadQuerySpec");	
+	
+	var self = this;
+	self.stuffTestSoup(function(entries) {
+		QUnit.equal(entries.length, 3);
+		
+	    var querySpec = new SoupQuerySpec("Color", "Green");//nonexistent index
+	    querySpec.pageSize = 25;
+	    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
+			function(cursor) {
+				self.setAssertionFailed("querySoup with bogus querySpec should fail");
+			}, 
+			function(param) { 
+				QUnit.ok(true,"querySoup with bogus querySpec should fail");
+				self.finalizeTest();                
+			}
+	    );
+	});
+};
 
 /**
  * TEST testManipulateCursor
@@ -499,7 +522,6 @@ SmartStoreTestSuite.prototype.forwardCursorToEnd = function(cursor) {
 				
 				QUnit.equal(nextCursor.currentPageIndex, nextCursor.totalPages-1, "final pageIndex correct");
 				QUnit.equal(nEntries, expectedCurEntries, "last page nEntries matches");
-				
                 self.finalizeTest();
 			}
 		}, 
