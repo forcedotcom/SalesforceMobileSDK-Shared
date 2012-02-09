@@ -230,13 +230,27 @@ SmartStoreTestSuite.prototype.testUpsertSoupEntries = function()  {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testUpsertSoupEntries");
 
 	var self = this;
-	self.addGeneratedEntriesToTestSoup(7, function(entries) {
-		QUnit.equal(entries.length, 7);
+	self.addGeneratedEntriesToTestSoup(7, function(entries1) {
+		QUnit.equal(entries1.length, 7);
 		
 		//upsert another batch
-		self.addGeneratedEntriesToTestSoup(12, function(entries) {
-			QUnit.equal(entries.length, 12);
-            self.finalizeTest();
+		self.addGeneratedEntriesToTestSoup(12, function(entries2) {
+			QUnit.equal(entries2.length, 12);
+            //modify the initial entries
+            for (var i = 0; i < entries2.length; i++) {
+                var e = entries2[i];
+                e.updatedField = "Mister Toast " + i;
+            }
+            
+            //update the entries
+            self.addEntriesToTestSoup(entries2,
+                function(entries3) {
+                    QUnit.equal(entries3.length,entries2.length,"updated list match initial list len");
+                    QUnit.equal(entries3[0].updatedField,"Mister Toast 0","updatedField is correct");
+                    self.finalizeTest();
+                },
+                function(err) { QUnit.ok(false,"updating entries failed: " + err); }
+                );            
 		});
 	});
 }; 
