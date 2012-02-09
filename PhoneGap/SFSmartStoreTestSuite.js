@@ -174,7 +174,7 @@ SmartStoreTestSuite.prototype.addEntriesToTestSoup = function(entries, callback)
 };
 
 /** 
- * TEST registerSoup / hasSoup/ removeSoup 
+ * TEST registerSoup / soupExists / removeSoup 
  */
 SmartStoreTestSuite.prototype.testRegisterRemoveSoup = function()  {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testRegisterRemoveSoup");
@@ -221,6 +221,26 @@ SmartStoreTestSuite.prototype.testRegisterRemoveSoup = function()  {
 				});
 	});
 }; 
+
+
+/** 
+ * TEST registerSoup
+ */
+SmartStoreTestSuite.prototype.testRegisterBogusSoup = function()  {
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testRegisterBogusSoup");
+	var soupName = null;//intentional bogus soupName
+	var self = this;
+
+	navigator.smartstore.registerSoup(soupName, self.defaultSoupIndexes, 
+		function(soupName2) {
+			self.setAssertionFailed("registerSoup should fail with bogus soupName " + soupName2);
+		},
+		function() {            
+			QUnit.ok(true,"registerSoup should fail with bogus soupName");
+			self.finalizeTest();
+		}
+	);
+}
 
 
 /** 
