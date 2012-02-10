@@ -466,6 +466,77 @@ SmartStoreTestSuite.prototype.testQuerySoupBadQuerySpec = function()  {
 	});
 };
 
+
+/**
+ * TEST querySoup  with an endKey and no beginKey
+ */
+SmartStoreTestSuite.prototype.testQuerySoupEndKeyNoBeginKey = function()  {
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testQuerySoupEndKeyNoBeginKey");	
+	
+	var self = this;
+	
+	// Start clean
+	self.removeSoup(self.defaultSoupName,		
+		function() {
+			self.registerSoup(self.defaultSoupName, self.defaultSoupIndexes, 
+				function(soupName) {
+					self.stuffTestSoup(function(entries) {
+						QUnit.equal(entries.length, 3);
+						//keep in sync with stuffTestSoup
+						var querySpec =  {indexPath:"Name", endKey:"Robot", order:"ascending"};
+
+					    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
+							function(cursor) {
+								var nEntries = cursor.currentPageOrderedEntries.length;
+								QUnit.equal(nEntries, 2, "nEntries matches endKey");
+								QUnit.equal(cursor.currentPageOrderedEntries[1].Name,"Robot","verify last entry");
+								self.finalizeTest();                
+							}, 
+							function(param) { 
+								self.setAssertionFailed("querySoup failed");              
+							}
+					    );
+					});
+				});
+			}
+		);
+};
+
+/**
+ * TEST querySoup  with beginKey and no endKey
+ */
+SmartStoreTestSuite.prototype.testQuerySoupBeginKeyNoEndKey = function()  {
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testQuerySoupBeginKeyNoEndKey");	
+	
+	var self = this;
+	
+	// Start clean
+	self.removeSoup(self.defaultSoupName,		
+		function() {
+			self.registerSoup(self.defaultSoupName, self.defaultSoupIndexes, 
+				function(soupName) {
+					self.stuffTestSoup(function(entries) {
+						QUnit.equal(entries.length, 3);
+						//keep in sync with stuffTestSoup
+						var querySpec =  {indexPath:"Name", beginKey:"Robot", order:"ascending"};
+
+					    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
+							function(cursor) {
+								var nEntries = cursor.currentPageOrderedEntries.length;
+								QUnit.equal(nEntries, 2, "nEntries matches beginKey");
+								QUnit.equal(cursor.currentPageOrderedEntries[0].Name,"Robot","verify first entry");
+								self.finalizeTest();                
+							}, 
+							function(param) { 
+								self.setAssertionFailed("querySoup failed");              
+							}
+					    );
+					});
+				});
+			}
+		);
+};
+
 /**
  * TEST testManipulateCursor
  */
