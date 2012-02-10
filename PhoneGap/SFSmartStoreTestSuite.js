@@ -102,6 +102,32 @@ SmartStoreTestSuite.prototype.soupExists = function(soupName, callback) {
       );
 };
 
+/**
+ * Helper method that removes and recreates a soup, ensuring a known good state
+ */
+SmartStoreTestSuite.prototype.removeAndRecreateSoup = function(soupName, soupIndexes, callback) {
+	var self = this;
+	// Start clean
+	self.removeSoup(soupName,
+		function() {
+			// Check soup does not exist
+			self.soupExists(soupName,
+				function(exists) {
+					QUnit.equals(exists, false, "soup should not already exist");
+					// Create soup
+					self.registerSoup(soupName, soupIndexes, 
+					function(soupName2) {
+						QUnit.equals(soupName2,soupName,"registered soup OK");
+                        // Check soup now exists
+						self.soupExists(soupName,	
+							function(exists2) {
+								QUnit.equals(exists2, true, "soup should now exist");
+								if (callback !== null) callback(soupName);
+							});
+					});
+				});
+		});
+}
 
 /**
  * Helper method that drops default soup
@@ -476,30 +502,26 @@ SmartStoreTestSuite.prototype.testQuerySoupEndKeyNoBeginKey = function()  {
 	var self = this;
 	
 	// Start clean
-	self.removeSoup(self.defaultSoupName,		
-		function() {
-			self.registerSoup(self.defaultSoupName, self.defaultSoupIndexes, 
-				function(soupName) {
-					self.stuffTestSoup(function(entries) {
-						QUnit.equal(entries.length, 3);
-						//keep in sync with stuffTestSoup
-						var querySpec =  {indexPath:"Name", endKey:"Robot", order:"ascending"};
+	self.removeAndRecreateSoup(self.defaultSoupName, self.defaultSoupIndexes,
+		function(soupName2) {
+			self.stuffTestSoup(function(entries) {
+				QUnit.equal(entries.length, 3);
+				//keep in sync with stuffTestSoup
+				var querySpec =  {indexPath:"Name", endKey:"Robot", order:"ascending"};
 
-					    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
-							function(cursor) {
-								var nEntries = cursor.currentPageOrderedEntries.length;
-								QUnit.equal(nEntries, 2, "nEntries matches endKey");
-								QUnit.equal(cursor.currentPageOrderedEntries[1].Name,"Robot","verify last entry");
-								self.finalizeTest();                
-							}, 
-							function(param) { 
-								self.setAssertionFailed("querySoup failed");              
-							}
-					    );
-					});
-				});
-			}
-		);
+			    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
+					function(cursor) {
+						var nEntries = cursor.currentPageOrderedEntries.length;
+						QUnit.equal(nEntries, 2, "nEntries matches endKey");
+						QUnit.equal(cursor.currentPageOrderedEntries[1].Name,"Robot","verify last entry");
+						self.finalizeTest();                
+					}, 
+					function(param) { 
+						self.setAssertionFailed("querySoup failed");              
+					}
+			    );
+			});
+		});
 };
 
 /**
@@ -507,34 +529,30 @@ SmartStoreTestSuite.prototype.testQuerySoupEndKeyNoBeginKey = function()  {
  */
 SmartStoreTestSuite.prototype.testQuerySoupBeginKeyNoEndKey = function()  {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testQuerySoupBeginKeyNoEndKey");	
-	
 	var self = this;
 	
 	// Start clean
-	self.removeSoup(self.defaultSoupName,		
-		function() {
-			self.registerSoup(self.defaultSoupName, self.defaultSoupIndexes, 
-				function(soupName) {
-					self.stuffTestSoup(function(entries) {
-						QUnit.equal(entries.length, 3);
-						//keep in sync with stuffTestSoup
-						var querySpec =  {indexPath:"Name", beginKey:"Robot", order:"ascending"};
+	self.removeAndRecreateSoup(self.defaultSoupName, self.defaultSoupIndexes,
+		function(soupName) {
+			self.stuffTestSoup(function(entries) {
+				QUnit.equal(entries.length, 3);
+				//keep in sync with stuffTestSoup
+				var querySpec =  {indexPath:"Name", beginKey:"Robot", order:"ascending"};
 
-					    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
-							function(cursor) {
-								var nEntries = cursor.currentPageOrderedEntries.length;
-								QUnit.equal(nEntries, 2, "nEntries matches beginKey");
-								QUnit.equal(cursor.currentPageOrderedEntries[0].Name,"Robot","verify first entry");
-								self.finalizeTest();                
-							}, 
-							function(param) { 
-								self.setAssertionFailed("querySoup failed");              
-							}
-					    );
-					});
-				});
-			}
-		);
+			    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
+					function(cursor) {
+						var nEntries = cursor.currentPageOrderedEntries.length;
+						QUnit.equal(nEntries, 2, "nEntries matches beginKey");
+						QUnit.equal(cursor.currentPageOrderedEntries[0].Name,"Robot","verify first entry");
+						self.finalizeTest();                
+					}, 
+					function(param) { 
+						self.setAssertionFailed("querySoup failed");              
+					}
+			    );
+			});
+		});
+
 };
 
 /**
@@ -599,6 +617,23 @@ SmartStoreTestSuite.prototype.forwardCursorToEnd = function(cursor) {
 		}, 
 		function(param) { self.setAssertionFailed("moveCursorToNextPage: " + param); }
 	);
+};
+
+
+/**
+ * TEST unusual soup names
+ */
+SmartStoreTestSuite.prototype.testArbitrarySoupNames = function() {
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testArbitrarySoupNames");	
+	
+	var soupName = "123This should-be a_valid.soup+name!?100";
+	var self = this;
+	
+	//simply register and verify that the soup exists
+	self.removeAndRecreateSoup(soupName,self.defaultSoupIndexes,
+		function(soupName2) {
+			self.finalizeTest();
+		});
 };
 
 }
