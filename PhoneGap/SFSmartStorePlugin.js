@@ -60,7 +60,7 @@ var SoupIndexSpec = function (path, type) {
 /**
  * QuerySpec
  */
-var SoupQuerySpec = function (path, matchKey) {
+var SoupQuerySpec = function (path) {
 	
 	//the kind of query, one of: "exact","range", or "like":
 	//"exact" uses matchKey, "range" uses beginKey and endKey, "like" uses likeKey
@@ -70,7 +70,7 @@ var SoupQuerySpec = function (path, matchKey) {
     this.indexPath = path;
 
 	//for queryType "exact"
-    this.matchKey = matchKey;
+    this.matchKey = null;
 	//for queryType "like"
 	this.likeKey = null;
     
@@ -135,10 +135,9 @@ SmartStore.prototype.buildAllQuerySpec = function(path, order, pageSize) {
 /**
  * Returns a cursor that will page all entries exactly matching the matchKey value for path
  */
-SmartStore.prototype.buildExactQuerySpec = function(path, matchKey, order, pageSize) {
-	var inst = new SoupQuerySpec(path,matchKey);
+SmartStore.prototype.buildExactQuerySpec = function(path, matchKey, pageSize) {
+	var inst = new SoupQuerySpec(path);
 	inst.matchKey = matchKey;
-	inst.order = order;
 	inst.pageSize = pageSize;
 	return inst;
 };

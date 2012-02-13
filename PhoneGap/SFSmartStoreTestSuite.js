@@ -477,8 +477,8 @@ SmartStoreTestSuite.prototype.testQuerySoupBadQuerySpec = function()  {
 		QUnit.equal(entries.length, 3);
 		
 		//query on a nonexistent index
-		var querySpec =  {indexPath:"bottlesOfBeer", matchKey:99, order:"descending"};
-
+		var querySpec = navigator.smartstore.buildRangeQuerySpec("bottlesOfBeer",99,null,"descending");				
+		
 	    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
 			function(cursor) {
 				self.setAssertionFailed("querySoup with bogus querySpec should fail");
@@ -644,29 +644,28 @@ SmartStoreTestSuite.prototype.testQuerySpecFactories = function() {
 	var self = this;
 	
 	var path = "Name";
-	var key = "Qbert";
+	var beginKey = "Qbert";
 	var endKey = "Zzzzbert";
 	var order = "descending";
 	var pageSize = 17;
-	var query =  navigator.smartstore.buildExactQuerySpec(path,key,order,pageSize);
+	var query =  navigator.smartstore.buildExactQuerySpec(path,beginKey,pageSize);
 	QUnit.equal(query.queryType,"exact","check queryType");
 	QUnit.equal(query.indexPath,path,"check indexPath");
-	QUnit.equal(query.matchKey,key,"check matchKey");
-	QUnit.equal(query.order,order,"check order");
+	QUnit.equal(query.matchKey,beginKey,"check matchKey");
 	QUnit.equal(query.pageSize,pageSize,"check pageSize");
 	
-	query =  navigator.smartstore.buildRangeQuerySpec(path,key,endKey,order,pageSize);
+	query =  navigator.smartstore.buildRangeQuerySpec(path,beginKey,endKey,order,pageSize);
 	QUnit.equal(query.queryType,"range","check queryType");
 	QUnit.equal(query.indexPath,path,"check indexPath");
-	QUnit.equal(query.beginKey,key,"check beginKey");
+	QUnit.equal(query.beginKey,beginKey,"check beginKey");
 	QUnit.equal(query.endKey,endKey,"check endKey");
 	QUnit.equal(query.order,order,"check order");
 	QUnit.equal(query.pageSize,pageSize,"check pageSize");
 	
-	query =  navigator.smartstore.buildLikeQuerySpec(path,key,order,pageSize);
+	query =  navigator.smartstore.buildLikeQuerySpec(path,beginKey,order,pageSize);
 	QUnit.equal(query.queryType,"like","check queryType");
 	QUnit.equal(query.indexPath,path,"check indexPath");
-	QUnit.equal(query.likeKey,key,"check likeKey");
+	QUnit.equal(query.likeKey,beginKey,"check likeKey");
 	QUnit.equal(query.order,order,"check order");
 	QUnit.equal(query.pageSize,pageSize,"check pageSize");
 	
