@@ -61,11 +61,20 @@ var SoupIndexSpec = function (path, type) {
  * QuerySpec
  */
 var SoupQuerySpec = function (path, matchKey) {
+	
+	//the kind of query, one of: "exact","range", or "like":
+	//"exact" uses matchKey, "range" uses beginKey and endKey, "like" uses likeKey
+	this.queryType = "exact";
+	
     //path for the original IndexSpec you wish to use for search: may be a compound path eg Account.Owner.Name
     this.indexPath = path;
-    //exact match key 
+
+	//for queryType "exact"
     this.matchKey = matchKey;
+	//for queryType "like"
+	this.likeKey = null;
     
+	//for queryType "range"
     //the value at which query results may begin
     this.beginKey = null;
     //the value at which query results may end
@@ -77,6 +86,9 @@ var SoupQuerySpec = function (path, matchKey) {
     //the number of entries to copy from native to javascript per each cursor page
     this.pageSize = 10;
 };
+
+
+
 
 /**
  * Cursor
@@ -106,6 +118,36 @@ var SmartStore = function () {
     SFHybridApp.logToConsole("new SmartStore");
 };
  
+
+// ====== querySpec factory methods
+
+SmartStore.prototype.buildExactQuerySpec = function(path, matchKey, order, pageSize) {
+	var inst = new SoupQuerySpec(path,matchKey);
+	inst.matchKey = matchKey;
+	inst.order = order;
+	inst.pageSize = pageSize;
+	return inst;
+};
+
+SmartStore.prototype.buildRangeQuerySpec = function(path, beginKey, endKey, order, pageSize) {
+	var inst = new SoupQuerySpec(path);
+	inst.queryType = "range";
+	inst.beginKey = beginKey;
+	inst.endKey = endKey;
+	inst.order = order;
+	inst.pageSize = pageSize;
+	return inst;
+};
+
+SmartStore.prototype.buildLikeQuerySpec = function(path, likeKey, order, pageSize) {
+	var inst = new SoupQuerySpec(path);
+	inst.queryType = "like";
+	inst.likeKey = likeKey;
+	inst.order = order;
+	inst.pageSize = pageSize;
+	return inst;
+};
+
 // ====== Soup manipulation ======
 
 SmartStore.prototype.registerSoup = function (soupName, indexSpecs, successCB, errorCB) {

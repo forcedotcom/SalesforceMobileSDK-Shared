@@ -171,7 +171,7 @@ SmartStoreTestSuite.prototype.stuffTestSoup = function(callback) {
 
 
 /**
-* Helper method that addss entry to the named soup
+* Helper method that adds entry to the named soup
 */
 SmartStoreTestSuite.prototype.addGeneratedEntriesToSoup = function(soupName, nEntries, callback) {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.addGeneratedEntriesToSoup: " + soupName + " nEntries=" + nEntries);
@@ -635,6 +635,48 @@ SmartStoreTestSuite.prototype.testArbitrarySoupNames = function() {
 			self.finalizeTest();
 		});
 };
+
+
+/**
+ * TEST querySpec factory functions
+ */
+SmartStoreTestSuite.prototype.testQuerySpecFactories = function() {
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testQuerySpecFactories");
+	var self = this;
+	
+	var path = "Name";
+	var key = "Qbert";
+	var endKey = "Zzzzbert";
+	var order = "descending";
+	var pageSize = 17;
+	var query =  navigator.smartstore.buildExactQuerySpec(path,key,order,pageSize);
+	SFHybridApp.logToConsole("exact query: " + query);
+	QUnit.equal(query.queryType,"exact","check queryType");
+	QUnit.equal(query.indexPath,path,"check indexPath");
+	QUnit.equal(query.matchKey,key,"check matchKey");
+	QUnit.equal(query.order,order,"check order");
+	QUnit.equal(query.pageSize,pageSize,"check pageSize");
+	
+	query =  navigator.smartstore.buildRangeQuerySpec(path,key,endKey,order,pageSize);
+	SFHybridApp.logToConsole("range query: " + query);
+	QUnit.equal(query.queryType,"range","check queryType");
+	QUnit.equal(query.indexPath,path,"check indexPath");
+	QUnit.equal(query.beginKey,key,"check beginKey");
+	QUnit.equal(query.endKey,endKey,"check endKey");
+	QUnit.equal(query.order,order,"check order");
+	QUnit.equal(query.pageSize,pageSize,"check pageSize");
+	
+	query =  navigator.smartstore.buildLikeQuerySpec(path,key,order,pageSize);
+	SFHybridApp.logToConsole("like query: " + query);
+	QUnit.equal(query.queryType,"like","check queryType");
+	QUnit.equal(query.indexPath,path,"check indexPath");
+	QUnit.equal(query.likeKey,key,"check likeKey");
+	QUnit.equal(query.order,order,"check order");
+	QUnit.equal(query.pageSize,pageSize,"check pageSize");
+	
+	self.finalizeTest();
+};
+
 
 }
 
