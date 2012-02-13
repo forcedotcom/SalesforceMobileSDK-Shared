@@ -121,6 +121,20 @@ var SmartStore = function () {
 
 // ====== querySpec factory methods
 
+
+/**
+ * Returns a cursor that will page through all soup entries in order by the given path value
+ */
+SmartStore.prototype.buildAllQuerySpec = function(path, order, pageSize) {
+	var inst = new SoupQuerySpec(path);
+	inst.order = order;
+	inst.pageSize = pageSize;
+	return inst;
+};
+
+/**
+ * Returns a cursor that will page all entries exactly matching the matchKey value for path
+ */
 SmartStore.prototype.buildExactQuerySpec = function(path, matchKey, order, pageSize) {
 	var inst = new SoupQuerySpec(path,matchKey);
 	inst.matchKey = matchKey;
@@ -129,6 +143,9 @@ SmartStore.prototype.buildExactQuerySpec = function(path, matchKey, order, pageS
 	return inst;
 };
 
+/**
+ * Returns a cursor that will page all entries in the range beginKey ...endKey for path
+ */
 SmartStore.prototype.buildRangeQuerySpec = function(path, beginKey, endKey, order, pageSize) {
 	var inst = new SoupQuerySpec(path);
 	inst.queryType = "range";
@@ -139,6 +156,9 @@ SmartStore.prototype.buildRangeQuerySpec = function(path, beginKey, endKey, orde
 	return inst;
 };
 
+/**
+ * Returns a cursor that will page all entries matching the given likeKey value for path
+ */
 SmartStore.prototype.buildLikeQuerySpec = function(path, likeKey, order, pageSize) {
 	var inst = new SoupQuerySpec(path);
 	inst.queryType = "like";
@@ -147,6 +167,8 @@ SmartStore.prototype.buildLikeQuerySpec = function(path, likeKey, order, pageSiz
 	inst.pageSize = pageSize;
 	return inst;
 };
+
+
 
 // ====== Soup manipulation ======
 
