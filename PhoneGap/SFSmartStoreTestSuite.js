@@ -381,7 +381,7 @@ SmartStoreTestSuite.prototype.testRetrieveSoupEntries = function()  {
 	
 	var self = this; 
 	self.stuffTestSoup(function(entries) {
-		QUnit.equal(entries.length, 3);
+		QUnit.equal(entries.length, 3,"check stuffTestSoup result");
 		var soupEntry0Id = entries[0]._soupEntryId;
 		var soupEntry2Id = entries[2]._soupEntryId;
 		
@@ -680,11 +680,59 @@ SmartStoreTestSuite.prototype.testQuerySpecFactories = function() {
 	self.finalizeTest();
 };
 
-// SmartStoreTestSuite.prototype.testLikeQuerySpec  = function() {
-// 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testLikeQuerySpec");
-// 	var self = this;
-// 	//TODO
-// };
+SmartStoreTestSuite.prototype.testLikeQuerySpecStartsWith  = function() {
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testLikeQuerySpecStartsWith");
+	var self = this;
+	
+	self.stuffTestSoup(function(entries) {
+		QUnit.equal(entries.length, 3,"check stuffTestSoup result");
+		var querySpec = navigator.smartstore.buildLikeQuerySpec("Name","Todd%");
+		navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
+			function(cursor) {
+				var nEntries = cursor.currentPageOrderedEntries.length;
+				QUnit.equal(nEntries, 1, "currentPageOrderedEntries correct");
+                self.finalizeTest();
+			}, 
+			function(param) { self.setAssertionFailed("querySoup: " + param); }
+		);
+	});
+};
+
+SmartStoreTestSuite.prototype.testLikeQuerySpecEndsWith  = function() {
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testLikeQuerySpecEndsWith");
+	var self = this;
+	
+	self.stuffTestSoup(function(entries) {
+		QUnit.equal(entries.length, 3,"check stuffTestSoup result");
+		var querySpec = navigator.smartstore.buildLikeQuerySpec("Name","%Stellanova");
+		navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
+			function(cursor) {
+				var nEntries = cursor.currentPageOrderedEntries.length;
+				QUnit.equal(nEntries, 1, "currentPageOrderedEntries correct");
+                self.finalizeTest();
+			}, 
+			function(param) { self.setAssertionFailed("querySoup: " + param); }
+		);
+	});
+};
+
+SmartStoreTestSuite.prototype.testLikeQueryInnerText  = function() {
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testLikeQueryInnerText");
+	var self = this;
+	
+	self.stuffTestSoup(function(entries) {
+		QUnit.equal(entries.length, 3,"check stuffTestSoup result");
+		var querySpec = navigator.smartstore.buildLikeQuerySpec("Name","%ono%");
+		navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
+			function(cursor) {
+				var nEntries = cursor.currentPageOrderedEntries.length;
+				QUnit.equal(nEntries, 1, "currentPageOrderedEntries correct");
+                self.finalizeTest();
+			}, 
+			function(param) { self.setAssertionFailed("querySoup: " + param); }
+		);
+	});
+};
 
 }
 
