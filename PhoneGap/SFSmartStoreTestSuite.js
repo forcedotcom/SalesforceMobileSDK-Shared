@@ -423,7 +423,7 @@ SmartStoreTestSuite.prototype.testRemoveFromSoup = function()  {
 			function(status) {
 				QUnit.equal(status, "OK", "removeFromSoup OK");
 				
-				var querySpec = new SoupQuerySpec("Name", null);
+				var querySpec = navigator.smartstore.buildExactQuerySpec("Name",null);
 				navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
 					function(cursor) {
 						var nEntries = cursor.currentPageOrderedEntries.length;
@@ -448,8 +448,7 @@ SmartStoreTestSuite.prototype.testQuerySoup = function()  {
 	self.stuffTestSoup(function(entries) {
 		QUnit.equal(entries.length, 3);
 		
-	    var querySpec = new SoupQuerySpec("Name", "Robot");
-	    querySpec.pageSize = 25;
+		var querySpec = navigator.smartstore.buildExactQuerySpec("Name","Robot");
 	    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
 			function(cursor) {
 				QUnit.equal(cursor.totalPages, 1, "totalPages correct");
@@ -507,7 +506,7 @@ SmartStoreTestSuite.prototype.testQuerySoupEndKeyNoBeginKey = function()  {
 			self.stuffTestSoup(function(entries) {
 				QUnit.equal(entries.length, 3);
 				//keep in sync with stuffTestSoup
-				var querySpec =  {indexPath:"Name", endKey:"Robot", order:"ascending"};
+				var querySpec = navigator.smartstore.buildRangeQuerySpec("Name",null,"Robot");				
 
 			    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
 					function(cursor) {
@@ -537,7 +536,7 @@ SmartStoreTestSuite.prototype.testQuerySoupBeginKeyNoEndKey = function()  {
 			self.stuffTestSoup(function(entries) {
 				QUnit.equal(entries.length, 3);
 				//keep in sync with stuffTestSoup
-				var querySpec =  {indexPath:"Name", beginKey:"Robot", order:"ascending"};
+				var querySpec = navigator.smartstore.buildRangeQuerySpec("Name","Robot",null);				
 
 			    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
 					function(cursor) {
@@ -565,7 +564,7 @@ SmartStoreTestSuite.prototype.testManipulateCursor = function()  {
 	this.addGeneratedEntriesToTestSoup(self.NUM_CURSOR_MANIPULATION_ENTRIES, function(entries) {
 
 		QUnit.equal(entries.length, self.NUM_CURSOR_MANIPULATION_ENTRIES);
-	    var querySpec = new SoupQuerySpec("Name", null);
+		var querySpec = navigator.smartstore.buildExactQuerySpec("Name",null);
 	
 	    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
 			function(cursor) {
@@ -677,6 +676,11 @@ SmartStoreTestSuite.prototype.testQuerySpecFactories = function() {
 	self.finalizeTest();
 };
 
+// SmartStoreTestSuite.prototype.testLikeQuerySpec  = function() {
+// 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testLikeQuerySpec");
+// 	var self = this;
+// 	//TODO
+// };
 
 }
 
