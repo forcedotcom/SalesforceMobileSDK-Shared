@@ -127,8 +127,8 @@ var SmartStore = function () {
  */
 SmartStore.prototype.buildAllQuerySpec = function(path, order, pageSize) {
 	var inst = new SoupQuerySpec(path);
-	inst.order = order;
-	inst.pageSize = pageSize;
+	if (order) { inst.order = order; } // override default only if a value was specified
+	if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
 	return inst;
 };
 
@@ -138,7 +138,7 @@ SmartStore.prototype.buildAllQuerySpec = function(path, order, pageSize) {
 SmartStore.prototype.buildExactQuerySpec = function(path, matchKey, pageSize) {
 	var inst = new SoupQuerySpec(path);
 	inst.matchKey = matchKey;
-	inst.pageSize = pageSize;
+	if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
 	return inst;
 };
 
@@ -150,8 +150,8 @@ SmartStore.prototype.buildRangeQuerySpec = function(path, beginKey, endKey, orde
 	inst.queryType = "range";
 	inst.beginKey = beginKey;
 	inst.endKey = endKey;
-	inst.order = order;
-	inst.pageSize = pageSize;
+	if (order) { inst.order = order; } // override default only if a value was specified
+	if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
 	return inst;
 };
 
@@ -162,8 +162,8 @@ SmartStore.prototype.buildLikeQuerySpec = function(path, likeKey, order, pageSiz
 	var inst = new SoupQuerySpec(path);
 	inst.queryType = "like";
 	inst.likeKey = likeKey;
-	inst.order = order;
-	inst.pageSize = pageSize;
+	if (order) { inst.order = order; } // override default only if a value was specified
+	if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
 	return inst;
 };
 
