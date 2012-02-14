@@ -475,7 +475,7 @@ SmartStoreTestSuite.prototype.testQuerySoupDescending = function()  {
 	self.stuffTestSoup(function(entries) {
 		QUnit.equal(entries.length, 3);
 		
-		var querySpec = navigator.smartstore.buildRangeQuerySpec("Name", null, null, "descending");		
+		var querySpec = navigator.smartstore.buildAllQuerySpec("Name", "descending");		
 	    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
 			function(cursor) {
 				QUnit.equal(cursor.totalPages, 1, "totalPages correct");
@@ -687,9 +687,10 @@ SmartStoreTestSuite.prototype.testQuerySpecFactories = function() {
 	QUnit.equal(query.pageSize,pageSize,"check pageSize");
 	
 	var query =  navigator.smartstore.buildAllQuerySpec(path,order,pageSize);
-	QUnit.equal(query.queryType,"all","check queryType");
+	QUnit.equal(query.queryType,"range","check queryType");
 	QUnit.equal(query.indexPath,path,"check indexPath");
-	QUnit.equal(query.matchKey,null,"check matchKey");
+	QUnit.equal(query.beginKey,null,"check beginKey");
+	QUnit.equal(query.endKey,null,"check endKey");
 	QUnit.equal(query.order,order,"check order");
 	QUnit.equal(query.pageSize,pageSize,"check pageSize");
 	
