@@ -582,8 +582,8 @@ SmartStoreTestSuite.prototype.testManipulateCursor = function()  {
 	this.addGeneratedEntriesToTestSoup(self.NUM_CURSOR_MANIPULATION_ENTRIES, 
 		function(entries) {
 			QUnit.equal(entries.length, self.NUM_CURSOR_MANIPULATION_ENTRIES);
-			var querySpec = navigator.smartstore.buildAllQuerySpec();
-	
+			var querySpec = navigator.smartstore.buildAllQuerySpec(null,null,10);
+			
 		    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
 				function(cursor) {
 					QUnit.equal(cursor.currentPageIndex, 0, "currentPageIndex correct");
@@ -686,11 +686,11 @@ SmartStoreTestSuite.prototype.testQuerySpecFactories = function() {
 	QUnit.equal(query.order,order,"check order");
 	QUnit.equal(query.pageSize,pageSize,"check pageSize");
 	
-	var query =  navigator.smartstore.buildAllQuerySpec(pageSize);
+	var query =  navigator.smartstore.buildAllQuerySpec(path,order,pageSize);
 	QUnit.equal(query.queryType,"exact","check queryType");
-	QUnit.equal(query.indexPath,null,"check indexPath");
+	QUnit.equal(query.indexPath,path,"check indexPath");
 	QUnit.equal(query.matchKey,null,"check matchKey");
-	QUnit.equal(query.order,null,"check order");
+	QUnit.equal(query.order,order,"check order");
 	QUnit.equal(query.pageSize,pageSize,"check pageSize");
 	
 	self.finalizeTest();
