@@ -422,7 +422,7 @@ SmartStoreTestSuite.prototype.testRemoveFromSoup = function()  {
 			function(status) {
 				QUnit.equal(status, "OK", "removeFromSoup OK");
 				
-				var querySpec = navigator.smartstore.buildAllQuerySpec();
+				var querySpec = navigator.smartstore.buildAllQuerySpec("Name");
 				navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
 					function(cursor) {
 						var nEntries = cursor.currentPageOrderedEntries.length;
@@ -475,7 +475,7 @@ SmartStoreTestSuite.prototype.testQuerySoupDescending = function()  {
 	self.stuffTestSoup(function(entries) {
 		QUnit.equal(entries.length, 3);
 		
-		var querySpec = navigator.smartstore.buildRangeQuerySpec("Name", null, null, "descending");		
+		var querySpec = navigator.smartstore.buildAllQuerySpec("Name", "descending");		
 	    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
 			function(cursor) {
 				QUnit.equal(cursor.totalPages, 1, "totalPages correct");
@@ -582,7 +582,7 @@ SmartStoreTestSuite.prototype.testManipulateCursor = function()  {
 	this.addGeneratedEntriesToTestSoup(self.NUM_CURSOR_MANIPULATION_ENTRIES, 
 		function(entries) {
 			QUnit.equal(entries.length, self.NUM_CURSOR_MANIPULATION_ENTRIES);
-			var querySpec = navigator.smartstore.buildAllQuerySpec(null,null,10);
+			var querySpec = navigator.smartstore.buildAllQuerySpec("Name",null,10);
 			
 		    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
 				function(cursor) {
@@ -687,9 +687,10 @@ SmartStoreTestSuite.prototype.testQuerySpecFactories = function() {
 	QUnit.equal(query.pageSize,pageSize,"check pageSize");
 	
 	var query =  navigator.smartstore.buildAllQuerySpec(path,order,pageSize);
-	QUnit.equal(query.queryType,"exact","check queryType");
+	QUnit.equal(query.queryType,"range","check queryType");
 	QUnit.equal(query.indexPath,path,"check indexPath");
-	QUnit.equal(query.matchKey,null,"check matchKey");
+	QUnit.equal(query.beginKey,null,"check beginKey");
+	QUnit.equal(query.endKey,null,"check endKey");
 	QUnit.equal(query.order,order,"check order");
 	QUnit.equal(query.pageSize,pageSize,"check pageSize");
 	
@@ -789,15 +790,8 @@ SmartStoreTestSuite.prototype.testEmptyQuerySpec  = function() {
 	var querySpec = new SoupQuerySpec(null);
 	querySpec.queryType = null; 
 	navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
-		function(cursor) {
-			var nEntries = cursor.currentPageOrderedEntries.length;
-			QUnit.equal(nEntries, 0, "currentPageOrderedEntries correct");
-			navigator.smartstore.closeCursor(cursor,
-                function(param) { QUnit.ok(true,"closeCursor ok"); self.finalizeTest(); },
-                function(param) { self.setAssertionFailed("closeCursor: " + param); }
-                );
-		}, 
-		function(param) { self.setAssertionFailed("querySoup: " + param); }
+		function(param) { self.setAssertionFailed("querySoup should have failed"); }, 
+		function(param) { self.finalizeTest(); }
 	);
 };
 
