@@ -670,9 +670,9 @@ SmartStoreTestSuite.prototype.testQuerySpecFactories = function() {
 	QUnit.equal(query.order,order,"check order");
 	QUnit.equal(query.pageSize,pageSize,"check pageSize");
 	
-	var query =  navigator.smartstore.buildAllQuerySpec(path,order,pageSize);
+	var query =  navigator.smartstore.buildAllQuerySpec(order,pageSize);
 	QUnit.equal(query.queryType,"exact","check queryType");
-	QUnit.equal(query.indexPath,path,"check indexPath");
+	QUnit.equal(query.indexPath,null,"check indexPath");
 	QUnit.equal(query.matchKey,undefined,"check matchKey");
 	QUnit.equal(query.order,order,"check order");
 	QUnit.equal(query.pageSize,pageSize,"check pageSize");
