@@ -794,5 +794,24 @@ SmartStoreTestSuite.prototype.testCompoundQueryPath  = function() {
 	
 };
 
+SmartStoreTestSuite.prototype.testEmptyQuerySpec  = function() {
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testEmptyQuerySpec");
+	var self = this;
+	
+	var querySpec = new SoupQuerySpec(null);
+	querySpec.queryType = null; 
+	navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
+		function(cursor) {
+			var nEntries = cursor.currentPageOrderedEntries.length;
+			QUnit.equal(nEntries, 0, "currentPageOrderedEntries correct");
+			navigator.smartstore.closeCursor(cursor,
+                function(param) { QUnit.ok(true,"closeCursor ok"); self.finalizeTest(); },
+                function(param) { self.setAssertionFailed("closeCursor: " + param); }
+                );
+		}, 
+		function(param) { self.setAssertionFailed("querySoup: " + param); }
+	);
+};
+
 }
 
