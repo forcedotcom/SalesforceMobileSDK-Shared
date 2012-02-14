@@ -233,7 +233,14 @@ SFTestSuite.prototype.collectionContains = function(collection, value) {
  * Called when a given test completes.
  */
 QUnit.testDone = function(status) {
-    var statsMsg = " failed: " + status.failed + " passed: " + status.passed;
+	var test = QUnit.config.current;
+	var statsMsg = " failed: " + status.failed + " passed: " + status.passed;
+	var countAssertions = test.assertions.length; 
+	for (var i = 0; i < countAssertions; i++ ) {
+		if (!test.assertions[i].result) {
+			statsMsg += "\n" + (i+1) + "/" + countAssertions + ":" + test.assertions[i].message;
+		}
+	}
     SFHybridApp.logToConsole("testDone: " + status.name + statsMsg);
     
     var currentModuleName = SFTestModuleCollection.currentRunningModuleName;
