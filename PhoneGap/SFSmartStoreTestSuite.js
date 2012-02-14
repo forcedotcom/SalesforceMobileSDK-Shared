@@ -470,6 +470,34 @@ SmartStoreTestSuite.prototype.testQuerySoup = function()  {
 /**
  * TEST querySoup
  */
+SmartStoreTestSuite.prototype.testQuerySoupDescending = function()  {
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testQuerySoupDescending");	
+	
+	var self = this;
+	self.stuffTestSoup(function(entries) {
+		QUnit.equal(entries.length, 3);
+		
+		var querySpec = navigator.smartstore.buildRangeQuerySpec("Name", null, null, "descending");		
+	    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
+			function(cursor) {
+				QUnit.equal(cursor.totalPages, 1, "totalPages correct");
+				QUnit.equal(cursor.currentPageOrderedEntries.length, 3, "check currentPageOrderedEntries");
+				QUnit.equal(cursor.currentPageOrderedEntries[0].Name,"Todd Stellanova","verify first entry");
+				QUnit.equal(cursor.currentPageOrderedEntries[2].Name,"Pro Bono Bonobo","verify last entry");
+				
+                navigator.smartstore.closeCursor(cursor,
+                    function(param) { QUnit.ok(true,"closeCursor ok"); self.finalizeTest(); },
+                    function(param) { self.setAssertionFailed("closeCursor: " + param); }
+                    );
+			}, 
+			function(param) { self.setAssertionFailed("querySoup: " + param); }
+	    );
+	});
+};
+
+/**
+ * TEST querySoup
+ */
 SmartStoreTestSuite.prototype.testQuerySoupBadQuerySpec = function()  {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testQuerySoupBadQuerySpec");	
 	
@@ -670,11 +698,11 @@ SmartStoreTestSuite.prototype.testQuerySpecFactories = function() {
 	QUnit.equal(query.order,order,"check order");
 	QUnit.equal(query.pageSize,pageSize,"check pageSize");
 	
-	var query =  navigator.smartstore.buildAllQuerySpec(order,pageSize);
+	var query =  navigator.smartstore.buildAllQuerySpec(pageSize);
 	QUnit.equal(query.queryType,"exact","check queryType");
 	QUnit.equal(query.indexPath,null,"check indexPath");
-	QUnit.equal(query.matchKey,undefined,"check matchKey");
-	QUnit.equal(query.order,order,"check order");
+	QUnit.equal(query.matchKey,null,"check matchKey");
+	QUnit.equal(query.order,null,"check order");
 	QUnit.equal(query.pageSize,pageSize,"check pageSize");
 	
 	self.finalizeTest();
