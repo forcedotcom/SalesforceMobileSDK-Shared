@@ -423,7 +423,7 @@ SmartStoreTestSuite.prototype.testRemoveFromSoup = function()  {
 			function(status) {
 				QUnit.equal(status, "OK", "removeFromSoup OK");
 				
-				var querySpec = navigator.smartstore.buildExactQuerySpec("Name",null);
+				var querySpec = navigator.smartstore.buildAllQuerySpec();
 				navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
 					function(cursor) {
 						var nEntries = cursor.currentPageOrderedEntries.length;
@@ -564,7 +564,7 @@ SmartStoreTestSuite.prototype.testManipulateCursor = function()  {
 	this.addGeneratedEntriesToTestSoup(self.NUM_CURSOR_MANIPULATION_ENTRIES, function(entries) {
 
 		QUnit.equal(entries.length, self.NUM_CURSOR_MANIPULATION_ENTRIES);
-		var querySpec = navigator.smartstore.buildExactQuerySpec("Name",null);
+		var querySpec = navigator.smartstore.buildAllQuerySpec();
 	
 	    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
 			function(cursor) {
