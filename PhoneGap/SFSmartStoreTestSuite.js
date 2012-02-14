@@ -178,7 +178,8 @@ SmartStoreTestSuite.prototype.addGeneratedEntriesToSoup = function(soupName, nEn
  
 	var entries = [];
 	for (var i = 0; i < nEntries; i++) {
-		var myEntry = { Name: "Todd Stellanova" + i, Id: "00300" + i,  attributes:{type:"Contact"} };
+		var entityId = "00300" + i;
+		var myEntry = { Name: "Todd Stellanova" + i, Id: entityId,  attributes:{type:"Contact", url:"/foo/Contact/"+i} };
 		entries.push(myEntry);
 	}
 	
@@ -731,6 +732,38 @@ SmartStoreTestSuite.prototype.testLikeQueryInnerText  = function() {
 			function(param) { self.setAssertionFailed("querySoup: " + param); }
 		);
 	});
+};
+
+SmartStoreTestSuite.prototype.testCompoundQueryPath  = function() {
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testCompoundQueryPath");
+	var self = this;
+	//attributes.url is a nonsensical path but it works for testing compound paths
+	var indices = [{path:"Name", type:"string"}, {path:"Id", type:"string"}, {path:"attributes.url", type:"string"}];
+	var soupName = "compoundPathSoup";
+	self.removeAndRecreateSoup(soupName,indices,
+		function(soupName) {
+			self.addGeneratedEntriesToSoup(soupName, 3, 
+				function(entries) {
+					QUnit.equal(entries.length, 3,"check addGeneratedEntriesToSoup result");
+					//pick out a compound path value and ensure that we can query for the same entry
+					var selectedEntry = entries[1];
+					var selectedUrl = selectedEntry.attributes.url;
+					var querySpec = navigator.smartstore.buildExactQuerySpec("attributes.url",selectedUrl);
+					navigator.smartstore.querySoup(soupName, querySpec, 
+						function(cursor) {
+							QUnit.equal(cursor.currentPageOrderedEntries.length, 1, "currentPageOrderedEntries correct");
+							var foundEntry = cursor.currentPageOrderedEntries[0];
+							QUnit.equal(foundEntry.attributes.url,selectedUrl,"Verify same entry");
+							navigator.smartstore.closeCursor(cursor,
+			                    function(param) { QUnit.ok(true,"closeCursor ok"); self.finalizeTest(); },
+			                    function(param) { self.setAssertionFailed("closeCursor: " + param); }
+			                    );
+						}, 
+						function(param) { self.setAssertionFailed("querySoup: " + param); }
+					);
+				});
+		});
+	
 };
 
 }
