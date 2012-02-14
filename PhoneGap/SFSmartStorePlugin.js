@@ -125,8 +125,8 @@ var SmartStore = function () {
 /**
  * Returns a cursor that will page through all soup entries in order by the given path value
  */
-SmartStore.prototype.buildAllQuerySpec = function(path, order, pageSize) {
-	var inst = new SoupQuerySpec(path);
+SmartStore.prototype.buildAllQuerySpec = function(order, pageSize) {
+	var inst = new SoupQuerySpec(null);
 	if (order) { inst.order = order; } // override default only if a value was specified
 	if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
 	return inst;
