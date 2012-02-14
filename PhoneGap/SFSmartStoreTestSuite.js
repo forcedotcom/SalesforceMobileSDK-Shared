@@ -52,12 +52,10 @@ SmartStoreTestSuite.prototype.constructor = SmartStoreTestSuite;
 SmartStoreTestSuite.prototype.runTest= function (methName) {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.runTest: methName=" + methName);
 	var self = this;
-	
-	self.removeDefaultSoup(function() {
-		self.registerDefaultSoup(function() {
+	self.removeAndRecreateSoup(this.defaultSoupName, this.defaultSoupIndexes, 
+		function(soupName) {
 			self[methName]();
 		});
-	});
 };
 
 /**
@@ -526,30 +524,25 @@ SmartStoreTestSuite.prototype.testQuerySoupBadQuerySpec = function()  {
  */
 SmartStoreTestSuite.prototype.testQuerySoupEndKeyNoBeginKey = function()  {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testQuerySoupEndKeyNoBeginKey");	
-	
 	var self = this;
 	
-	// Start clean
-	self.removeAndRecreateSoup(self.defaultSoupName, self.defaultSoupIndexes,
-		function(soupName2) {
-			self.stuffTestSoup(function(entries) {
-				QUnit.equal(entries.length, 3);
-				//keep in sync with stuffTestSoup
-				var querySpec = navigator.smartstore.buildRangeQuerySpec("Name",null,"Robot");				
+	self.stuffTestSoup(function(entries) {
+		QUnit.equal(entries.length, 3);
+		//keep in sync with stuffTestSoup
+		var querySpec = navigator.smartstore.buildRangeQuerySpec("Name",null,"Robot");				
 
-			    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
-					function(cursor) {
-						var nEntries = cursor.currentPageOrderedEntries.length;
-						QUnit.equal(nEntries, 2, "nEntries matches endKey");
-						QUnit.equal(cursor.currentPageOrderedEntries[1].Name,"Robot","verify last entry");
-						self.finalizeTest();                
-					}, 
-					function(param) { 
-						self.setAssertionFailed("querySoup failed");              
-					}
-			    );
-			});
-		});
+	    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
+			function(cursor) {
+				var nEntries = cursor.currentPageOrderedEntries.length;
+				QUnit.equal(nEntries, 2, "nEntries matches endKey");
+				QUnit.equal(cursor.currentPageOrderedEntries[1].Name,"Robot","verify last entry");
+				self.finalizeTest();                
+			}, 
+			function(param) { 
+				self.setAssertionFailed("querySoup failed");              
+			}
+	    );
+	});
 };
 
 /**
@@ -558,28 +551,24 @@ SmartStoreTestSuite.prototype.testQuerySoupEndKeyNoBeginKey = function()  {
 SmartStoreTestSuite.prototype.testQuerySoupBeginKeyNoEndKey = function()  {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testQuerySoupBeginKeyNoEndKey");	
 	var self = this;
-	
-	// Start clean
-	self.removeAndRecreateSoup(self.defaultSoupName, self.defaultSoupIndexes,
-		function(soupName) {
-			self.stuffTestSoup(function(entries) {
-				QUnit.equal(entries.length, 3);
-				//keep in sync with stuffTestSoup
-				var querySpec = navigator.smartstore.buildRangeQuerySpec("Name","Robot",null);				
 
-			    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
-					function(cursor) {
-						var nEntries = cursor.currentPageOrderedEntries.length;
-						QUnit.equal(nEntries, 2, "nEntries matches beginKey");
-						QUnit.equal(cursor.currentPageOrderedEntries[0].Name,"Robot","verify first entry");
-						self.finalizeTest();                
-					}, 
-					function(param) { 
-						self.setAssertionFailed("querySoup failed");              
-					}
-			    );
-			});
-		});
+	self.stuffTestSoup(function(entries) {
+		QUnit.equal(entries.length, 3);
+		//keep in sync with stuffTestSoup
+		var querySpec = navigator.smartstore.buildRangeQuerySpec("Name","Robot",null);				
+
+	    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
+			function(cursor) {
+				var nEntries = cursor.currentPageOrderedEntries.length;
+				QUnit.equal(nEntries, 2, "nEntries matches beginKey");
+				QUnit.equal(cursor.currentPageOrderedEntries[0].Name,"Robot","verify first entry");
+				self.finalizeTest();                
+			}, 
+			function(param) { 
+				self.setAssertionFailed("querySoup failed");              
+			}
+	    );
+	});
 
 };
 
@@ -588,26 +577,26 @@ SmartStoreTestSuite.prototype.testQuerySoupBeginKeyNoEndKey = function()  {
  */
 SmartStoreTestSuite.prototype.testManipulateCursor = function()  {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testManipulateCursor");	
-	
 	var self = this;
-	this.addGeneratedEntriesToTestSoup(self.NUM_CURSOR_MANIPULATION_ENTRIES, function(entries) {
-
-		QUnit.equal(entries.length, self.NUM_CURSOR_MANIPULATION_ENTRIES);
-		var querySpec = navigator.smartstore.buildAllQuerySpec();
 	
-	    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
-			function(cursor) {
-				QUnit.equal(cursor.currentPageIndex, 0, "currentPageIndex correct");
-				QUnit.equal(cursor.pageSize, 10, "pageSize correct");
+	this.addGeneratedEntriesToTestSoup(self.NUM_CURSOR_MANIPULATION_ENTRIES, 
+		function(entries) {
+			QUnit.equal(entries.length, self.NUM_CURSOR_MANIPULATION_ENTRIES);
+			var querySpec = navigator.smartstore.buildAllQuerySpec();
+	
+		    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
+				function(cursor) {
+					QUnit.equal(cursor.currentPageIndex, 0, "currentPageIndex correct");
+					QUnit.equal(cursor.pageSize, 10, "pageSize correct");
 				
-				var nEntries = cursor.currentPageOrderedEntries.length;
-				QUnit.equal(nEntries, cursor.pageSize, "nEntries matches pageSize");
+					var nEntries = cursor.currentPageOrderedEntries.length;
+					QUnit.equal(nEntries, cursor.pageSize, "nEntries matches pageSize");
 							
-				self.forwardCursorToEnd(cursor);
-			}, 
-			function(param) { self.setAssertionFailed("querySoup: " + param); }
-		);
-	});
+					self.forwardCursorToEnd(cursor);
+				}, 
+				function(param) { self.setAssertionFailed("querySoup: " + param); }
+			);
+		});
 };
 
 /**
@@ -616,7 +605,6 @@ SmartStoreTestSuite.prototype.testManipulateCursor = function()  {
  */
 SmartStoreTestSuite.prototype.forwardCursorToEnd = function(cursor) {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.forwardCursorToEnd");	
-	
 	var self = this;
 	
 	navigator.smartstore.moveCursorToNextPage(cursor, 
@@ -653,9 +641,9 @@ SmartStoreTestSuite.prototype.forwardCursorToEnd = function(cursor) {
  */
 SmartStoreTestSuite.prototype.testArbitrarySoupNames = function() {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testArbitrarySoupNames");	
+	var self = this;
 	
 	var soupName = "123This should-be a_valid.soup+name!?100";
-	var self = this;
 	
 	//simply register and verify that the soup exists
 	self.removeAndRecreateSoup(soupName,self.defaultSoupIndexes,
@@ -811,6 +799,38 @@ SmartStoreTestSuite.prototype.testEmptyQuerySpec  = function() {
 		}, 
 		function(param) { self.setAssertionFailed("querySoup: " + param); }
 	);
+};
+
+
+SmartStoreTestSuite.prototype.testIntegerQuerySpec  = function() {
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testIntegerQuerySpec");
+	var self = this;
+	var myEntry1 = { Name: "Todd Stellanova", shots:37 };
+    var myEntry2 = { Name: "Pro Bono Bonobo",  shots:92  };
+    var myEntry3 = { Name: "Robot",  shots:0  };
+    var rawEntries = [myEntry1, myEntry2, myEntry3];
+	var soupName = "charmingSoup";
+
+	self.removeAndRecreateSoup(soupName, [{path:"Name", type:"string"}, {path:"shots", type:"integer"}], 
+		function(soupName) {
+			self.addEntriesToSoup(soupName,rawEntries,
+				function(entries) {
+					var querySpec = navigator.smartstore.buildRangeQuerySpec("shots", 10, 100,"ascending");
+					navigator.smartstore.querySoup(soupName, querySpec, 
+						function(cursor) {
+							QUnit.equal(cursor.currentPageOrderedEntries.length, 2, "check currentPageOrderedEntries");
+							QUnit.equal(cursor.currentPageOrderedEntries[0].Name,"Todd Stellanova","verify first entry");
+							QUnit.equal(cursor.currentPageOrderedEntries[1].Name,"Pro Bono Bonobo","verify last entry");
+							navigator.smartstore.closeCursor(cursor,
+				                function(param) { QUnit.ok(true,"closeCursor ok"); self.finalizeTest(); },
+				                function(param) { self.setAssertionFailed("closeCursor: " + param); }
+				                );
+						},
+						function(param) { self.setAssertionFailed("querySoup: " + param); }
+					);
+				});
+		});
+		
 };
 
 }
