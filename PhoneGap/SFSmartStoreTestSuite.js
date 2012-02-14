@@ -470,6 +470,34 @@ SmartStoreTestSuite.prototype.testQuerySoup = function()  {
 /**
  * TEST querySoup
  */
+SmartStoreTestSuite.prototype.testQuerySoupDescending = function()  {
+	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testQuerySoupDescending");	
+	
+	var self = this;
+	self.stuffTestSoup(function(entries) {
+		QUnit.equal(entries.length, 3);
+		
+		var querySpec = navigator.smartstore.buildRangeQuerySpec("Name", null, null, "descending");		
+	    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
+			function(cursor) {
+				QUnit.equal(cursor.totalPages, 1, "totalPages correct");
+				QUnit.equal(cursor.currentPageOrderedEntries.length, 3, "check currentPageOrderedEntries");
+				QUnit.equal(cursor.currentPageOrderedEntries[0].Name,"Todd Stellanova","verify first entry");
+				QUnit.equal(cursor.currentPageOrderedEntries[2].Name,"Pro Bono Bonobo","verify last entry");
+				
+                navigator.smartstore.closeCursor(cursor,
+                    function(param) { QUnit.ok(true,"closeCursor ok"); self.finalizeTest(); },
+                    function(param) { self.setAssertionFailed("closeCursor: " + param); }
+                    );
+			}, 
+			function(param) { self.setAssertionFailed("querySoup: " + param); }
+	    );
+	});
+};
+
+/**
+ * TEST querySoup
+ */
 SmartStoreTestSuite.prototype.testQuerySoupBadQuerySpec = function()  {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testQuerySoupBadQuerySpec");	
 	
