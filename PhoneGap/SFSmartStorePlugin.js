@@ -112,7 +112,7 @@ var PagedSoupCursor = function () {
 };
 
 /**
- * Represents a group of Contacts.
+ * SmartStore constructor
  */
 var SmartStore = function () {
     SFHybridApp.logToConsole("new SmartStore");
