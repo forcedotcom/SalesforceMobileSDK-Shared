@@ -35,18 +35,39 @@
                 return;
             }
             
-            if (startData.shouldAuthenticate) {
-                // Authenticate via the Salesforce OAuth plugin.
-                var oauthProperties = new OAuthProperties(remoteAccessConsumerKey, 
-                                                          oauthRedirectURI, 
-                                                          oauthScopes, 
-                                                          autoRefreshOnForeground);
-                SalesforceOAuthPlugin.authenticate(loginSuccess, loginFailure, oauthProperties);
+            // If the device is offline, the following situations require us to fall back to looking for
+            // cached data:
+            //   - The start data points to a remote (e.g. Visualforce) application.
+            //   - The start data points to a local application, but authentication is required for that app.
+            var isDeviceOnline = SFHybridApp.deviceIsOnline();
+            if (!isDeviceOnline &&
+                ((startData instanceof SFHybridApp.RemoteAppStartData)
+                  || startData.shouldAuthenticate)) {
+            	SFHybridApp.logToConsole("Device is OFFLINE.  Trying to load cached app data.");
+                
+                SalesforceOAuthPlugin.getAppHomeUrl(function (urlString) {
+                    if (urlString === "") {
+                        SFHybridApp.logError("Device is offline, and no cached data could be found.  Cannot continue.");
+                    } else {
+                        SFHybridApp.logToConsole("Trying to load cached app at " + urlString);
+                        SFHybridApp.loadUrl(urlString);
+                    }
+                });
             } else {
-                if (startData instanceof SFHybridApp.LocalAppStartData) {
-                    SFHybridApp.loadUrl(SFHybridApp.buildLocalUrl(startData.appStartUrl));
+                SFHybridApp.logToConsole("Device is ONLINE, OR app is not otherwise required to be online.");
+                if (startData.shouldAuthenticate) {
+                    // Authenticate via the Salesforce OAuth plugin.
+                    var oauthProperties = new OAuthProperties(remoteAccessConsumerKey, 
+                                                              oauthRedirectURI, 
+                                                              oauthScopes, 
+                                                              autoRefreshOnForeground);
+                    SalesforceOAuthPlugin.authenticate(loginSuccess, loginFailure, oauthProperties);
                 } else {
-                    SFHybridApp.loadUrl(startData.appStartUrl);
+                    if (startData instanceof SFHybridApp.LocalAppStartData) {
+                        SFHybridApp.loadUrl(SFHybridApp.buildLocalUrl(startData.appStartUrl));
+                    } else {
+                        SFHybridApp.loadUrl(startData.appStartUrl);
+                    }
                 }
             }
         }

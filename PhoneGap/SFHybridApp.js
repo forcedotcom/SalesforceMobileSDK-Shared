@@ -101,6 +101,21 @@ loadUrl: function(fullAppUrl) {
         location.href = fullAppUrl;
     }
 },
+    
+/**
+ * Determine whether the device is online.
+ */
+deviceIsOnline: function() {
+    var connType = navigator.network.connection.type;
+    if (connType) {
+        // PhoneGap's connection object.  May be more accurate?
+        SFHybridApp.logToConsole("Connection type: " + connType);
+        return !(connType == Connection.NONE || connType == Connection.UNKNOWN);
+    } else {
+        // Default to browser facility.
+        return navigator.onLine;
+    }
+},
 
 /**
  * RemoteAppStartData data object - Represents the data associated with bootstrapping a
