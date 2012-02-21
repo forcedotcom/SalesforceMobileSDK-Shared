@@ -269,7 +269,7 @@ QUnit.testDone = function(status) {
         
         // let test runner know	
         if (navigator.testrunner) {
-            navigator.testrunner.onTestComplete(status.name, false, statsMsg);
+            navigator.testrunner.onTestComplete(status.name, false, statsMsg, testStatus);
         }
     } else {
         testStatus.testState = SFTestStatus.SUCCESS_TEST_STATE;    
@@ -277,7 +277,7 @@ QUnit.testDone = function(status) {
         currentModule.numPassedTests++;
         
         if (navigator.testrunner) {
-            navigator.testrunner.onTestComplete(status.name, true, "");
+            navigator.testrunner.onTestComplete(status.name, true, "", testStatus);
         }
     }
 };

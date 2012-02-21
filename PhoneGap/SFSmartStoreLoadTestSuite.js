@@ -36,9 +36,9 @@ if (typeof SmartStoreLoadTestSuite === 'undefined') {
  */
 var SmartStoreLoadTestSuite = function () {
 	SFTestSuite.call(this, "smartstoreload");
-	this.MAX_NUMBER_ENTRIES = 256;
+	this.MAX_NUMBER_ENTRIES = 128;
 	this.testIndexPath = "key";
-	this.defaultSoupName = "PerfTestSoup2";
+	this.defaultSoupName = "PerfTestSoup";
 	this.defaultSoupIndexes = [
 		{path:"key", type:"string"}, 
 		{path:"Id", type:"string"}
@@ -51,14 +51,6 @@ var SmartStoreLoadTestSuite = function () {
 SmartStoreLoadTestSuite.prototype = new SFTestSuite();
 SmartStoreLoadTestSuite.prototype.constructor = SmartStoreLoadTestSuite;
 
-
-/**
- * Helper method that creates default soup
- */
-SmartStoreLoadTestSuite.prototype.registerDefaultSoup = function(callback) {
-	SFHybridApp.logToConsole("In SFSmartStoreLoadTestSuite.registerDefaultSoup");
-	this.registerSoup(this.defaultSoupName, this.defaultSoupIndexes, callback);
-};
 
 /**
  * Helper method that creates soup
@@ -227,7 +219,7 @@ SmartStoreLoadTestSuite.prototype.testUpsertManyEntries  = function() {
 		function(soupName) {
 			self.upsertNextEntry([]);
 		});
-}
+};
 
 
 

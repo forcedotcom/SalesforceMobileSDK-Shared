@@ -46,13 +46,18 @@ TestRunner.prototype.onReadyForTests = function (successCB, errorCB) {
                   );                  
 };
 
-TestRunner.prototype.onTestComplete = function (testName, success, message, successCB, errorCB) {
+TestRunner.prototype.onTestComplete = function (testName, success, message, status, successCB, errorCB) {
     SFHybridApp.logToConsole("TestRunner.onTestComplete");
 
     PhoneGap.exec(successCB, errorCB, 
                   "com.salesforce.testrunner",
                   "onTestComplete",
-                  [{"testName": testName, "success": success, "message": message}]
+                  [{
+                   "testName": testName, 
+                   "success": success, 
+                   "message": message, 
+                   "testStatus":status
+                   }]
                   );
 };
 
