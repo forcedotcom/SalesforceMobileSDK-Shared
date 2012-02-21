@@ -35,6 +35,9 @@ var SFTestStatus = function(testName) {
     this.successfulAssertions = 0;
     this.failedAssertions = 0;
     this.totalAssertions = 0;
+	this.startTime = 0; //milliseconds since 1970
+	this.endTime = 0; //milliseconds since 1970
+	this.testDuration = 0; //milliseconds
 };
     
 SFTestStatus.IDLE_TEST_STATE = 'idle';
@@ -102,7 +105,7 @@ SFTestSuite.prototype.startTests = function() {
 	SFHybridApp.logToConsole("In startTests");
 	var self = this;
 
-	//collect a list of test methods by introspection
+	//collect a list of testFoo methods by introspection
 	for (var key in self) {
 		//we specifically don't check hasOwnProperty here, to grab proto methods
 		var val = self[key];
@@ -160,14 +163,17 @@ SFTestSuite.prototype.startTest = function(methName) {
 SFTestSuite.prototype.preRun = function(methName) {
 	SFHybridApp.logToConsole("In preRun: methName=" + methName);
 	this.module.currentTestName = methName;
-    this.module.testStatusCollection[methName].testState = SFTestStatus.RUNNING_TEST_STATE;
+	var testStatus = this.module.testStatusCollection[methName];	
+    testStatus.testState = SFTestStatus.RUNNING_TEST_STATE;
+    testStatus.startTime = (new Date()).getTime();
+
 }
 
 /**
  * Method to run an actual test
  * Sub-classes should override this method if they need anything to be setup before running tests
  */
-SFTestSuite.prototype.runTest= function (methName) {
+SFTestSuite.prototype.runTest = function (methName) {
 	SFHybridApp.logToConsole("In runTest: methName=" + methName);
 	this[methName]();
 };
@@ -179,6 +185,13 @@ SFTestSuite.prototype.runTest= function (methName) {
  * go in here as well.
  */
 SFTestSuite.prototype.finalizeTest = function() {
+	var methName = this.module.currentTestName;
+
+	var testStatus = this.module.testStatusCollection[methName];
+	testStatus.endTime = (new Date()).getTime();
+	testStatus.testDuration = testStatus.endTime - testStatus.startTime;
+	SFHybridApp.logToConsole("test " + this.module.currentTestName + " duration: " + testStatus.testDuration +"ms");
+	//restart QUnit
     QUnit.start();
 };
     
