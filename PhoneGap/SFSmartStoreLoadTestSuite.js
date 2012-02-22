@@ -36,7 +36,10 @@ if (typeof SmartStoreLoadTestSuite === 'undefined') {
  */
 var SmartStoreLoadTestSuite = function () {
 	SFTestSuite.call(this, "smartstoreload");
-	this.MAX_NUMBER_ENTRIES = 128;
+	this.MAX_NUMBER_ENTRIES = 2048;
+	this.MAX_NUMBER_FIELDS = 2048;
+	this.MAX_FIELD_LENGTH = 65536;
+	
 	this.testIndexPath = "key";
 	this.defaultSoupName = "PerfTestSoup";
 	this.defaultSoupIndexes = [
@@ -50,6 +53,7 @@ var SmartStoreLoadTestSuite = function () {
 // We are sub-classing SFTestSuite
 SmartStoreLoadTestSuite.prototype = new SFTestSuite();
 SmartStoreLoadTestSuite.prototype.constructor = SmartStoreLoadTestSuite;
+
 
 
 /**
@@ -191,36 +195,110 @@ SmartStoreLoadTestSuite.prototype.addEntriesToTestSoup = function(entries, callb
 
 
 
+/**
+ * TEST: Upsert more and more entries to a single soup
+ */
 
-SmartStoreLoadTestSuite.prototype.upsertNextEntry = function(entries) {
+SmartStoreLoadTestSuite.prototype.upsertNextManyEntry = function(k) {
+	SFHybridApp.logToConsole("upsertNextManyEntry " + k);
 	var self = this;
-	
-	//each round creates one new entry and updates all the existing entries
-	var start = (new Date()).getTime();
-	var entry = {key: "k"+start, value:"x"};
-	entries.push(entry);
+	var entries = [];
+
+	for (var i=0; i< k; i++) {
+		var entry = {key: "k_" + k + '_' + i, value:"x"+i};
+		entries.push(entry);
+	}	
 	
 	self.addEntriesToSoup(self.defaultSoupName,entries, 
 		function(updatedEntries) {
-			if (entries.length < self.MAX_NUMBER_ENTRIES) {
-				self.upsertNextEntry(updatedEntries);
+			if (updatedEntries.length < self.MAX_NUMBER_ENTRIES) {
+				k *= 2;
+				self.upsertNextManyEntry(k);
 			} else {
 				self.finalizeTest();
 			}
 		});
 };
 
+
 SmartStoreLoadTestSuite.prototype.testUpsertManyEntries  = function() {
 	SFHybridApp.logToConsole("In SFSmartStoreLoadTestSuite.testUpsertManyEntries");
 	var self = this;
 
-	self.removeAndRecreateSoup(self.defaultSoupName, 
-		self.defaultSoupIndexes, 
+	self.removeAndRecreateSoup(self.defaultSoupName, self.defaultSoupIndexes, 
 		function(soupName) {
-			self.upsertNextEntry([]);
+			self.upsertNextManyEntry(1);
 		});
 };
 
+
+/**
+ * TEST: Upsert entries with more and more fields to a single soup
+ */
+SmartStoreLoadTestSuite.prototype.upsertNextManyFieldsEntry = function(k) {
+	SFHybridApp.logToConsole("upsertNextManyFieldsEntry " + k);
+	var self = this;
+	var entry = {key: "k"+k};
+
+	for (var i=0; i< k; i++) {
+		entry["v"+i] = "value_" + i;
+	}
+	
+	self.addEntriesToSoup(self.defaultSoupName,[entry], 
+		function(updatedEntries) {
+			if (k < self.MAX_NUMBER_FIELDS) {
+				k *= 2;
+				self.upsertNextManyFieldsEntry(k);
+			} else {
+				self.finalizeTest();
+			} 
+		});
+};
+
+SmartStoreLoadTestSuite.prototype.testNumerousFields  = function() {
+	SFHybridApp.logToConsole("In SFSmartStoreLoadTestSuite.testNumerousFields");
+	var self = this;
+
+	self.removeAndRecreateSoup(self.defaultSoupName, self.defaultSoupIndexes, 
+		function(soupName) {
+			self.upsertNextManyFieldsEntry(1);
+		});
+};
+
+
+/**
+ * TEST: Upsert entries where the value gets longer and longer
+ */
+SmartStoreLoadTestSuite.prototype.upsertNextLargerFieldEntry = function(k) {
+	SFHybridApp.logToConsole("upsertNextLargerFieldEntry " + k);
+	var self = this;
+
+	var val = "";
+	for (var i=0; i< k; i++) {
+		val = val + "x";
+	}
+	var entry = {key: "k"+k, value:val};
+	
+	self.addEntriesToSoup(self.defaultSoupName,[entry], 
+		function(updatedEntries) {
+			if (k < self.MAX_FIELD_LENGTH) {
+				k *= 2;
+				self.upsertNextLargerFieldEntry(k);
+			} else {
+				self.finalizeTest();
+			} 
+		});
+};
+
+SmartStoreLoadTestSuite.prototype.testIncreasingFieldLength  = function() {
+	SFHybridApp.logToConsole("In SFSmartStoreLoadTestSuite.testIncreasingFieldLength");
+	var self = this;
+
+	self.removeAndRecreateSoup(self.defaultSoupName, self.defaultSoupIndexes, 
+		function(soupName) {
+			self.upsertNextLargerFieldEntry(1);
+		});
+};
 
 
 }
