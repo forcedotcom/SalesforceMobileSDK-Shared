@@ -116,7 +116,7 @@ SmartStoreLoadTestSuite.prototype.removeAndRecreateSoup = function(soupName, sou
 					});
 				});
 		});
-}
+};
 
 /**
  * Helper method that drops default soup
@@ -154,7 +154,7 @@ SmartStoreLoadTestSuite.prototype.addGeneratedEntriesToSoup = function(soupName,
 	var entries = [];
 	for (var i = 0; i < nEntries; i++) {
 		var entityId = "00300" + i;
-		var myEntry = { Name: "Todd Stellanova" + i, Id: entityId,  attributes:{type:"Contact", url:"/foo/Contact/"+i} };
+		var myEntry = { key: "Todd Stellanova" + i, Id: entityId, value:entityId};
 		entries.push(myEntry);
 	}
 	
@@ -299,6 +299,43 @@ SmartStoreLoadTestSuite.prototype.testIncreasingFieldLength  = function() {
 			self.upsertNextLargerFieldEntry(1);
 		});
 };
+
+/**
+ * TEST: Retrieve a bunch of similar entries
+ */
+SmartStoreLoadTestSuite.prototype.testAddAndRetrieveManyEntries  = function() {
+	SFHybridApp.logToConsole("In SFSmartStoreLoadTestSuite.testAddAndRetrieveManyEntries");
+	var self = this;
+	
+	self.removeAndRecreateSoup(self.defaultSoupName, self.defaultSoupIndexes, 
+		function(soupName) {
+			self.addGeneratedEntriesToTestSoup(self.MAX_NUMBER_ENTRIES,
+				function(addedEntries) {
+					//collect the generated entry Ids
+					var retrieveIds = [];
+					for (var i = 0; i < addedEntries.length; i++) {
+						var entryId = addedEntries[i]._soupEntryId;
+						retrieveIds.push(entryId);
+					}
+					
+					navigator.smartstore.retrieveSoupEntries(self.defaultSoupName,
+						retrieveIds, 
+						function(retrievedEntries) {
+						    QUnit.equal(retrievedEntries.length, addedEntries.length,"verify retrieved matches added");
+							QUnit.equal(retrievedEntries[0]._soupEntryId,retrieveIds[0],"verify retrieved ID");
+							self.finalizeTest();
+						},
+						function(param) { 
+							self.setAssertionFailed("retrieveSoupEntries failed: " + param); 
+						}
+					);
+					
+				});
+			});
+				
+		
+};
+
 
 
 }
