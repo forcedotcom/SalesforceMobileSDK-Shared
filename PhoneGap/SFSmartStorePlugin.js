@@ -116,6 +116,7 @@ var PagedSoupCursor = function () {
  */
 var SmartStore = function () {
     SFHybridApp.logToConsole("new SmartStore");
+    this.logLevel = 0;
 };
  
 
@@ -224,7 +225,8 @@ SmartStore.prototype.retrieveSoupEntries = function (soupName, entryIds, success
 };
 
 SmartStore.prototype.upsertSoupEntries = function (soupName, entries, successCB, errorCB) {
-    SFHybridApp.logToConsole("SmartStore.upsertSoupEntries: '" + soupName + "' entries.length: " + entries.length);
+    if (this.logLevel > 0) 
+        SFHybridApp.logToConsole("SmartStore.upsertSoupEntries: '" + soupName + "' entries.length: " + entries.length);
 
     PhoneGap.exec(successCB, errorCB, 
                   "com.salesforce.smartstore", 
