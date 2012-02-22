@@ -190,7 +190,7 @@ SFTestSuite.prototype.finalizeTest = function() {
 	var testStatus = this.module.testStatusCollection[methName];
 	testStatus.endTime = (new Date()).getTime();
 	testStatus.testDuration = testStatus.endTime - testStatus.startTime;
-	SFHybridApp.logToConsole("test " + this.module.currentTestName + " duration: " + testStatus.testDuration +"ms");
+
 	//restart QUnit
     QUnit.start();
 };
@@ -299,6 +299,8 @@ QUnit.moduleDone = function(status) {
         SFHybridApp.logToConsole("Successful assertions: " + testStatus.successfulAssertions);
         SFHybridApp.logToConsole("Failed assertions: " + testStatus.failedAssertions);
         SFHybridApp.logToConsole("Total assertions: " + testStatus.totalAssertions);
+        SFHybridApp.logToConsole("Duration: " + testStatus.testDuration);
+
     }
 };
 
