@@ -32,9 +32,20 @@ PhoneGap.addResource("testrunner");
 
 var TestRunner = function () {
     SFHybridApp.logToConsole("new TestRunner");
+	this.testSuiteClassName = null;
+	this.testSuite = null;
 };
  
-// ====== Soup manipulation ======
+// ====== Test and Suite setup ======
+
+TestRunner.prototype.setTestSuite = function (suiteClassName) {
+	if (this.testSuiteClassName !== suiteClassName) {
+		SFHybridApp.logToConsole("TestRunner.setTestSuite: " + suiteClassName);
+	    
+		this.testSuiteClassName = suiteClassName;
+		this.testSuite = new window[suiteClassName]();
+	}
+};
 
 TestRunner.prototype.onReadyForTests = function (successCB, errorCB) {
     SFHybridApp.logToConsole("TestRunner.onReadyForTests");
