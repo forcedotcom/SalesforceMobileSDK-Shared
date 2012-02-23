@@ -215,7 +215,8 @@ SmartStore.prototype.querySoup = function (soupName, querySpec, successCB, error
 };
 
 SmartStore.prototype.retrieveSoupEntries = function (soupName, entryIds, successCB, errorCB) {
-    SFHybridApp.logToConsole("SmartStore.retrieveSoupEntry: '" + soupName + "' entryIds: " + entryIds);
+    if (this.logLevel > 0) 
+        SFHybridApp.logToConsole("SmartStore.retrieveSoupEntry: '" + soupName + "' entryIds: " + entryIds);
     
     PhoneGap.exec(successCB, errorCB, 
                   "com.salesforce.smartstore", 
