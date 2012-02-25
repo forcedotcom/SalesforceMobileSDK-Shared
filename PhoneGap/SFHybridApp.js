@@ -107,9 +107,10 @@ loadUrl: function(fullAppUrl) {
  */
 deviceIsOnline: function() {
     var connType = navigator.network.connection.type;
+    SFHybridApp.logToConsole("deviceIsOnline connType: " + connType);
+    
     if (connType) {
         // PhoneGap's connection object.  May be more accurate?
-        SFHybridApp.logToConsole("Connection type: " + connType);
         return !(connType == Connection.NONE || connType == Connection.UNKNOWN);
     } else {
         // Default to browser facility.
