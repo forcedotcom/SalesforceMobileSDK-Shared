@@ -17,7 +17,7 @@
         /**
          * JQuery's "ready" function.  This will execute once JQuery is successfully loaded.
          */
-        $(function() {
+        jQuery(document).ready(function() {
             SFHybridApp.logToConsole("jQuery is ready");
             document.addEventListener("deviceready", onDeviceReady,false);
             SFHybridApp.logToConsole("Added onDeviceReady event listener.");

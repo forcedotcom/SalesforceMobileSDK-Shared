@@ -7,7 +7,7 @@
 if (SFHybridApp == undefined) {
 
 var SFHybridApp = {
-
+    
 appStartTime: new Date(),  // Used for debug timing measurements.
 
 /**
@@ -17,7 +17,7 @@ appStartTime: new Date(),  // Used for debug timing measurements.
  */
 logToConsole: function(txt) {
     if ((typeof debugMode !== "undefined") && (debugMode === true)) {
-        $("#console").css("display", "block");
+        jQuery("#console").css("display", "block");
         SFHybridApp.log("#console", txt);
     }
 },
@@ -27,7 +27,7 @@ logToConsole: function(txt) {
  *   txt - The text (html) to log to the console.
  */
 logError: function(txt) {
-    $("#errors").css("display", "block");
+    jQuery("#errors").css("display", "block");
     SFHybridApp.log("#errors", txt);
 },
         
@@ -40,7 +40,7 @@ log: function(section, txt) {
     console.log("jslog: " + txt);
     var now = new Date();
     var fullTxt = "<p><i><b>* At " + (now.getTime() - SFHybridApp.appStartTime.getTime()) + "ms:</b></i> " + txt + "</p>";
-    $(section).append(fullTxt);
+    jQuery(section).append(fullTxt);
 },
 
 /**
@@ -70,8 +70,8 @@ buildLocalUrl: function(page) {
  *   Full URL to the user's page, e.g. https://na1.salesforce.com/apex/MyVisualForcePage.
  */
 buildAppUrl: function(server, page) {
-    var trimmedServer = $.trim(server);
-    var trimmedPage = $.trim(page);
+    var trimmedServer = jQuery.trim(server);
+    var trimmedPage = jQuery.trim(page);
     if (trimmedServer === "")
         return trimmedPage;
     else if (trimmedPage === "")
@@ -130,7 +130,7 @@ deviceIsOnline: function() {
  *                                   application.  Defaults to true.
  */
 RemoteAppStartData: function(appStartUrl, isAbsoluteUrl, shouldAuthenticate) {
-    if (typeof appStartUrl !== "string" || $.trim(appStartUrl) === "") {
+    if (typeof appStartUrl !== "string" || jQuery.trim(appStartUrl) === "") {
         SFHybridApp.logError("appStartUrl cannot be empty");
         return;
     }
@@ -151,7 +151,7 @@ RemoteAppStartData: function(appStartUrl, isAbsoluteUrl, shouldAuthenticate) {
  *                                   application.  Defaults to true.
  */
 LocalAppStartData: function(appStartUrl, shouldAuthenticate) {
-    this.appStartUrl = (typeof appStartUrl !== "string" || $.trim(appStartUrl) === "" ? "index.html" : appStartUrl);
+    this.appStartUrl = (typeof appStartUrl !== "string" || jQuery.trim(appStartUrl) === "" ? "index.html" : appStartUrl);
     this.isRemoteApp = false;
     this.isAbsoluteUrl = false;
     this.shouldAuthenticate = (typeof shouldAuthenticate !== "boolean" ? true : shouldAuthenticate);
