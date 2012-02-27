@@ -109,12 +109,12 @@ deviceIsOnline: function() {
     var connType = navigator.network.connection.type;
     SFHybridApp.logToConsole("deviceIsOnline connType: " + connType);
     
-    if (connType) {
+    if (typeof connType !== 'undefined') {
         // PhoneGap's connection object.  May be more accurate?
-        return !(connType == Connection.NONE || connType == Connection.UNKNOWN);
+        return (connType != null && connType != Connection.NONE && connType != Connection.UNKNOWN);
     } else {
         // Default to browser facility.
-        return navigator.onLine;
+    	return navigator.onLine;
     }
 },
 
