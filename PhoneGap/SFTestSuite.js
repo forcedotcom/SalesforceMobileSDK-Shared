@@ -299,7 +299,7 @@ QUnit.moduleDone = function(status) {
         SFHybridApp.logToConsole("Successful assertions: " + testStatus.successfulAssertions);
         SFHybridApp.logToConsole("Failed assertions: " + testStatus.failedAssertions);
         SFHybridApp.logToConsole("Total assertions: " + testStatus.totalAssertions);
-        SFHybridApp.logToConsole("Duration: " + testStatus.testDuration);
+        SFHybridApp.logToConsole(testStatus.testName + " completed in: " + (testStatus.testDuration/1000.0) + 's');
 
     }
 };
