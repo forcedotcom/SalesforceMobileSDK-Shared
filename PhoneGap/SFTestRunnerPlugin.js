@@ -67,7 +67,7 @@ TestRunner.prototype.onTestComplete = function (testName, success, message, stat
                    "testName": testName, 
                    "success": success, 
                    "message": message, 
-                   "testStatus":status
+                   "testDuration": status.testDuration
                    }]
                   );
 };
