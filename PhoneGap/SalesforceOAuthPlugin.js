@@ -42,65 +42,25 @@ var SalesforceOAuthPlugin = {
 
 
     /**
-    * Logout the current authenticated user. This removes any current valid session token
-    * as well as any OAuth refresh token.  The user is forced to login again.
-    * This method does not call back with a success or failure callback, as 
-    * (1) this method must not fail and (2) in the success case, the current user
-    * will be logged out and asked to re-authenticate.
-    */
+     * Logout the current authenticated user. This removes any current valid session token
+     * as well as any OAuth refresh token.  The user is forced to login again.
+     * This method does not call back with a success or failure callback, as 
+     * (1) this method must not fail and (2) in the success case, the current user
+     * will be logged out and asked to re-authenticate.
+     */
     logout: function() {
-        PhoneGap.exec(null, null, "com.salesforce.oauth","logoutCurrentUser",[]);
+        PhoneGap.exec(null, null, "com.salesforce.oauth", "logoutCurrentUser", []);
     },
     
     /**
-     * Creates the full app URL, based on the user's start page and the instance where
-     * the user is authenticated.
-     *   pageLocation     - The user-defined start page on the service (e.g. apex/MyVisualForcePage).
-     *   oauthCredentials - The credentials data, used to determine the instance URL.  See
-     *                      authenticate() above for a description of the data structure.
-     * Returns:
-     *   Full URL to the user's page, e.g. https://na1.salesforce.com/apex/MyVisualForcePage.
+     * Gets the app's homepage as an absolute URL.  Used for attempting to load any cached
+     * content that the developer may have built into the app (via HTML5 caching).
+     *
+     * This method will either return the URL as a string, or an empty string if the URL has not been
+     * initialized.
      */
-    buildAppUrl: function(pageLocation, oauthCredentials) {
-        var instanceUrl = oauthCredentials.instanceUrl;
-
-        // Manage '/' between instance and page URL on the page var side.
-        if (instanceUrl.charAt(instanceUrl.length-1) == '/')
-            instanceUrl = instanceUrl.substr(0, instanceUrl.length-1);
-
-        var trimmedPageLocation = pageLocation.replace(/^\s+/, '').replace(/\s+$/, '');
-        if (trimmedPageLocation == "" || trimmedPageLocation == "/")
-            return oauthCredentials.instanceUrl + "/";
-        if (trimmedPageLocation.charAt(0) != '/')
-            trimmedPageLocation = "/" + trimmedPageLocation;
-
-        return instanceUrl + trimmedPageLocation;
-    },
-
-    /**
-     * Creates the default local URL to load when no start page is specified.
-     * 
-     */
-    buildDefaultLocalUrl: function() {
-		if (navigator.device.platform == "Android") {
-			return "file:///android_asset/www/index.html";
-		}
-		else {
-			return "index.html"; 
-		}
-    },
-    
-    /**
-     * Load the URL using phonegap on Android and directly on other platforms
-     *   fullAppUrl       - the full url to load
-     */
-    loadUrl: function(fullAppUrl) {
-		if (navigator.device.platform == "Android") {
-			navigator.app.loadUrl(fullAppUrl , {clearHistory:true});
-		}
-		else {
-			location.href = fullAppUrl;
-		}
+    getAppHomeUrl: function(success) {
+        PhoneGap.exec(success, null, "com.salesforce.oauth", "getAppHomeUrl", []);
     }
 };
 
