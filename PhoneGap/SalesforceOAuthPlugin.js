@@ -70,10 +70,12 @@ var SalesforceOAuthPlugin = {
  *   oauthRedirectURI        - String containing the redirect URI configured for the remote access object.
  *   oauthScopes             - Array of strings specifying the authorization scope of the app (e.g ["api", "visualforce"]).
  *   autoRefreshOnForeground - Boolean, determines whether the container automatically refreshes OAuth session when app is foregrounded
+ *   autoRefreshPeriodically - Boolean, determines whether the container automatically refreshes OAuth session periodically
  */
-function OAuthProperties(remoteAccessConsumerKey, oauthRedirectURI, oauthScopes, autoRefreshOnForeground) {
+function OAuthProperties(remoteAccessConsumerKey, oauthRedirectURI, oauthScopes, autoRefreshOnForeground, autoRefreshPeriodically) {
     this.remoteAccessConsumerKey = remoteAccessConsumerKey;
     this.oauthRedirectURI = oauthRedirectURI;
     this.oauthScopes = oauthScopes;
     this.autoRefreshOnForeground = autoRefreshOnForeground;
+    this.autoRefreshPeriodically = autoRefreshPeriodically;
 }
