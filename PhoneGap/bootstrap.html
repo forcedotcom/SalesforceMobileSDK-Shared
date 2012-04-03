@@ -60,7 +60,8 @@
                     var oauthProperties = new OAuthProperties(remoteAccessConsumerKey, 
                                                               oauthRedirectURI, 
                                                               oauthScopes, 
-                                                              autoRefreshOnForeground);
+                                                              autoRefreshOnForeground,
+                                                              autoRefreshPeriodically);
                     SalesforceOAuthPlugin.authenticate(loginSuccess, loginFailure, oauthProperties);
                 } else {
                     if (startData instanceof SFHybridApp.LocalAppStartData) {
