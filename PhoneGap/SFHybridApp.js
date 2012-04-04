@@ -106,8 +106,13 @@ loadUrl: function(fullAppUrl) {
  * Determine whether the device is online.
  */
 deviceIsOnline: function() {
-    var connType = navigator.network.connection.type;
-    SFHybridApp.logToConsole("deviceIsOnline connType: " + connType);
+    var connType;
+    if (navigator && navigator.network && navigator.network.connection) {
+        connType = navigator.network.connection.type;
+        SFHybridApp.logToConsole("deviceIsOnline connType: " + connType);
+    } else {
+        SFHybridApp.logToConsole("deviceIsOnline connType is undefined.");
+    }
     
     if (typeof connType !== 'undefined') {
         // PhoneGap's connection object.  May be more accurate?
