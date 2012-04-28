@@ -90,6 +90,23 @@ buildAppUrl: function(server, page) {
 },
 
 /**
+ * Creates the initial entry page to the service, for pages that are hosted on Salesforce.
+ * This function pretty much assumes OAuth authentication has occurred, as it requires
+ * data that has been returned as part of the authentication process.
+ *
+ * instanceServer - Required - The instance where the page will be hosted.
+ * startPage      - Required - The start page portion of the URL (e.g. /apex/MyPage).
+ * accessToken    - Required - The access / SID token used to authenticate the user.
+ *
+ * Returns: The full URL required to load the requested start page on the service.
+ */
+buildFrontDoorUrl: function(instanceServer, startPage, accessToken) {
+    var baseUrl = SFHybridApp.buildAppUrl(instanceServer, "/secur/frontdoor.jsp");
+    var fullUrl = baseUrl + "?sid=" + encodeURIComponent(accessToken) + "&retURL=" + encodeURIComponent(startPage);
+    return fullUrl;
+},
+
+/**
  * Load the given URL, using PhoneGap on Android, and loading directly on other platforms.
  *   fullAppUrl       - The URL to load.
  */
@@ -121,6 +138,36 @@ deviceIsOnline: function() {
         // Default to browser facility.
     	return navigator.onLine;
     }
+},
+
+/**
+ * Sanitizes a URL for logging, based on an array of querystring parameters whose
+ * values should be sanitized.  The value of each querystring parameter, if found
+ * in the URL, will be changed to '[redacted]'.  Useful for getting rid of secure
+ * data on the querystring, so it doesn't get persisted in an app log for instance.
+ *
+ * origUrl            - Required - The URL to sanitize.
+ * sanitizeParamArray - Required - An array of querystring parameters whose values
+ *                                 should be sanitized.
+ * Returns: The sanitzed URL.
+ */
+sanitizeUrlParamsForLogging: function(origUrl, sanitizeParamArray) {
+    var trimmedOrigUrl = jQuery.trim(origUrl);
+    if (trimmedOrigUrl === '')
+        return trimmedOrigUrl;
+    
+    if ((typeof sanitizeParamArray !== "object") || (sanitizeParamArray.length === 0))
+        return trimmedOrigUrl;
+    
+    var redactedUrl = trimmedOrigUrl;
+    for (var i = 0; i < sanitizeParamArray.length; i++) {
+        var paramRedactRegexString = "^(.*[\\?&]" + sanitizeParamArray[i] + "=)([^&]+)(.*)$";
+        var paramRedactRegex = new RegExp(paramRedactRegexString, "i");
+        if (paramRedactRegex.test(redactedUrl))
+            redactedUrl = redactedUrl.replace(paramRedactRegex, "$1[redacted]$3");
+    }
+    
+    return redactedUrl;
 },
 
 /**
