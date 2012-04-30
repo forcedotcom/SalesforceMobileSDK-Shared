@@ -17,7 +17,7 @@ var remoteAccessConsumerKey = "___VARIABLE_publicKey___";
 var oauthRedirectURI = "___VARIABLE_redirectURL___";
 
 // The authorization/access scope(s) you wish to define for your application.
-var oauthScopes = ["visualforce","api"];
+var oauthScopes = ["web","api"];
 
 // The start data associated with the application.  Use SFHybridApp.LocalAppStartData for a "local"
 // PhoneGap-based application, and SFHybridApp.RemoteAppStartData for a Visualforce-based
