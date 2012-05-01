@@ -105,10 +105,10 @@
                 if (startData.isAbsoluteUrl) {
                     fullAppUrl = startData.appStartUrl;
                 } else {
-                    fullAppUrl = SFHybridApp.buildAppUrl(oauthCredentials.instanceUrl, startData.appStartUrl);
+                    fullAppUrl = SFHybridApp.buildFrontDoorUrl(oauthCredentials.instanceUrl, startData.appStartUrl, oauthCredentials.accessToken);
                 }
             }
-            SFHybridApp.logToConsole("fullAppUrl: " + fullAppUrl);
+            SFHybridApp.logToConsole("fullAppUrl: " + SFHybridApp.sanitizeUrlParamsForLogging(fullAppUrl, [ "sid" ]));
             SFHybridApp.loadUrl(fullAppUrl);
         }
             
