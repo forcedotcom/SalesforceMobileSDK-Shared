@@ -19,9 +19,6 @@
     <!-- required for smartstore plugin support -->    
     <script type="text/javascript" src="../SFSmartStorePlugin.js"></script>
 
-    <!-- required for testrunner plugin support -->    
-    <script type="text/javascript" src="../SFTestRunnerPlugin.js"></script>
-
 	<!-- load qunit -->
     <link rel="stylesheet" type="text/css" href="../qunit.css" />
     <script type="text/javascript" src="../qunit.js"></script>
@@ -33,6 +30,7 @@
     <script type="text/javascript" src="../SFSmartStoreLoadTestSuite.js"></script>
 
     <!-- mock implementation of smart store -- so we can run outside the container -->
+    <script type="text/javascript" src="SFMockSmartStorePlugin.js"></script>
 
     <script type="text/javascript" charset="utf-8">
     var debugMode = true;
@@ -40,11 +38,24 @@
     $(function() {
         //Add event listeners and so forth here
         SFHybridApp.logToConsole("onLoad: jquery ready");
+		document.addEventListener("deviceready", onDeviceReady,false);
 
+        // Without a container, we have to do some of the initialization ourselves
+        PhoneGap.Channel.join(function() { 
+            PhoneGap.onPhoneGapInit.fire(); // run constructor
+            PhoneGap.onDeviceReady.fire();  // done
+        }, [ PhoneGap.onDOMContentLoaded ]);
+    });
+
+    // When this function is called, PhoneGap has been initialized and is ready to roll 
+    function onDeviceReady() {
+        SFHybridApp.logToConsole("onDeviceReady: PhoneGap ready");
+
+        // Enabled links
         var $j = jQuery.noConflict();
         $j('#link_test_suite').click(function() { new SmartStoreTestSuite().startTests(); });
         $j('#link_load_test_suite').click(function() { new SmartStoreLoadTestSuite().startTests(); });
-    });
+    }
         
     </script>
         
