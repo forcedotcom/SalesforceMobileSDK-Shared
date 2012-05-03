@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+
+    <!-- include jquery mobile -->
+    <link rel="stylesheet" href="../../jquery/jquery.mobile-1.0b2.min.css" />
+    <script src="../../jquery/jquery-1.6.2.min.js"></script>
+    <script src="../../jquery/jquery.mobile-1.0b2.min.js"></script>
+        
+    <!-- include local utility functionality -->
+    <link rel="stylesheet" type="text/css" href="../SFHybridApp.css" />
+    <script type="text/javascript" src="../SFHybridApp.js"></script>
+
+    <!-- include phonegap / callback -->
+	<script type="text/javascript" charset="utf-8" src="phonegap-1.2.0.js"></script>
+        
+    <!-- required for smartstore plugin support -->    
+    <script type="text/javascript" src="../SFSmartStorePlugin.js"></script>
+
+    <!-- required for testrunner plugin support -->    
+    <script type="text/javascript" src="../SFTestRunnerPlugin.js"></script>
+
+	<!-- load qunit -->
+    <link rel="stylesheet" type="text/css" href="../qunit.css" />
+    <script type="text/javascript" src="../qunit.js"></script>
+
+	<!-- we load all the test suite definitions here but don't run them until 
+	the native test runner tells us to -->
+	<script type="text/javascript" src="../SFTestSuite.js"></script>
+    <script type="text/javascript" src="../SFSmartStoreTestSuite.js"></script>
+    <script type="text/javascript" src="../SFSmartStoreLoadTestSuite.js"></script>
+
+    <!-- mock implementation of smart store -- so we can run outside the container -->
+
+    <script type="text/javascript" charset="utf-8">
+    var debugMode = true;
+
+    $(function() {
+        //Add event listeners and so forth here
+        SFHybridApp.logToConsole("onLoad: jquery ready");
+
+        var $j = jQuery.noConflict();
+        $j('#link_test_suite').click(function() { new SmartStoreTestSuite().startTests(); });
+        $j('#link_load_test_suite').click(function() { new SmartStoreLoadTestSuite().startTests(); });
+    });
+        
+    </script>
+        
+  </head>
+  <body>
+      <div data-role="page" data-theme="b" id="jqm-home"> 
+          <div  data-role="header"> 
+              <h1>Mock SmartStore Test</h1> 
+          </div> 
+
+          <p><a href="#" id="link_test_suite" data-role="button" data-inline="true">Run Tests</a></p>
+          <p><a href="#" id="link_load_test_suite" data-role="button" data-inline="true">Run Load Tests</a></p>
+
+
+		  <div id="qunit-testrunner-toolbar"></div>
+		  <h2 id="qunit-userAgent"></h2>
+		  <ol id="qunit-tests"></ol>
+		  <div id="qunit-fixture">test markup, will be hidden</div>
+
+          <h3>console:</h3>
+          <p id="console" class="logWindow"/>
+      </div> 
+  </body>
+</html>
