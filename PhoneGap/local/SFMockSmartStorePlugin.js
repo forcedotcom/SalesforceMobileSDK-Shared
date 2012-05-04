@@ -54,7 +54,7 @@ PhoneGap.exec = function(successCB, errorCB, service, action, args) {
         if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
         if (indexSpecs !== undefined && indexSpecs.length == 0) {errorCB("No indexSpecs specified for soup: " + soupName); return;}
 
-        successCB(mockStore.registerSoup(soupName));
+        successCB(mockStore.registerSoup(soupName, indexSpecs));
     }
     else if (action === "pgRemoveSoup") {
         var soupName = args[0].soupName;
@@ -72,6 +72,9 @@ PhoneGap.exec = function(successCB, errorCB, service, action, args) {
         var querySpec = args[0].querySpec;
 
         if (!mockStore.soupExists(soupName)) { errorCB("Soup: " + soupName + " does not exist"); return; }
+        if (!mockStore.indexExists(soupName, querySpec.indexPath)) { 
+            errorCB(soupName + " does not have an index on " + querySpec.indexPath); return; 
+        }
         successCB(mockStore.querySoup(soupName, querySpec));
     }
     else if (action === "pgRetrieveSoupEntries") {
@@ -118,6 +121,7 @@ PhoneGap.exec = function(successCB, errorCB, service, action, args) {
 // Mock smart store class 
 var MockSmartStore = function() {
     this.soups = {};
+    this.soupIndexSpecs = {};
     this.cursors = {};
     this.nextSoupId = 0;
     this.nextCursorId = 0;
@@ -128,10 +132,23 @@ MockSmartStore.prototype.soupExists = function(soupName) {
     return this.soups[soupName] !== undefined;
 };
 
+MockSmartStore.prototype.indexExists = function(soupName, indexPath) {
+    var indexSpecs = this.soupIndexSpecs[soupName];
+    if (indexSpecs != null) {
+        for (var i=0; i<indexSpecs.length; i++) {
+            var indexSpec = indexSpecs[i];
+            if (indexSpec.path == indexPath) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
-MockSmartStore.prototype.registerSoup = function(soupName) {
+MockSmartStore.prototype.registerSoup = function(soupName, indexSpecs) {
     if (!this.soupExists(soupName)) {
         this.soups[soupName] = {};
+        this.soupIndexSpecs[soupName] = indexSpecs;
     }
     return soupName;
 };
@@ -139,6 +156,7 @@ MockSmartStore.prototype.registerSoup = function(soupName) {
 
 MockSmartStore.prototype.removeSoup = function(soupName) {
     delete this.soups[soupName];
+    delete this.soupIndexSpecs[soupName];
 };
 
 
@@ -178,13 +196,23 @@ MockSmartStore.prototype.removeFromSoup = function(soupName, entryIds) {
 };
 
 
+MockSmartStore.prototype.project = function(soupElt, path) {
+    var pathElements = path.split(".");
+    var o = soupElt;
+    for (var i = 0; i<pathElements.length; i++) {
+        var pathElement = pathElements[i];
+        o = o[pathElement];
+    }
+    return o;
+};
+
 MockSmartStore.prototype.querySoupFull = function(soupName, querySpec) {
     var soup = this.soups[soupName];
     var results = [];
     var likeRegexp = (querySpec.likeKey ? new RegExp(querySpec.likeKey.replace(/%/g, ".*")) : null);
     for (var soupEntryId in soup) {
         var soupElt = soup[soupEntryId];
-        var projection = soupElt[querySpec.indexPath];
+        var projection = this.project(soupElt, querySpec.indexPath);
         if (querySpec.queryType === "exact") {
             if (projection == querySpec.matchKey) {
                 results.push(soupElt);
