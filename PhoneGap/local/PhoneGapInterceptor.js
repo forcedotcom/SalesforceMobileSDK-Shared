@@ -33,7 +33,7 @@
 
 // Block calls to container (they use javascript prompt on Android)
 window.prompt = function(msg, arg) { 
-    SFHybridApp.logToConsole("Called prompt with " + msg + ":" + arg); 
+    console.log("Called prompt with " + msg + ":" + arg); 
 }
 
 /**
@@ -76,7 +76,7 @@ PhoneGap.interceptExec = function(service, action, func) {
    @param args
 */
 PhoneGap.exec = function(successCB, errorCB, service, action, args) {
-    SFHybridApp.logToConsole("PhoneGap.exec " + service + ":" + action);
+    console.log("PhoneGap.exec " + service + ":" + action);
 
     var found = false;
     var req = service + ":" + action;
@@ -89,7 +89,7 @@ PhoneGap.exec = function(successCB, errorCB, service, action, args) {
     }
 
     if (!found) {
-        SFHybridApp.logToConsole("No mock for " + service + ":" + action);
+        console.log("No mock for " + service + ":" + action);
         return;
     }
 };

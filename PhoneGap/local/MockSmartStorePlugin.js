@@ -32,7 +32,6 @@
 */
 
 var SMARTSTORE_SERVICE = "com.salesforce.smartstore";
-var mockStore = new MockSmartStore();
 
 PhoneGap.interceptExec(SMARTSTORE_SERVICE, "pgRegisterSoup", function (successCB, errorCB, args) {
     var soupName = args[0].soupName;

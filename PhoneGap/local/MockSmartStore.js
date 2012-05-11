@@ -30,12 +30,32 @@
   Meant for development and testing only, the data is stored in SessionStorage, queries do full scans.
 */
 
-var MockSmartStore = function() {
+var MockSmartStore = function(useSessionStorage) {
     this.soups = {};
     this.soupIndexSpecs = {};
     this.cursors = {};
     this.nextSoupId = 0;
     this.nextCursorId = 0;
+    this.useSessionStorage = useSessionStorage;
+};
+
+MockSmartStore.prototype.toJSON = function() {
+    var self = this;
+    return JSON.stringify({
+        soups: self.soups,
+        soupIndexSpecs: self.soupIndexSpecs,
+        nextSoupId: self.nextSoupId,
+        nextCursorId: self.nextCursorId
+    });
+}
+
+MockSmartStore.prototype.fromJSON = function(json) {
+    var obj = JSON.parse(json);
+    this.soups = obj.soups;
+    this.soupIndexSpecs = obj.soupIndexSpecs;
+    this.cursors = obj.cursors;
+    this.nextSoupId = obj.nextSoupId;
+    this.nextCursorId = obj.nextCursorId;
 };
 
 MockSmartStore.prototype.soupExists = function(soupName) {
@@ -178,3 +198,26 @@ MockSmartStore.prototype.moveCursorToPage = function(cursorId, pageIndex) {
 MockSmartStore.prototype.closeCursor = function(cursorId) {
     delete this.cursors[cursorId];
 };
+
+// Initialize MockSmartStore singleton
+MockSmartStore.init = function(useSessionStorage) {
+    mockStore = new MockSmartStore(useSessionStorage);
+
+    if (useSessionStorage && window.sessionStorage) {
+        // Restore smartstore from storage
+        var STORAGE_KEY_MOCKSTORE = "mockStore";
+        var json = window.sessionStorage.getItem(STORAGE_KEY_MOCKSTORE);
+        if (json) {
+            console.log("Getting store from session storage");
+            mockStore.fromJSON(json);
+        }
+        // Save smartstore to storage when onBeforeUnload fires
+        $(window).bind('beforeunload', function() {
+            if (window.sessionStorage) {
+            console.log("Saving store to session storage");
+                var json = mockStore.toJSON();
+                window.sessionStorage.setItem(STORAGE_KEY_MOCKSTORE, json);
+            }
+        });
+    }
+}
