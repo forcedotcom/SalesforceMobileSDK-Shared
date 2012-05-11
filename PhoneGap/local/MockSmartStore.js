@@ -25,100 +25,11 @@
  */
 
 /*
-   Mock smartstore phonegap plugin implementation 
+  MockSmartStore: a JavaScript SmartStore
 
-   It overrides the smartstore phonegap plugin implementation and creates an in-memory smartstore instead of calling out to the container
-   This file is meant to be used during development to test code that needs to interact with the smartstore without running inside the container
-
-   NB: This file should be included after phonegap.js and SFSmartStorePlugin.js
+  Meant for development and testing only, the data is stored in SessionStorage, queries do full scans.
 */
 
-// Block calls to container (they use javascript prompt)
-window.prompt = function(msg, arg) { 
-    SFHybridApp.logToConsole("Called prompt with " + msg + ":" + arg); 
-}
-
-// Supply mock implementation for selected plugin calls
-PhoneGap.exec = function(successCB, errorCB, service, action, args) {
-    SFHybridApp.logToConsole("PhoneGap.exec " + service + ":" + action);
-
-    if (service !== "com.salesforce.smartstore") {
-        SFHybridApp.logToConsole("No mock for " + service + ":" + action);
-        return;
-    }
-
-    if (action === "pgRegisterSoup") {
-        var soupName = args[0].soupName;
-        var indexSpecs = args[0].indexes;
-
-        if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
-        if (indexSpecs !== undefined && indexSpecs.length == 0) {errorCB("No indexSpecs specified for soup: " + soupName); return;}
-
-        successCB(mockStore.registerSoup(soupName, indexSpecs));
-    }
-    else if (action === "pgRemoveSoup") {
-        var soupName = args[0].soupName;
-
-        mockStore.removeSoup(soupName);
-        successCB("OK");
-    }
-    else if (action === "pgSoupExists") {
-        var soupName = args[0].soupName;
-
-        successCB(mockStore.soupExists(soupName));
-    }
-    else if (action === "pgQuerySoup") {
-        var soupName = args[0].soupName;
-        var querySpec = args[0].querySpec;
-
-        if (!mockStore.soupExists(soupName)) { errorCB("Soup: " + soupName + " does not exist"); return; }
-        if (!mockStore.indexExists(soupName, querySpec.indexPath)) { 
-            errorCB(soupName + " does not have an index on " + querySpec.indexPath); return; 
-        }
-        successCB(mockStore.querySoup(soupName, querySpec));
-    }
-    else if (action === "pgRetrieveSoupEntries") {
-        var soupName = args[0].soupName;
-        var entryIds = args[0].entryIds;
-
-        if (!mockStore.soupExists(soupName)) { errorCB("Soup: " + soupName + " does not exist"); return; }
-        successCB(mockStore.retrieveSoupEntries(soupName, entryIds));
-    }
-    else if (action === "pgUpsertSoupEntries") {
-        var soupName = args[0].soupName;
-        var entries = args[0].entries;
-
-        if (!mockStore.soupExists(soupName)) { errorCB("Soup: " + soupName + " does not exist"); return; }
-        successCB(mockStore.upsertSoupEntries(soupName, entries));
-    }
-    else if (action === "pgRemoveFromSoup") {
-        var soupName = args[0].soupName;
-        var entryIds = args[0].entryIds;
-
-        if (!mockStore.soupExists(soupName)) { errorCB("Soup: " + soupName + " does not exist"); return; }
-        mockStore.removeFromSoup(soupName, entryIds);
-        successCB("OK");
-    }
-    else if (action === "pgMoveCursorToPageIndex") {
-        var cursorId = args[0].cursorId;
-        var index = args[0].index;
-
-        successCB(mockStore.moveCursorToPage(cursorId, index));
-    }
-    else if (action === "pgCloseCursor") {
-        var cursorId = args[0].cursorId;
-
-        mockStore.closeCursor(cursorId);
-        successCB("OK");
-    }
-    else {
-        SFHybridApp.logToConsole("No mock for " + service + ":" + action);
-        return;
-    }
-};
-
-
-// Mock smart store class 
 var MockSmartStore = function() {
     this.soups = {};
     this.soupIndexSpecs = {};
@@ -126,7 +37,6 @@ var MockSmartStore = function() {
     this.nextSoupId = 0;
     this.nextCursorId = 0;
 };
-
 
 MockSmartStore.prototype.soupExists = function(soupName) {
     return this.soups[soupName] !== undefined;
@@ -153,12 +63,10 @@ MockSmartStore.prototype.registerSoup = function(soupName, indexSpecs) {
     return soupName;
 };
 
-
 MockSmartStore.prototype.removeSoup = function(soupName) {
     delete this.soups[soupName];
     delete this.soupIndexSpecs[soupName];
 };
-
 
 MockSmartStore.prototype.upsertSoupEntries = function(soupName, entries) {
     var soup = this.soups[soupName];
@@ -175,7 +83,6 @@ MockSmartStore.prototype.upsertSoupEntries = function(soupName, entries) {
     return entries;
 };
 
-
 MockSmartStore.prototype.retrieveSoupEntries = function(soupName, entryIds) {
     var soup = this.soups[soupName];
     var entries = [];
@@ -186,7 +93,6 @@ MockSmartStore.prototype.retrieveSoupEntries = function(soupName, entryIds) {
     return entries;
 }
 
-
 MockSmartStore.prototype.removeFromSoup = function(soupName, entryIds) {
     var soup = this.soups[soupName];
     for (var i=0; i<entryIds.length; i++) {
@@ -194,7 +100,6 @@ MockSmartStore.prototype.removeFromSoup = function(soupName, entryIds) {
         delete soup[entryId];
     }
 };
-
 
 MockSmartStore.prototype.project = function(soupElt, path) {
     var pathElements = path.split(".");
@@ -273,8 +178,3 @@ MockSmartStore.prototype.moveCursorToPage = function(cursorId, pageIndex) {
 MockSmartStore.prototype.closeCursor = function(cursorId) {
     delete this.cursors[cursorId];
 };
-
-// Mock smart store instance
-if (typeof mockStore === "undefined") {
-    mockStore = new MockSmartStore();
-}

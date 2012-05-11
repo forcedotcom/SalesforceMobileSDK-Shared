@@ -29,22 +29,21 @@
     <script type="text/javascript" src="../SFSmartStoreTestSuite.js"></script>
     <script type="text/javascript" src="../SFSmartStoreLoadTestSuite.js"></script>
 
-    <!-- mock implementation of smart store -- so we can run outside the container -->
-    <script type="text/javascript" src="SFMockSmartStorePlugin.js"></script>
+    <!-- includes that allow testing SmartStore outside the container -->
+    <script type="text/javascript" src="PhoneGapInterceptor.js"></script>
+    <script type="text/javascript" src="MockSmartStore.js"></script>
+    <script type="text/javascript" src="MockSmartStorePlugin.js"></script>
 
     <script type="text/javascript" charset="utf-8">
     var debugMode = true;
 
     $(function() {
-        //Add event listeners and so forth here
+        //Add event listener
         SFHybridApp.logToConsole("onLoad: jquery ready");
 		document.addEventListener("deviceready", onDeviceReady,false);
 
         // Without a container, we have to do some of the initialization ourselves
-        PhoneGap.Channel.join(function() { 
-            PhoneGap.onPhoneGapInit.fire(); // run constructor
-            PhoneGap.onDeviceReady.fire();  // done
-        }, [ PhoneGap.onDOMContentLoaded ]);
+        PhoneGap.completeInitalization();
     });
 
     // When this function is called, PhoneGap has been initialized and is ready to roll 
