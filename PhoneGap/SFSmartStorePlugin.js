@@ -226,13 +226,17 @@ SmartStore.prototype.retrieveSoupEntries = function (soupName, entryIds, success
 };
 
 SmartStore.prototype.upsertSoupEntries = function (soupName, entries, successCB, errorCB) {
+	SmartStore.prototype.upsertSoupEntriesWithExternalId(soupName, entries, "_soupEntryId", successCB, errorCB);
+};
+
+SmartStore.prototype.upsertSoupEntriesWithExternalId = function (soupName, entries, externalIdPath, successCB, errorCB) {
     if (this.logLevel > 0) 
         SFHybridApp.logToConsole("SmartStore.upsertSoupEntries: '" + soupName + "' entries.length: " + entries.length);
 
     PhoneGap.exec(successCB, errorCB, 
                   "com.salesforce.smartstore", 
                   "pgUpsertSoupEntries", 
-                  [{"soupName":soupName, "entries":entries}]
+                  [{"soupName":soupName, "entries":entries, "externalIdPath": externalIdPath}]
                   );
 };
 
