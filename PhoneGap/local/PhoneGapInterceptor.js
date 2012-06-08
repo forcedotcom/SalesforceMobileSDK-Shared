@@ -82,7 +82,12 @@ PhoneGap.exec = function(successCB, errorCB, service, action, args) {
     var req = service + ":" + action;
     for (var key in PhoneGap.interceptors) {
         if (key === req) {
-            PhoneGap.interceptors[key](successCB, errorCB, args);
+            try {
+                PhoneGap.interceptors[key](successCB, errorCB, args);
+            }
+            catch (err) {
+                errorCB(err);
+            }
             found = true;
             break;
         }
