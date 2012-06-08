@@ -372,13 +372,13 @@ SmartStoreTestSuite.prototype.testUpsertSoupEntriesWithExternalId = function()  
             }
             
             //update the entries
-		    navigator.smartstore.upsertSoupEntriesWithExternalId(self.defaultSoupName, entries2, "key", 
+		    navigator.smartstore.upsertSoupEntriesWithExternalId(self.defaultSoupName, entries2, "Id", 
 				function(entries3) {
                     QUnit.equal(entries3.length,entries2.length,"updated list match initial list len");
-                    QUnit.equal(entries3[0].updatedField,"Mister Toast 0","updatedField is correct");
+                    QUnit.equal(entries3[4].updatedField,"Mister Toast 4","updatedField is correct");
                     self.finalizeTest();
 				}, 
-				function(err) { QUnit.ok(false,"updating entries failed: " + err); }
+				function(err) { self.setAssertionFailed("upsertSoupEntries failed: " + err); }
 			);
 		});
 	});

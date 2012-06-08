@@ -88,15 +88,37 @@ MockSmartStore.prototype.removeSoup = function(soupName) {
     delete this.soupIndexSpecs[soupName];
 };
 
-MockSmartStore.prototype.upsertSoupEntries = function(soupName, entries) {
+MockSmartStore.prototype.upsertSoupEntries = function(soupName, entries, externalIdPath) {
     var soup = this.soups[soupName];
     
     for (var i=0; i<entries.length; i++) {
         var entry = entries[i];
-        if (entry._soupEntryId === undefined) {
-            entry._soupEntryId = this.nextSoupId++;
+        var internalId;
+
+        // upsert with external id
+        if (externalIdPath != "_soupEntryId") {
+            var externalId = entry[externalIdPath];
+            for (var soupEltId in soup) {
+                var soupElt = soup[soupEltId];
+                var projection = this.project(soupElt, externalIdPath);
+                if (projection == externalId) {
+                    internalId = soupEltId;
+                    break;
+                }
+            }
         }
-        soup[ entry._soupEntryId ] = entry;
+        // "regular" upsert
+        else {
+            internalId = entry._soupEntryId;
+        }
+
+        // create
+        if (internalId === undefined) {
+            internalId = this.nextSoupId++;
+            entry._soupEntryId = internalId;
+        }
+        
+        soup[ internalId ] = entry;
     }
 
     // XXX we should clone instead of modifying in place
