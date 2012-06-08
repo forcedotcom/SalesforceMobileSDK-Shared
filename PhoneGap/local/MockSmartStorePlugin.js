@@ -78,9 +78,13 @@ PhoneGap.interceptExec(SMARTSTORE_SERVICE, "pgRetrieveSoupEntries", function (su
 PhoneGap.interceptExec(SMARTSTORE_SERVICE, "pgUpsertSoupEntries", function (successCB, errorCB, args) {
     var soupName = args[0].soupName;
     var entries = args[0].entries;
+    var externalIdPath = args[0].externalIdPath;
 
     if (!mockStore.soupExists(soupName)) { errorCB("Soup: " + soupName + " does not exist"); return; }
-    successCB(mockStore.upsertSoupEntries(soupName, entries));
+    if (externalIdPath != "_soupEntryId" && !mockStore.indexExists(soupName, externalIdPath)) { 
+        errorCB(soupName + " does not have an index on " + externalIdPath); return; 
+    }
+    successCB(mockStore.upsertSoupEntries(soupName, entries, externalIdPath));
 });
 
 PhoneGap.interceptExec(SMARTSTORE_SERVICE, "pgRemoveFromSoup", function (successCB, errorCB, args) {
