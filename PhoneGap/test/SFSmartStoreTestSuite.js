@@ -378,7 +378,7 @@ SmartStoreTestSuite.prototype.testUpsertSoupEntriesWithExternalId = function()  
                     QUnit.equal(entries3[4].updatedField,"Mister Toast 4","updatedField is correct");
                     self.finalizeTest();
 				}, 
-				function(err) { QUnit.ok(false,"updating entries failed: " + err); }
+				function(err) { self.setAssertionFailed("upsertSoupEntries failed: " + err); }
 			);
 		});
 	});
