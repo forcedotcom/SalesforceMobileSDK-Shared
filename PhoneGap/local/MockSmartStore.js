@@ -58,6 +58,10 @@ MockSmartStore.prototype.fromJSON = function(json) {
     this.nextCursorId = obj.nextCursorId;
 };
 
+MockSmartStore.prototype.checkSoup = function(soupName) {
+    if (!this.soupExists(soupName))  throw "Soup: " + soupName + " does not exist";
+}
+
 MockSmartStore.prototype.soupExists = function(soupName) {
     return this.soups[soupName] !== undefined;
 };
@@ -89,6 +93,10 @@ MockSmartStore.prototype.removeSoup = function(soupName) {
 };
 
 MockSmartStore.prototype.upsertSoupEntries = function(soupName, entries, externalIdPath) {
+    this.checkSoup(soupName); 
+    if (externalIdPath != "_soupEntryId" && !this.indexExists(soupName, externalIdPath)) 
+        throw soupName + " does not have an index on " + externalIdPath; 
+
     var soup = this.soups[soupName];
     
     for (var i=0; i<entries.length; i++) {
@@ -102,8 +110,10 @@ MockSmartStore.prototype.upsertSoupEntries = function(soupName, entries, externa
                 var soupElt = soup[soupEltId];
                 var projection = this.project(soupElt, externalIdPath);
                 if (projection == externalId) {
+                    if (internalId !== undefined) {
+                        throw "There are more than one soup elements where " + externalIdPath + " is " + externalId;
+                    }
                     internalId = soupEltId;
-                    break;
                 }
             }
         }
@@ -126,6 +136,7 @@ MockSmartStore.prototype.upsertSoupEntries = function(soupName, entries, externa
 };
 
 MockSmartStore.prototype.retrieveSoupEntries = function(soupName, entryIds) {
+    this.checkSoup(soupName); 
     var soup = this.soups[soupName];
     var entries = [];
     for (var i=0; i<entryIds.length; i++) {
@@ -136,6 +147,7 @@ MockSmartStore.prototype.retrieveSoupEntries = function(soupName, entryIds) {
 }
 
 MockSmartStore.prototype.removeFromSoup = function(soupName, entryIds) {
+    this.checkSoup(soupName); 
     var soup = this.soups[soupName];
     for (var i=0; i<entryIds.length; i++) {
         var entryId = entryIds[i];
@@ -154,6 +166,9 @@ MockSmartStore.prototype.project = function(soupElt, path) {
 };
 
 MockSmartStore.prototype.querySoupFull = function(soupName, querySpec) {
+    this.checkSoup(soupName); 
+    if (!this.indexExists(soupName, querySpec.indexPath)) throw soupName + " does not have an index on " + querySpec.indexPath; 
+
     var soup = this.soups[soupName];
     var results = [];
     var likeRegexp = (querySpec.likeKey ? new RegExp(querySpec.likeKey.replace(/%/g, ".*")) : null);
