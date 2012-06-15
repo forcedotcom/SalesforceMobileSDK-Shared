@@ -169,19 +169,48 @@ SmartStoreTestSuite.prototype.stuffTestSoup = function(callback) {
 
 
 /**
-* Helper method that adds entry to the named soup
-*/
+ * Helper method that adds entry to the named soup
+ */
 SmartStoreTestSuite.prototype.addGeneratedEntriesToSoup = function(soupName, nEntries, callback) {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.addGeneratedEntriesToSoup: " + soupName + " nEntries=" + nEntries);
  
-	var entries = [];
-	for (var i = 0; i < nEntries; i++) {
-		var entityId = "00300" + i;
-		var myEntry = { Name: "Todd Stellanova" + i, Id: entityId,  attributes:{type:"Contact", url:"/foo/Contact/"+i} };
-		entries.push(myEntry);
-	}
+	var entries = this.createGeneratedEntries(nEntries);
 	
 	this.addEntriesToSoup(soupName, entries, callback);
+};
+
+/**
+ * Creates a list of generated entries, with index fields that should order well automatically.
+ *   nEntries - The number of generated entries to create.
+ * Return: An array of generated entries.
+ */
+SmartStoreTestSuite.prototype.createGeneratedEntries = function(nEntries) {
+    var entries = [];
+    for (var i = 0; i < nEntries; i++) {
+        var paddedIndex = this.padNumber(i, nEntries, "0");
+        var entityId = "003" + paddedIndex;
+        var myEntry = { Name: "Todd Stellanova" + paddedIndex, Id: entityId,  attributes:{type:"Contact", url:"/foo/Contact/"+paddedIndex} };
+        entries.push(myEntry);
+    }
+    return entries;
+};
+
+/**
+ * Pads a number to match a specified number of numerals.
+ *  numberToPad - The original number to pad.
+ *  maxSize     - The ultimate size, in numerals, of the padded number.
+ *  paddingChar - The character used to pad the number.
+ * Returns: The padded number string.
+ */
+SmartStoreTestSuite.prototype.padNumber = function(numberToPad, maxSize, paddingChar) {
+    var numberToPadString = numberToPad + "";
+    var numberToPadStringLength = numberToPadString.length;
+    var maxSizeString = maxSize + "";
+    var maxSizeStringLength = maxSizeString.length;
+    for (var i = 0; i < (maxSizeStringLength - numberToPadStringLength); i++) {
+        numberToPadString = paddingChar + numberToPadString;
+    }
+    return numberToPadString;
 };
 
 /**
@@ -199,7 +228,22 @@ SmartStoreTestSuite.prototype.addEntriesToSoup = function(soupName, entries, cal
 		function(param) { self.setAssertionFailed("upsertSoupEntries failed: " + param); }
 	);
 };
-
+    
+/**
+ * Helper method that upserts soup entries to the named soup, with the given external id path.
+ */
+SmartStoreTestSuite.prototype.upsertEntriesToSoupWithExternalIdPath = function(soupName, entries, externalIdPath, callback) {
+    SFHybridApp.logToConsole("In SFSmartStoreTestSuite.upsertEntriesToSoupWithExternalIdPath: " + soupName + " entries.length=" + entries.length + " externalIdPath: " + externalIdPath);
+        
+    var self = this;
+    navigator.smartstore.upsertSoupEntriesWithExternalId(soupName, entries, externalIdPath,
+        function(upsertedEntries) {
+            SFHybridApp.logToConsole("upsertEntriesToSoupWithExternalIdPath of " + upsertedEntries.length + " entries succeeded");
+            callback(upsertedEntries);
+        },
+        function(param) { self.setAssertionFailed("upsertEntriesToSoupWithExternalIdPath '" + externalIdPath + "' failed: " + param); }
+    );
+};
 
 /**
  * Helper method that adds n soup entries to default soup
@@ -358,30 +402,46 @@ SmartStoreTestSuite.prototype.testUpsertSoupEntriesWithExternalId = function()  
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testUpsertSoupEntriesWithExternalId");
 
 	var self = this;
-	self.addGeneratedEntriesToTestSoup(7, function(entries1) {
-		QUnit.equal(entries1.length, 7);
+	self.addGeneratedEntriesToTestSoup(11, function(entries1) {
+		QUnit.equal(entries1.length, 11);
 		
-		//upsert another batch
-		self.addGeneratedEntriesToTestSoup(12, function(entries2) {
-			QUnit.equal(entries2.length, 12);
-            //modify the initial entries
-            for (var i = 0; i < entries2.length; i++) {
-                var e = entries2[i];
-                e.updatedField = "Mister Toast " + i;
-                delete e._soupEntryId; // we are going to upsert by eternal id
+		// Now upsert an overlapping batch, using an external ID path.
+        var entries2 = self.createGeneratedEntries(16);
+        for (var i = 0; i < entries2.length; i++) {
+            var entry = entries2[i];
+            entry.updatedField = "Mister Toast " + i;
+        }
+        var externalIdPath = self.defaultSoupIndexes[0].path;
+        self.upsertEntriesToSoupWithExternalIdPath(self.defaultSoupName, entries2, externalIdPath,
+            function(entries3) {
+                QUnit.equal(entries3.length, 16);
+                
+                // Now, query the soup for all entries, and make sure that we have only 16.
+                var querySpec = navigator.smartstore.buildAllQuerySpec("Name", null, 25);
+                navigator.smartstore.querySoup(self.defaultSoupName, querySpec,
+                    function(cursor) {
+                        QUnit.equal(cursor.totalPages, 1, "Are totalPages correct?");
+                        var orderedEntries = cursor.currentPageOrderedEntries;
+                        var nEntries = orderedEntries.length;
+                        QUnit.equal(nEntries, 16, "Are there 16 entries in total?");
+                        QUnit.equal(orderedEntries[0]._soupEntryId, 1, "Is the first soup entry ID correct?");
+                        QUnit.equal(orderedEntries[0].updatedField, "Mister Toast 0", "Is the first updated field correct?");
+                        QUnit.equal(orderedEntries[15]._soupEntryId, 16, "Is the last soup entry ID correct?");
+                        QUnit.equal(orderedEntries[15].updatedField, "Mister Toast 15", "Is the last updated field correct?");
+                                                                                  
+                        navigator.smartstore.closeCursor(cursor,
+                            function(param) { QUnit.ok(true,"closeCursor ok"); self.finalizeTest(); },
+                            function(err) { self.setAssertionFailed("closeCursor failed: " + err); }
+                        );
+                    },
+                    function(err) { self.setAssertionFailed("querySoup failed: " + err); }
+                );
+            },
+            function(err) {
+                self.setAssertionFailed("Upserting entries with external ID '" + externalIdPath + "' failed: " + err);
             }
-            
-            //update the entries
-		    navigator.smartstore.upsertSoupEntriesWithExternalId(self.defaultSoupName, entries2, "key", 
-				function(entries3) {
-                    QUnit.equal(entries3.length,entries2.length,"updated list match initial list len");
-                    QUnit.equal(entries3[0].updatedField,"Mister Toast 0","updatedField is correct");
-                    self.finalizeTest();
-				}, 
-				function(err) { QUnit.ok(false,"updating entries failed: " + err); }
-			);
-		});
-	});
+        );
+    });
 }; 
 
 

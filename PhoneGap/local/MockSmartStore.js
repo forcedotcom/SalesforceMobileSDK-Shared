@@ -34,8 +34,8 @@ var MockSmartStore = function(useSessionStorage) {
     this.soups = {};
     this.soupIndexSpecs = {};
     this.cursors = {};
-    this.nextSoupId = 0;
-    this.nextCursorId = 0;
+    this.nextSoupEltId = 1;
+    this.nextCursorId = 1;
     this.useSessionStorage = useSessionStorage;
 };
 
@@ -44,7 +44,7 @@ MockSmartStore.prototype.toJSON = function() {
     return JSON.stringify({
         soups: self.soups,
         soupIndexSpecs: self.soupIndexSpecs,
-        nextSoupId: self.nextSoupId,
+        nextSoupEltId: self.nextSoupEltId,
         nextCursorId: self.nextCursorId
     });
 }
@@ -54,9 +54,13 @@ MockSmartStore.prototype.fromJSON = function(json) {
     this.soups = obj.soups;
     this.soupIndexSpecs = obj.soupIndexSpecs;
     this.cursors = obj.cursors;
-    this.nextSoupId = obj.nextSoupId;
+    this.nextSoupEltId = obj.nextSoupEltId;
     this.nextCursorId = obj.nextCursorId;
 };
+
+MockSmartStore.prototype.checkSoup = function(soupName) {
+    if (!this.soupExists(soupName))  throw "Soup: " + soupName + " does not exist";
+}
 
 MockSmartStore.prototype.soupExists = function(soupName) {
     return this.soups[soupName] !== undefined;
@@ -88,22 +92,45 @@ MockSmartStore.prototype.removeSoup = function(soupName) {
     delete this.soupIndexSpecs[soupName];
 };
 
-MockSmartStore.prototype.upsertSoupEntries = function(soupName, entries) {
+MockSmartStore.prototype.upsertSoupEntries = function(soupName, entries, externalIdPath) {
+    this.checkSoup(soupName); 
+    if (externalIdPath != "_soupEntryId" && !this.indexExists(soupName, externalIdPath)) 
+        throw soupName + " does not have an index on " + externalIdPath; 
+
     var soup = this.soups[soupName];
+    var upsertedEntries = [];
     
     for (var i=0; i<entries.length; i++) {
-        var entry = entries[i];
-        if (entry._soupEntryId === undefined) {
-            entry._soupEntryId = this.nextSoupId++;
-        }
-        soup[ entry._soupEntryId ] = entry;
-    }
+        var entry = JSON.parse(JSON.stringify(entries[i])); // clone
+        var isNew = true;
 
-    // XXX we should clone instead of modifying in place
-    return entries;
+        // upsert by external id
+        if (externalIdPath != "_soupEntryId") {
+            var externalId = this.project(entry, externalIdPath);
+            for (var soupEltId in soup) {
+                var soupElt = soup[soupEltId];
+                var projection = this.project(soupElt, externalIdPath);
+                if (projection == externalId) {
+                    if (!isNew) throw "There are more than one soup elements where " + externalIdPath + " is " + externalId;
+                    entry._soupEntryId = soupEltId;
+                    isNew = false;
+                }
+            }
+        }
+
+        // create
+        if (!("_soupEntryId" in entry)) 
+            entry._soupEntryId = this.nextSoupEltId++;
+        
+        // update/insert into soup
+        soup[ entry._soupEntryId ] = entry;
+        upsertedEntries.push(entry);
+    }
+    return upsertedEntries;
 };
 
 MockSmartStore.prototype.retrieveSoupEntries = function(soupName, entryIds) {
+    this.checkSoup(soupName); 
     var soup = this.soups[soupName];
     var entries = [];
     for (var i=0; i<entryIds.length; i++) {
@@ -114,6 +141,7 @@ MockSmartStore.prototype.retrieveSoupEntries = function(soupName, entryIds) {
 }
 
 MockSmartStore.prototype.removeFromSoup = function(soupName, entryIds) {
+    this.checkSoup(soupName); 
     var soup = this.soups[soupName];
     for (var i=0; i<entryIds.length; i++) {
         var entryId = entryIds[i];
@@ -132,6 +160,9 @@ MockSmartStore.prototype.project = function(soupElt, path) {
 };
 
 MockSmartStore.prototype.querySoupFull = function(soupName, querySpec) {
+    this.checkSoup(soupName); 
+    if (!this.indexExists(soupName, querySpec.indexPath)) throw soupName + " does not have an index on " + querySpec.indexPath; 
+
     var soup = this.soups[soupName];
     var results = [];
     var likeRegexp = (querySpec.likeKey ? new RegExp(querySpec.likeKey.replace(/%/g, ".*")) : null);
