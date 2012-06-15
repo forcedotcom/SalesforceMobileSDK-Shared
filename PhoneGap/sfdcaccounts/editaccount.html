@@ -34,16 +34,10 @@
 
         // Add event listeners and so forth here.
         SFHybridApp.logToConsole("onLoad: jquery ready");
-        document.addEventListener("deviceready", onDeviceReady, false);
-    });
-
-    // When this function is called, PhoneGap has been initialized and is ready to roll.
-    function onDeviceReady() {
-        SFHybridApp.logToConsole("onDeviceReady: PhoneGap ready");
 
         // Register click handlers.
         regAccClickHandlers();
-    }
+    });
     </script>
   </head>
 
