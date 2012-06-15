@@ -36,58 +36,44 @@ var SMARTSTORE_SERVICE = "com.salesforce.smartstore";
 PhoneGap.interceptExec(SMARTSTORE_SERVICE, "pgRegisterSoup", function (successCB, errorCB, args) {
     var soupName = args[0].soupName;
     var indexSpecs = args[0].indexes;
-
     if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
     if (indexSpecs !== undefined && indexSpecs.length == 0) {errorCB("No indexSpecs specified for soup: " + soupName); return;}
-
     successCB(mockStore.registerSoup(soupName, indexSpecs));
 });
 
 PhoneGap.interceptExec(SMARTSTORE_SERVICE, "pgRemoveSoup", function (successCB, errorCB, args) {
     var soupName = args[0].soupName;
-
     mockStore.removeSoup(soupName);
     successCB("OK");
 });
 
 PhoneGap.interceptExec(SMARTSTORE_SERVICE, "pgSoupExists", function (successCB, errorCB, args) {
     var soupName = args[0].soupName;
-
     successCB(mockStore.soupExists(soupName));
 });
 
 PhoneGap.interceptExec(SMARTSTORE_SERVICE, "pgQuerySoup", function (successCB, errorCB, args) {
     var soupName = args[0].soupName;
     var querySpec = args[0].querySpec;
-
-    if (!mockStore.soupExists(soupName)) { errorCB("Soup: " + soupName + " does not exist"); return; }
-    if (!mockStore.indexExists(soupName, querySpec.indexPath)) { 
-        errorCB(soupName + " does not have an index on " + querySpec.indexPath); return; 
-    }
     successCB(mockStore.querySoup(soupName, querySpec));
 });
 
 PhoneGap.interceptExec(SMARTSTORE_SERVICE, "pgRetrieveSoupEntries", function (successCB, errorCB, args) {
     var soupName = args[0].soupName;
     var entryIds = args[0].entryIds;
-
-    if (!mockStore.soupExists(soupName)) { errorCB("Soup: " + soupName + " does not exist"); return; }
     successCB(mockStore.retrieveSoupEntries(soupName, entryIds));
 });
 
 PhoneGap.interceptExec(SMARTSTORE_SERVICE, "pgUpsertSoupEntries", function (successCB, errorCB, args) {
     var soupName = args[0].soupName;
     var entries = args[0].entries;
-
-    if (!mockStore.soupExists(soupName)) { errorCB("Soup: " + soupName + " does not exist"); return; }
-    successCB(mockStore.upsertSoupEntries(soupName, entries));
+    var externalIdPath = args[0].externalIdPath;
+    successCB(mockStore.upsertSoupEntries(soupName, entries, externalIdPath));
 });
 
 PhoneGap.interceptExec(SMARTSTORE_SERVICE, "pgRemoveFromSoup", function (successCB, errorCB, args) {
     var soupName = args[0].soupName;
     var entryIds = args[0].entryIds;
-
-    if (!mockStore.soupExists(soupName)) { errorCB("Soup: " + soupName + " does not exist"); return; }
     mockStore.removeFromSoup(soupName, entryIds);
     successCB("OK");
 });
@@ -95,13 +81,11 @@ PhoneGap.interceptExec(SMARTSTORE_SERVICE, "pgRemoveFromSoup", function (success
 PhoneGap.interceptExec(SMARTSTORE_SERVICE, "pgMoveCursorToPageIndex", function (successCB, errorCB, args) {
     var cursorId = args[0].cursorId;
     var index = args[0].index;
-
     successCB(mockStore.moveCursorToPage(cursorId, index));
 });
 
 PhoneGap.interceptExec(SMARTSTORE_SERVICE, "pgCloseCursor", function (successCB, errorCB, args) {
     var cursorId = args[0].cursorId;
-
     mockStore.closeCursor(cursorId);
     successCB("OK");
 });
