@@ -25,7 +25,7 @@
  */
 
 /*
-  PhoneGap Interceptor
+  cordova Interceptor
 
   When running outside the container, include this file after the phonegap.js to prevent actual calls to the 
   non-existent container.
@@ -37,53 +37,53 @@ window.prompt = function(msg, arg) {
 }
 
 /**
-  Call PhoneGap.completeInitalization() to finish initialization while outsite the container e.g.
+  Call cordova.completeInitalization() to finish initialization while outsite the container e.g.
 
     $(function() {
         //Add event listener
 		document.addEventListener("deviceready", onDeviceReady,false);
 
         // Without a container, we have to do some of the initialization ourselves
-        PhoneGap.completeInitalization();
+        cordova.completeInitalization();
     });
 */
-PhoneGap.completeInitalization = function() {
+cordova.completeInitalization = function() {
     // Without a container, we have to do some of the initialization ourselves
-    PhoneGap.Channel.join(function() { 
-        PhoneGap.onPhoneGapInit.fire(); // run constructor
-        PhoneGap.onDeviceReady.fire();  // done
-    }, [ PhoneGap.onDOMContentLoaded ]);
+    cordova.Channel.join(function() { 
+        cordova.onPhoneGapInit.fire(); // run constructor
+        cordova.onDeviceReady.fire();  // done
+    }, [ cordova.onDOMContentLoaded ]);
 };
 
 /**
-  Call PhoneGap.interceptExec to provide an alternative implementation for an container service/action
+  Call cordova.interceptExec to provide an alternative implementation for an container service/action
   @param service
   @param action
   @param func that should take three arguments successCB, errorCB, args
 
 */
-PhoneGap.interceptors = {};
-PhoneGap.interceptExec = function(service, action, func) {
-    PhoneGap.interceptors[service + ":" + action] = func;
+cordova.interceptors = {};
+cordova.interceptExec = function(service, action, func) {
+    cordova.interceptors[service + ":" + action] = func;
 };
 
 /**
-   Overriding PhoneGap exec to call the functions registered with interceptExec
+   Overriding cordova exec to call the functions registered with interceptExec
    @param successCB
    @param errorCB
    @param service
    @param action
    @param args
 */
-PhoneGap.exec = function(successCB, errorCB, service, action, args) {
-    console.log("PhoneGap.exec " + service + ":" + action);
+cordova.exec = function(successCB, errorCB, service, action, args) {
+    console.log("cordova.exec " + service + ":" + action);
 
     var found = false;
     var req = service + ":" + action;
-    for (var key in PhoneGap.interceptors) {
+    for (var key in cordova.interceptors) {
         if (key === req) {
             try {
-                PhoneGap.interceptors[key](successCB, errorCB, args);
+                cordova.interceptors[key](successCB, errorCB, args);
             }
             catch (err) {
                 errorCB(err);
