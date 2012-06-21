@@ -17,7 +17,7 @@ var INDEXES_OPPORTUNITIES = [
 ];
 
 function hasSmartstore() {
-    if (PhoneGap.hasResource("smartstore") && navigator.smartstore) {
+    if (cordova.hasResource("smartstore") && navigator.smartstore) {
         SFHybridApp.logToConsole("hasSmartstore: " + true);
         return true;
     }

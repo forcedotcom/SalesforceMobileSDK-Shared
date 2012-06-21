@@ -24,11 +24,11 @@
         });
         
         /**
-         * Handler for PhoneGap's "deviceready" event, signifying that PhoneGap is successfully
+         * Handler for Cordova's "deviceready" event, signifying that Cordova is successfully
          * loaded.
          */
         function onDeviceReady() {
-            SFHybridApp.logToConsole("onDeviceReady called: PhoneGap is ready.");
+            SFHybridApp.logToConsole("onDeviceReady called: Cordova is ready.");
             
             // Validate the start data configuration.
             if (!isValidStartData(startData)) {

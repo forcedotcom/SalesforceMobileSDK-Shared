@@ -26,9 +26,9 @@
 
 
 
-if (!PhoneGap.hasResource("smartstore")) {
+if (!cordova.hasResource("smartstore")) {
 
-PhoneGap.addResource("smartstore");
+cordova.addResource("smartstore");
 
 /**
  *  SmartStoreError.
@@ -177,7 +177,7 @@ SmartStore.prototype.buildLikeQuerySpec = function(path, likeKey, order, pageSiz
 SmartStore.prototype.registerSoup = function (soupName, indexSpecs, successCB, errorCB) {
     SFHybridApp.logToConsole("SmartStore.registerSoup: '" + soupName + "' indexSpecs: " + indexSpecs);
     
-    PhoneGap.exec(successCB, errorCB, 
+    cordova.exec(successCB, errorCB, 
                   "com.salesforce.smartstore", 
                   "pgRegisterSoup", 
                   [{"soupName":soupName, "indexes":indexSpecs}]
@@ -187,7 +187,7 @@ SmartStore.prototype.registerSoup = function (soupName, indexSpecs, successCB, e
 SmartStore.prototype.removeSoup = function (soupName, successCB, errorCB) {
     SFHybridApp.logToConsole("SmartStore.removeSoup: " + soupName );
     
-    PhoneGap.exec(successCB, errorCB, 
+    cordova.exec(successCB, errorCB, 
                   "com.salesforce.smartstore", 
                   "pgRemoveSoup", 
                   [{"soupName":soupName}]
@@ -197,7 +197,7 @@ SmartStore.prototype.removeSoup = function (soupName, successCB, errorCB) {
 SmartStore.prototype.soupExists = function (soupName, successCB, errorCB) {
     SFHybridApp.logToConsole("SmartStore.soupExists: " + soupName );
     
-    PhoneGap.exec(successCB, errorCB, 
+    cordova.exec(successCB, errorCB, 
                   "com.salesforce.smartstore", 
                   "pgSoupExists", 
                   [{"soupName":soupName}]
@@ -207,7 +207,7 @@ SmartStore.prototype.soupExists = function (soupName, successCB, errorCB) {
 SmartStore.prototype.querySoup = function (soupName, querySpec, successCB, errorCB) {
     SFHybridApp.logToConsole("SmartStore.querySoup: '" + soupName + "' indexPath: " + querySpec.indexPath);
     
-    PhoneGap.exec(successCB, errorCB, 
+    cordova.exec(successCB, errorCB, 
                   "com.salesforce.smartstore", 
                   "pgQuerySoup", 
                   [{"soupName":soupName, "querySpec":querySpec}]
@@ -218,7 +218,7 @@ SmartStore.prototype.retrieveSoupEntries = function (soupName, entryIds, success
     if (this.logLevel > 0) 
         SFHybridApp.logToConsole("SmartStore.retrieveSoupEntry: '" + soupName + "' entryIds: " + entryIds);
     
-    PhoneGap.exec(successCB, errorCB, 
+    cordova.exec(successCB, errorCB, 
                   "com.salesforce.smartstore", 
                   "pgRetrieveSoupEntries", 
                   [{"soupName":soupName, "entryIds":entryIds}]
@@ -233,7 +233,7 @@ SmartStore.prototype.upsertSoupEntriesWithExternalId = function (soupName, entri
     if (this.logLevel > 0) 
         SFHybridApp.logToConsole("SmartStore.upsertSoupEntries: '" + soupName + "' entries.length: " + entries.length);
 
-    PhoneGap.exec(successCB, errorCB, 
+    cordova.exec(successCB, errorCB, 
                   "com.salesforce.smartstore", 
                   "pgUpsertSoupEntries", 
                   [{"soupName":soupName, "entries":entries, "externalIdPath": externalIdPath}]
@@ -243,7 +243,7 @@ SmartStore.prototype.upsertSoupEntriesWithExternalId = function (soupName, entri
 SmartStore.prototype.removeFromSoup = function (soupName, entryIds, successCB, errorCB) {
     SFHybridApp.logToConsole("SmartStore.removeFromSoup: '" + soupName + "' entryIds: " + entryIds);
 
-    PhoneGap.exec(successCB, errorCB, 
+    cordova.exec(successCB, errorCB, 
                   "com.salesforce.smartstore", 
                   "pgRemoveFromSoup", 
                   [{"soupName":soupName, "entryIds":entryIds}]
@@ -255,7 +255,7 @@ SmartStore.prototype.removeFromSoup = function (soupName, entryIds, successCB, e
 SmartStore.prototype.moveCursorToPageIndex = function (cursor, newPageIndex, successCB, errorCB) {
     SFHybridApp.logToConsole("moveCursorToPageIndex: " + cursor.cursorId + "  newPageIndex: " + newPageIndex);
 
-    PhoneGap.exec(successCB, errorCB, 
+    cordova.exec(successCB, errorCB, 
     "com.salesforce.smartstore", 
     "pgMoveCursorToPageIndex", 
     [{"cursorId":cursor.cursorId, "index":newPageIndex}]
@@ -283,7 +283,7 @@ SmartStore.prototype.moveCursorToPreviousPage = function (cursor, successCB, err
 SmartStore.prototype.closeCursor = function (cursor, successCB, errorCB) {
     SFHybridApp.logToConsole("closeCursor: " + cursor.cursorId);
 
-    PhoneGap.exec(successCB, errorCB, 
+    cordova.exec(successCB, errorCB, 
     "com.salesforce.smartstore", 
     "pgCloseCursor", 
     [{"cursorId":cursor.cursorId}]
@@ -295,7 +295,7 @@ SmartStore.prototype.closeCursor = function (cursor, successCB, errorCB) {
     
 
     
-PhoneGap.addConstructor(function () {
+cordova.addConstructor(function () {
         SFHybridApp.logToConsole("SmartStore pre-install");
          if (typeof navigator.smartstore === 'undefined') {
              SFHybridApp.logToConsole("SmartStore.install");
