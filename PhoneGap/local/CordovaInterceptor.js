@@ -47,6 +47,9 @@ window.prompt = function(msg, arg) {
         cordova.completeInitalization();
     });
 */
+/*
+ * TODO: Need some additional work here to make this work on Cordova 1.8.1.
+ */
 cordova.completeInitalization = function() {
     // Without a container, we have to do some of the initialization ourselves
     cordova.Channel.join(function() { 
@@ -62,6 +65,9 @@ cordova.completeInitalization = function() {
   @param func that should take three arguments successCB, errorCB, args
 
 */
+/*
+ * TODO: Need some additional work here to make this work on Cordova 1.8.1.
+ */
 cordova.interceptors = {};
 cordova.interceptExec = function(service, action, func) {
     cordova.interceptors[service + ":" + action] = func;
