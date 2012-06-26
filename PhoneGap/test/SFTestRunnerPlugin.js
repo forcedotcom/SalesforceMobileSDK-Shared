@@ -24,11 +24,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-if (!cordova.hasResource("testrunner")) {
-
-cordova.addResource("testrunner");
+if (typeof TestRunner === 'undefined') {
 
 var TestRunner = function () {
     SFHybridApp.logToConsole("new TestRunner");
@@ -41,7 +37,6 @@ var TestRunner = function () {
 TestRunner.prototype.setTestSuite = function (suiteClassName) {
 	if (this.testSuiteClassName !== suiteClassName) {
 		SFHybridApp.logToConsole("TestRunner.setTestSuite: " + suiteClassName);
-	    
 		this.testSuiteClassName = suiteClassName;
 		this.testSuite = new window[suiteClassName]();
 	}
@@ -49,7 +44,6 @@ TestRunner.prototype.setTestSuite = function (suiteClassName) {
 
 TestRunner.prototype.onReadyForTests = function (successCB, errorCB) {
     SFHybridApp.logToConsole("TestRunner.onReadyForTests");
-    
     cordova.exec(successCB, errorCB, 
                   "com.salesforce.testrunner",
                   "onReadyForTests",
@@ -59,7 +53,6 @@ TestRunner.prototype.onReadyForTests = function (successCB, errorCB) {
 
 TestRunner.prototype.onTestComplete = function (testName, success, message, status, successCB, errorCB) {
     SFHybridApp.logToConsole("TestRunner.onTestComplete");
-
     cordova.exec(successCB, errorCB, 
                   "com.salesforce.testrunner",
                   "onTestComplete",
@@ -72,10 +65,8 @@ TestRunner.prototype.onTestComplete = function (testName, success, message, stat
                   );
 };
 
-
 //======Plugin creation / installation ======
-    
-    
+
 cordova.addConstructor(function () {
         SFHybridApp.logToConsole("TestRunner pre-install");
          if (typeof navigator.testrunner === 'undefined') {
@@ -83,5 +74,4 @@ cordova.addConstructor(function () {
              navigator.testrunner = new TestRunner();
          }
 });
-
 }
