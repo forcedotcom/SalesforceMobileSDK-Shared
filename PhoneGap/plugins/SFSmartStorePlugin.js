@@ -24,12 +24,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-if (!cordova.hasResource("smartstore")) {
-
-cordova.addResource("smartstore");
-
 /**
  *  SmartStoreError.
  *  An error code assigned by an implementation when an error has occurred
@@ -87,9 +81,6 @@ var SoupQuerySpec = function (path) {
     this.pageSize = 10;
 };
 
-
-
-
 /**
  * Cursor
  */
@@ -106,7 +97,6 @@ var PagedSoupCursor = function () {
     this.totalPages = 0;
     //the current page index among all the pages available
     this.currentPageIndex = 0;
-
     //the list of current page entries, ordered as requested in the querySpec
     this.currentPageOrderedEntries = null;
 };
@@ -118,10 +108,8 @@ var SmartStore = function () {
     SFHybridApp.logToConsole("new SmartStore");
     this.logLevel = 0;
 };
- 
 
 // ====== querySpec factory methods
-
 
 /**
  * Returns a cursor that will page through all soup entries in order by the given path value
@@ -170,13 +158,10 @@ SmartStore.prototype.buildLikeQuerySpec = function(path, likeKey, order, pageSiz
 	return inst;
 };
 
-
-
 // ====== Soup manipulation ======
 
 SmartStore.prototype.registerSoup = function (soupName, indexSpecs, successCB, errorCB) {
     SFHybridApp.logToConsole("SmartStore.registerSoup: '" + soupName + "' indexSpecs: " + indexSpecs);
-    
     cordova.exec(successCB, errorCB, 
                   "com.salesforce.smartstore", 
                   "pgRegisterSoup", 
@@ -186,7 +171,6 @@ SmartStore.prototype.registerSoup = function (soupName, indexSpecs, successCB, e
 
 SmartStore.prototype.removeSoup = function (soupName, successCB, errorCB) {
     SFHybridApp.logToConsole("SmartStore.removeSoup: " + soupName );
-    
     cordova.exec(successCB, errorCB, 
                   "com.salesforce.smartstore", 
                   "pgRemoveSoup", 
@@ -196,7 +180,6 @@ SmartStore.prototype.removeSoup = function (soupName, successCB, errorCB) {
 
 SmartStore.prototype.soupExists = function (soupName, successCB, errorCB) {
     SFHybridApp.logToConsole("SmartStore.soupExists: " + soupName );
-    
     cordova.exec(successCB, errorCB, 
                   "com.salesforce.smartstore", 
                   "pgSoupExists", 
@@ -206,7 +189,6 @@ SmartStore.prototype.soupExists = function (soupName, successCB, errorCB) {
 
 SmartStore.prototype.querySoup = function (soupName, querySpec, successCB, errorCB) {
     SFHybridApp.logToConsole("SmartStore.querySoup: '" + soupName + "' indexPath: " + querySpec.indexPath);
-    
     cordova.exec(successCB, errorCB, 
                   "com.salesforce.smartstore", 
                   "pgQuerySoup", 
@@ -217,7 +199,6 @@ SmartStore.prototype.querySoup = function (soupName, querySpec, successCB, error
 SmartStore.prototype.retrieveSoupEntries = function (soupName, entryIds, successCB, errorCB) {
     if (this.logLevel > 0) 
         SFHybridApp.logToConsole("SmartStore.retrieveSoupEntry: '" + soupName + "' entryIds: " + entryIds);
-    
     cordova.exec(successCB, errorCB, 
                   "com.salesforce.smartstore", 
                   "pgRetrieveSoupEntries", 
@@ -232,7 +213,6 @@ SmartStore.prototype.upsertSoupEntries = function (soupName, entries, successCB,
 SmartStore.prototype.upsertSoupEntriesWithExternalId = function (soupName, entries, externalIdPath, successCB, errorCB) {
     if (this.logLevel > 0) 
         SFHybridApp.logToConsole("SmartStore.upsertSoupEntries: '" + soupName + "' entries.length: " + entries.length);
-
     cordova.exec(successCB, errorCB, 
                   "com.salesforce.smartstore", 
                   "pgUpsertSoupEntries", 
@@ -242,7 +222,6 @@ SmartStore.prototype.upsertSoupEntriesWithExternalId = function (soupName, entri
 
 SmartStore.prototype.removeFromSoup = function (soupName, entryIds, successCB, errorCB) {
     SFHybridApp.logToConsole("SmartStore.removeFromSoup: '" + soupName + "' entryIds: " + entryIds);
-
     cordova.exec(successCB, errorCB, 
                   "com.salesforce.smartstore", 
                   "pgRemoveFromSoup", 
@@ -254,7 +233,6 @@ SmartStore.prototype.removeFromSoup = function (soupName, entryIds, successCB, e
     
 SmartStore.prototype.moveCursorToPageIndex = function (cursor, newPageIndex, successCB, errorCB) {
     SFHybridApp.logToConsole("moveCursorToPageIndex: " + cursor.cursorId + "  newPageIndex: " + newPageIndex);
-
     cordova.exec(successCB, errorCB, 
     "com.salesforce.smartstore", 
     "pgMoveCursorToPageIndex", 
@@ -267,7 +245,6 @@ SmartStore.prototype.moveCursorToNextPage = function (cursor, successCB, errorCB
     if (newPageIndex >= cursor.totalPages) {
         return;//TODO callback with error?
     }
-
     this.moveCursorToPageIndex(cursor, newPageIndex, successCB, errorCB);
 };
 
@@ -276,13 +253,11 @@ SmartStore.prototype.moveCursorToPreviousPage = function (cursor, successCB, err
     if (newPageIndex < 0) {
         return;//TODO callback with error?
     }
-
     this.moveCursorToPageIndex(cursor, newPageIndex, successCB, errorCB);
 };
 
 SmartStore.prototype.closeCursor = function (cursor, successCB, errorCB) {
     SFHybridApp.logToConsole("closeCursor: " + cursor.cursorId);
-
     cordova.exec(successCB, errorCB, 
     "com.salesforce.smartstore", 
     "pgCloseCursor", 
@@ -290,11 +265,8 @@ SmartStore.prototype.closeCursor = function (cursor, successCB, errorCB) {
     );
 };
 
-
 //======Plugin creation / installation ======
-    
 
-    
 cordova.addConstructor(function () {
         SFHybridApp.logToConsole("SmartStore pre-install");
          if (typeof navigator.smartstore === 'undefined') {
@@ -302,9 +274,3 @@ cordova.addConstructor(function () {
              navigator.smartstore = new SmartStore();
          }
 });
-
-}
-
-
-    
-

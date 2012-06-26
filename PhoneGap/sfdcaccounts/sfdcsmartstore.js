@@ -17,12 +17,7 @@ var INDEXES_OPPORTUNITIES = [
 ];
 
 function hasSmartstore() {
-    if (cordova.hasResource("smartstore") && navigator.smartstore) {
-        SFHybridApp.logToConsole("hasSmartstore: " + true);
-        return true;
-    }
-    SFHybridApp.logToConsole("hasSmartstore: " + false);
-    return false;
+    return true;
 }
 
 function regAccSoup() {
