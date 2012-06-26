@@ -24,6 +24,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+if (typeof SmartStore === 'undefined') {
+
 /**
  *  SmartStoreError.
  *  An error code assigned by an implementation when an error has occurred
@@ -274,3 +276,4 @@ cordova.addConstructor(function () {
              navigator.smartstore = new SmartStore();
          }
 });
+}

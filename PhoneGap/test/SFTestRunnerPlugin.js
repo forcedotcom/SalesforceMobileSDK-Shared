@@ -24,6 +24,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+if (typeof TestRunner === 'undefined') {
+
 var TestRunner = function () {
     SFHybridApp.logToConsole("new TestRunner");
 	this.testSuiteClassName = null;
@@ -72,3 +74,4 @@ cordova.addConstructor(function () {
              navigator.testrunner = new TestRunner();
          }
 });
+}
