@@ -5,7 +5,7 @@
         
         <link rel="stylesheet" type="text/css" href="SFHybridApp.css" />
         
-        <script type="text/javascript" src="phonegap-1.2.0.js"></script>
+        <script type="text/javascript" src="cordova-1.8.1.js"></script>
         <script type="text/javascript" src="jquery/jquery-1.6.2.min.js"></script>
         <script type="text/javascript" src="SalesforceOAuthPlugin.js"></script>
         <script type="text/javascript" src="SFHybridApp.js"></script>
@@ -24,11 +24,11 @@
         });
         
         /**
-         * Handler for PhoneGap's "deviceready" event, signifying that PhoneGap is successfully
+         * Handler for Cordova's "deviceready" event, signifying that Cordova is successfully
          * loaded.
          */
         function onDeviceReady() {
-            SFHybridApp.logToConsole("onDeviceReady called: PhoneGap is ready.");
+            SFHybridApp.logToConsole("onDeviceReady called: Cordova is ready.");
             
             // Validate the start data configuration.
             if (!isValidStartData(startData)) {

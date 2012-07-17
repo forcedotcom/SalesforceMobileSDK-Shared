@@ -13,8 +13,8 @@
     <link rel="stylesheet" type="text/css" href="../util/SFHybridApp.css" />
     <script type="text/javascript" src="../util/SFHybridApp.js"></script>
 
-    <!-- include phonegap / callback -->
-	<script type="text/javascript" charset="utf-8" src="phonegap-1.2.0.js"></script>
+    <!-- include cordova / callback -->
+	<script type="text/javascript" charset="utf-8" src="cordova-1.8.1.js"></script>
         
     <!-- required for smartstore plugin support -->    
     <script type="text/javascript" src="../plugins/SFSmartStorePlugin.js"></script>
@@ -30,7 +30,7 @@
     <script type="text/javascript" src="../test/SFSmartStoreLoadTestSuite.js"></script>
 
     <!-- includes that allow testing SmartStore outside the container -->
-    <script type="text/javascript" src="PhoneGapInterceptor.js"></script>
+    <script type="text/javascript" src="CordovaInterceptor.js"></script>
     <script type="text/javascript" src="MockSmartStore.js"></script>
     <script type="text/javascript" src="MockSmartStorePlugin.js"></script>
 
@@ -46,12 +46,12 @@
         MockSmartStore.init(false); // not saving mockstore in sessionStorage - tests expect a clean initial state
 
         // Without a container, we have to do some of the initialization ourselves
-        PhoneGap.completeInitalization();
+        cordova.completeInitalization();
     });
 
-    // When this function is called, PhoneGap has been initialized and is ready to roll 
+    // When this function is called, Cordova has been initialized and is ready to roll 
     function onDeviceReady() {
-        SFHybridApp.logToConsole("onDeviceReady: PhoneGap ready");
+        SFHybridApp.logToConsole("onDeviceReady: Cordova ready");
 
         // Enabled links
         var $j = jQuery.noConflict();

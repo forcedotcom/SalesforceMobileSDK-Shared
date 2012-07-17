@@ -52,7 +52,7 @@ if (forcetk.Client === undefined) {
      * @param [clientId=null] 'Consumer Key' in the Remote Access app settings
      * @param [loginUrl='https://login.salesforce.com/'] Login endpoint
      * @param [proxyUrl=null] Proxy URL. Omit if running on Visualforce or 
-     *                  PhoneGap etc
+     *                  Cordova etc
      * @constructor
      */
     forcetk.Client = function(clientId, loginUrl, proxyUrl) {
@@ -60,7 +60,7 @@ if (forcetk.Client === undefined) {
         this.loginUrl = loginUrl || 'https://login.salesforce.com/';
         if (typeof proxyUrl === 'undefined' || proxyUrl === null) {
             if (location.protocol === 'file:') {
-                // In PhoneGap
+                // In Cordova
                 this.proxyUrl = null;
             } else {
                 // In Visualforce
