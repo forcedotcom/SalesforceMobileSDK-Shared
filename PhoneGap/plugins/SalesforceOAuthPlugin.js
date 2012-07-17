@@ -6,7 +6,7 @@ var SalesforceOAuthPlugin = {
 	* after onDeviceReady.
     *   success - The success callback function to use.
     *   fail    - The failure/error callback function to use.
-	* PhoneGap returns a dictionary with:
+	* cordova returns a dictionary with:
 	* 	accessToken
 	* 	refreshToken
     *   clientId
@@ -17,7 +17,7 @@ var SalesforceOAuthPlugin = {
 	* 	userAgent
 	*/
     getAuthCredentials: function(success, fail) {
-        PhoneGap.exec(success, fail, "com.salesforce.oauth","getAuthCredentials",[]);
+        cordova.exec(success, fail, "com.salesforce.oauth","getAuthCredentials",[]);
     },
     
     /**
@@ -26,7 +26,7 @@ var SalesforceOAuthPlugin = {
      *   fail            - The failure/error callback function to use.
      *   oauthProperties - The configuration properties for the authentication process.
      *                     See OAuthProperties() below.
-     * PhoneGap returns a dictionary with:
+     * cordova returns a dictionary with:
      *   accessToken
      *   refreshToken
      *   clientId
@@ -37,7 +37,7 @@ var SalesforceOAuthPlugin = {
      *   userAgent
      */
     authenticate: function(success, fail, oauthProperties) {
-        PhoneGap.exec(success, fail, "com.salesforce.oauth", "authenticate", [JSON.stringify(oauthProperties)]);
+        cordova.exec(success, fail, "com.salesforce.oauth", "authenticate", [JSON.stringify(oauthProperties)]);
     },
 
 
@@ -49,7 +49,7 @@ var SalesforceOAuthPlugin = {
      * will be logged out and asked to re-authenticate.
      */
     logout: function() {
-        PhoneGap.exec(null, null, "com.salesforce.oauth", "logoutCurrentUser", []);
+        cordova.exec(null, null, "com.salesforce.oauth", "logoutCurrentUser", []);
     },
     
     /**
@@ -60,7 +60,7 @@ var SalesforceOAuthPlugin = {
      * initialized.
      */
     getAppHomeUrl: function(success) {
-        PhoneGap.exec(success, null, "com.salesforce.oauth", "getAppHomeUrl", []);
+        cordova.exec(success, null, "com.salesforce.oauth", "getAppHomeUrl", []);
     }
 };
 

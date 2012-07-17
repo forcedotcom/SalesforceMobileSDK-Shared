@@ -1,6 +1,6 @@
 /**
  * Utility functionality for hybrid apps.
- * Note: This JS module assumes the inclusion of a) the PhoneGap JS libraries and
+ * Note: This JS module assumes the inclusion of a) the Cordova JS libraries and
  * b) the jQuery libraries.
  */
  
@@ -107,7 +107,7 @@ buildFrontDoorUrl: function(instanceServer, startPage, accessToken) {
 },
 
 /**
- * Load the given URL, using PhoneGap on Android, and loading directly on other platforms.
+ * Load the given URL, using Cordova on Android, and loading directly on other platforms.
  *   fullAppUrl       - The URL to load.
  */
 loadUrl: function(fullAppUrl) {
@@ -132,7 +132,7 @@ deviceIsOnline: function() {
     }
     
     if (typeof connType !== 'undefined') {
-        // PhoneGap's connection object.  May be more accurate?
+        // Cordova's connection object.  May be more accurate?
         return (connType != null && connType != Connection.NONE && connType != Connection.UNKNOWN);
     } else {
         // Default to browser facility.
@@ -195,7 +195,7 @@ RemoteAppStartData: function(appStartUrl, isAbsoluteUrl, shouldAuthenticate) {
 /**
  * LocalAppStartData data object - Represents the data associated with bootstrapping a
  * 'local' app, i.e. a hybrid app with its content managed through a local web page,
- * such as a traditional PhoneGap app.
+ * such as a traditional Cordova app.
  *
  *   appStartUrl        - Optional - The local "start page" of the hybrid application.
  *                                   Defaults to "index.html".
