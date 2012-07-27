@@ -24,50 +24,22 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
-  cordova Interceptor
-
-  When running outside the container, include this file after the phonegap.js to prevent actual calls to the 
-  non-existent container.
-*/
-
-// Block calls to container (they use javascript prompt on Android)
-window.prompt = function(msg, arg) { 
-    console.log("Called prompt with " + msg + ":" + arg); 
-}
-
 /**
-  Call cordova.completeInitalization() to finish initialization while outsite the container e.g.
-
-    $(function() {
-        //Add event listener
-		document.addEventListener("deviceready", onDeviceReady,false);
-
-        // Without a container, we have to do some of the initialization ourselves
-        cordova.completeInitalization();
-    });
+  Mock Cordova: mocks just enough cordova functions to allow testing of plugins outside a container
 */
-/*
- * TODO: Need some additional work here to make this work on Cordova 1.8.1.
- */
-cordova.completeInitalization = function() {
-    // Without a container, we have to do some of the initialization ourselves
-    cordova.Channel.join(function() { 
-        cordova.onPhoneGapInit.fire(); // run constructor
-        cordova.onDeviceReady.fire();  // done
-    }, [ cordova.onDOMContentLoaded ]);
+
+cordova = {};
+cordova.addConstructor = function(f) {
+    f();
 };
 
 /**
-  Call cordova.interceptExec to provide an alternative implementation for an container service/action
+  Call cordova.interceptExec to provide an mock implementation for an container service/action
   @param service
   @param action
   @param func that should take three arguments successCB, errorCB, args
 
 */
-/*
- * TODO: Need some additional work here to make this work on Cordova 1.8.1.
- */
 cordova.interceptors = {};
 cordova.interceptExec = function(service, action, func) {
     cordova.interceptors[service + ":" + action] = func;

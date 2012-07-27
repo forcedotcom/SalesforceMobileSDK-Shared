@@ -252,3 +252,67 @@ MockSmartStore.init = function(useSessionStorage) {
         });
     }
 }
+
+/*
+  Implementation of smartstore plugin calls that rely on a MockSmartStore instead of calling container
+*/
+
+var SMARTSTORE_SERVICE = "com.salesforce.smartstore";
+
+cordova.interceptExec(SMARTSTORE_SERVICE, "pgRegisterSoup", function (successCB, errorCB, args) {
+    var soupName = args[0].soupName;
+    var indexSpecs = args[0].indexes;
+    if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
+    if (indexSpecs !== undefined && indexSpecs.length == 0) {errorCB("No indexSpecs specified for soup: " + soupName); return;}
+    successCB(mockStore.registerSoup(soupName, indexSpecs));
+});
+
+cordova.interceptExec(SMARTSTORE_SERVICE, "pgRemoveSoup", function (successCB, errorCB, args) {
+    var soupName = args[0].soupName;
+    mockStore.removeSoup(soupName);
+    successCB("OK");
+});
+
+cordova.interceptExec(SMARTSTORE_SERVICE, "pgSoupExists", function (successCB, errorCB, args) {
+    var soupName = args[0].soupName;
+    successCB(mockStore.soupExists(soupName));
+});
+
+cordova.interceptExec(SMARTSTORE_SERVICE, "pgQuerySoup", function (successCB, errorCB, args) {
+    var soupName = args[0].soupName;
+    var querySpec = args[0].querySpec;
+    successCB(mockStore.querySoup(soupName, querySpec));
+});
+
+cordova.interceptExec(SMARTSTORE_SERVICE, "pgRetrieveSoupEntries", function (successCB, errorCB, args) {
+    var soupName = args[0].soupName;
+    var entryIds = args[0].entryIds;
+    successCB(mockStore.retrieveSoupEntries(soupName, entryIds));
+});
+
+cordova.interceptExec(SMARTSTORE_SERVICE, "pgUpsertSoupEntries", function (successCB, errorCB, args) {
+    var soupName = args[0].soupName;
+    var entries = args[0].entries;
+    var externalIdPath = args[0].externalIdPath;
+    successCB(mockStore.upsertSoupEntries(soupName, entries, externalIdPath));
+});
+
+cordova.interceptExec(SMARTSTORE_SERVICE, "pgRemoveFromSoup", function (successCB, errorCB, args) {
+    var soupName = args[0].soupName;
+    var entryIds = args[0].entryIds;
+    mockStore.removeFromSoup(soupName, entryIds);
+    successCB("OK");
+});
+
+cordova.interceptExec(SMARTSTORE_SERVICE, "pgMoveCursorToPageIndex", function (successCB, errorCB, args) {
+    var cursorId = args[0].cursorId;
+    var index = args[0].index;
+    successCB(mockStore.moveCursorToPage(cursorId, index));
+});
+
+cordova.interceptExec(SMARTSTORE_SERVICE, "pgCloseCursor", function (successCB, errorCB, args) {
+    var cursorId = args[0].cursorId;
+    mockStore.closeCursor(cursorId);
+    successCB("OK");
+});
+

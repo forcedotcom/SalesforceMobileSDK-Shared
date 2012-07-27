@@ -1,23 +1,25 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
 
     <!-- include jquery mobile -->
     <link rel="stylesheet" href="../../jquery/jquery.mobile-1.0b2.min.css" />
     <script src="../../jquery/jquery-1.6.2.min.js"></script>
     <script src="../../jquery/jquery.mobile-1.0b2.min.js"></script>
-        
+
     <!-- include local utility functionality -->
     <link rel="stylesheet" type="text/css" href="../util/SFHybridApp.css" />
     <script type="text/javascript" src="../util/SFHybridApp.js"></script>
-
-    <!-- include cordova / callback -->
-	<script type="text/javascript" charset="utf-8" src="cordova-1.8.1.js"></script>
         
+    <!-- mock cordova -->
+    <script type="text/javascript" src="MockCordova.js"></script>
+
     <!-- required for smartstore plugin support -->    
     <script type="text/javascript" src="../plugins/SFSmartStorePlugin.js"></script>
+
+    <!-- mock smartstore -->
+    <script type="text/javascript" src="MockSmartStore.js"></script>
 
 	<!-- load qunit -->
     <link rel="stylesheet" type="text/css" href="../test/qunit.css" />
@@ -29,36 +31,18 @@
     <script type="text/javascript" src="../test/SFSmartStoreTestSuite.js"></script>
     <script type="text/javascript" src="../test/SFSmartStoreLoadTestSuite.js"></script>
 
-    <!-- includes that allow testing SmartStore outside the container -->
-    <script type="text/javascript" src="CordovaInterceptor.js"></script>
-    <script type="text/javascript" src="MockSmartStore.js"></script>
-    <script type="text/javascript" src="MockSmartStorePlugin.js"></script>
-
     <script type="text/javascript" charset="utf-8">
     var debugMode = true;
 
     $(function() {
-        //Add event listener
-        SFHybridApp.logToConsole("onLoad: jquery ready");
-		document.addEventListener("deviceready", onDeviceReady,false);
-
         // Initialize mock smartstore
         MockSmartStore.init(false); // not saving mockstore in sessionStorage - tests expect a clean initial state
-
-        // Without a container, we have to do some of the initialization ourselves
-        cordova.completeInitalization();
-    });
-
-    // When this function is called, Cordova has been initialized and is ready to roll 
-    function onDeviceReady() {
-        SFHybridApp.logToConsole("onDeviceReady: Cordova ready");
 
         // Enabled links
         var $j = jQuery.noConflict();
         $j('#link_test_suite').click(function() { new SmartStoreTestSuite().startTests(); });
         $j('#link_load_test_suite').click(function() { new SmartStoreLoadTestSuite().startTests(); });
-    }
-        
+    });
     </script>
         
   </head>
