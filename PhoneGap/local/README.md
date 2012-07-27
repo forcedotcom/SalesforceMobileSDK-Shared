@@ -7,6 +7,5 @@
 When writting an application using SmartStore, to test it outside the container do the following:
 - include MockCordova.js instead of cordova-xyz.js
 - include MockSmartStore.js after SFSmartStorePlugin.js
-- make sure to initialize MockSmartStore before using it by calling MockSmartStore.init(...)
 
 

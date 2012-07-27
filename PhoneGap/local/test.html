@@ -35,9 +35,6 @@
     var debugMode = true;
 
     $(function() {
-        // Initialize mock smartstore
-        MockSmartStore.init(false); // not saving mockstore in sessionStorage - tests expect a clean initial state
-
         // Enabled links
         var $j = jQuery.noConflict();
         $j('#link_test_suite').click(function() { new SmartStoreTestSuite().startTests(); });

@@ -25,54 +25,55 @@
  */
 
 /**
-  Mock Cordova: mocks just enough cordova functions to allow testing of plugins outside a container
+ * Mock Cordova: mocks just enough cordova functions to allow testing of plugins outside a container
+ *
+ * Note: we are using the module pattern (see http://briancray.com/posts/javascript-module-pattern/)
 */
 
-cordova = {};
-cordova.addConstructor = function(f) {
-    f();
-};
+var MockCordova = (function() {
+    // Private members
+    var interceptors = {};
 
-/**
-  Call cordova.interceptExec to provide an mock implementation for an container service/action
-  @param service
-  @param action
-  @param func that should take three arguments successCB, errorCB, args
+    // Constructor
+    var module = function() {};
 
-*/
-cordova.interceptors = {};
-cordova.interceptExec = function(service, action, func) {
-    cordova.interceptors[service + ":" + action] = func;
-};
+    // Prototype
+    module.prototype = {
+        constructor: module,
 
-/**
-   Overriding cordova exec to call the functions registered with interceptExec
-   @param successCB
-   @param errorCB
-   @param service
-   @param action
-   @param args
-*/
-cordova.exec = function(successCB, errorCB, service, action, args) {
-    console.log("cordova.exec " + service + ":" + action);
+        // Method to provide an mock implementation for an container service/action
+        // func should take three arguments: successCB, errorCB, args
+        interceptExec: function(service, action, func) {
+            interceptors[service + ":" + action] = func;
+        },
 
-    var found = false;
-    var req = service + ":" + action;
-    for (var key in cordova.interceptors) {
-        if (key === req) {
-            try {
-                cordova.interceptors[key](successCB, errorCB, args);
+        // Mocking cordova's addConstructor method
+        addConstructor: function(func) {
+            func();
+        },
+
+        // Mocking cordova's exec method by calling the functions registered with interceptExec
+        exec: function(successCB, errorCB, service, action, args) {
+            console.log("cordova.exec " + service + ":" + action);
+            var found = false;
+            var req = service + ":" + action;
+            for (var key in interceptors) {
+                if (key === req) {
+                    try { interceptors[key](successCB, errorCB, args); } catch (err) { errorCB(err); }
+                    found = true;
+                    break;
+                }
             }
-            catch (err) {
-                errorCB(err);
+
+            if (!found) {
+                console.log("No mock for " + service + ":" + action);
+                return;
             }
-            found = true;
-            break;
         }
-    }
+    };
 
-    if (!found) {
-        console.log("No mock for " + service + ":" + action);
-        return;
-    }
-};
+    // Return module
+    return module;
+})();
+
+var cordova = new MockCordova();
