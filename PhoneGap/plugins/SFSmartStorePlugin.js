@@ -24,26 +24,164 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-if (typeof SmartStore === 'undefined') {
+define("salesforce/plugin/smartstore", function(require, exports, module) {
+    var exec = require("cordova/exec");
 
-/**
- *  SmartStoreError.
- *  An error code assigned by an implementation when an error has occurred
- */
-var SmartStoreError = function () {
-    this.code = null;
-};
+    var smartstore = {
+        logLevel: 0,
 
-/**
- * Error codes
- */
-SmartStoreError.UNKNOWN_ERROR = 0;
-SmartStoreError.INVALID_ARGUMENT_ERROR = 1;
-SmartStoreError.TIMEOUT_ERROR = 2;
-SmartStoreError.PENDING_OPERATION_ERROR = 3;
-SmartStoreError.IO_ERROR = 4;
-SmartStoreError.NOT_SUPPORTED_ERROR = 5;
-SmartStoreError.PERMISSION_DENIED_ERROR = 20;
+        // ====== querySpec factory methods
+
+        // Returns a cursor that will page through all soup entries in order by the given path value
+        // Internally it simply does a range query with null begin and end keys
+        buildAllQuerySpec: function(path, order, pageSize) {
+	        var inst = new SoupQuerySpec(path);
+	        inst.queryType = "range";
+	        if (order) { inst.order = order; } // override default only if a value was specified
+	        if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+	        return inst;
+        },
+
+        // Returns a cursor that will page all entries exactly matching the matchKey value for path
+        buildExactQuerySpec: function(path, matchKey, pageSize) {
+	        var inst = new SoupQuerySpec(path);
+	        inst.matchKey = matchKey;
+	        if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+	        return inst;
+        },
+
+        // Returns a cursor that will page all entries in the range beginKey ...endKey for path
+        buildRangeQuerySpec: function(path, beginKey, endKey, order, pageSize) {
+	        var inst = new SoupQuerySpec(path);
+	        inst.queryType = "range";
+	        inst.beginKey = beginKey;
+	        inst.endKey = endKey;
+	        if (order) { inst.order = order; } // override default only if a value was specified
+	        if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+	        return inst;
+        },
+
+        // Returns a cursor that will page all entries matching the given likeKey value for path
+        buildLikeQuerySpec: function(path, likeKey, order, pageSize) {
+	        var inst = new SoupQuerySpec(path);
+	        inst.queryType = "like";
+	        inst.likeKey = likeKey;
+	        if (order) { inst.order = order; } // override default only if a value was specified
+	        if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+	        return inst;
+        },
+
+        // ====== Soup manipulation ======
+
+        registerSoup: function (soupName, indexSpecs, successCB, errorCB) {
+            SFHybridApp.logToConsole("SmartStore.registerSoup: '" + soupName + "' indexSpecs: " + indexSpecs);
+            exec(successCB, errorCB, 
+                         "com.salesforce.smartstore", 
+                         "pgRegisterSoup", 
+                         [{"soupName":soupName, "indexes":indexSpecs}]
+                        );                  
+        },
+
+        removeSoup: function (soupName, successCB, errorCB) {
+            SFHybridApp.logToConsole("SmartStore.removeSoup: " + soupName );
+            exec(successCB, errorCB, 
+                         "com.salesforce.smartstore", 
+                         "pgRemoveSoup", 
+                         [{"soupName":soupName}]
+                        );                  
+        },
+
+        soupExists: function (soupName, successCB, errorCB) {
+            SFHybridApp.logToConsole("SmartStore.soupExists: " + soupName );
+            exec(successCB, errorCB, 
+                         "com.salesforce.smartstore", 
+                         "pgSoupExists", 
+                         [{"soupName":soupName}]
+                        );                  
+        },
+
+        querySoup: function (soupName, querySpec, successCB, errorCB) {
+            SFHybridApp.logToConsole("SmartStore.querySoup: '" + soupName + "' indexPath: " + querySpec.indexPath);
+            exec(successCB, errorCB, 
+                         "com.salesforce.smartstore", 
+                         "pgQuerySoup", 
+                         [{"soupName":soupName, "querySpec":querySpec}]
+                        );
+        },
+
+        retrieveSoupEntries: function (soupName, entryIds, successCB, errorCB) {
+            if (this.logLevel > 0) 
+                SFHybridApp.logToConsole("SmartStore.retrieveSoupEntry: '" + soupName + "' entryIds: " + entryIds);
+            exec(successCB, errorCB, 
+                         "com.salesforce.smartstore", 
+                         "pgRetrieveSoupEntries", 
+                         [{"soupName":soupName, "entryIds":entryIds}]
+                        );
+        },
+
+        upsertSoupEntries: function (soupName, entries, successCB, errorCB) {
+	        this.upsertSoupEntriesWithExternalId(soupName, entries, "_soupEntryId", successCB, errorCB);
+        },
+
+        upsertSoupEntriesWithExternalId: function (soupName, entries, externalIdPath, successCB, errorCB) {
+            if (this.logLevel > 0) 
+                SFHybridApp.logToConsole("SmartStore.upsertSoupEntries: '" + soupName + "' entries.length: " + entries.length);
+            exec(successCB, errorCB, 
+                         "com.salesforce.smartstore", 
+                         "pgUpsertSoupEntries", 
+                         [{"soupName":soupName, "entries":entries, "externalIdPath": externalIdPath}]
+                        );
+        },
+
+        removeFromSoup: function (soupName, entryIds, successCB, errorCB) {
+            SFHybridApp.logToConsole("SmartStore.removeFromSoup: '" + soupName + "' entryIds: " + entryIds);
+            exec(successCB, errorCB, 
+                         "com.salesforce.smartstore", 
+                         "pgRemoveFromSoup", 
+                         [{"soupName":soupName, "entryIds":entryIds}]
+                        );
+        },
+
+        //====== Cursor manipulation ======
+        
+        moveCursorToPageIndex: function (cursor, newPageIndex, successCB, errorCB) {
+            SFHybridApp.logToConsole("moveCursorToPageIndex: " + cursor.cursorId + "  newPageIndex: " + newPageIndex);
+            exec(successCB, errorCB, 
+                         "com.salesforce.smartstore", 
+                         "pgMoveCursorToPageIndex", 
+                         [{"cursorId":cursor.cursorId, "index":newPageIndex}]
+                        );
+        },
+
+        moveCursorToNextPage: function (cursor, successCB, errorCB) {
+            var newPageIndex = cursor.currentPageIndex + 1;
+            if (newPageIndex >= cursor.totalPages) {
+                return;//TODO callback with error?
+            }
+            this.moveCursorToPageIndex(cursor, newPageIndex, successCB, errorCB);
+        },
+
+        moveCursorToPreviousPage: function (cursor, successCB, errorCB) {
+            var newPageIndex = cursor.currentPageIndex - 1;
+            if (newPageIndex < 0) {
+                return;//TODO callback with error?
+            }
+            this.moveCursorToPageIndex(cursor, newPageIndex, successCB, errorCB);
+        },
+
+        closeCursor: function (cursor, successCB, errorCB) {
+            SFHybridApp.logToConsole("closeCursor: " + cursor.cursorId);
+            exec(successCB, errorCB, 
+                         "com.salesforce.smartstore", 
+                         "pgCloseCursor", 
+                         [{"cursorId":cursor.cursorId}]
+                        );
+        }
+    };
+
+    module.exports = smartstore;
+});
+
  
 /**
  * IndexSpec
@@ -57,7 +195,6 @@ var SoupIndexSpec = function (path, type) {
  * QuerySpec
  */
 var SoupQuerySpec = function (path) {
-	
 	//the kind of query, one of: "exact","range", or "like":
 	//"exact" uses matchKey, "range" uses beginKey and endKey, "like" uses likeKey
 	this.queryType = "exact";
@@ -102,178 +239,3 @@ var PagedSoupCursor = function () {
     //the list of current page entries, ordered as requested in the querySpec
     this.currentPageOrderedEntries = null;
 };
-
-/**
- * SmartStore constructor
- */
-var SmartStore = function () {
-    SFHybridApp.logToConsole("new SmartStore");
-    this.logLevel = 0;
-};
-
-// ====== querySpec factory methods
-
-/**
- * Returns a cursor that will page through all soup entries in order by the given path value
- * Internally it simply does a range query with null begin and end keys
- */
-SmartStore.prototype.buildAllQuerySpec = function(path, order, pageSize) {
-	var inst = new SoupQuerySpec(path);
-	inst.queryType = "range";
-	if (order) { inst.order = order; } // override default only if a value was specified
-	if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
-	return inst;
-};
-
-/**
- * Returns a cursor that will page all entries exactly matching the matchKey value for path
- */
-SmartStore.prototype.buildExactQuerySpec = function(path, matchKey, pageSize) {
-	var inst = new SoupQuerySpec(path);
-	inst.matchKey = matchKey;
-	if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
-	return inst;
-};
-
-/**
- * Returns a cursor that will page all entries in the range beginKey ...endKey for path
- */
-SmartStore.prototype.buildRangeQuerySpec = function(path, beginKey, endKey, order, pageSize) {
-	var inst = new SoupQuerySpec(path);
-	inst.queryType = "range";
-	inst.beginKey = beginKey;
-	inst.endKey = endKey;
-	if (order) { inst.order = order; } // override default only if a value was specified
-	if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
-	return inst;
-};
-
-/**
- * Returns a cursor that will page all entries matching the given likeKey value for path
- */
-SmartStore.prototype.buildLikeQuerySpec = function(path, likeKey, order, pageSize) {
-	var inst = new SoupQuerySpec(path);
-	inst.queryType = "like";
-	inst.likeKey = likeKey;
-	if (order) { inst.order = order; } // override default only if a value was specified
-	if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
-	return inst;
-};
-
-// ====== Soup manipulation ======
-
-SmartStore.prototype.registerSoup = function (soupName, indexSpecs, successCB, errorCB) {
-    SFHybridApp.logToConsole("SmartStore.registerSoup: '" + soupName + "' indexSpecs: " + indexSpecs);
-    cordova.exec(successCB, errorCB, 
-                  "com.salesforce.smartstore", 
-                  "pgRegisterSoup", 
-                  [{"soupName":soupName, "indexes":indexSpecs}]
-                  );                  
-};
-
-SmartStore.prototype.removeSoup = function (soupName, successCB, errorCB) {
-    SFHybridApp.logToConsole("SmartStore.removeSoup: " + soupName );
-    cordova.exec(successCB, errorCB, 
-                  "com.salesforce.smartstore", 
-                  "pgRemoveSoup", 
-                  [{"soupName":soupName}]
-                  );                  
-};
-
-SmartStore.prototype.soupExists = function (soupName, successCB, errorCB) {
-    SFHybridApp.logToConsole("SmartStore.soupExists: " + soupName );
-    cordova.exec(successCB, errorCB, 
-                  "com.salesforce.smartstore", 
-                  "pgSoupExists", 
-                  [{"soupName":soupName}]
-                  );                  
-};
-
-SmartStore.prototype.querySoup = function (soupName, querySpec, successCB, errorCB) {
-    SFHybridApp.logToConsole("SmartStore.querySoup: '" + soupName + "' indexPath: " + querySpec.indexPath);
-    cordova.exec(successCB, errorCB, 
-                  "com.salesforce.smartstore", 
-                  "pgQuerySoup", 
-                  [{"soupName":soupName, "querySpec":querySpec}]
-                  );
-};
-
-SmartStore.prototype.retrieveSoupEntries = function (soupName, entryIds, successCB, errorCB) {
-    if (this.logLevel > 0) 
-        SFHybridApp.logToConsole("SmartStore.retrieveSoupEntry: '" + soupName + "' entryIds: " + entryIds);
-    cordova.exec(successCB, errorCB, 
-                  "com.salesforce.smartstore", 
-                  "pgRetrieveSoupEntries", 
-                  [{"soupName":soupName, "entryIds":entryIds}]
-                  );
-};
-
-SmartStore.prototype.upsertSoupEntries = function (soupName, entries, successCB, errorCB) {
-	SmartStore.prototype.upsertSoupEntriesWithExternalId(soupName, entries, "_soupEntryId", successCB, errorCB);
-};
-
-SmartStore.prototype.upsertSoupEntriesWithExternalId = function (soupName, entries, externalIdPath, successCB, errorCB) {
-    if (this.logLevel > 0) 
-        SFHybridApp.logToConsole("SmartStore.upsertSoupEntries: '" + soupName + "' entries.length: " + entries.length);
-    cordova.exec(successCB, errorCB, 
-                  "com.salesforce.smartstore", 
-                  "pgUpsertSoupEntries", 
-                  [{"soupName":soupName, "entries":entries, "externalIdPath": externalIdPath}]
-                  );
-};
-
-SmartStore.prototype.removeFromSoup = function (soupName, entryIds, successCB, errorCB) {
-    SFHybridApp.logToConsole("SmartStore.removeFromSoup: '" + soupName + "' entryIds: " + entryIds);
-    cordova.exec(successCB, errorCB, 
-                  "com.salesforce.smartstore", 
-                  "pgRemoveFromSoup", 
-                  [{"soupName":soupName, "entryIds":entryIds}]
-                  );
-};
-
-//====== Cursor manipulation ======
-    
-SmartStore.prototype.moveCursorToPageIndex = function (cursor, newPageIndex, successCB, errorCB) {
-    SFHybridApp.logToConsole("moveCursorToPageIndex: " + cursor.cursorId + "  newPageIndex: " + newPageIndex);
-    cordova.exec(successCB, errorCB, 
-    "com.salesforce.smartstore", 
-    "pgMoveCursorToPageIndex", 
-    [{"cursorId":cursor.cursorId, "index":newPageIndex}]
-    );
-};
-
-SmartStore.prototype.moveCursorToNextPage = function (cursor, successCB, errorCB) {
-    var newPageIndex = cursor.currentPageIndex + 1;
-    if (newPageIndex >= cursor.totalPages) {
-        return;//TODO callback with error?
-    }
-    this.moveCursorToPageIndex(cursor, newPageIndex, successCB, errorCB);
-};
-
-SmartStore.prototype.moveCursorToPreviousPage = function (cursor, successCB, errorCB) {
-    var newPageIndex = cursor.currentPageIndex - 1;
-    if (newPageIndex < 0) {
-        return;//TODO callback with error?
-    }
-    this.moveCursorToPageIndex(cursor, newPageIndex, successCB, errorCB);
-};
-
-SmartStore.prototype.closeCursor = function (cursor, successCB, errorCB) {
-    SFHybridApp.logToConsole("closeCursor: " + cursor.cursorId);
-    cordova.exec(successCB, errorCB, 
-    "com.salesforce.smartstore", 
-    "pgCloseCursor", 
-    [{"cursorId":cursor.cursorId}]
-    );
-};
-
-//======Plugin creation / installation ======
-
-cordova.addConstructor(function () {
-        SFHybridApp.logToConsole("SmartStore pre-install");
-         if (typeof navigator.smartstore === 'undefined') {
-             SFHybridApp.logToConsole("SmartStore.install");
-             navigator.smartstore = new SmartStore();
-         }
-});
-}
