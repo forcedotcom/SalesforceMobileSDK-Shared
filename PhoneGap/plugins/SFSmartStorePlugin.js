@@ -27,6 +27,64 @@
 define("salesforce/plugin/smartstore", function(require, exports, module) {
     var exec = require("cordova/exec");
 
+    /**
+     * SoupIndexSpec consturctor
+     */
+    var SoupIndexSpec = function (path, type) {
+            this.path = path;
+            this.type = type;
+    };
+
+    /**
+     * SoupQuerySpec constructor
+     */
+    var SoupQuerySpec = function (path) {
+	    //the kind of query, one of: "exact","range", or "like":
+	    //"exact" uses matchKey, "range" uses beginKey and endKey, "like" uses likeKey
+	    this.queryType = "exact";
+	    
+        //path for the original IndexSpec you wish to use for search: may be a compound path eg Account.Owner.Name
+        this.indexPath = path;
+
+	    //for queryType "exact"
+        this.matchKey = null;
+	    //for queryType "like"
+	    this.likeKey = null;
+        
+	    //for queryType "range"
+        //the value at which query results may begin
+        this.beginKey = null;
+        //the value at which query results may end
+        this.endKey = null;
+
+        //"ascending" or "descending" : optional
+        this.order = "ascending";
+
+        //the number of entries to copy from native to javascript per each cursor page
+        this.pageSize = 10;
+    };
+
+    /**
+     * PagedSoupCursor constructor
+     */
+    var PagedSoupCursor = function () {
+        //the soup name from which this cursor was generated
+        this.soupName = null;
+        //a unique identifier for this cursor, used by plugin
+        this.cursorId = null;
+        //the query spec that generated this cursor
+        this.querySpec = null;
+        //the maximum number of entries returned per page 
+        this.pageSize = 0;
+        //the total number of pages of results available
+        this.totalPages = 0;
+        //the current page index among all the pages available
+        this.currentPageIndex = 0;
+        //the list of current page entries, ordered as requested in the querySpec
+        this.currentPageOrderedEntries = null;
+    };
+
+
     var smartstore = {
         logLevel: 0,
 
@@ -74,7 +132,7 @@ define("salesforce/plugin/smartstore", function(require, exports, module) {
         // ====== Soup manipulation ======
 
         registerSoup: function (soupName, indexSpecs, successCB, errorCB) {
-            SFHybridApp.logToConsole("SmartStore.registerSoup: '" + soupName + "' indexSpecs: " + indexSpecs);
+            console.log("SmartStore.registerSoup: '" + soupName + "' indexSpecs: " + indexSpecs);
             exec(successCB, errorCB, 
                          "com.salesforce.smartstore", 
                          "pgRegisterSoup", 
@@ -83,7 +141,7 @@ define("salesforce/plugin/smartstore", function(require, exports, module) {
         },
 
         removeSoup: function (soupName, successCB, errorCB) {
-            SFHybridApp.logToConsole("SmartStore.removeSoup: " + soupName );
+            console.log("SmartStore.removeSoup: " + soupName );
             exec(successCB, errorCB, 
                          "com.salesforce.smartstore", 
                          "pgRemoveSoup", 
@@ -92,7 +150,7 @@ define("salesforce/plugin/smartstore", function(require, exports, module) {
         },
 
         soupExists: function (soupName, successCB, errorCB) {
-            SFHybridApp.logToConsole("SmartStore.soupExists: " + soupName );
+            console.log("SmartStore.soupExists: " + soupName );
             exec(successCB, errorCB, 
                          "com.salesforce.smartstore", 
                          "pgSoupExists", 
@@ -101,7 +159,7 @@ define("salesforce/plugin/smartstore", function(require, exports, module) {
         },
 
         querySoup: function (soupName, querySpec, successCB, errorCB) {
-            SFHybridApp.logToConsole("SmartStore.querySoup: '" + soupName + "' indexPath: " + querySpec.indexPath);
+            console.log("SmartStore.querySoup: '" + soupName + "' indexPath: " + querySpec.indexPath);
             exec(successCB, errorCB, 
                          "com.salesforce.smartstore", 
                          "pgQuerySoup", 
@@ -111,7 +169,7 @@ define("salesforce/plugin/smartstore", function(require, exports, module) {
 
         retrieveSoupEntries: function (soupName, entryIds, successCB, errorCB) {
             if (this.logLevel > 0) 
-                SFHybridApp.logToConsole("SmartStore.retrieveSoupEntry: '" + soupName + "' entryIds: " + entryIds);
+                console.log("SmartStore.retrieveSoupEntry: '" + soupName + "' entryIds: " + entryIds);
             exec(successCB, errorCB, 
                          "com.salesforce.smartstore", 
                          "pgRetrieveSoupEntries", 
@@ -125,7 +183,7 @@ define("salesforce/plugin/smartstore", function(require, exports, module) {
 
         upsertSoupEntriesWithExternalId: function (soupName, entries, externalIdPath, successCB, errorCB) {
             if (this.logLevel > 0) 
-                SFHybridApp.logToConsole("SmartStore.upsertSoupEntries: '" + soupName + "' entries.length: " + entries.length);
+                console.log("SmartStore.upsertSoupEntries: '" + soupName + "' entries.length: " + entries.length);
             exec(successCB, errorCB, 
                          "com.salesforce.smartstore", 
                          "pgUpsertSoupEntries", 
@@ -134,7 +192,7 @@ define("salesforce/plugin/smartstore", function(require, exports, module) {
         },
 
         removeFromSoup: function (soupName, entryIds, successCB, errorCB) {
-            SFHybridApp.logToConsole("SmartStore.removeFromSoup: '" + soupName + "' entryIds: " + entryIds);
+            console.log("SmartStore.removeFromSoup: '" + soupName + "' entryIds: " + entryIds);
             exec(successCB, errorCB, 
                          "com.salesforce.smartstore", 
                          "pgRemoveFromSoup", 
@@ -145,7 +203,7 @@ define("salesforce/plugin/smartstore", function(require, exports, module) {
         //====== Cursor manipulation ======
         
         moveCursorToPageIndex: function (cursor, newPageIndex, successCB, errorCB) {
-            SFHybridApp.logToConsole("moveCursorToPageIndex: " + cursor.cursorId + "  newPageIndex: " + newPageIndex);
+            console.log("moveCursorToPageIndex: " + cursor.cursorId + "  newPageIndex: " + newPageIndex);
             exec(successCB, errorCB, 
                          "com.salesforce.smartstore", 
                          "pgMoveCursorToPageIndex", 
@@ -170,72 +228,21 @@ define("salesforce/plugin/smartstore", function(require, exports, module) {
         },
 
         closeCursor: function (cursor, successCB, errorCB) {
-            SFHybridApp.logToConsole("closeCursor: " + cursor.cursorId);
+            console.log("closeCursor: " + cursor.cursorId);
             exec(successCB, errorCB, 
                          "com.salesforce.smartstore", 
                          "pgCloseCursor", 
                          [{"cursorId":cursor.cursorId}]
                         );
-        }
+        },
+
+        //====== Useful objects ======
+        SoupQuerySpec: SoupQuerySpec,
+        SoupIndexSpec: SoupIndexSpec,
+        PagedSoupCursor: PagedSoupCursor
     };
 
     module.exports = smartstore;
 });
 
  
-/**
- * IndexSpec
- */
-var SoupIndexSpec = function (path, type) {
-    this.path = path;
-    this.type = type;
-};
-
-/**
- * QuerySpec
- */
-var SoupQuerySpec = function (path) {
-	//the kind of query, one of: "exact","range", or "like":
-	//"exact" uses matchKey, "range" uses beginKey and endKey, "like" uses likeKey
-	this.queryType = "exact";
-	
-    //path for the original IndexSpec you wish to use for search: may be a compound path eg Account.Owner.Name
-    this.indexPath = path;
-
-	//for queryType "exact"
-    this.matchKey = null;
-	//for queryType "like"
-	this.likeKey = null;
-    
-	//for queryType "range"
-    //the value at which query results may begin
-    this.beginKey = null;
-    //the value at which query results may end
-    this.endKey = null;
-
-    //"ascending" or "descending" : optional
-    this.order = "ascending";
-
-    //the number of entries to copy from native to javascript per each cursor page
-    this.pageSize = 10;
-};
-
-/**
- * Cursor
- */
-var PagedSoupCursor = function () {
-    //the soup name from which this cursor was generated
-    this.soupName = null;
-    //a unique identifier for this cursor, used by plugin
-    this.cursorId = null;
-    //the query spec that generated this cursor
-    this.querySpec = null;
-    //the maximum number of entries returned per page 
-    this.pageSize = 0;
-    //the total number of pages of results available
-    this.totalPages = 0;
-    //the current page index among all the pages available
-    this.currentPageIndex = 0;
-    //the list of current page entries, ordered as requested in the querySpec
-    this.currentPageOrderedEntries = null;
-};

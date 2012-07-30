@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, salesforce.com, inc.
+ * Copyright (c) 2012, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -24,54 +24,46 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-if (typeof TestRunner === 'undefined') {
+define("salesforce/plugin/testrunner", function(require, exports, module) {
 
-var TestRunner = function () {
-    SFHybridApp.logToConsole("new TestRunner");
-	this.testSuiteClassName = null;
-	this.testSuite = null;
-};
- 
-// ====== Test and Suite setup ======
+    var TestRunner = function () {
+        SFHybridApp.logToConsole("new TestRunner");
+	    this.testSuiteClassName = null;
+	    this.testSuite = null;
+    };
+    
+    // ====== Test and Suite setup ======
 
-TestRunner.prototype.setTestSuite = function (suiteClassName) {
-	if (this.testSuiteClassName !== suiteClassName) {
-		SFHybridApp.logToConsole("TestRunner.setTestSuite: " + suiteClassName);
-		this.testSuiteClassName = suiteClassName;
-		this.testSuite = new window[suiteClassName]();
-	}
-};
+    TestRunner.prototype.setTestSuite = function (suiteClassName) {
+	    if (this.testSuiteClassName !== suiteClassName) {
+		    SFHybridApp.logToConsole("TestRunner.setTestSuite: " + suiteClassName);
+		    this.testSuiteClassName = suiteClassName;
+		    this.testSuite = new window[suiteClassName]();
+	    }
+    };
 
-TestRunner.prototype.onReadyForTests = function (successCB, errorCB) {
-    SFHybridApp.logToConsole("TestRunner.onReadyForTests");
-    cordova.exec(successCB, errorCB, 
-                  "com.salesforce.testrunner",
-                  "onReadyForTests",
-                  []
-                  );                  
-};
+    TestRunner.prototype.onReadyForTests = function (successCB, errorCB) {
+        SFHybridApp.logToConsole("TestRunner.onReadyForTests");
+        cordova.exec(successCB, errorCB, 
+                     "com.salesforce.testrunner",
+                     "onReadyForTests",
+                     []
+                    );                  
+    };
 
-TestRunner.prototype.onTestComplete = function (testName, success, message, status, successCB, errorCB) {
-    SFHybridApp.logToConsole("TestRunner.onTestComplete");
-    cordova.exec(successCB, errorCB, 
-                  "com.salesforce.testrunner",
-                  "onTestComplete",
-                  [{
-                   "testName": testName, 
-                   "success": success, 
-                   "message": message, 
-                   "testDuration": status.testDuration
-                   }]
-                  );
-};
+    TestRunner.prototype.onTestComplete = function (testName, success, message, status, successCB, errorCB) {
+        SFHybridApp.logToConsole("TestRunner.onTestComplete");
+        cordova.exec(successCB, errorCB, 
+                     "com.salesforce.testrunner",
+                     "onTestComplete",
+                     [{
+                         "testName": testName, 
+                         "success": success, 
+                         "message": message, 
+                         "testDuration": status.testDuration
+                     }]
+                    );
+    };
 
-//======Plugin creation / installation ======
-
-cordova.addConstructor(function () {
-        SFHybridApp.logToConsole("TestRunner pre-install");
-         if (typeof navigator.testrunner === 'undefined') {
-             SFHybridApp.logToConsole("TestRunner.install");
-             navigator.testrunner = new TestRunner();
-         }
+    module.exports = TestRunner;
 });
-}
