@@ -7,7 +7,7 @@
 /**
  * Utilify functions for logging
  */
-define("salesforce/util/logger", function(require, exports, module) {
+cordova.define("salesforce/util/logger", function(require, exports, module) {
     var appStartTime = (new Date()).getTime();  // Used for debug timing measurements.
 
     /**
@@ -18,7 +18,7 @@ define("salesforce/util/logger", function(require, exports, module) {
     var log = function(section, txt) {
         console.log("jslog: " + txt);
         var now = new Date();
-        var fullTxt = "<p><i><b>* At " + (now.getTime() - this.appStartTime) + "ms:</b></i> " + txt + "</p>";
+        var fullTxt = "<p><i><b>* At " + (now.getTime() - appStartTime) + "ms:</b></i> " + txt + "</p>";
         jQuery(section).append(fullTxt);
     };
 
@@ -87,7 +87,7 @@ define("salesforce/util/logger", function(require, exports, module) {
 /**
  * Utility functions used at startup 
  */
-define("salesforce/util/bootstrap", function(require, exports, module) {
+cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
 
     var logger = require("salesforce/util/logger");
 
@@ -138,6 +138,7 @@ define("salesforce/util/bootstrap", function(require, exports, module) {
      */
     var onDeviceReady = function(loginFailure) {
         logger.logToConsole("onDeviceReady called: Cordova is ready.");
+        var oauth = require("salesforce/plugin/oauth");
         
         // Validate the start data configuration.
         if (!isValidStartData(startData)) {
@@ -154,7 +155,7 @@ define("salesforce/util/bootstrap", function(require, exports, module) {
              || startData.shouldAuthenticate)) {
             logger.logToConsole("Device is OFFLINE.  Trying to load cached app data.");
             
-            SalesforceOAuthPlugin.getAppHomeUrl(function (urlString) {
+            getAppHomeUrl(function (urlString) {
                 if (urlString === "") {
                     logger.logError("Device is offline, and no cached data could be found.  Cannot continue.");
                 } else {
@@ -165,13 +166,14 @@ define("salesforce/util/bootstrap", function(require, exports, module) {
         } else {
             logger.logToConsole("Device is ONLINE, OR app is not otherwise required to be online.");
             if (startData.shouldAuthenticate) {
+                console.log("Calling authenticate");
                 // Authenticate via the Salesforce OAuth plugin.
-                var oauthProperties = new OAuthProperties(remoteAccessConsumerKey, 
-                                                          oauthRedirectURI, 
-                                                          oauthScopes, 
-                                                          autoRefreshOnForeground,
-                                                          autoRefreshPeriodically);
-                SalesforceOAuthPlugin.authenticate(loginSuccess, loginFailure, oauthProperties);
+                var oauthProperties = new oauth.OAuthProperties(remoteAccessConsumerKey, 
+                                                                oauthRedirectURI, 
+                                                                oauthScopes, 
+                                                                autoRefreshOnForeground,
+                                                                autoRefreshPeriodically);
+                oauth.authenticate(loginSuccess, loginFailure, oauthProperties);
             } else {
                 if (startData instanceof LocalAppStartData) {
                     loadUrl(buildLocalUrl(startData.appStartUrl));
@@ -253,7 +255,7 @@ define("salesforce/util/bootstrap", function(require, exports, module) {
      *   fullAppUrl       - The URL to load.
      */
     var loadUrl = function(fullAppUrl) {
-        if (navigator.device.platform == "Android") {
+        if (navigator.platform.id == "android") {
             navigator.app.loadUrl(fullAppUrl , {clearHistory:true});
         }
         else {
@@ -303,7 +305,7 @@ define("salesforce/util/bootstrap", function(require, exports, module) {
     };
 
     /**
-     * Success callback for the SalesforceOAuthPlugin.authenticate() method.
+     * Success callback for the authenticate() method.
      */
     var loginSuccess = function(oauthCredentials) {
         logger.logToConsole("loginSuccess");
@@ -322,7 +324,7 @@ define("salesforce/util/bootstrap", function(require, exports, module) {
     };
     
     /**
-     * Error callback for the SalesforceOAuthPlugin.authenticate() method.
+     * Error callback for the authenticate() method.
      * TODO: Is there more that we'd want to do here?
      */
     var loginFailure = function(result) {
@@ -334,9 +336,13 @@ define("salesforce/util/bootstrap", function(require, exports, module) {
      * Part of the module that is public
      */
     module.exports = {
-        isDeviceOnline: isDeviceOnline,
+        deviceIsOnline: deviceIsOnline,
         onDeviceReady: onDeviceReady,
-        loginFailure: loginFailure
+        loginFailure: loginFailure,
+        LocalAppStartData: LocalAppStartData,
+        RemoteAppStartData: RemoteAppStartData
     };
 });
 
+// For backward compatibility
+var SFHybridApp = cordova.require("salesforce/util/bootstrap");

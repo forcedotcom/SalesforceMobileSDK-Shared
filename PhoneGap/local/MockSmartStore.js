@@ -325,7 +325,7 @@ var MockSmartStore = (function(window, $) {
 })(window, jQuery);
 
 var mockStore = new MockSmartStore();
-mockStore.hookToCordova(require("cordova"));
+mockStore.hookToCordova(cordova);
 
 
 

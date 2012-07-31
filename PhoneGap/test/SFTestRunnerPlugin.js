@@ -27,7 +27,7 @@
 define("salesforce/plugin/testrunner", function(require, exports, module) {
 
     var TestRunner = function () {
-        SFHybridApp.logToConsole("new TestRunner");
+        console.log("new TestRunner");
 	    this.testSuiteClassName = null;
 	    this.testSuite = null;
     };
@@ -36,14 +36,14 @@ define("salesforce/plugin/testrunner", function(require, exports, module) {
 
     TestRunner.prototype.setTestSuite = function (suiteClassName) {
 	    if (this.testSuiteClassName !== suiteClassName) {
-		    SFHybridApp.logToConsole("TestRunner.setTestSuite: " + suiteClassName);
+		    console.log("TestRunner.setTestSuite: " + suiteClassName);
 		    this.testSuiteClassName = suiteClassName;
 		    this.testSuite = new window[suiteClassName]();
 	    }
     };
 
     TestRunner.prototype.onReadyForTests = function (successCB, errorCB) {
-        SFHybridApp.logToConsole("TestRunner.onReadyForTests");
+        console.log("TestRunner.onReadyForTests");
         cordova.exec(successCB, errorCB, 
                      "com.salesforce.testrunner",
                      "onReadyForTests",
@@ -52,7 +52,7 @@ define("salesforce/plugin/testrunner", function(require, exports, module) {
     };
 
     TestRunner.prototype.onTestComplete = function (testName, success, message, status, successCB, errorCB) {
-        SFHybridApp.logToConsole("TestRunner.onTestComplete");
+        console.log("TestRunner.onTestComplete");
         cordova.exec(successCB, errorCB, 
                      "com.salesforce.testrunner",
                      "onTestComplete",

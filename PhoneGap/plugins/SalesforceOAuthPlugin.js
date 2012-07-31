@@ -24,9 +24,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-define("salesforce/plugin/oauth", function(require, exports, module) {
-    var exec = require("cordova/exec");
-
+cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
     /**
      * OAuthProperties data structure, for plugin arguments.
      *   remoteAccessConsumerKey - String containing the remote access object ID (client ID).
@@ -43,75 +41,82 @@ define("salesforce/plugin/oauth", function(require, exports, module) {
         this.autoRefreshPeriodically = autoRefreshPeriodically;
     };
 
-
-    var oauth = {
-	    /**
-	     * Obtain authentication credentials, calling 'authenticate' only if necessary.
-	     * Most index.html authors can simply use this method to obtain auth credentials
-	     * after onDeviceReady.
-         *   success - The success callback function to use.
-         *   fail    - The failure/error callback function to use.
-	     * cordova returns a dictionary with:
-	     * 	accessToken
-	     * 	refreshToken
-         *   clientId
-	     * 	userId
-	     * 	orgId
-         *   loginUrl
-	     * 	instanceUrl
-	     * 	userAgent
-	     */
-        getAuthCredentials: function(success, fail) {
-            exec(success, fail, "com.salesforce.oauth","getAuthCredentials",[]);
-        },
-        
-        /**
-         * Initiates the authentication process, with the given app configuration.
-         *   success         - The success callback function to use.
-         *   fail            - The failure/error callback function to use.
-         *   oauthProperties - The configuration properties for the authentication process.
-         *                     See OAuthProperties() below.
-         * cordova returns a dictionary with:
-         *   accessToken
-         *   refreshToken
-         *   clientId
-         *   userId
-         *   orgId
-         *   loginUrl
-         *   instanceUrl
-         *   userAgent
-         */
-        authenticate: function(success, fail, oauthProperties) {
-            exec(success, fail, "com.salesforce.oauth", "authenticate", [JSON.stringify(oauthProperties)]);
-        },
-
-
-        /**
-         * Logout the current authenticated user. This removes any current valid session token
-         * as well as any OAuth refresh token.  The user is forced to login again.
-         * This method does not call back with a success or failure callback, as 
-         * (1) this method must not fail and (2) in the success case, the current user
-         * will be logged out and asked to re-authenticate.
-         */
-        logout: function() {
-            exec(null, null, "com.salesforce.oauth", "logoutCurrentUser", []);
-        },
-        
-        /**
-         * Gets the app's homepage as an absolute URL.  Used for attempting to load any cached
-         * content that the developer may have built into the app (via HTML5 caching).
-         *
-         * This method will either return the URL as a string, or an empty string if the URL has not been
-         * initialized.
-         */
-        getAppHomeUrl: function(success) {
-            exec(success, null, "com.salesforce.oauth", "getAppHomeUrl", []);
-        },
-
-        // Constructor
-        OAuthProperties: OAuthProperties;
+	/**
+	 * Obtain authentication credentials, calling 'authenticate' only if necessary.
+	 * Most index.html authors can simply use this method to obtain auth credentials
+	 * after onDeviceReady.
+     *   success - The success callback function to use.
+     *   fail    - The failure/error callback function to use.
+	 * cordova returns a dictionary with:
+	 * 	accessToken
+	 * 	refreshToken
+     *  clientId
+	 * 	userId
+	 * 	orgId
+     *  loginUrl
+	 * 	instanceUrl
+	 * 	userAgent
+	 */
+    var getAuthCredentials = function(success, fail) {
+        cordova.exec(success, fail, "com.salesforce.oauth","getAuthCredentials",[]);
+    };
+    
+    /**
+     * Initiates the authentication process, with the given app configuration.
+     *   success         - The success callback function to use.
+     *   fail            - The failure/error callback function to use.
+     *   oauthProperties - The configuration properties for the authentication process.
+     *                     See OAuthProperties() below.
+     * cordova returns a dictionary with:
+     *   accessToken
+     *   refreshToken
+     *   clientId
+     *   userId
+     *   orgId
+     *   loginUrl
+     *   instanceUrl
+     *   userAgent
+     */
+    var authenticate = function(success, fail, oauthProperties) {
+        console.log("In authenticate");
+        cordova.exec(success, fail, "com.salesforce.oauth", "authenticate", [JSON.stringify(oauthProperties)]);
     };
 
-    module.exports = oauth;
-};
+
+    /**
+     * Logout the current authenticated user. This removes any current valid session token
+     * as well as any OAuth refresh token.  The user is forced to login again.
+     * This method does not call back with a success or failure callback, as 
+     * (1) this method must not fail and (2) in the success case, the current user
+     * will be logged out and asked to re-authenticate.
+     */
+    var logout = function() {
+        cordova.exec(null, null, "com.salesforce.oauth", "logoutCurrentUser", []);
+    };
+    
+    /**
+     * Gets the app's homepage as an absolute URL.  Used for attempting to load any cached
+     * content that the developer may have built into the app (via HTML5 caching).
+     *
+     * This method will either return the URL as a string, or an empty string if the URL has not been
+     * initialized.
+     */
+    var getAppHomeUrl = function(success) {
+        cordova.exec(success, null, "com.salesforce.oauth", "getAppHomeUrl", []);
+    };
+
+
+    /**
+     * Part of the module that is public
+     */
+    module.exports = {
+        getAuthCredentials: getAuthCredentials,
+        authenticate: authenticate,
+        logout: logout,
+        getAppHomeUrl: getAppHomeUrl,
+
+        // Constructor
+        OAuthProperties: OAuthProperties,
+    };
+});
 

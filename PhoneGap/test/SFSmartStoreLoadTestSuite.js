@@ -31,7 +31,7 @@
  */
 if (typeof SmartStoreLoadTestSuite === 'undefined') { 
 
-var smartstore = require("salesforce/plugin/smartstore");
+navigator.smartstore = cordova.require("salesforce/plugin/smartstore");
 
 /**
  * Constructor for SmartStoreLoadTestSuite
@@ -65,7 +65,7 @@ SmartStoreLoadTestSuite.prototype.registerSoup = function(soupName, soupIndexes,
 	console.log("In SFSmartStoreLoadTestSuite.registerSoup: soupName=" + soupName);
 	
 	var self = this;
-    smartstore.registerSoup(soupName, soupIndexes, 
+    navigator.smartstore.registerSoup(soupName, soupIndexes, 
 		function(soup) { 
 			if (callback !== null) callback(soup);
 		}, 
@@ -82,7 +82,7 @@ SmartStoreLoadTestSuite.prototype.soupExists = function(soupName, callback) {
 	console.log("In SFSmartStoreLoadTestSuite.soupExists: soupName=" + soupName);
 	
 	var self = this;
-    smartstore.soupExists(soupName,  
+    navigator.smartstore.soupExists(soupName,  
 		function(exists) { 
 			if (callback !== null) callback(exists);
 		}, 
@@ -135,7 +135,7 @@ SmartStoreLoadTestSuite.prototype.removeSoup = function(soupName, callback) {
 	console.log("In SFSmartStoreLoadTestSuite.removeSoup: soupName=" + soupName);
 	
 	var self = this;
-    smartstore.removeSoup(soupName, 
+    navigator.smartstore.removeSoup(soupName, 
 		function() { 
 			if (callback !== null) callback();
 		}, 
@@ -168,7 +168,7 @@ SmartStoreLoadTestSuite.prototype.addGeneratedEntriesToSoup = function(soupName,
  */
 SmartStoreLoadTestSuite.prototype.addEntriesToSoup = function(soupName, entries, callback) {
 	var self = this;
-    smartstore.upsertSoupEntries(soupName, entries, 
+    navigator.smartstore.upsertSoupEntries(soupName, entries, 
 		function(upsertedEntries) {
 			callback(upsertedEntries);
 		}, 
@@ -320,7 +320,7 @@ SmartStoreLoadTestSuite.prototype.testAddAndRetrieveManyEntries  = function() {
 						retrieveIds.push(entryId);
 					}
 					
-					smartstore.retrieveSoupEntries(self.defaultSoupName,
+					navigator.smartstore.retrieveSoupEntries(self.defaultSoupName,
 						retrieveIds, 
 						function(retrievedEntries) {
 						    QUnit.equal(retrievedEntries.length, addedEntries.length,"verify retrieved matches added");

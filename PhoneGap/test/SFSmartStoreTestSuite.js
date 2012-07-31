@@ -31,8 +31,8 @@
  */
 if (typeof SmartStoreTestSuite === 'undefined') { 
 
-var smartstore = require("salesforce/plugin/smartstore");
-var SoupQuerySpec = smartstore.SoupQuerySpec;
+navigator.smartstore = cordova.require("salesforce/plugin/smartstore");
+var SoupQuerySpec = navigator.smartstore.SoupQuerySpec;
 
 /**
  * Constructor for SmartStoreTestSuite
@@ -76,7 +76,7 @@ SmartStoreTestSuite.prototype.registerSoup = function(soupName, soupIndexes, cal
 	console.log("In SFSmartStoreTestSuite.registerSoup: soupName=" + soupName);
 	
 	var self = this;
-    smartstore.registerSoup(soupName, soupIndexes, 
+    navigator.smartstore.registerSoup(soupName, soupIndexes, 
 		function(soup) { 
 			console.log("registerSoup succeeded");
 			if (callback !== null) callback(soup);
@@ -92,7 +92,7 @@ SmartStoreTestSuite.prototype.soupExists = function(soupName, callback) {
 	console.log("In SFSmartStoreTestSuite.soupExists: soupName=" + soupName);
 	
 	var self = this;
-    smartstore.soupExists(soupName,  
+    navigator.smartstore.soupExists(soupName,  
 		function(exists) { 
 			console.log("soupExists succeeded");
 			if (callback !== null) callback(exists);
@@ -145,7 +145,7 @@ SmartStoreTestSuite.prototype.removeSoup = function(soupName, callback) {
 	console.log("In SFSmartStoreTestSuite.removeSoup: soupName=" + soupName);
 	
 	var self = this;
-    smartstore.removeSoup(soupName, 
+    navigator.smartstore.removeSoup(soupName, 
 		function() { 
 			console.log("removeSoup succeeded");
 			if (callback !== null) callback();
@@ -223,7 +223,7 @@ SmartStoreTestSuite.prototype.addEntriesToSoup = function(soupName, entries, cal
 	console.log("In SFSmartStoreTestSuite.addEntriesToSoup: " + soupName + " entries.length=" + entries.length);
 
 	var self = this;
-    smartstore.upsertSoupEntries(soupName, entries, 
+    navigator.smartstore.upsertSoupEntries(soupName, entries, 
 		function(upsertedEntries) {
 		    console.log("addEntriesToSoup of " + upsertedEntries.length + " entries succeeded");
 			callback(upsertedEntries);
@@ -239,7 +239,7 @@ SmartStoreTestSuite.prototype.upsertEntriesToSoupWithExternalIdPath = function(s
     console.log("In SFSmartStoreTestSuite.upsertEntriesToSoupWithExternalIdPath: " + soupName + " entries.length=" + entries.length + " externalIdPath: " + externalIdPath);
         
     var self = this;
-    smartstore.upsertSoupEntriesWithExternalId(soupName, entries, externalIdPath,
+    navigator.smartstore.upsertSoupEntriesWithExternalId(soupName, entries, externalIdPath,
         function(upsertedEntries) {
             console.log("upsertEntriesToSoupWithExternalIdPath of " + upsertedEntries.length + " entries succeeded");
             callback(upsertedEntries);
@@ -322,7 +322,7 @@ SmartStoreTestSuite.prototype.testRegisterBogusSoup = function()  {
 	var soupName = null;//intentional bogus soupName
 	var self = this;
 
-	smartstore.registerSoup(soupName, self.defaultSoupIndexes, 
+	navigator.smartstore.registerSoup(soupName, self.defaultSoupIndexes, 
 		function(soupName2) {
 			self.setAssertionFailed("registerSoup should fail with bogus soupName " + soupName2);
 		},
@@ -351,7 +351,7 @@ SmartStoreTestSuite.prototype.testRegisterSoupNoIndices = function()  {
 				function(exists) {
 					QUnit.equals(exists, false, "soup should not already exist");
 					// Create soup
-					smartstore.registerSoup(soupName, [], 
+					navigator.smartstore.registerSoup(soupName, [], 
 						function(soupName2) {
 							self.setAssertionFailed("registerSoup should fail with bogus indices " + soupName2);
 						},
@@ -420,8 +420,8 @@ SmartStoreTestSuite.prototype.testUpsertSoupEntriesWithExternalId = function()  
                 QUnit.equal(entries3.length, 16);
                 
                 // Now, query the soup for all entries, and make sure that we have only 16.
-                var querySpec = smartstore.buildAllQuerySpec("Name", null, 25);
-                smartstore.querySoup(self.defaultSoupName, querySpec,
+                var querySpec = navigator.smartstore.buildAllQuerySpec("Name", null, 25);
+                navigator.smartstore.querySoup(self.defaultSoupName, querySpec,
                     function(cursor) {
                         QUnit.equal(cursor.totalPages, 1, "Are totalPages correct?");
                         var orderedEntries = cursor.currentPageOrderedEntries;
@@ -432,7 +432,7 @@ SmartStoreTestSuite.prototype.testUpsertSoupEntriesWithExternalId = function()  
                         QUnit.equal(orderedEntries[15]._soupEntryId, 16, "Is the last soup entry ID correct?");
                         QUnit.equal(orderedEntries[15].updatedField, "Mister Toast 15", "Is the last updated field correct?");
                                                                                   
-                        smartstore.closeCursor(cursor,
+                        navigator.smartstore.closeCursor(cursor,
                             function(param) { QUnit.ok(true,"closeCursor ok"); self.finalizeTest(); },
                             function(err) { self.setAssertionFailed("closeCursor failed: " + err); }
                         );
@@ -457,7 +457,7 @@ SmartStoreTestSuite.prototype.testUpsertToNonexistentSoup = function()  {
 	var self = this;
 	var entries = [{a:1},{a:2},{a:3}];
 	
-    smartstore.upsertSoupEntries("nonexistentSoup", entries, 
+    navigator.smartstore.upsertSoupEntries("nonexistentSoup", entries, 
 		function(upsertedEntries) {
 			self.setAssertionFailed("upsertSoupEntries should fail with nonexistent soup ");
 		},
@@ -480,7 +480,7 @@ SmartStoreTestSuite.prototype.testRetrieveSoupEntries = function()  {
 		var soupEntry0Id = entries[0]._soupEntryId;
 		var soupEntry2Id = entries[2]._soupEntryId;
 		
-		smartstore.retrieveSoupEntries(self.defaultSoupName, [soupEntry2Id, soupEntry0Id], 
+		navigator.smartstore.retrieveSoupEntries(self.defaultSoupName, [soupEntry2Id, soupEntry0Id], 
 			function(retrievedEntries) {
 			    QUnit.equal(retrievedEntries.length, 2);
                                                  
@@ -514,12 +514,12 @@ SmartStoreTestSuite.prototype.testRemoveFromSoup = function()  {
 			soupEntryIds.push(entry._soupEntryId);
 		}
 		
-		smartstore.removeFromSoup(self.defaultSoupName, soupEntryIds, 
+		navigator.smartstore.removeFromSoup(self.defaultSoupName, soupEntryIds, 
 			function(status) {
 				QUnit.equal(status, "OK", "removeFromSoup OK");
 				
-				var querySpec = smartstore.buildAllQuerySpec("Name");
-				smartstore.querySoup(self.defaultSoupName, querySpec, 
+				var querySpec = navigator.smartstore.buildAllQuerySpec("Name");
+				navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
 					function(cursor) {
 						var nEntries = cursor.currentPageOrderedEntries.length;
 						QUnit.equal(nEntries, 0, "currentPageOrderedEntries correct");
@@ -543,14 +543,14 @@ SmartStoreTestSuite.prototype.testQuerySoup = function()  {
 	self.stuffTestSoup(function(entries) {
 		QUnit.equal(entries.length, 3);
 		
-		var querySpec = smartstore.buildExactQuerySpec("Name","Robot");
-	    smartstore.querySoup(self.defaultSoupName, querySpec, 
+		var querySpec = navigator.smartstore.buildExactQuerySpec("Name","Robot");
+	    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
 			function(cursor) {
 				QUnit.equal(cursor.totalPages, 1, "totalPages correct");
 				var nEntries = cursor.currentPageOrderedEntries.length;
 				QUnit.equal(nEntries, 1, "currentPageOrderedEntries correct");
                 
-                smartstore.closeCursor(cursor,
+                navigator.smartstore.closeCursor(cursor,
                     function(param) { QUnit.ok(true,"closeCursor ok"); self.finalizeTest(); },
                     function(param) { self.setAssertionFailed("closeCursor: " + param); }
                     );
@@ -571,15 +571,15 @@ SmartStoreTestSuite.prototype.testQuerySoupDescending = function()  {
 	self.stuffTestSoup(function(entries) {
 		QUnit.equal(entries.length, 3);
 		
-		var querySpec = smartstore.buildAllQuerySpec("Name", "descending");		
-	    smartstore.querySoup(self.defaultSoupName, querySpec, 
+		var querySpec = navigator.smartstore.buildAllQuerySpec("Name", "descending");		
+	    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
 			function(cursor) {
 				QUnit.equal(cursor.totalPages, 1, "totalPages correct");
 				QUnit.equal(cursor.currentPageOrderedEntries.length, 3, "check currentPageOrderedEntries");
 				QUnit.equal(cursor.currentPageOrderedEntries[0].Name,"Todd Stellanova","verify first entry");
 				QUnit.equal(cursor.currentPageOrderedEntries[2].Name,"Pro Bono Bonobo","verify last entry");
 				
-                smartstore.closeCursor(cursor,
+                navigator.smartstore.closeCursor(cursor,
                     function(param) { QUnit.ok(true,"closeCursor ok"); self.finalizeTest(); },
                     function(param) { self.setAssertionFailed("closeCursor: " + param); }
                     );
@@ -600,9 +600,9 @@ SmartStoreTestSuite.prototype.testQuerySoupBadQuerySpec = function()  {
 		QUnit.equal(entries.length, 3);
 		
 		//query on a nonexistent index
-		var querySpec = smartstore.buildRangeQuerySpec("bottlesOfBeer",99,null,"descending");				
+		var querySpec = navigator.smartstore.buildRangeQuerySpec("bottlesOfBeer",99,null,"descending");				
 		
-	    smartstore.querySoup(self.defaultSoupName, querySpec, 
+	    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
 			function(cursor) {
 				self.setAssertionFailed("querySoup with bogus querySpec should fail");
 			}, 
@@ -625,9 +625,9 @@ SmartStoreTestSuite.prototype.testQuerySoupEndKeyNoBeginKey = function()  {
 	self.stuffTestSoup(function(entries) {
 		QUnit.equal(entries.length, 3);
 		//keep in sync with stuffTestSoup
-		var querySpec = smartstore.buildRangeQuerySpec("Name",null,"Robot");				
+		var querySpec = navigator.smartstore.buildRangeQuerySpec("Name",null,"Robot");				
 
-	    smartstore.querySoup(self.defaultSoupName, querySpec, 
+	    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
 			function(cursor) {
 				var nEntries = cursor.currentPageOrderedEntries.length;
 				QUnit.equal(nEntries, 2, "nEntries matches endKey");
@@ -651,9 +651,9 @@ SmartStoreTestSuite.prototype.testQuerySoupBeginKeyNoEndKey = function()  {
 	self.stuffTestSoup(function(entries) {
 		QUnit.equal(entries.length, 3);
 		//keep in sync with stuffTestSoup
-		var querySpec = smartstore.buildRangeQuerySpec("Name","Robot",null);				
+		var querySpec = navigator.smartstore.buildRangeQuerySpec("Name","Robot",null);				
 
-	    smartstore.querySoup(self.defaultSoupName, querySpec, 
+	    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
 			function(cursor) {
 				var nEntries = cursor.currentPageOrderedEntries.length;
 				QUnit.equal(nEntries, 2, "nEntries matches beginKey");
@@ -678,9 +678,9 @@ SmartStoreTestSuite.prototype.testManipulateCursor = function()  {
 	this.addGeneratedEntriesToTestSoup(self.NUM_CURSOR_MANIPULATION_ENTRIES, 
 		function(entries) {
 			QUnit.equal(entries.length, self.NUM_CURSOR_MANIPULATION_ENTRIES);
-			var querySpec = smartstore.buildAllQuerySpec("Name",null,10);
+			var querySpec = navigator.smartstore.buildAllQuerySpec("Name",null,10);
 			
-		    smartstore.querySoup(self.defaultSoupName, querySpec, 
+		    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
 				function(cursor) {
 					QUnit.equal(cursor.currentPageIndex, 0, "currentPageIndex correct");
 					QUnit.equal(cursor.pageSize, 10, "pageSize correct");
@@ -703,7 +703,7 @@ SmartStoreTestSuite.prototype.forwardCursorToEnd = function(cursor) {
 	console.log("In SFSmartStoreTestSuite.forwardCursorToEnd");	
 	var self = this;
 	
-	smartstore.moveCursorToNextPage(cursor, 
+	navigator.smartstore.moveCursorToNextPage(cursor, 
 		function(nextCursor) {
 			var pageCount = nextCursor.currentPageIndex + 1;
 			var nEntries = nextCursor.currentPageOrderedEntries.length;
@@ -761,13 +761,13 @@ SmartStoreTestSuite.prototype.testQuerySpecFactories = function() {
 	var endKey = "Zzzzbert";
 	var order = "descending";
 	var pageSize = 17;
-	var query =  smartstore.buildExactQuerySpec(path,beginKey,pageSize);
+	var query =  navigator.smartstore.buildExactQuerySpec(path,beginKey,pageSize);
 	QUnit.equal(query.queryType,"exact","check queryType");
 	QUnit.equal(query.indexPath,path,"check indexPath");
 	QUnit.equal(query.matchKey,beginKey,"check matchKey");
 	QUnit.equal(query.pageSize,pageSize,"check pageSize");
 	
-	query =  smartstore.buildRangeQuerySpec(path,beginKey,endKey,order,pageSize);
+	query =  navigator.smartstore.buildRangeQuerySpec(path,beginKey,endKey,order,pageSize);
 	QUnit.equal(query.queryType,"range","check queryType");
 	QUnit.equal(query.indexPath,path,"check indexPath");
 	QUnit.equal(query.beginKey,beginKey,"check beginKey");
@@ -775,14 +775,14 @@ SmartStoreTestSuite.prototype.testQuerySpecFactories = function() {
 	QUnit.equal(query.order,order,"check order");
 	QUnit.equal(query.pageSize,pageSize,"check pageSize");
 	
-	query =  smartstore.buildLikeQuerySpec(path,beginKey,order,pageSize);
+	query =  navigator.smartstore.buildLikeQuerySpec(path,beginKey,order,pageSize);
 	QUnit.equal(query.queryType,"like","check queryType");
 	QUnit.equal(query.indexPath,path,"check indexPath");
 	QUnit.equal(query.likeKey,beginKey,"check likeKey");
 	QUnit.equal(query.order,order,"check order");
 	QUnit.equal(query.pageSize,pageSize,"check pageSize");
 	
-	var query =  smartstore.buildAllQuerySpec(path,order,pageSize);
+	var query =  navigator.smartstore.buildAllQuerySpec(path,order,pageSize);
 	QUnit.equal(query.queryType,"range","check queryType");
 	QUnit.equal(query.indexPath,path,"check indexPath");
 	QUnit.equal(query.beginKey,null,"check beginKey");
@@ -799,8 +799,8 @@ SmartStoreTestSuite.prototype.testLikeQuerySpecStartsWith  = function() {
 	
 	self.stuffTestSoup(function(entries) {
 		QUnit.equal(entries.length, 3,"check stuffTestSoup result");
-		var querySpec = smartstore.buildLikeQuerySpec("Name","Todd%");
-		smartstore.querySoup(self.defaultSoupName, querySpec, 
+		var querySpec = navigator.smartstore.buildLikeQuerySpec("Name","Todd%");
+		navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
 			function(cursor) {
 				var nEntries = cursor.currentPageOrderedEntries.length;
 				QUnit.equal(nEntries, 1, "currentPageOrderedEntries correct");
@@ -817,8 +817,8 @@ SmartStoreTestSuite.prototype.testLikeQuerySpecEndsWith  = function() {
 	
 	self.stuffTestSoup(function(entries) {
 		QUnit.equal(entries.length, 3,"check stuffTestSoup result");
-		var querySpec = smartstore.buildLikeQuerySpec("Name","%Stellanova");
-		smartstore.querySoup(self.defaultSoupName, querySpec, 
+		var querySpec = navigator.smartstore.buildLikeQuerySpec("Name","%Stellanova");
+		navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
 			function(cursor) {
 				var nEntries = cursor.currentPageOrderedEntries.length;
 				QUnit.equal(nEntries, 1, "currentPageOrderedEntries correct");
@@ -835,8 +835,8 @@ SmartStoreTestSuite.prototype.testLikeQueryInnerText  = function() {
 	
 	self.stuffTestSoup(function(entries) {
 		QUnit.equal(entries.length, 3,"check stuffTestSoup result");
-		var querySpec = smartstore.buildLikeQuerySpec("Name","%ono%");
-		smartstore.querySoup(self.defaultSoupName, querySpec, 
+		var querySpec = navigator.smartstore.buildLikeQuerySpec("Name","%ono%");
+		navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
 			function(cursor) {
 				var nEntries = cursor.currentPageOrderedEntries.length;
 				QUnit.equal(nEntries, 1, "currentPageOrderedEntries correct");
@@ -861,13 +861,13 @@ SmartStoreTestSuite.prototype.testCompoundQueryPath  = function() {
 					//pick out a compound path value and ensure that we can query for the same entry
 					var selectedEntry = entries[1];
 					var selectedUrl = selectedEntry.attributes.url;
-					var querySpec = smartstore.buildExactQuerySpec("attributes.url",selectedUrl);
-					smartstore.querySoup(soupName, querySpec, 
+					var querySpec = navigator.smartstore.buildExactQuerySpec("attributes.url",selectedUrl);
+					navigator.smartstore.querySoup(soupName, querySpec, 
 						function(cursor) {
 							QUnit.equal(cursor.currentPageOrderedEntries.length, 1, "currentPageOrderedEntries correct");
 							var foundEntry = cursor.currentPageOrderedEntries[0];
 							QUnit.equal(foundEntry.attributes.url,selectedUrl,"Verify same entry");
-							smartstore.closeCursor(cursor,
+							navigator.smartstore.closeCursor(cursor,
 			                    function(param) { QUnit.ok(true,"closeCursor ok"); self.finalizeTest(); },
 			                    function(param) { self.setAssertionFailed("closeCursor: " + param); }
 			                    );
@@ -885,7 +885,7 @@ SmartStoreTestSuite.prototype.testEmptyQuerySpec  = function() {
 	
 	var querySpec = new SoupQuerySpec(null);
 	querySpec.queryType = null; 
-	smartstore.querySoup(self.defaultSoupName, querySpec, 
+	navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
 		function(param) { self.setAssertionFailed("querySoup should have failed"); }, 
 		function(param) { self.finalizeTest(); }
 	);
@@ -905,13 +905,13 @@ SmartStoreTestSuite.prototype.testIntegerQuerySpec  = function() {
 		function(soupName) {
 			self.addEntriesToSoup(soupName,rawEntries,
 				function(entries) {
-					var querySpec = smartstore.buildRangeQuerySpec("shots", 10, 100,"ascending");
-					smartstore.querySoup(soupName, querySpec, 
+					var querySpec = navigator.smartstore.buildRangeQuerySpec("shots", 10, 100,"ascending");
+					navigator.smartstore.querySoup(soupName, querySpec, 
 						function(cursor) {
 							QUnit.equal(cursor.currentPageOrderedEntries.length, 2, "check currentPageOrderedEntries");
 							QUnit.equal(cursor.currentPageOrderedEntries[0].Name,"Todd Stellanova","verify first entry");
 							QUnit.equal(cursor.currentPageOrderedEntries[1].Name,"Pro Bono Bonobo","verify last entry");
-							smartstore.closeCursor(cursor,
+							navigator.smartstore.closeCursor(cursor,
 				                function(param) { QUnit.ok(true,"closeCursor ok"); self.finalizeTest(); },
 				                function(param) { self.setAssertionFailed("closeCursor: " + param); }
 				                );

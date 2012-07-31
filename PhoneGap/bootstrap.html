@@ -7,8 +7,8 @@
         
         <script type="text/javascript" src="cordova-1.8.1.js"></script>
         <script type="text/javascript" src="jquery/jquery-1.6.2.min.js"></script>
-        <script type="text/javascript" src="SalesforceOAuthPlugin.js"></script>
         <script type="text/javascript" src="SFHybridApp.js"></script>
+        <script type="text/javascript" src="SalesforceOAuthPlugin.js"></script>
         <script type="text/javascript" src="bootconfig.js"></script>
         
         <script type="text/javascript">
@@ -16,8 +16,8 @@
          * JQuery's "ready" function.  This will execute once JQuery is successfully loaded.
          */
         jQuery(document).ready(function() {
-            var logger = require("salesforce/util/logger");
-            var bootstrap = require("salesforce/util/bootstrap");
+            var logger = cordova.require("salesforce/util/logger");
+            var bootstrap = cordova.require("salesforce/util/bootstrap");
             var onDeviceReady = function() { 
                 bootstrap.onDeviceReady(bootstrap.loginFailure); 
                 // Note: default loginFailure handler simply logs a message to the console
