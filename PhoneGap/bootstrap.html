@@ -6,31 +6,38 @@
         <link rel="stylesheet" type="text/css" href="SFHybridApp.css" />
         
         <script type="text/javascript" src="cordova-1.8.1.js"></script>
-        <script type="text/javascript" src="jquery/jquery-1.6.2.min.js"></script>
         <script type="text/javascript" src="SFHybridApp.js"></script>
         <script type="text/javascript" src="SalesforceOAuthPlugin.js"></script>
         <script type="text/javascript" src="bootconfig.js"></script>
         
         <script type="text/javascript">
-        /**
-         * JQuery's "ready" function.  This will execute once JQuery is successfully loaded.
-         */
-        jQuery(document).ready(function() {
-            var logger = cordova.require("salesforce/util/logger");
-            var bootstrap = cordova.require("salesforce/util/bootstrap");
-            var onDeviceReady = function() { 
-                bootstrap.onDeviceReady(bootstrap.loginFailure); 
-                // Note: default loginFailure handler simply logs a message to the console
-                //       provide your own if you want a different behavior
-            }
+        (function(window) {
+            var onReady = function() {
+                var bootstrap = cordova.require("salesforce/util/bootstrap");
+                var onDeviceReady = function() { 
+                    bootstrap.onDeviceReady(bootstrap.loginFailure); 
+                    // Note: default loginFailure handler simply logs a message to the console
+                    //       provide your own if you want a different behavior
+                }
 
-
-            logger.logToConsole("jQuery is ready");
-            document.addEventListener("deviceready", onDeviceReady, false);
-            logger.logToConsole("Added onDeviceReady event listener.");
-        });
+                document.addEventListener("deviceready", onDeviceReady, false);
+            };
+            window.addEventListener("load", onReady);
+        })(window);
         </script>
     </head>
+    <style>
+    .logWindow
+    {
+        display:none;
+        width:700px;
+    }
+
+    .logWindow > p
+    {
+        padding:0px; margin:0px; word-wrap:break-word;
+    }
+    </style>
     <body>
         <div id="main">
             <h1>Loading...</h1>

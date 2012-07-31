@@ -1,7 +1,6 @@
 /**
  * Utility functionality for hybrid apps.
- * Note: This JS module assumes the inclusion of a) the Cordova JS libraries and
- * b) the jQuery libraries.
+ * Note: This JS module assumes the inclusion of the Cordova JS library
  */
 
 /**
@@ -12,14 +11,18 @@ cordova.define("salesforce/util/logger", function(require, exports, module) {
 
     /**
      * Logs text to a given section of the page.
-     *   section - HTML section (CSS-identified) to log to.
+     *   section - id of HTML section to log to.
      *   txt - The text (html) to log.
      */
     var log = function(section, txt) {
         console.log("jslog: " + txt);
         var now = new Date();
         var fullTxt = "<p><i><b>* At " + (now.getTime() - appStartTime) + "ms:</b></i> " + txt + "</p>";
-        jQuery(section).append(fullTxt);
+        var sectionElt = document.getElementById(section);
+        if (sectionElt) {
+            sectionElt.style.display = "block";
+            document.getElementById(section).innerHTML += fullTxt;
+        }
     };
 
     /**
@@ -29,9 +32,16 @@ cordova.define("salesforce/util/logger", function(require, exports, module) {
      */
     var logToConsole = function(txt) {
         if ((typeof debugMode !== "undefined") && (debugMode === true)) {
-            jQuery("#console").css("display", "block");
-            log("#console", txt);
+            log("console", txt);
         }
+    };
+
+    /**
+     * Use to log error messages to an "error console" section of the page.
+     *   txt - The text (html) to log to the console.
+     */
+    var logError = function(txt) {
+        log("errors", txt);
     };
 
     /**
@@ -46,7 +56,7 @@ cordova.define("salesforce/util/logger", function(require, exports, module) {
      * Returns: The sanitzed URL.
      */
     var sanitizeUrlParamsForLogging = function(origUrl, sanitizeParamArray) {
-        var trimmedOrigUrl = jQuery.trim(origUrl);
+        var trimmedOrigUrl = origUrl.trim();
         if (trimmedOrigUrl === '')
             return trimmedOrigUrl;
         
@@ -63,16 +73,6 @@ cordova.define("salesforce/util/logger", function(require, exports, module) {
         
         return redactedUrl;
     };
-
-    /**
-     * Use to log error messages to an "error console" section of the page.
-     *   txt - The text (html) to log to the console.
-     */
-    var logError = function(txt) {
-        jQuery("#errors").css("display", "block");
-        log("#errors", txt);
-    };
-
 
     /**
      * Part of the module that is public
@@ -103,7 +103,7 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
      *                                   application.  Defaults to true.
      */
     var RemoteAppStartData = function(appStartUrl, isAbsoluteUrl, shouldAuthenticate) {
-        if (typeof appStartUrl !== "string" || jQuery.trim(appStartUrl) === "") {
+        if (typeof appStartUrl !== "string" || appStartUrl.trim() === "") {
             logger.logError("appStartUrl cannot be empty");
             return;
         }
@@ -124,7 +124,7 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
      *                                   application.  Defaults to true.
      */
     var LocalAppStartData = function(appStartUrl, shouldAuthenticate) {
-        this.appStartUrl = (typeof appStartUrl !== "string" || jQuery.trim(appStartUrl) === "" 
+        this.appStartUrl = (typeof appStartUrl !== "string" || appStartUrl.trim() === "" 
                             ? "index.html" : appStartUrl);
         this.isRemoteApp = false;
         this.isAbsoluteUrl = false;
@@ -213,8 +213,8 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
      *   Full URL to the user's page, e.g. https://na1.salesforce.com/apex/MyVisualForcePage.
      */
     var buildAppUrl = function(server, page) {
-        var trimmedServer = jQuery.trim(server);
-        var trimmedPage = jQuery.trim(page);
+        var trimmedServer = server.trim();
+        var trimmedPage = page.trim();
         if (trimmedServer === "")
             return trimmedPage;
         else if (trimmedPage === "")
