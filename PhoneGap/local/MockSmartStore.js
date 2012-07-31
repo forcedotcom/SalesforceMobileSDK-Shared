@@ -56,13 +56,13 @@ var MockSmartStore = (function(window) {
                     mockStore.fromJSON(json);
                 }
                 // Save smartstore to storage when onBeforeUnload fires
-                window.addEventListener('beforeunload', function() {
+                window.onbeforeunload = function() {
                     if (window.sessionStorage) {
                         console.log("Saving store to session storage");
                         var json = mockStore.toJSON();
                         window.sessionStorage.setItem(STORAGE_KEY_MOCKSTORE, json);
                     }
-                });
+                };
             }
         },
 

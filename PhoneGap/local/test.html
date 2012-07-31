@@ -24,8 +24,10 @@
     
         (function(window) {
             var onReady = function() {
-                document.getElementById("link_test_suite").addEventListener("click", function() { new SmartStoreTestSuite().startTests(); });
-                document.getElementById("link_load_test_suite").addEventListener("click", function() { new SmartStoreLoadTestSuite().startTests(); });
+                document.getElementById("link_test_suite")
+                    .addEventListener("click", function() { new SmartStoreTestSuite().startTests(); });
+                document.getElementById("link_load_test_suite")
+                    .addEventListener("click", function() { new SmartStoreLoadTestSuite().startTests(); });
             };
             window.addEventListener("load", onReady);
         })(window);
