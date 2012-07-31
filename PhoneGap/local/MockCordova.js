@@ -27,20 +27,50 @@
 /**
  * Mock Cordova: mocks just enough cordova functions to allow testing of plugins outside a container
  *
- * Note: we are using the module pattern (see http://briancray.com/posts/javascript-module-pattern/)
-*/
+ */
 
-var MockCordova = (function() {
-    // Private members
+var require,
+    define;
+
+(function () {
+    var modules = {};
+
+    function build(module) {
+        var factory = module.factory;
+        module.exports = {};
+        delete module.factory;
+        factory(require, module.exports, module);
+        return module.exports;
+    }
+
+    require = function (id) {
+        if (!modules[id]) {
+            throw "module " + id + " not found";
+        }
+        return modules[id].factory ? build(modules[id]) : modules[id].exports;
+    };
+
+    define = function (id, factory) {
+        if (modules[id]) {
+            throw "module " + id + " already defined";
+        }
+
+        modules[id] = {
+            id: id,
+            factory: factory
+        };
+    };
+
+    define.remove = function (id) {
+        delete modules[id];
+    };
+
+})();
+
+define("cordova", function(require, exports, module) {
     var interceptors = {};
 
-    // Constructor
-    var module = function() {};
-
-    // Prototype
-    module.prototype = {
-        constructor: module,
-
+    var cordova = {
         // Method to provide an mock implementation for an container service/action
         // func should take three arguments: successCB, errorCB, args
         interceptExec: function(service, action, func) {
@@ -72,8 +102,11 @@ var MockCordova = (function() {
         }
     };
 
-    // Return module
-    return module;
-})();
+    module.exports = cordova;
+});
 
-var cordova = new MockCordova();
+
+define("cordova/exec", function(require, exports, module) {
+    var cordova = require('cordova');
+    module.exports = cordova.exec;
+});
