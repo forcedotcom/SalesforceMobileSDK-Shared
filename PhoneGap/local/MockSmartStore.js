@@ -31,7 +31,7 @@
  * Note: we are using the module pattern (see http://briancray.com/posts/javascript-module-pattern/)
  */
 
-var MockSmartStore = (function(window, $) {
+var MockSmartStore = (function(window) {
     // Private members
     var _soups = {};
     var _soupIndexSpecs = {};
@@ -56,7 +56,7 @@ var MockSmartStore = (function(window, $) {
                     mockStore.fromJSON(json);
                 }
                 // Save smartstore to storage when onBeforeUnload fires
-                $(window).bind('beforeunload', function() {
+                window.addEventListener('beforeunload', function() {
                     if (window.sessionStorage) {
                         console.log("Saving store to session storage");
                         var json = mockStore.toJSON();
@@ -322,7 +322,7 @@ var MockSmartStore = (function(window, $) {
 
     // Return module
     return module;
-})(window, jQuery);
+})(window);
 
 var mockStore = new MockSmartStore();
 mockStore.hookToCordova(cordova);
