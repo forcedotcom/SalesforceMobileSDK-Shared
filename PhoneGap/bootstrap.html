@@ -1,43 +1,25 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>VisualForce Bootstrap Page with OAuth Plugin</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0;" />
+        <title>Salesforce Hybrid Application Bootstrap Page</title>
         
-        <link rel="stylesheet" type="text/css" href="SFHybridApp.css" />
+        <script src="cordova-1.8.1.js"></script>
+        <script src="SFHybridApp.js"></script>
+        <script src="SalesforceOAuthPlugin.js"></script>
+        <script src="bootconfig.js"></script>
         
-        <script type="text/javascript" src="cordova-1.8.1.js"></script>
-        <script type="text/javascript" src="SFHybridApp.js"></script>
-        <script type="text/javascript" src="SalesforceOAuthPlugin.js"></script>
-        <script type="text/javascript" src="bootconfig.js"></script>
-        
-        <script type="text/javascript">
-        (function(window) {
-            var onReady = function() {
-                var bootstrap = cordova.require("salesforce/util/bootstrap");
-                var onDeviceReady = function() { 
-                    bootstrap.onDeviceReady(bootstrap.loginFailure); 
-                    // Note: default loginFailure handler simply logs a message to the console
-                    //       provide your own if you want a different behavior
-                }
+        <!-- log window styling -->
+        <style>
+          .logWindow {display:none; width:700px;}
+          .logWindow > p {padding:0px; margin:0px; word-wrap:break-word;}
+        </style>
 
-                document.addEventListener("deviceready", onDeviceReady, false);
-            };
-            window.addEventListener("load", onReady);
-        })(window);
+        <script>
+        document.addEventListener("deviceready", cordova.require("salesforce/util/bootstrap").onDeviceReady);
         </script>
     </head>
-    <style>
-    .logWindow
-    {
-        display:none;
-        width:700px;
-    }
 
-    .logWindow > p
-    {
-        padding:0px; margin:0px; word-wrap:break-word;
-    }
-    </style>
     <body>
         <div id="main">
             <h1>Loading...</h1>

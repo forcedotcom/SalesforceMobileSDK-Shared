@@ -32,7 +32,7 @@
  */
 
 var MockSmartStore = (function(window) {
-    // Private members
+    // Private
     var _soups = {};
     var _soupIndexSpecs = {};
     var _cursors = {};
@@ -45,6 +45,14 @@ var MockSmartStore = (function(window) {
     // Prototype
     module.prototype = {
         constructor: module,
+
+        reset: function() {
+            _soups = {};
+            _soupIndexSpecs = {};
+            _cursors = {};
+            _nextSoupEltId = 1;
+            _nextCursorId = 1;
+        },
 
         useSessionStorage: function() {
             if (window.sessionStorage) {
@@ -69,9 +77,9 @@ var MockSmartStore = (function(window) {
         toJSON: function() {
             return JSON.stringify({
                 soups: _soups,
-                soupIndexSpecs: soupIndexSpecs,
-                nextSoupEltId: nextSoupEltId,
-                nextCursorId: nextCursorId
+                soupIndexSpecs: _soupIndexSpecs,
+                nextSoupEltId: _nextSoupEltId,
+                nextCursorId: _nextCursorId
             });
         },
 

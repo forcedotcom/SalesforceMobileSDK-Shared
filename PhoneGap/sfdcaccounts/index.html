@@ -4,30 +4,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0;" />
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
 
-    <!-- Include jquery mobile. -->
+    <!-- include jquery mobile -->
     <link rel="stylesheet" href="jquery/jquery.mobile-1.0b2.min.css" />
     <script src="jquery/jquery-1.6.2.min.js"></script>
     <script src="jquery/jquery.mobile-1.0b2.min.js"></script>
-
-    <!-- Include cordova/callback. -->
-    <script type="text/javascript" charset="utf-8" src="cordova-1.8.1.js"></script>
-
-    <!-- Required for OAuth plugin support. -->
-    <script type="text/javascript" src="SalesforceOAuthPlugin.js"></script>
-
-    <!-- Include forcetk for REST transaction support. -->
-    <script src="forcetk.js"></script>
-
-    <!-- Include local utility functionality. -->
-    <link rel="stylesheet" type="text/css" href="SFHybridApp.css" />
+        
+    <!-- include cordova / callback -->
+	<script type="text/javascript" charset="utf-8" src="cordova-1.8.1.js"></script>
+    <!-- include local utility functionality -->
     <script type="text/javascript" charset="utf-8" src="SFHybridApp.js"></script>
+    <!-- required for oauth plugin support -->    
+    <script type="text/javascript" src="SalesforceOAuthPlugin.js"></script>
+    <!-- required for smartstore plugin support -->    
+    <script type="text/javascript" src="SFSmartStorePlugin.js.js"></script>
 
-    <!-- Include the SmartStore plugin. -->
-    <script type="text/javascript" src="SFSmartStorePlugin.js"></script>
+    <!-- include forcetk for REST transaction support -->
+    <script src="forcetk.js"></script>    
 
     <!-- Load our app-specific code. -->
     <script src="sfdcsmartstore.js"></script>
     <script src="sfdcaccounts.js"></script>
+
+    <!-- log window styling -->
+    <style>
+      .logWindow {display:none; width:700px;}
+      .logWindow > p {padding:0px; margin:0px; word-wrap:break-word;}
+    </style>
 
     <script type="text/javascript" charset="utf-8">
 
@@ -37,7 +39,6 @@
     var debugMode = false;
 
     jQuery(document).ready(function() {
-
         // Add event listeners and so forth here.
         SFHybridApp.logToConsole("onLoad: jquery ready");
         document.addEventListener("deviceready", onDeviceReady, false);

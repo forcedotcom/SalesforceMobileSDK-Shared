@@ -28,7 +28,6 @@
  * Mock Cordova: mocks just enough cordova functions to allow testing of plugins outside a container
  *
  */
-
 (function(window) {
     var require,
     define;
@@ -107,10 +106,6 @@
     });
 
     window.cordova = require("cordova");
-
-    define("cordova/exec", function(require, exports, module) {
-        module.exports = cordova.exec;
-    });
 
 })(window);
 

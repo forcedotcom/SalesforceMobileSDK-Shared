@@ -24,25 +24,22 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-define("salesforce/plugin/testrunner", function(require, exports, module) {
+cordova.define("salesforce/plugin/testrunner", function(require, exports, module) {
 
-    var TestRunner = function () {
-        console.log("new TestRunner");
-	    this.testSuiteClassName = null;
-	    this.testSuite = null;
-    };
-    
+    // Private
+    var _testSuiteClassName = null;
+    var _testSuite = null;
+
     // ====== Test and Suite setup ======
-
-    TestRunner.prototype.setTestSuite = function (suiteClassName) {
-	    if (this.testSuiteClassName !== suiteClassName) {
+    var setTestSuite = function (suiteClassName) {
+	    if (_testSuiteClassName !== suiteClassName) {
 		    console.log("TestRunner.setTestSuite: " + suiteClassName);
-		    this.testSuiteClassName = suiteClassName;
-		    this.testSuite = new window[suiteClassName]();
+		    _testSuiteClassName = suiteClassName;
+		    _testSuite = new window[suiteClassName]();
 	    }
     };
 
-    TestRunner.prototype.onReadyForTests = function (successCB, errorCB) {
+    var onReadyForTests = function (successCB, errorCB) {
         console.log("TestRunner.onReadyForTests");
         cordova.exec(successCB, errorCB, 
                      "com.salesforce.testrunner",
@@ -51,7 +48,7 @@ define("salesforce/plugin/testrunner", function(require, exports, module) {
                     );                  
     };
 
-    TestRunner.prototype.onTestComplete = function (testName, success, message, status, successCB, errorCB) {
+    var onTestComplete = function (testName, success, message, status, successCB, errorCB) {
         console.log("TestRunner.onTestComplete");
         cordova.exec(successCB, errorCB, 
                      "com.salesforce.testrunner",
@@ -65,5 +62,12 @@ define("salesforce/plugin/testrunner", function(require, exports, module) {
                     );
     };
 
-    module.exports = TestRunner;
+    module.exports = {
+        setTestSuite: setTestSuite,
+        onReadyForTests: onReadyForTests,
+        onTestComplete: onTestComplete
+    };
 });
+
+// For backward compatibility
+navigator.testrunner = cordova.require("salesforce/plugin/testrunner");

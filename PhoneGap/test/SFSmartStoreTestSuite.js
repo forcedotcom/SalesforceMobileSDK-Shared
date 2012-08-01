@@ -31,9 +31,6 @@
  */
 if (typeof SmartStoreTestSuite === 'undefined') { 
 
-navigator.smartstore = cordova.require("salesforce/plugin/smartstore");
-var SoupQuerySpec = navigator.smartstore.SoupQuerySpec;
-
 /**
  * Constructor for SmartStoreTestSuite
  */

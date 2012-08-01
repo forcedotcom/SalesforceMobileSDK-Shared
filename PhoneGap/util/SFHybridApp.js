@@ -136,7 +136,7 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
      * Handler for Cordova's "deviceready" event, signifying that Cordova is successfully
      * loaded.
      */
-    var onDeviceReady = function(loginFailure) {
+    var onDeviceReady = function() {
         logger.logToConsole("onDeviceReady called: Cordova is ready.");
         var oauth = require("salesforce/plugin/oauth");
         
@@ -338,11 +338,14 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
     module.exports = {
         deviceIsOnline: deviceIsOnline,
         onDeviceReady: onDeviceReady,
-        loginFailure: loginFailure,
         LocalAppStartData: LocalAppStartData,
         RemoteAppStartData: RemoteAppStartData
     };
 });
 
 // For backward compatibility
-var SFHybridApp = cordova.require("salesforce/util/bootstrap");
+var SFHybridApp = {};
+SFHybridApp.LocalAppStartData = cordova.require("salesforce/util/bootstrap").LocalAppStartData;
+SFHybridApp.RemoteAppStartData = cordova.require("salesforce/util/bootstrap").RemoteAppStartData;
+SFHybridApp.logToConsole = cordova.require("salesforce/util/logger").logToConsole;
+SFHybridApp.logError = cordova.require("salesforce/util/logger").logError;

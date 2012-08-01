@@ -78,7 +78,6 @@ cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
      *   userAgent
      */
     var authenticate = function(success, fail, oauthProperties) {
-        console.log("In authenticate");
         cordova.exec(success, fail, "com.salesforce.oauth", "authenticate", [JSON.stringify(oauthProperties)]);
     };
 
@@ -120,3 +119,5 @@ cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
     };
 });
 
+// For backward compatibility
+var SalesforceOAuthPlugin = cordova.require("salesforce/plugin/oauth");

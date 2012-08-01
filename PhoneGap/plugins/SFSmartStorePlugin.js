@@ -267,4 +267,9 @@ cordova.define("salesforce/plugin/smartstore", function(require, exports, module
     };
 });
 
+// For backward compatibility
+navigator.smartstore = cordova.require("salesforce/plugin/smartstore");
+var SoupIndexSpec = navigator.smartstore.SoupIndexSpec;
+var SoupQuerySpec = navigator.smartstore.SoupQuerySpec;
+var PagedSoupCursor = navigator.smartstore.PagedSoupCursor;
 
