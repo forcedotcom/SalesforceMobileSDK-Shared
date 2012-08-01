@@ -48,8 +48,13 @@ cordova.define("salesforce/plugin/testrunner", function(require, exports, module
                     );                  
     };
 
+    var startTest =  function(testName) {
+        console.log("TestRunner.startTest: " + testName);
+        _testSuite.startTest(testName);
+    };
+
     var onTestComplete = function (testName, success, message, status, successCB, errorCB) {
-        console.log("TestRunner.onTestComplete");
+        console.log("TestRunner.onTestComplete: " + testName + ",success:" + success);
         cordova.exec(successCB, errorCB, 
                      "com.salesforce.testrunner",
                      "onTestComplete",
@@ -65,6 +70,7 @@ cordova.define("salesforce/plugin/testrunner", function(require, exports, module
     module.exports = {
         setTestSuite: setTestSuite,
         onReadyForTests: onReadyForTests,
+        startTest: startTest,
         onTestComplete: onTestComplete
     };
 });
