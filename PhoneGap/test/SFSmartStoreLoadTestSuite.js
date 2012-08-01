@@ -60,7 +60,7 @@ SmartStoreLoadTestSuite.prototype.constructor = SmartStoreLoadTestSuite;
  * Helper method that creates soup
  */
 SmartStoreLoadTestSuite.prototype.registerSoup = function(soupName, soupIndexes, callback) {
-	console.log("In SFSmartStoreLoadTestSuite.registerSoup: soupName=" + soupName);
+	SFHybridApp.logToConsole("In SFSmartStoreLoadTestSuite.registerSoup: soupName=" + soupName);
 	
 	var self = this;
     navigator.smartstore.registerSoup(soupName, soupIndexes, 
@@ -77,7 +77,7 @@ SmartStoreLoadTestSuite.prototype.registerSoup = function(soupName, soupIndexes,
  * Helper method that check if soup exists
  */
 SmartStoreLoadTestSuite.prototype.soupExists = function(soupName, callback) {
-	console.log("In SFSmartStoreLoadTestSuite.soupExists: soupName=" + soupName);
+	SFHybridApp.logToConsole("In SFSmartStoreLoadTestSuite.soupExists: soupName=" + soupName);
 	
 	var self = this;
     navigator.smartstore.soupExists(soupName,  
@@ -122,7 +122,7 @@ SmartStoreLoadTestSuite.prototype.removeAndRecreateSoup = function(soupName, sou
  * Helper method that drops default soup
  */
 SmartStoreLoadTestSuite.prototype.removeDefaultSoup = function(callback) {
-	console.log("In SFSmartStoreLoadTestSuite.removeDefaultSoup");
+	SFHybridApp.logToConsole("In SFSmartStoreLoadTestSuite.removeDefaultSoup");
 	this.removeSoup(this.defaultSoupName, callback);
 };
 
@@ -130,7 +130,7 @@ SmartStoreLoadTestSuite.prototype.removeDefaultSoup = function(callback) {
  * Helper method that drops soup
  */
 SmartStoreLoadTestSuite.prototype.removeSoup = function(soupName, callback) {
-	console.log("In SFSmartStoreLoadTestSuite.removeSoup: soupName=" + soupName);
+	SFHybridApp.logToConsole("In SFSmartStoreLoadTestSuite.removeSoup: soupName=" + soupName);
 	
 	var self = this;
     navigator.smartstore.removeSoup(soupName, 
@@ -149,7 +149,7 @@ SmartStoreLoadTestSuite.prototype.removeSoup = function(soupName, callback) {
 * Helper method that adds entry to the named soup
 */
 SmartStoreLoadTestSuite.prototype.addGeneratedEntriesToSoup = function(soupName, nEntries, callback) {
-	console.log("In SFSmartStoreLoadTestSuite.addGeneratedEntriesToSoup: " + soupName + " nEntries=" + nEntries);
+	SFHybridApp.logToConsole("In SFSmartStoreLoadTestSuite.addGeneratedEntriesToSoup: " + soupName + " nEntries=" + nEntries);
  
 	var entries = [];
 	for (var i = 0; i < nEntries; i++) {
@@ -181,7 +181,7 @@ SmartStoreLoadTestSuite.prototype.addEntriesToSoup = function(soupName, entries,
  * Helper method that adds n soup entries to default soup
  */
 SmartStoreLoadTestSuite.prototype.addGeneratedEntriesToTestSoup = function(nEntries, callback) {
-	console.log("In SFSmartStoreLoadTestSuite.addGeneratedEntriesToTestSoup: nEntries=" + nEntries);
+	SFHybridApp.logToConsole("In SFSmartStoreLoadTestSuite.addGeneratedEntriesToTestSoup: nEntries=" + nEntries);
 	this.addGeneratedEntriesToSoup(this.defaultSoupName,nEntries,callback);	
 };
 
@@ -189,7 +189,7 @@ SmartStoreLoadTestSuite.prototype.addGeneratedEntriesToTestSoup = function(nEntr
  * Helper method that adds soup entries to default soup
  */
 SmartStoreLoadTestSuite.prototype.addEntriesToTestSoup = function(entries, callback) {
-	console.log("In SFSmartStoreLoadTestSuite.addEntriesToTestSoup: entries.length=" + entries.length);
+	SFHybridApp.logToConsole("In SFSmartStoreLoadTestSuite.addEntriesToTestSoup: entries.length=" + entries.length);
 	this.addEntriesToSoup(this.defaultSoupName,entries,callback);	
 };
 
@@ -200,7 +200,7 @@ SmartStoreLoadTestSuite.prototype.addEntriesToTestSoup = function(entries, callb
  */
 
 SmartStoreLoadTestSuite.prototype.upsertNextManyEntry = function(k) {
-	console.log("upsertNextManyEntry " + k);
+	SFHybridApp.logToConsole("upsertNextManyEntry " + k);
 	var self = this;
 	var entries = [];
 
@@ -222,7 +222,7 @@ SmartStoreLoadTestSuite.prototype.upsertNextManyEntry = function(k) {
 
 
 SmartStoreLoadTestSuite.prototype.testUpsertManyEntries  = function() {
-	console.log("In SFSmartStoreLoadTestSuite.testUpsertManyEntries");
+	SFHybridApp.logToConsole("In SFSmartStoreLoadTestSuite.testUpsertManyEntries");
 	var self = this;
 
 	self.removeAndRecreateSoup(self.defaultSoupName, self.defaultSoupIndexes, 
@@ -236,7 +236,7 @@ SmartStoreLoadTestSuite.prototype.testUpsertManyEntries  = function() {
  * TEST: Upsert entries with more and more fields to a single soup
  */
 SmartStoreLoadTestSuite.prototype.upsertNextManyFieldsEntry = function(k) {
-	console.log("upsertNextManyFieldsEntry " + k);
+	SFHybridApp.logToConsole("upsertNextManyFieldsEntry " + k);
 	var self = this;
 	var entry = {key: "k"+k};
 
@@ -256,7 +256,7 @@ SmartStoreLoadTestSuite.prototype.upsertNextManyFieldsEntry = function(k) {
 };
 
 SmartStoreLoadTestSuite.prototype.testNumerousFields  = function() {
-	console.log("In SFSmartStoreLoadTestSuite.testNumerousFields");
+	SFHybridApp.logToConsole("In SFSmartStoreLoadTestSuite.testNumerousFields");
 	var self = this;
 
 	self.removeAndRecreateSoup(self.defaultSoupName, self.defaultSoupIndexes, 
@@ -270,7 +270,7 @@ SmartStoreLoadTestSuite.prototype.testNumerousFields  = function() {
  * TEST: Upsert entries where the value gets longer and longer
  */
 SmartStoreLoadTestSuite.prototype.upsertNextLargerFieldEntry = function(k) {
-	console.log("upsertNextLargerFieldEntry " + k);
+	SFHybridApp.logToConsole("upsertNextLargerFieldEntry " + k);
 	var self = this;
 
 	var val = "";
@@ -291,7 +291,7 @@ SmartStoreLoadTestSuite.prototype.upsertNextLargerFieldEntry = function(k) {
 };
 
 SmartStoreLoadTestSuite.prototype.testIncreasingFieldLength  = function() {
-	console.log("In SFSmartStoreLoadTestSuite.testIncreasingFieldLength");
+	SFHybridApp.logToConsole("In SFSmartStoreLoadTestSuite.testIncreasingFieldLength");
 	var self = this;
 
 	self.removeAndRecreateSoup(self.defaultSoupName, self.defaultSoupIndexes, 
@@ -304,7 +304,7 @@ SmartStoreLoadTestSuite.prototype.testIncreasingFieldLength  = function() {
  * TEST: Retrieve a bunch of similar entries
  */
 SmartStoreLoadTestSuite.prototype.testAddAndRetrieveManyEntries  = function() {
-	console.log("In SFSmartStoreLoadTestSuite.testAddAndRetrieveManyEntries");
+	SFHybridApp.logToConsole("In SFSmartStoreLoadTestSuite.testAddAndRetrieveManyEntries");
 	var self = this;
 	
 	self.removeAndRecreateSoup(self.defaultSoupName, self.defaultSoupIndexes, 
