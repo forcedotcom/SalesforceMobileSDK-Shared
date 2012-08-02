@@ -4,40 +4,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0;" />
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
 
-    <!-- Include jquery mobile. -->
+    <!-- include jquery mobile -->
     <link rel="stylesheet" href="jquery/jquery.mobile-1.0b2.min.css" />
     <script src="jquery/jquery-1.6.2.min.js"></script>
     <script src="jquery/jquery.mobile-1.0b2.min.js"></script>
+        
+    <!-- include cordova / callback -->
+	<script src="cordova-1.8.1.js"></script>
+    <!-- include local utility functionality -->
+    <script src="SFHybridApp.js"></script>
+    <!-- required for oauth plugin support -->    
+    <script src="SalesforceOAuthPlugin.js"></script>
+    <!-- required for smartstore plugin support -->    
+    <script src="SFSmartStorePlugin.js"></script>
 
-    <!-- Include cordova/callback. -->
-    <script type="text/javascript" charset="utf-8" src="cordova-1.8.1.js"></script>
-
-    <!-- Required for OAuth plugin support. -->
-    <script type="text/javascript" src="SalesforceOAuthPlugin.js"></script>
-
-    <!-- Include forcetk for REST transaction support. -->
-    <script src="forcetk.js"></script>
-
-    <!-- Include local utility functionality. -->
-    <link rel="stylesheet" type="text/css" href="SFHybridApp.css" />
-    <script type="text/javascript" charset="utf-8" src="SFHybridApp.js"></script>
-
-    <!-- Include the SmartStore plugin. -->
-    <script type="text/javascript" src="SFSmartStorePlugin.js"></script>
+    <!-- include forcetk for REST transaction support -->
+    <script src="forcetk.js"></script>    
 
     <!-- Load our app-specific code. -->
     <script src="sfdcsmartstore.js"></script>
     <script src="sfdcaccounts.js"></script>
 
-    <script type="text/javascript" charset="utf-8">
+    <!-- log window styling -->
+    <style>
+      .logWindow {display:none; width:700px;}
+      .logWindow > p {padding:0px; margin:0px; word-wrap:break-word;}
+    </style>
 
+    <script>
     // The version of the REST API you wish to use in your app.
     var apiVersion = "v23.0";
     var forcetkClient;
-    var debugMode = false;
+    var debugMode = true;
 
     jQuery(document).ready(function() {
-
         // Add event listeners and so forth here.
         SFHybridApp.logToConsole("onLoad: jquery ready");
         document.addEventListener("deviceready", onDeviceReady, false);
@@ -46,7 +46,6 @@
     // When this function is called, Cordova has been initialized and is ready to roll.
     function onDeviceReady() {
         SFHybridApp.logToConsole("onDeviceReady: Cordova ready");
-
         // Register soups for offline storage.
         regAccSoup();
     }
@@ -62,7 +61,6 @@
     }
 
     function onRegSoup() {
-
         // Call getAuthCredentials to get the initial session credentials.
         SalesforceOAuthPlugin.getAuthCredentials(salesforceSessionRefreshed, getAuthCredentialsError);
 
@@ -85,7 +83,6 @@
         SFHybridApp.logToConsole("getAuthCredentialsError: " + error);
     }
     </script>
-
   </head>
   <body>
       <div data-role="page" data-theme="b" id="jqm-home">

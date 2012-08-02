@@ -31,8 +31,8 @@
  * Note: we are using the module pattern (see http://briancray.com/posts/javascript-module-pattern/)
  */
 
-var MockSmartStore = (function(window, $) {
-    // Private members
+var MockSmartStore = (function(window) {
+    // Private
     var _soups = {};
     var _soupIndexSpecs = {};
     var _cursors = {};
@@ -46,6 +46,14 @@ var MockSmartStore = (function(window, $) {
     module.prototype = {
         constructor: module,
 
+        reset: function() {
+            _soups = {};
+            _soupIndexSpecs = {};
+            _cursors = {};
+            _nextSoupEltId = 1;
+            _nextCursorId = 1;
+        },
+
         useSessionStorage: function() {
             if (window.sessionStorage) {
                 // Restore smartstore from storage
@@ -56,22 +64,22 @@ var MockSmartStore = (function(window, $) {
                     mockStore.fromJSON(json);
                 }
                 // Save smartstore to storage when onBeforeUnload fires
-                $(window).bind('beforeunload', function() {
+                window.onbeforeunload = function() {
                     if (window.sessionStorage) {
                         console.log("Saving store to session storage");
                         var json = mockStore.toJSON();
                         window.sessionStorage.setItem(STORAGE_KEY_MOCKSTORE, json);
                     }
-                });
+                };
             }
         },
 
         toJSON: function() {
             return JSON.stringify({
                 soups: _soups,
-                soupIndexSpecs: soupIndexSpecs,
-                nextSoupEltId: nextSoupEltId,
-                nextCursorId: nextCursorId
+                soupIndexSpecs: _soupIndexSpecs,
+                nextSoupEltId: _nextSoupEltId,
+                nextCursorId: _nextCursorId
             });
         },
 
@@ -322,7 +330,7 @@ var MockSmartStore = (function(window, $) {
 
     // Return module
     return module;
-})(window, jQuery);
+})(window);
 
 var mockStore = new MockSmartStore();
 mockStore.hookToCordova(cordova);
