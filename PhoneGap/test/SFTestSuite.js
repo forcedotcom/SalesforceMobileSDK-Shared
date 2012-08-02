@@ -78,7 +78,7 @@ var SFTestModuleCollection = {
 
 /**
  * Abstract test suite
- * This file assumes that qunit.js has been previously loaded, as well as SFHybridApp.js and SFTestSuite.js
+ * This file assumes that qunit.js has been previously loaded, as well as SFHybridApp.js.
  * To display results you'll need to load qunit.css.
  */
 if (typeof SFTestSuite === 'undefined') {
