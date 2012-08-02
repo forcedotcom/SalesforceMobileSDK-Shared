@@ -16,7 +16,7 @@
     <!-- required for oauth plugin support -->    
     <script src="SalesforceOAuthPlugin.js"></script>
     <!-- required for smartstore plugin support -->    
-    <script src="SFSmartStorePlugin.js.js"></script>
+    <script src="SFSmartStorePlugin.js"></script>
 
     <!-- include forcetk for REST transaction support -->
     <script src="forcetk.js"></script>    
@@ -35,7 +35,7 @@
     // The version of the REST API you wish to use in your app.
     var apiVersion = "v23.0";
     var forcetkClient;
-    var debugMode = false;
+    var debugMode = true;
 
     jQuery(document).ready(function() {
         // Add event listeners and so forth here.
@@ -46,7 +46,6 @@
     // When this function is called, Cordova has been initialized and is ready to roll.
     function onDeviceReady() {
         SFHybridApp.logToConsole("onDeviceReady: Cordova ready");
-
         // Register soups for offline storage.
         regAccSoup();
     }
@@ -62,7 +61,6 @@
     }
 
     function onRegSoup() {
-
         // Call getAuthCredentials to get the initial session credentials.
         SalesforceOAuthPlugin.getAuthCredentials(salesforceSessionRefreshed, getAuthCredentialsError);
 
@@ -85,7 +83,6 @@
         SFHybridApp.logToConsole("getAuthCredentialsError: " + error);
     }
     </script>
-
   </head>
   <body>
       <div data-role="page" data-theme="b" id="jqm-home">
