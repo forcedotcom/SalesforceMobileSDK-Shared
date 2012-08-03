@@ -27,33 +27,57 @@
 /**
  * Mock Cordova: mocks just enough cordova functions to allow testing of plugins outside a container
  *
- * Note: we are using the module pattern (see http://briancray.com/posts/javascript-module-pattern/)
-*/
+ */
+(function(window) {
+    var require,
+    define;
 
-var MockCordova = (function() {
-    // Private members
-    var interceptors = {};
+    (function () {
+        var modules = {};
 
-    // Constructor
-    var module = function() {};
+        function build(module) {
+            var factory = module.factory;
+            module.exports = {};
+            delete module.factory;
+            factory(require, module.exports, module);
+            return module.exports;
+        }
 
-    // Prototype
-    module.prototype = {
-        constructor: module,
+        require = function (id) {
+            if (!modules[id]) {
+                throw "module " + id + " not found";
+            }
+            return modules[id].factory ? build(modules[id]) : modules[id].exports;
+        };
+
+        define = function (id, factory) {
+            if (modules[id]) {
+                throw "module " + id + " already defined";
+            }
+
+            modules[id] = {
+                id: id,
+                factory: factory
+            };
+        };
+
+        define.remove = function (id) {
+            delete modules[id];
+        };
+
+    })();
+
+    define("cordova", function(require, exports, module) {
+        var interceptors = {};
 
         // Method to provide an mock implementation for an container service/action
         // func should take three arguments: successCB, errorCB, args
-        interceptExec: function(service, action, func) {
+        var interceptExec = function(service, action, func) {
             interceptors[service + ":" + action] = func;
-        },
-
-        // Mocking cordova's addConstructor method
-        addConstructor: function(func) {
-            func();
-        },
+        };
 
         // Mocking cordova's exec method by calling the functions registered with interceptExec
-        exec: function(successCB, errorCB, service, action, args) {
+        var exec = function(successCB, errorCB, service, action, args) {
             console.log("cordova.exec " + service + ":" + action);
             var found = false;
             var req = service + ":" + action;
@@ -69,11 +93,19 @@ var MockCordova = (function() {
                 console.log("No mock for " + service + ":" + action);
                 return;
             }
-        }
-    };
+        };
 
-    // Return module
-    return module;
-})();
+        module.exports = {
+            exec: exec,
+            define: define,
+            require: require,
 
-var cordova = new MockCordova();
+            // Only in mock
+            interceptExec: interceptExec,
+        };
+    });
+
+    window.cordova = require("cordova");
+
+})(window);
+

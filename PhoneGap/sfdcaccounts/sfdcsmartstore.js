@@ -17,14 +17,14 @@ var INDEXES_OPPORTUNITIES = [
 ];
 
 function regAccSoup() {
-
+    SFHybridApp.logToConsole("In regAccSoup");
     // Registers soup for storing accounts.
     navigator.smartstore.registerSoup(ACCOUNTS_SOUP_NAME,
             INDEXES_ACCOUNTS, regOppSoup, regOppSoup);
 }
 
 function regOppSoup() {
-
+    SFHybridApp.logToConsole("In regOppSoup");
     // Registers soup for storing opportunities.
     navigator.smartstore.registerSoup(OPPORTUNITIES_SOUP_NAME,
             INDEXES_OPPORTUNITIES, onSuccessRegSoup, onErrorRegSoup);

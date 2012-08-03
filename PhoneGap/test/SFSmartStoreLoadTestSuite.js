@@ -27,7 +27,7 @@
 /**
  * A test suite for SmartStore
  * This file assumes that qunit.js has been previously loaded, as well as SFHybridApp.js and SFTestSuite.js
- * To display results you'll need to load qunit.css and SFHybridApp.css as well.
+ * To display results you'll need to load qunit.css.
  */
 if (typeof SmartStoreLoadTestSuite === 'undefined') { 
 
