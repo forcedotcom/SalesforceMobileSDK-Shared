@@ -2,27 +2,29 @@
 
 function regLinkClickHandlers() {
     var $j = jQuery.noConflict();
+    var sfHybridApp = cordova.require("salesforce/util/logger");
     $j('#link_fetch_device_contacts').click(function() {
-                                           SFHybridApp.logToConsole("link_fetch_device_contacts clicked");
-                                           var options = new ContactFindOptions();
+                                           sfHybridApp.logToConsole("link_fetch_device_contacts clicked");
+                                           var options = cordova.require("cordova/plugin/ContactFindOptions");
                                            options.filter = ""; // empty search string returns all contacts
                                            options.multiple = true;
                                            var fields = ["name"];
-                                           navigator.contacts.find(fields, onSuccessDevice, onErrorDevice, options);
+                                           var contactsObj = cordova.require("cordova/plugin/contacts");
+                                           contactsObj.find(fields, onSuccessDevice, onErrorDevice, options);
                                            });
     
     $j('#link_fetch_sfdc_contacts').click(function() {
-                                         SFHybridApp.logToConsole("link_fetch_sfdc_contacts clicked");
+                                         sfHybridApp.logToConsole("link_fetch_sfdc_contacts clicked");
                                          forcetkClient.query("SELECT Name FROM Contact", onSuccessSfdcContacts, onErrorSfdc); 
                                          });
     
     $j('#link_fetch_sfdc_accounts').click(function() {
-                                         SFHybridApp.logToConsole("link_fetch_sfdc_accounts clicked");
+                                         sfHybridApp.logToConsole("link_fetch_sfdc_accounts clicked");
                                          forcetkClient.query("SELECT Name FROM Account", onSuccessSfdcAccounts, onErrorSfdc); 
                                          });
     
     $j('#link_reset').click(function() {
-                           SFHybridApp.logToConsole("link_reset clicked");
+                           sfHybridApp.logToConsole("link_reset clicked");
                            $j("#div_device_contact_list").html("")
                            $j("#div_sfdc_contact_list").html("")
                            $j("#div_sfdc_account_list").html("")
@@ -30,14 +32,16 @@ function regLinkClickHandlers() {
                            });
                            
     $j('#link_logout').click(function() {
-             SFHybridApp.logToConsole("link_logout clicked");
-             SalesforceOAuthPlugin.logout();
+             sfHybridApp.logToConsole("link_logout clicked");
+             var sfOAuthPlugin = cordova.require("salesforce/plugin/oauth");
+             sfOAuthPlugin.logout();
              });
 }
 
 function onSuccessDevice(contacts) {
     var $j = jQuery.noConflict();
-    SFHybridApp.logToConsole("onSuccessDevice: received " + contacts.length + " contacts");
+    var sfHybridApp = cordova.require("salesforce/util/logger");
+    sfHybridApp.logToConsole("onSuccessDevice: received " + contacts.length + " contacts");
     $j("#div_device_contact_list").html("")
     var ul = $j('<ul data-role="listview" data-inset="true" data-theme="a" data-dividertheme="a"></ul>');
     $j("#div_device_contact_list").append(ul);
@@ -55,13 +59,15 @@ function onSuccessDevice(contacts) {
 }
 
 function onErrorDevice(error) {
-    SFHybridApp.logToConsole("onErrorDevice: " + JSON.stringify(error) );
+    var sfHybridApp = cordova.require("salesforce/util/logger");
+    sfHybridApp.logToConsole("onErrorDevice: " + JSON.stringify(error) );
     alert('Error getting device contacts!');
 }
 
 function onSuccessSfdcContacts(response) {
     var $j = jQuery.noConflict();
-    SFHybridApp.logToConsole("onSuccessSfdcContacts: received " + response.totalSize + " contacts");
+    var sfHybridApp = cordova.require("salesforce/util/logger");
+    sfHybridApp.logToConsole("onSuccessSfdcContacts: received " + response.totalSize + " contacts");
     
     $j("#div_sfdc_contact_list").html("")
     var ul = $j('<ul data-role="listview" data-inset="true" data-theme="a" data-dividertheme="a"></ul>');
@@ -78,7 +84,8 @@ function onSuccessSfdcContacts(response) {
 
 function onSuccessSfdcAccounts(response) {
     var $j = jQuery.noConflict();
-    SFHybridApp.logToConsole("onSuccessSfdcAccounts: received " + response.totalSize + " accounts");
+    var sfHybridApp = cordova.require("salesforce/util/logger");
+    sfHybridApp.logToConsole("onSuccessSfdcAccounts: received " + response.totalSize + " accounts");
     
     $j("#div_sfdc_account_list").html("")
     var ul = $j('<ul data-role="listview" data-inset="true" data-theme="a" data-dividertheme="a"></ul>');
@@ -94,6 +101,7 @@ function onSuccessSfdcAccounts(response) {
 }
 
 function onErrorSfdc(error) {
-    SFHybridApp.logToConsole("onErrorSfdc: " + JSON.stringify(error));
+    var sfHybridApp = cordova.require("salesforce/util/logger");
+    sfHybridApp.logToConsole("onErrorSfdc: " + JSON.stringify(error));
     alert('Error getting sfdc contacts!');
 }
