@@ -32,7 +32,7 @@
     jQuery(document).ready(function() {
 
         // Add event listeners and so forth here.
-        SFHybridApp.logToConsole("onLoad: jquery ready");
+        cordova.require("salesforce/util/logger").logToConsole("onLoad: jquery ready");
         
         // Register click handlers.
         regOppClickHandlers();
