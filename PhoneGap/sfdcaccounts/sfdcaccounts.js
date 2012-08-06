@@ -3,46 +3,46 @@ var numOpportunities = 0;
 
 function regLinkClickHandlers() {
     var $j = jQuery.noConflict();
-    var sfHybridApp = cordova.require("salesforce/util/logger");
+    var logToConsole = cordova.require("salesforce/util/logger").logToConsole;
     $j('#link_fetch_device_accounts').click(function() {
-        sfHybridApp.logToConsole("link_fetch_device_accounts clicked");
+        logToConsole("link_fetch_device_accounts clicked");
         getNumAccounts(onSuccessNumAccounts, onErrorDevice);
     });
 
     $j('#link_fetch_device_opportunities').click(function() {
-        sfHybridApp.logToConsole("link_fetch_device_opportunities clicked");
+        logToConsole("link_fetch_device_opportunities clicked");
         getNumOpportunities(onSuccessNumOpportunities, onErrorDevice);
     });
 
     $j('#link_fetch_sfdc_opportunities').click(function() {
-        sfHybridApp.logToConsole("link_fetch_sfdc_opportunities clicked");
+        logToConsole("link_fetch_sfdc_opportunities clicked");
         forcetkClient.query("SELECT Id, Name, Description, AccountId, CloseDate, StageName FROM Opportunity",
                 onSuccessSfdcOpportunities, onErrorSfdc);
     });
 
     $j('#link_fetch_sfdc_accounts').click(function() {
-        sfHybridApp.logToConsole("link_fetch_sfdc_accounts clicked");
+        logToConsole("link_fetch_sfdc_accounts clicked");
         forcetkClient.query("SELECT Id, Name, Description FROM Account", onSuccessSfdcAccounts, onErrorSfdc);
     });
 
     $j('#link_sync_accounts').click(function() {
-        sfHybridApp.logToConsole("link_sync_accounts clicked");
+        logToConsole("link_sync_accounts clicked");
         syncAccounts();
     });
 
     $j('#link_sync_opportunities').click(function() {
-        sfHybridApp.logToConsole("link_sync_opportunities clicked");
+        logToConsole("link_sync_opportunities clicked");
         syncOpportunities();
     });
 
     $j('#link_reset').click(function() {
-        sfHybridApp.logToConsole("link_reset clicked");
+        logToConsole("link_reset clicked");
         resetDisplay();
         removeAccSoup();
     });
 
     $j('#link_logout').click(function() {
-        sfHybridApp.logToConsole("link_logout clicked");
+        logToConsole("link_logout clicked");
         var sfOAuthPlugin = cordova.require("salesforce/plugin/oauth");
         sfOAuthPlugin.logout();
     });
@@ -50,9 +50,9 @@ function regLinkClickHandlers() {
 
 function regAccClickHandlers() {
     var $j = jQuery.noConflict();
-    var sfHybridApp = cordova.require("salesforce/util/logger");
+    var logToConsole = cordova.require("salesforce/util/logger").logToConsole;
     $j('#save_acc').click(function() {
-        sfHybridApp.logToConsole("save_acc clicked");
+        logToConsole("save_acc clicked");
         var id = $j("#div_account_editor input:text[name=id]").val();
         var name = $j("#div_account_editor input:text[name=name]").val();
         var description = $j("#div_account_editor input:text[name=description]").val();
@@ -62,16 +62,16 @@ function regAccClickHandlers() {
     });
 
     $j('#cancel_acc').click(function() {
-        sfHybridApp.logToConsole("cancel_acc clicked");
+        logToConsole("cancel_acc clicked");
         resetDisplay();
     });
 }
 
 function regOppClickHandlers() {
     var $j = jQuery.noConflict();
-    var sfHybridApp = cordova.require("salesforce/util/logger");
+    var logToConsole = cordova.require("salesforce/util/logger").logToConsole;
     $j('#save_opp').click(function() {
-        sfHybridApp.logToConsole("save_opp clicked");
+        logToConsole("save_opp clicked");
         var id = $j("#div_opportunity_editor input:text[name=id]").val();
         var name = $j("#div_opportunity_editor input:text[name=name]").val();
         var description = $j("#div_opportunity_editor input:text[name=description]").val();
@@ -86,7 +86,7 @@ function regOppClickHandlers() {
     });
 
     $j('#cancel_opp').click(function() {
-        sfHybridApp.logToConsole("cancel_opp clicked");
+        logToConsole("cancel_opp clicked");
         resetDisplay();
     });
 }
@@ -128,8 +128,8 @@ function onErrorDevice(error) {
 function onSuccessDeviceAccounts(response) {
     resetDisplay();
     var $j = jQuery.noConflict();
-    var sfHybridApp = cordova.require("salesforce/util/logger");
-    sfHybridApp.logToConsole("onSuccessDeviceAccounts: received " + numAccounts + " accounts");
+    var logToConsole = cordova.require("salesforce/util/logger").logToConsole;
+    logToConsole("onSuccessDeviceAccounts: received " + numAccounts + " accounts");
     $j("#div_device_account_list").html("")
     var ul = $j('<ul id="accList" data-role="listview" data-inset="true" data-theme="a" data-dividertheme="a"></ul>');
     $j("#div_device_account_list").append(ul);
@@ -146,7 +146,7 @@ function onSuccessDeviceAccounts(response) {
 
     // Handles click events for each list item.
     ul.delegate("li", "click", function(e) {
-        sfHybridApp.logToConsole("Item Clicked: " + this.id);
+        logToConsole("Item Clicked: " + this.id);
         resetDisplay();
         $j('#div_account_editor').load("editaccount.html");
         getAccById(this.id, function(response) {
@@ -161,8 +161,8 @@ function onSuccessDeviceAccounts(response) {
 function onSuccessDeviceOpportunities(response) {
     resetDisplay();
     var $j = jQuery.noConflict();
-    var sfHybridApp = cordova.require("salesforce/util/logger");
-    sfHybridApp.logToConsole("onSuccessDeviceOpportunities: received " + numOpportunities + " opportunities");
+    var logToConsole = cordova.require("salesforce/util/logger").logToConsole;
+    logToConsole("onSuccessDeviceOpportunities: received " + numOpportunities + " opportunities");
     $j("#div_device_opportunity_list").html("")
     var ul = $j('<ul id="oppList" data-role="listview" data-inset="true" data-theme="a" data-dividertheme="a"></ul>');
     $j("#div_device_opportunity_list").append(ul);
@@ -179,7 +179,7 @@ function onSuccessDeviceOpportunities(response) {
 
     // Handles click events for each list item.
     ul.delegate("li", "click", function(e) {
-        sfHybridApp.logToConsole("Item Clicked: " + this.id);
+        logToConsole("Item Clicked: " + this.id);
         resetDisplay();
         $j('#div_opportunity_editor').load("editopportunity.html");
         getOppById(this.id, function(response) {
@@ -197,8 +197,8 @@ function onSuccessDeviceOpportunities(response) {
 function onSuccessSfdcAccounts(response) {
     resetDisplay();
     var $j = jQuery.noConflict();
-    var sfHybridApp = cordova.require("salesforce/util/logger");
-    sfHybridApp.logToConsole("onSuccessSfdcAccounts: received " + response.totalSize + " accounts");
+    var logToConsole = cordova.require("salesforce/util/logger").logToConsole;
+    logToConsole("onSuccessSfdcAccounts: received " + response.totalSize + " accounts");
     $j("#div_sfdc_account_list").html("")
     var ul = $j('<ul id="accList" data-role="listview" data-inset="true" data-theme="a" data-dividertheme="a"></ul>');
     $j("#div_sfdc_account_list").append(ul);
@@ -220,7 +220,7 @@ function onSuccessSfdcAccounts(response) {
 
     // Handles click events for each list item.
     ul.delegate("li", "click", function(e) {
-        sfHybridApp.logToConsole("Item Clicked: " + this.id);
+        logToConsole("Item Clicked: " + this.id);
         resetDisplay();
         $j('#div_account_editor').load("editaccount.html");
         getAccById(this.id, function(response) {
@@ -238,8 +238,8 @@ function onSuccessSfdcAccounts(response) {
 function onSuccessSfdcOpportunities(response) {
     resetDisplay();
     var $j = jQuery.noConflict();
-    var sfHybridApp = cordova.require("salesforce/util/logger")
-    sfHybridApp.logToConsole("onSuccessSfdcOpportunities: received " + response.totalSize + " opportunities");
+    var logToConsole = cordova.require("salesforce/util/logger").logToConsole;
+    logToConsole("onSuccessSfdcOpportunities: received " + response.totalSize + " opportunities");
     $j("#div_sfdc_opportunity_list").html("")
     var ul = $j('<ul id="oppList" data-role="listview" data-inset="true" data-theme="a" data-dividertheme="a"></ul>');
     $j("#div_sfdc_opportunity_list").append(ul);
@@ -263,7 +263,7 @@ function onSuccessSfdcOpportunities(response) {
 
     // Handles click events for each list item.
     ul.delegate("li", "click", function(e) {
-        sfHybridApp.logToConsole("Item Clicked: " + this.id);
+        logToConsole("Item Clicked: " + this.id);
         resetDisplay();
         $j('#div_opportunity_editor').load("editopportunity.html");
         getOppById(this.id, function(response) {
@@ -309,7 +309,7 @@ function syncAccounts() {
         $j.each(response.currentPageOrderedEntries, function(i, currentPageOrderedEntries) {
             updateAccount(currentPageOrderedEntries.Id, currentPageOrderedEntries.Name,
                     currentPageOrderedEntries.Description, function(response) {
-                    SFHybridApp.logToConsole("Successfully Synced Account!");
+                    cordova.require("salesforce/util/logger").logToConsole("Successfully Synced Account!");
                 }, onErrorSync);
         });
         onSuccessSync();
@@ -323,7 +323,7 @@ function syncOpportunities() {
             updateOpportunity(currentPageOrderedEntries.Id, currentPageOrderedEntries.Name,
                     currentPageOrderedEntries.Description, currentPageOrderedEntries.AccountId,
                     currentPageOrderedEntries.CloseDate, currentPageOrderedEntries.StageName, function(response) {
-                SFHybridApp.logToConsole("Successfully Synced Opportunity!");
+                cordova.require("salesforce/util/logger").logToConsole("Successfully Synced Opportunity!");
             }, onErrorSync);
         });
         onSuccessSync();

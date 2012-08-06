@@ -36,28 +36,28 @@
     var apiVersion = "v23.0";
     var forcetkClient;
     var debugMode = true;
-    var sfHybridApp = cordova.require("salesforce/util/logger");
+    var logToConsole = cordova.require("salesforce/util/logger").logToConsole;
 
     jQuery(document).ready(function() {
         // Add event listeners and so forth here.
-        sfHybridApp.logToConsole("onLoad: jquery ready");
+        logToConsole("onLoad: jquery ready");
         document.addEventListener("deviceready", onDeviceReady, false);
     });
 
     // When this function is called, Cordova has been initialized and is ready to roll.
     function onDeviceReady() {
-        sfHybridApp.logToConsole("onDeviceReady: Cordova ready");
+        logToConsole("onDeviceReady: Cordova ready");
         // Register soups for offline storage.
         regAccSoup();
     }
 
     function onSuccessRegSoup() {
-        sfHybridApp.logToConsole("onSuccessRegSoup: Offline soups ready");
+        logToConsole("onSuccessRegSoup: Offline soups ready");
         onRegSoup();
     }
 
     function onErrorRegSoup() {
-        sfHybridApp.logToConsole("onErrorRegSoup: Offline soups not ready");
+        logToConsole("onErrorRegSoup: Offline soups not ready");
         onRegSoup();
     }
 
@@ -80,7 +80,7 @@
         if (creds.data)  // Event sets the `data` object with the auth data.
             credsData = creds.data;
         
-        sfHybridApp.logToConsole("salesforceSessionRefreshed");
+        logToConsole("salesforceSessionRefreshed");
         forcetkClient = new forcetk.Client(credsData.clientId, credsData.loginUrl);
         forcetkClient.setSessionToken(credsData.accessToken, apiVersion, credsData.instanceUrl);
         forcetkClient.setRefreshToken(credsData.refreshToken);
@@ -88,7 +88,7 @@
     }
 
     function getAuthCredentialsError(error) {
-        sfHybridApp.logToConsole("getAuthCredentialsError: " + error);
+        logToConsole("getAuthCredentialsError: " + error);
     }
     </script>
   </head>

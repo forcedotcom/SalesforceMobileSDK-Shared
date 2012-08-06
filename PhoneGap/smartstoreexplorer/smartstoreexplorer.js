@@ -9,20 +9,20 @@ var sfSmartstore = cordova.require("salesforce/plugin/smartstore");
 
 
 function regLinkClickHandlers() {
-    var sfHybridApp = cordova.require("salesforce/util/logger");
-    sfHybridApp.logToConsole("regLinkClickHandlers");
+    var logToConsole = cordova.require("salesforce/util/logger").logToConsole;
+    logToConsole("regLinkClickHandlers");
 
 
     
     $('#link_fetch_sfdc_contacts').click(function() {
-                                         sfHybridApp.logToConsole("link_fetch_sfdc_contacts clicked");
+                                         logToConsole("link_fetch_sfdc_contacts clicked");
                                          forcetkClient.query("SELECT Name,Id FROM Contact", onSuccessSfdcContacts, onErrorSfdc); 
                                          });
     
 
     
     $('#link_reset').click(function() {
-                           sfHybridApp.logToConsole("link_reset clicked");
+                           logToConsole("link_reset clicked");
                            $("#div_device_contact_list").html("");
                            $("#div_sfdc_contact_list").html("");
                            $("#div_sfdc_account_list").html("");
@@ -32,17 +32,13 @@ function regLinkClickHandlers() {
                   
          
     $('#link_logout').click(function() {
-             sfHybridApp.logToConsole("link_logout clicked");
+             logToConsole("link_logout clicked");
              var sfOAuthPlugin = cordova.require("salesforce/plugin/oauth");
              sfOAuthPlugin.logout();
              });
     
     $('#link_reg_soup').click(function() {
-      sfHybridApp.logToConsole("link_reg_soup clicked");
-      
-//    if (!PhoneGap.hasResource("smartstore")) {
-//        SFHybridApp.logToConsole("no SmartStore plugin loaded ???");
-//    }
+      logToConsole("link_reg_soup clicked");
 
       var indexes = [
                      {path:"Name",type:"string"},
@@ -60,7 +56,7 @@ function regLinkClickHandlers() {
                               
     
     $('#link_stuff_soup').click(function() {
-        sfHybridApp.logToConsole("link_stuff_soup clicked");
+        logToConsole("link_stuff_soup clicked");
         runStuffSoup();
     });
                             
@@ -91,28 +87,28 @@ function regLinkClickHandlers() {
     
     
      $('#link_cursor_page_zero').click(function() {
-        sfHybridApp.logToConsole("link_cursor_page_zero clicked");
+        logToConsole("link_cursor_page_zero clicked");
         sfSmartstore.moveCursorToPageIndex(lastSoupCursor,0, onSuccessQuerySoup,onErrorQuerySoup);
     });
      
      $('#link_cursor_page_prev').click(function() {
-        sfHybridApp.logToConsole("link_cursor_page_prev clicked");
+        logToConsole("link_cursor_page_prev clicked");
         sfSmartstore.moveCursorToPreviousPage(lastSoupCursor,onSuccessQuerySoup,onErrorQuerySoup);
     });
      
     
     $('#link_cursor_page_next').click(function() {
-        sfHybridApp.logToConsole("link_cursor_page_next clicked");
+        logToConsole("link_cursor_page_next clicked");
         sfSmartstore.moveCursorToNextPage(lastSoupCursor,onSuccessQuerySoup,onErrorQuerySoup);
     });
 }
 
 
 function addEntriesToTestSoup(entries,cb) {
-    var sfHybridApp = cordova.require("salesforce/util/logger");
+    var logToConsole = cordova.require("salesforce/util/logger").logToConsole;
     sfSmartstore.upsertSoupEntries(SAMPLE_SOUP_NAME,entries,
                                            function(items) {
-                                               sfHybridApp.logToConsole("added entries: " + items.length);
+                                               logToConsole("added entries: " + items.length);
                                                $("#div_soup_status_line").html("Soup upsert OK");
 
                                                if (typeof cb !== "undefined") {
@@ -120,7 +116,7 @@ function addEntriesToTestSoup(entries,cb) {
                                                }
                                            },
                                            function(err) {
-                                               sfHybridApp.logToConsole("onErrorUpsert: " + err);
+                                               logToConsole("onErrorUpsert: " + err);
                                                $("#div_soup_status_line").html("Soup upsert ERROR");
                                                if (typeof cb !== "undefined") {
                                                 cb(null);
@@ -337,8 +333,8 @@ function onSoupExistsDone(param) {
 
 
 function onSuccessSfdcContacts(response) {
-    var sfHybridApp = cordova.require("salesforce/util/logger");
-    sfHybridApp.logToConsole("onSuccessSfdcContacts: received " + response.totalSize + " contacts");
+    var logToConsole = cordova.require("salesforce/util/logger").logToConsole;
+    logToConsole("onSuccessSfdcContacts: received " + response.totalSize + " contacts");
     
 	var entries = [];
     
@@ -349,7 +345,7 @@ function onSuccessSfdcContacts(response) {
     ul.append($('<li data-role="list-divider">Salesforce Contacts: ' + response.totalSize + '</li>'));
     $.each(response.records, function(i, contact) {
            entries.push(contact);
-           sfHybridApp.logToConsole("name: " + contact.Name);
+           logToConsole("name: " + contact.Name);
            var newLi = $("<li><a href='#'>" + (i+1) + " - " + contact.Name + "</a></li>");
            ul.append(newLi);
            });
@@ -360,7 +356,7 @@ function onSuccessSfdcContacts(response) {
                                                
                                                function(items) {
                                                    var statusTxt = "upserted: " + items.length + " contacts";
-                                                   sfHybridApp.logToConsole(statusTxt);
+                                                   logToConsole(statusTxt);
                                                    $("#div_soup_status_line").html(statusTxt);
                                                     $("#div_sfdc_contact_list").trigger( "create" );
                                                },
