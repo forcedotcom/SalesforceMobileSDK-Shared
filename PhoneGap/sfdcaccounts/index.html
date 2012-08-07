@@ -36,33 +36,35 @@
     var apiVersion = "v23.0";
     var forcetkClient;
     var debugMode = true;
+    var logToConsole = cordova.require("salesforce/util/logger").logToConsole;
 
     jQuery(document).ready(function() {
         // Add event listeners and so forth here.
-        SFHybridApp.logToConsole("onLoad: jquery ready");
+        logToConsole("onLoad: jquery ready");
         document.addEventListener("deviceready", onDeviceReady, false);
     });
 
     // When this function is called, Cordova has been initialized and is ready to roll.
     function onDeviceReady() {
-        SFHybridApp.logToConsole("onDeviceReady: Cordova ready");
+        logToConsole("onDeviceReady: Cordova ready");
         // Register soups for offline storage.
         regAccSoup();
     }
 
     function onSuccessRegSoup() {
-        SFHybridApp.logToConsole("onSuccessRegSoup: Offline soups ready");
+        logToConsole("onSuccessRegSoup: Offline soups ready");
         onRegSoup();
     }
 
     function onErrorRegSoup() {
-        SFHybridApp.logToConsole("onErrorRegSoup: Offline soups not ready");
+        logToConsole("onErrorRegSoup: Offline soups not ready");
         onRegSoup();
     }
 
     function onRegSoup() {
         // Call getAuthCredentials to get the initial session credentials.
-        SalesforceOAuthPlugin.getAuthCredentials(salesforceSessionRefreshed, getAuthCredentialsError);
+        var sfOAuthPlugin = cordova.require("salesforce/plugin/oauth");
+        sfOAuthPlugin.getAuthCredentials(salesforceSessionRefreshed, getAuthCredentialsError);
 
         // Register to receive notifications when autoRefreshOnForeground refreshes the SFDC session.
         document.addEventListener("salesforceSessionRefresh", salesforceSessionRefreshed, false);
@@ -72,15 +74,21 @@
     }
 
     function salesforceSessionRefreshed(creds) {
-        SFHybridApp.logToConsole("salesforceSessionRefreshed");
-        forcetkClient = new forcetk.Client(creds.clientId, creds.loginUrl);
-        forcetkClient.setSessionToken(creds.accessToken, apiVersion, creds.instanceUrl);
-        forcetkClient.setRefreshToken(creds.refreshToken);
-        forcetkClient.setUserAgentString(creds.userAgent);
+        // Depending on how we come into this method, `creds` may be callback data from the auth
+        // plugin, or an event fired from the plugin.  The data is different between the two.
+        var credsData = creds;
+        if (creds.data)  // Event sets the `data` object with the auth data.
+            credsData = creds.data;
+        
+        logToConsole("salesforceSessionRefreshed");
+        forcetkClient = new forcetk.Client(credsData.clientId, credsData.loginUrl);
+        forcetkClient.setSessionToken(credsData.accessToken, apiVersion, credsData.instanceUrl);
+        forcetkClient.setRefreshToken(credsData.refreshToken);
+        forcetkClient.setUserAgentString(credsData.userAgent);
     }
 
     function getAuthCredentialsError(error) {
-        SFHybridApp.logToConsole("getAuthCredentialsError: " + error);
+        logToConsole("getAuthCredentialsError: " + error);
     }
     </script>
   </head>

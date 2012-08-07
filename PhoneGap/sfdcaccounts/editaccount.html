@@ -20,7 +20,6 @@
     <script src="forcetk.js"></script>
 
     <!-- Include local utility functionality. -->
-    <link rel="stylesheet" type="text/css" href="SFHybridApp.css" />
     <script type="text/javascript" charset="utf-8" src="SFHybridApp.js"></script>
 
     <!-- Include the SmartStore plugin. -->
@@ -33,7 +32,7 @@
     jQuery(document).ready(function() {
 
         // Add event listeners and so forth here.
-        SFHybridApp.logToConsole("onLoad: jquery ready");
+        cordova.require("salesforce/util/logger").logToConsole("onLoad: jquery ready");
 
         // Register click handlers.
         regAccClickHandlers();
