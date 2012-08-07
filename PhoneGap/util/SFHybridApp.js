@@ -166,7 +166,7 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
         } else {
             logger.logToConsole("Device is ONLINE, OR app is not otherwise required to be online.");
             if (startData.shouldAuthenticate) {
-                console.log("Calling authenticate");
+                logger.logToConsole("Calling authenticate");
                 // Authenticate via the Salesforce OAuth plugin.
                 var oauthProperties = new oauth.OAuthProperties(remoteAccessConsumerKey, 
                                                                 oauthRedirectURI, 
@@ -193,7 +193,7 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
      *   The local URL start page for the app.
      */
     var buildLocalUrl = function(page) {
-        if (navigator.device.platform == "Android") {
+        if (device.platform == "Android") {
             return buildAppUrl("file:///android_asset/www", page);
         }
         else {
@@ -255,7 +255,7 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
      *   fullAppUrl       - The URL to load.
      */
     var loadUrl = function(fullAppUrl) {
-        if (navigator.platform.id == "android") {
+        if (device.platform == "Android") {
             navigator.app.loadUrl(fullAppUrl , {clearHistory:true});
         }
         else {
@@ -270,9 +270,9 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
         var connType;
         if (navigator && navigator.network && navigator.network.connection) {
             connType = navigator.network.connection.type;
-            console.log("deviceIsOnline connType: " + connType);
+            logger.logToConsole("deviceIsOnline connType: " + connType);
         } else {
-            console.log("deviceIsOnline connType is undefined.");
+            logger.logToConsole("deviceIsOnline connType is undefined.");
         }
         
         if (typeof connType !== 'undefined') {
@@ -289,15 +289,15 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
      */
     var isValidStartData = function(startData) {
         if (!(startData instanceof LocalAppStartData || startData instanceof RemoteAppStartData)) {
-            console.log("startData is not a valid object type.  Expecting LocalAppStartData or RemoteAppStartData.");
+            logger.logError("startData is not a valid object type.  Expecting LocalAppStartData or RemoteAppStartData.");
             return false;
         }
         
         if ((startData instanceof RemoteAppStartData)
             && startData.isAbsoluteUrl === false
             && startData.shouldAuthenticate === false) {
-            console.log("startData.isAbsoluteUrl and startData.shouldAuthenticate cannot both be false for a remote app.  "
-                        + "The instance URL determined from authentication is used to build the absolute URL.");
+            logger.logError("startData.isAbsoluteUrl and startData.shouldAuthenticate cannot both be false for a remote app.  "
+                            + "The instance URL determined from authentication is used to build the absolute URL.");
             return false;
         }
         
