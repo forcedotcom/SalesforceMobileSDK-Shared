@@ -155,7 +155,7 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
              || startData.shouldAuthenticate)) {
             logger.logToConsole("Device is OFFLINE.  Trying to load cached app data.");
             
-            getAppHomeUrl(function (urlString) {
+            oauth.getAppHomeUrl(function (urlString) {
                 if (urlString === "") {
                     logger.logError("Device is offline, and no cached data could be found.  Cannot continue.");
                 } else {
