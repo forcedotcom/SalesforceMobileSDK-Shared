@@ -52,131 +52,111 @@ SmartStoreTestSuite.prototype.constructor = SmartStoreTestSuite;
 SmartStoreTestSuite.prototype.runTest= function (methName) {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.runTest: methName=" + methName);
 	var self = this;
-	self.removeAndRecreateSoup(this.defaultSoupName, this.defaultSoupIndexes, 
-		function(soupName) {
-			self[methName]();
-		});
+	self.removeAndRecreateSoup(this.defaultSoupName, this.defaultSoupIndexes)
+        .done(
+		    function(soupName) {
+			    self[methName]();
+		    });
 };
 
 /**
- * Helper method that creates default soup
+ * Build a function returning a promise from a function that takes a success and error callback as last arguments
+ * The new function will take the same arguments as the original function minus the two callback functions
  */
-SmartStoreTestSuite.prototype.registerDefaultSoup = function(callback) {
-	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.registerDefaultSoup");
-	this.registerSoup(this.defaultSoupName, this.defaultSoupIndexes, callback);
-};
+var promiser = function(object, methodName, noAssertionOnFailure) {
+    var retfn = function () {
+	    SFHybridApp.logToConsole("In SFSmartStoreTestSuite." + methodName);
+        var self = this;
+        var args = $.makeArray(arguments);
+	    var d = $.Deferred();
+        args.push(function() {
+            console.log(methodName + " succeeded");
+            d.resolve.apply(d, arguments);
+        });
+        args.push(function() {
+            console.log(methodName + " failed");
+            if (!noAssertionOnFailure) self.setAssertionFailed(methodName + " failed");
+            d.reject.apply(d, arguments);
+        });
+        object[methodName].apply(object, args);
+        return d.promise();
+    };
+    return retfn;
+}
 
 /**
- * Helper method that creates soup
+ * Helper methods to do smartstore operations using promises
  */
-SmartStoreTestSuite.prototype.registerSoup = function(soupName, soupIndexes, callback) {
-	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.registerSoup: soupName=" + soupName);
-	
-	var self = this;
-    navigator.smartstore.registerSoup(soupName, soupIndexes, 
-		function(soup) { 
-			SFHybridApp.logToConsole("registerSoup succeeded");
-			if (callback !== null) callback(soup);
-		}, 
-		function(param) { self.setAssertionFailed("registerSoup failed: " + param); }
-      );
+SmartStoreTestSuite.prototype.registerSoup = promiser(navigator.smartstore, "registerSoup");
+SmartStoreTestSuite.prototype.soupExists = promiser(navigator.smartstore, "soupExists");
+SmartStoreTestSuite.prototype.removeSoup = promiser(navigator.smartstore, "removeSoup");
+SmartStoreTestSuite.prototype.removeFromSoup = promiser(navigator.smartstore, "removeFromSoup");
+SmartStoreTestSuite.prototype.querySoup = promiser(navigator.smartstore, "querySoup");
+SmartStoreTestSuite.prototype.upsertSoupEntries = promiser(navigator.smartstore, "upsertSoupEntries");
+SmartStoreTestSuite.prototype.upsertEntriesToSoupWithExternalIdPath = promiser(navigator.smartstore, "upsertSoupEntriesWithExternalId");
+SmartStoreTestSuite.prototype.retrieveSoupEntries = promiser(navigator.smartstore, "retrieveSoupEntries");
+SmartStoreTestSuite.prototype.closeCursor = promiser(navigator.smartstore, "closeCursor");
+SmartStoreTestSuite.prototype.moveCursorToNextPage = promiser(navigator.smartstore, "moveCursorToNextPage");
+
+SmartStoreTestSuite.prototype.registerSoupNoAssertion = promiser(navigator.smartstore, "registerSoup", true);
+SmartStoreTestSuite.prototype.querySoupNoAssertion = promiser(navigator.smartstore, "querySoup", true);
+SmartStoreTestSuite.prototype.upsertSoupEntriesNoAssertion = promiser(navigator.smartstore, "upsertSoupEntries", true);
+
+SmartStoreTestSuite.prototype.registerDefaultSoup = function() {
+	return this.registerSoup(this.defaultSoupName, this.defaultSoupIndexes);
 };
 
-/**
- * Helper method that check if soup exists
- */
-SmartStoreTestSuite.prototype.soupExists = function(soupName, callback) {
-	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.soupExists: soupName=" + soupName);
-	
-	var self = this;
-    navigator.smartstore.soupExists(soupName,  
-		function(exists) { 
-			SFHybridApp.logToConsole("soupExists succeeded");
-			if (callback !== null) callback(exists);
-		}, 
-		function(param) { 
-			self.setAssertionFailed("soupExists failed: " + param); 
-		}
-      );
+SmartStoreTestSuite.prototype.removeDefaultSoup = function() {
+	return this.removeSoup(this.defaultSoupName);
 };
 
 /**
  * Helper method that removes and recreates a soup, ensuring a known good state
  */
-SmartStoreTestSuite.prototype.removeAndRecreateSoup = function(soupName, soupIndexes, callback) {
+SmartStoreTestSuite.prototype.removeAndRecreateSoup = function(soupName, soupIndexes) {
 	var self = this;
 	// Start clean
-	self.removeSoup(soupName,
-		function() {
+	return self.removeSoup(soupName)
+        .pipe(function() {
 			// Check soup does not exist
-			self.soupExists(soupName,
-				function(exists) {
-					QUnit.equals(exists, false, "soup should not already exist");
-					// Create soup
-					self.registerSoup(soupName, soupIndexes, 
-					function(soupName2) {
-						QUnit.equals(soupName2,soupName,"registered soup OK");
-                        // Check soup now exists
-						self.soupExists(soupName,	
-							function(exists2) {
-								QUnit.equals(exists2, true, "soup should now exist");
-								if (callback !== null) callback(soupName);
-							});
-					});
-				});
+			return self.soupExists(soupName);
+        })
+        .pipe(function(exists) {
+			QUnit.equals(exists, false, "soup should not already exist");
+			// Create soup
+			return self.registerSoup(soupName, soupIndexes);
+        })
+        .pipe(function(soupName2) {
+			QUnit.equals(soupName2,soupName,"registered soup OK");
+            // Check soup now exists
+			return self.soupExists(soupName);
+        })
+        .done(function(exists2) {
+			QUnit.equals(exists2, true, "soup should now exist");
 		});
 }
 
-/**
- * Helper method that drops default soup
- */
-SmartStoreTestSuite.prototype.removeDefaultSoup = function(callback) {
-	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.removeDefaultSoup");
-	this.removeSoup(this.defaultSoupName, callback);
-};
-
-/**
- * Helper method that drops soup
- */
-SmartStoreTestSuite.prototype.removeSoup = function(soupName, callback) {
-	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.removeSoup: soupName=" + soupName);
-	
-	var self = this;
-    navigator.smartstore.removeSoup(soupName, 
-		function() { 
-			SFHybridApp.logToConsole("removeSoup succeeded");
-			if (callback !== null) callback();
-		}, 
-		function(param) {
-			SFHybridApp.logToConsole("removeSoup failed");
-			self.setAssertionFailed("removeSoup failed: " + param); }
-      );
-};
 
 /**
  * Helper method that adds three soup entries to default soup
  */
-SmartStoreTestSuite.prototype.stuffTestSoup = function(callback) {
+SmartStoreTestSuite.prototype.stuffTestSoup = function() {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.stuffTestSoup");
-	
 	var myEntry1 = { Name: "Todd Stellanova", Id: "00300A",  attributes:{type:"Contact"} };
     var myEntry2 = { Name: "Pro Bono Bonobo",  Id: "00300B", attributes:{type:"Contact"}  };
     var myEntry3 = { Name: "Robot", Id: "00300C", attributes:{type:"Contact"}  };
     var entries = [myEntry1, myEntry2, myEntry3];
-
-	this.addEntriesToTestSoup(entries, callback);
+	return this.addEntriesToTestSoup(entries);
 };
 
 
 /**
  * Helper method that adds entry to the named soup
  */
-SmartStoreTestSuite.prototype.addGeneratedEntriesToSoup = function(soupName, nEntries, callback) {
+SmartStoreTestSuite.prototype.addGeneratedEntriesToSoup = function(soupName, nEntries) {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.addGeneratedEntriesToSoup: " + soupName + " nEntries=" + nEntries);
- 
-	var entries = this.createGeneratedEntries(nEntries);
-	
-	this.addEntriesToSoup(soupName, entries, callback);
+ 	var entries = this.createGeneratedEntries(nEntries);
+	return this.upsertSoupEntries(soupName, entries);
 };
 
 /**
@@ -214,51 +194,19 @@ SmartStoreTestSuite.prototype.padNumber = function(numberToPad, maxSize, padding
 };
 
 /**
- * Helper method that adds soup entries to the named soup
- */
-SmartStoreTestSuite.prototype.addEntriesToSoup = function(soupName, entries, callback) {
-	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.addEntriesToSoup: " + soupName + " entries.length=" + entries.length);
-
-	var self = this;
-    navigator.smartstore.upsertSoupEntries(soupName, entries, 
-		function(upsertedEntries) {
-		    SFHybridApp.logToConsole("addEntriesToSoup of " + upsertedEntries.length + " entries succeeded");
-			callback(upsertedEntries);
-		}, 
-		function(param) { self.setAssertionFailed("upsertSoupEntries failed: " + param); }
-	);
-};
-    
-/**
- * Helper method that upserts soup entries to the named soup, with the given external id path.
- */
-SmartStoreTestSuite.prototype.upsertEntriesToSoupWithExternalIdPath = function(soupName, entries, externalIdPath, callback) {
-    SFHybridApp.logToConsole("In SFSmartStoreTestSuite.upsertEntriesToSoupWithExternalIdPath: " + soupName + " entries.length=" + entries.length + " externalIdPath: " + externalIdPath);
-        
-    var self = this;
-    navigator.smartstore.upsertSoupEntriesWithExternalId(soupName, entries, externalIdPath,
-        function(upsertedEntries) {
-            SFHybridApp.logToConsole("upsertEntriesToSoupWithExternalIdPath of " + upsertedEntries.length + " entries succeeded");
-            callback(upsertedEntries);
-        },
-        function(param) { self.setAssertionFailed("upsertEntriesToSoupWithExternalIdPath '" + externalIdPath + "' failed: " + param); }
-    );
-};
-
-/**
  * Helper method that adds n soup entries to default soup
  */
-SmartStoreTestSuite.prototype.addGeneratedEntriesToTestSoup = function(nEntries, callback) {
+SmartStoreTestSuite.prototype.addGeneratedEntriesToTestSoup = function(nEntries) {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.addGeneratedEntriesToTestSoup: nEntries=" + nEntries);
-	this.addGeneratedEntriesToSoup(this.defaultSoupName,nEntries,callback);	
+	return this.addGeneratedEntriesToSoup(this.defaultSoupName,nEntries);
 };
 
 /**
  * Helper method that adds soup entries to default soup
  */
-SmartStoreTestSuite.prototype.addEntriesToTestSoup = function(entries, callback) {
+SmartStoreTestSuite.prototype.addEntriesToTestSoup = function(entries) {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.addEntriesToTestSoup: entries.length=" + entries.length);
-	this.addEntriesToSoup(this.defaultSoupName,entries,callback);	
+	return this.upsertSoupEntries(this.defaultSoupName,entries);
 };
 
 /** 
@@ -271,43 +219,39 @@ SmartStoreTestSuite.prototype.testRegisterRemoveSoup = function()  {
 	var self = this;
 
 	// Start clean
-	self.removeSoup(soupName,
-		function() {
+	self.removeSoup(soupName)
+        .pipe(function() {
 			// Check soup does not exist
-			self.soupExists(soupName,
-				function(exists) {
-					QUnit.equals(exists, false, "soup should not already exist");
-					// Create soup
-					self.registerSoup(soupName, self.defaultSoupIndexes, 
-						function(soupName2) {
-                            QUnit.equals(soupName2,soupName,"registered soup OK");
-							// Check soup now exists
-							self.soupExists(soupName,
-								function(exists) {
-									QUnit.equals(exists, true, "soup should now exist");
-                                    // Attempt to register the same soup again
-                                    self.registerSoup(soupName, self.defaultSoupIndexes,
-                                        function(soupName3) {
-                                            QUnit.equals(soupName3,soupName,"re-registered existing soup OK");
-                                            // Remove soup
-                                            self.removeSoup(soupName,  
-                                                function() {
-                                                    // Check soup no longer exists
-                                                    self.soupExists(soupName,
-                                                        function(exists) {
-                                                            QUnit.equals(exists, false, "soup should no longer exist");
-                                                            self.finalizeTest();
-                                                        });
-                                                });
-                                        },
-                                        function(err) {QUnit.ok(false,"re-registering existing soup failed " + err);}
-                                        );
-								});
-						},
-                        function(err) {QUnit.ok(false,"self.registerSoup failed " + err);}
-                        );
-				});
-	});
+			return self.soupExists(soupName);
+        })
+        .pipe(function(exists) {
+			QUnit.equals(exists, false, "soup should not already exist");
+			// Create soup
+			return self.registerSoup(soupName, self.defaultSoupIndexes);
+        })
+        .pipe(function(soupName2) {
+            QUnit.equals(soupName2,soupName,"registered soup OK");
+			// Check soup now exists
+			return self.soupExists(soupName);
+        }, function(err) {QUnit.ok(false,"self.registerSoup failed " + err);})
+        .pipe(function(exists) {
+			QUnit.equals(exists, true, "soup should now exist");
+            // Attempt to register the same soup again
+            return self.registerSoup(soupName, self.defaultSoupIndexes);
+        })
+        .pipe(function(soupName3) {
+            QUnit.equals(soupName3,soupName,"re-registered existing soup OK");
+            // Remove soup
+            return self.removeSoup(soupName);
+        }, function(err) {QUnit.ok(false,"re-registering existing soup failed " + err);})
+        .pipe(function() {
+            // Check soup no longer exists
+            return self.soupExists(soupName);
+        })
+        .done(function(exists) {
+            QUnit.equals(exists, false, "soup should no longer exist");
+            self.finalizeTest();
+        });
 }; 
 
 
@@ -319,15 +263,14 @@ SmartStoreTestSuite.prototype.testRegisterBogusSoup = function()  {
 	var soupName = null;//intentional bogus soupName
 	var self = this;
 
-	navigator.smartstore.registerSoup(soupName, self.defaultSoupIndexes, 
-		function(soupName2) {
+    self.registerSoupNoAssertion(soupName, self.defaultSoupIndexes)
+        .done(function(soupName2) {
 			self.setAssertionFailed("registerSoup should fail with bogus soupName " + soupName2);
-		},
-		function() {            
-			QUnit.ok(true,"registerSoup should fail with bogus soupName");
-			self.finalizeTest();
-		}
-	);
+	    })
+        .fail(function() {            
+		    QUnit.ok(true,"registerSoup should fail with bogus soupName");
+		    self.finalizeTest();
+	    });
 };
 
 
@@ -341,26 +284,23 @@ SmartStoreTestSuite.prototype.testRegisterSoupNoIndices = function()  {
 	var self = this;
 
 	// Start clean
-	self.removeSoup(soupName,
-		function() {
+	self.removeSoup(soupName)
+        .pipe(function() {
 			// Check soup does not exist
-			self.soupExists(soupName,
-				function(exists) {
-					QUnit.equals(exists, false, "soup should not already exist");
-					// Create soup
-					navigator.smartstore.registerSoup(soupName, [], 
-						function(soupName2) {
-							self.setAssertionFailed("registerSoup should fail with bogus indices " + soupName2);
-						},
-						function() {            
-							QUnit.ok(true,"registerSoup should fail with bogus indices");
-							self.finalizeTest();
-						}
-					);
-				}
-			);
-		}
-	);
+			return self.soupExists(soupName);
+        })
+        .pipe(function(exists) {
+			QUnit.equals(exists, false, "soup should not already exist");
+			// Create soup
+			return self.registerSoupNoAssertion(soupName, []);
+        })
+        .done(function(soupName2) {
+			self.setAssertionFailed("registerSoup should fail with bogus indices " + soupName2);
+        })
+        .fail(function() {            
+			QUnit.ok(true,"registerSoup should fail with bogus indices");
+			self.finalizeTest();
+		});
 }
 
 /** 
@@ -370,12 +310,15 @@ SmartStoreTestSuite.prototype.testUpsertSoupEntries = function()  {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testUpsertSoupEntries");
 
 	var self = this;
-	self.addGeneratedEntriesToTestSoup(7, function(entries1) {
-		QUnit.equal(entries1.length, 7);
-		
-		//upsert another batch
-		self.addGeneratedEntriesToTestSoup(12, function(entries2) {
-			QUnit.equal(entries2.length, 12);
+	self.addGeneratedEntriesToTestSoup(7)
+        .pipe(function(entries1) {
+		    QUnit.equal(entries1.length, 7);
+		    
+		    //upsert another batch
+		    return self.addGeneratedEntriesToTestSoup(12);
+        })
+        .pipe(function(entries2) {
+		    QUnit.equal(entries2.length, 12);
             //modify the initial entries
             for (var i = 0; i < entries2.length; i++) {
                 var e = entries2[i];
@@ -383,16 +326,13 @@ SmartStoreTestSuite.prototype.testUpsertSoupEntries = function()  {
             }
             
             //update the entries
-            self.addEntriesToTestSoup(entries2,
-                function(entries3) {
-                    QUnit.equal(entries3.length,entries2.length,"updated list match initial list len");
-                    QUnit.equal(entries3[0].updatedField,"Mister Toast 0","updatedField is correct");
-                    self.finalizeTest();
-                },
-                function(err) { QUnit.ok(false,"updating entries failed: " + err); }
-        	);            
-		});
-	});
+            return self.addEntriesToTestSoup(entries2);
+        })
+        .done(function(entries3) {
+            QUnit.equal(entries3.length,12,"updated list match initial list len");
+            QUnit.equal(entries3[0].updatedField,"Mister Toast 0","updatedField is correct");
+            self.finalizeTest();
+        });
 }; 
 
 /** 
@@ -402,46 +342,42 @@ SmartStoreTestSuite.prototype.testUpsertSoupEntriesWithExternalId = function()  
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testUpsertSoupEntriesWithExternalId");
 
 	var self = this;
-	self.addGeneratedEntriesToTestSoup(11, function(entries1) {
-		QUnit.equal(entries1.length, 11);
-		
-		// Now upsert an overlapping batch, using an external ID path.
-        var entries2 = self.createGeneratedEntries(16);
-        for (var i = 0; i < entries2.length; i++) {
-            var entry = entries2[i];
-            entry.updatedField = "Mister Toast " + i;
-        }
-        var externalIdPath = self.defaultSoupIndexes[0].path;
-        self.upsertEntriesToSoupWithExternalIdPath(self.defaultSoupName, entries2, externalIdPath,
-            function(entries3) {
-                QUnit.equal(entries3.length, 16);
-                
-                // Now, query the soup for all entries, and make sure that we have only 16.
-                var querySpec = navigator.smartstore.buildAllQuerySpec("Name", null, 25);
-                navigator.smartstore.querySoup(self.defaultSoupName, querySpec,
-                    function(cursor) {
-                        QUnit.equal(cursor.totalPages, 1, "Are totalPages correct?");
-                        var orderedEntries = cursor.currentPageOrderedEntries;
-                        var nEntries = orderedEntries.length;
-                        QUnit.equal(nEntries, 16, "Are there 16 entries in total?");
-                        QUnit.equal(orderedEntries[0]._soupEntryId, 1, "Is the first soup entry ID correct?");
-                        QUnit.equal(orderedEntries[0].updatedField, "Mister Toast 0", "Is the first updated field correct?");
-                        QUnit.equal(orderedEntries[15]._soupEntryId, 16, "Is the last soup entry ID correct?");
-                        QUnit.equal(orderedEntries[15].updatedField, "Mister Toast 15", "Is the last updated field correct?");
-                                                                                  
-                        navigator.smartstore.closeCursor(cursor,
-                            function(param) { QUnit.ok(true,"closeCursor ok"); self.finalizeTest(); },
-                            function(err) { self.setAssertionFailed("closeCursor failed: " + err); }
-                        );
-                    },
-                    function(err) { self.setAssertionFailed("querySoup failed: " + err); }
-                );
-            },
-            function(err) {
-                self.setAssertionFailed("Upserting entries with external ID '" + externalIdPath + "' failed: " + err);
+	self.addGeneratedEntriesToTestSoup(11)
+        .pipe(function(entries1) {
+		    QUnit.equal(entries1.length, 11);
+		    
+		    // Now upsert an overlapping batch, using an external ID path.
+            var entries2 = self.createGeneratedEntries(16);
+            for (var i = 0; i < entries2.length; i++) {
+                var entry = entries2[i];
+                entry.updatedField = "Mister Toast " + i;
             }
-        );
-    });
+            var externalIdPath = self.defaultSoupIndexes[0].path;
+            return self.upsertEntriesToSoupWithExternalIdPath(self.defaultSoupName, entries2, externalIdPath);
+        })
+        .pipe(function(entries3) {
+            QUnit.equal(entries3.length, 16);
+            
+            // Now, query the soup for all entries, and make sure that we have only 16.
+            var querySpec = navigator.smartstore.buildAllQuerySpec("Name", null, 25);
+            return self.querySoup(self.defaultSoupName, querySpec);
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(cursor.totalPages, 1, "Are totalPages correct?");
+            var orderedEntries = cursor.currentPageOrderedEntries;
+            var nEntries = orderedEntries.length;
+            QUnit.equal(nEntries, 16, "Are there 16 entries in total?");
+            QUnit.equal(orderedEntries[0]._soupEntryId, 1, "Is the first soup entry ID correct?");
+            QUnit.equal(orderedEntries[0].updatedField, "Mister Toast 0", "Is the first updated field correct?");
+            QUnit.equal(orderedEntries[15]._soupEntryId, 16, "Is the last soup entry ID correct?");
+            QUnit.equal(orderedEntries[15].updatedField, "Mister Toast 15", "Is the last updated field correct?");
+            
+            return self.closeCursor(cursor);
+        })
+        .done(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            self.finalizeTest(); 
+        });
 }; 
 
 
@@ -454,15 +390,14 @@ SmartStoreTestSuite.prototype.testUpsertToNonexistentSoup = function()  {
 	var self = this;
 	var entries = [{a:1},{a:2},{a:3}];
 	
-    navigator.smartstore.upsertSoupEntries("nonexistentSoup", entries, 
-		function(upsertedEntries) {
+    self.upsertSoupEntriesNoAssertion("nonexistentSoup", entries)
+        .done(function(upsertedEntries) {
 			self.setAssertionFailed("upsertSoupEntries should fail with nonexistent soup ");
-		},
-		function() {            
+		})
+        .fail(function() {            
 			QUnit.ok(true,"upsertSoupEntries should fail with nonexistent soup");
 			self.finalizeTest();
-		}
-	);
+		});
 };
 	
 /**
@@ -472,26 +407,28 @@ SmartStoreTestSuite.prototype.testRetrieveSoupEntries = function()  {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testRetrieveSoupEntries");
 	
 	var self = this; 
-	self.stuffTestSoup(function(entries) {
-		QUnit.equal(entries.length, 3,"check stuffTestSoup result");
-		var soupEntry0Id = entries[0]._soupEntryId;
-		var soupEntry2Id = entries[2]._soupEntryId;
-		
-		navigator.smartstore.retrieveSoupEntries(self.defaultSoupName, [soupEntry2Id, soupEntry0Id], 
-			function(retrievedEntries) {
-			    QUnit.equal(retrievedEntries.length, 2);
-                                                 
-                var entryIdArray = new Array();
-                for (var i = 0; i < retrievedEntries.length; i++) {
-                    entryIdArray[i] = retrievedEntries[i]._soupEntryId;
-                }
-                self.collectionContains(entryIdArray, soupEntry0Id);
-                self.collectionContains(entryIdArray, soupEntry2Id);
-                self.finalizeTest();
-			}, 
-			function(param) { self.setAssertionFailed("retrieveSoupEntries failed: " + param); }
-		);
-	});
+	var soupEntry0Id;
+	var soupEntry2Id;
+
+	self.stuffTestSoup()
+        .pipe(function(entries) {
+		    QUnit.equal(entries.length, 3,"check stuffTestSoup result");
+		    soupEntry0Id = entries[0]._soupEntryId;
+		    soupEntry2Id = entries[2]._soupEntryId;
+		    
+		    return self.retrieveSoupEntries(self.defaultSoupName, [soupEntry2Id, soupEntry0Id]);
+        })
+        .done(function(retrievedEntries) {
+			QUnit.equal(retrievedEntries.length, 2);
+            
+            var entryIdArray = new Array();
+            for (var i = 0; i < retrievedEntries.length; i++) {
+                entryIdArray[i] = retrievedEntries[i]._soupEntryId;
+            }
+            self.collectionContains(entryIdArray, soupEntry0Id);
+            self.collectionContains(entryIdArray, soupEntry2Id);
+            self.finalizeTest();
+		}); 
 };
 
 
@@ -502,32 +439,33 @@ SmartStoreTestSuite.prototype.testRemoveFromSoup = function()  {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testRemoveFromSoup");	
 	
 	var self = this; 
-	self.stuffTestSoup(function(entries) {
-		var soupEntryIds = [];
-		QUnit.equal(entries.length, 3);
-		
-		for (var i = entries.length - 1; i >= 0; i--) {
-			var entry = entries[i];
-			soupEntryIds.push(entry._soupEntryId);
-		}
-		
-		navigator.smartstore.removeFromSoup(self.defaultSoupName, soupEntryIds, 
-			function(status) {
-				QUnit.equal(status, "OK", "removeFromSoup OK");
-				
-				var querySpec = navigator.smartstore.buildAllQuerySpec("Name");
-				navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
-					function(cursor) {
-						var nEntries = cursor.currentPageOrderedEntries.length;
-						QUnit.equal(nEntries, 0, "currentPageOrderedEntries correct");
-                        self.finalizeTest();
-					}, 
-					function(param) { self.setAssertionFailed("querySoup: " + param); }
-				);
-			}, 
-			function(param) { self.setAssertionFailed("removeFromSoup: " + param); }
-		);
-	});
+	self.stuffTestSoup()
+        .pipe(function(entries) {
+		    var soupEntryIds = [];
+		    QUnit.equal(entries.length, 3);
+		    
+		    for (var i = entries.length - 1; i >= 0; i--) {
+			    var entry = entries[i];
+			    soupEntryIds.push(entry._soupEntryId);
+		    }
+		    
+		    return self.removeFromSoup(self.defaultSoupName, soupEntryIds);
+        })
+        .pipe(function(status) {
+			QUnit.equal(status, "OK", "removeFromSoup OK");
+			
+			var querySpec = navigator.smartstore.buildAllQuerySpec("Name");
+			return self.querySoup(self.defaultSoupName, querySpec);
+        })
+        .pipe(function(cursor) {
+		    var nEntries = cursor.currentPageOrderedEntries.length;
+		    QUnit.equal(nEntries, 0, "currentPageOrderedEntries correct");
+            return self.closeCursor(cursor);
+	    })
+        .done(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            self.finalizeTest(); 
+        });
 };
 
 /**
@@ -537,24 +475,23 @@ SmartStoreTestSuite.prototype.testQuerySoup = function()  {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testQuerySoup");	
 	
 	var self = this;
-	self.stuffTestSoup(function(entries) {
-		QUnit.equal(entries.length, 3);
-		
-		var querySpec = navigator.smartstore.buildExactQuerySpec("Name","Robot");
-	    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
-			function(cursor) {
-				QUnit.equal(cursor.totalPages, 1, "totalPages correct");
-				var nEntries = cursor.currentPageOrderedEntries.length;
-				QUnit.equal(nEntries, 1, "currentPageOrderedEntries correct");
-                
-                navigator.smartstore.closeCursor(cursor,
-                    function(param) { QUnit.ok(true,"closeCursor ok"); self.finalizeTest(); },
-                    function(param) { self.setAssertionFailed("closeCursor: " + param); }
-                    );
-			}, 
-			function(param) { self.setAssertionFailed("querySoup: " + param); }
-	    );
-	});
+	self.stuffTestSoup()
+        .pipe(function(entries) {
+		    QUnit.equal(entries.length, 3);
+		    
+		    var querySpec = navigator.smartstore.buildExactQuerySpec("Name","Robot");
+	        return self.querySoup(self.defaultSoupName, querySpec);
+        })
+        .pipe(function(cursor) {
+		    QUnit.equal(cursor.totalPages, 1, "totalPages correct");
+		    var nEntries = cursor.currentPageOrderedEntries.length;
+		    QUnit.equal(nEntries, 1, "currentPageOrderedEntries correct");
+            return self.closeCursor(cursor);
+        })
+        .done(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            self.finalizeTest(); 
+        });
 };
 
 
@@ -565,25 +502,24 @@ SmartStoreTestSuite.prototype.testQuerySoupDescending = function()  {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testQuerySoupDescending");	
 	
 	var self = this;
-	self.stuffTestSoup(function(entries) {
-		QUnit.equal(entries.length, 3);
-		
-		var querySpec = navigator.smartstore.buildAllQuerySpec("Name", "descending");		
-	    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
-			function(cursor) {
-				QUnit.equal(cursor.totalPages, 1, "totalPages correct");
-				QUnit.equal(cursor.currentPageOrderedEntries.length, 3, "check currentPageOrderedEntries");
-				QUnit.equal(cursor.currentPageOrderedEntries[0].Name,"Todd Stellanova","verify first entry");
-				QUnit.equal(cursor.currentPageOrderedEntries[2].Name,"Pro Bono Bonobo","verify last entry");
-				
-                navigator.smartstore.closeCursor(cursor,
-                    function(param) { QUnit.ok(true,"closeCursor ok"); self.finalizeTest(); },
-                    function(param) { self.setAssertionFailed("closeCursor: " + param); }
-                    );
-			}, 
-			function(param) { self.setAssertionFailed("querySoup: " + param); }
-	    );
-	});
+	self.stuffTestSoup().
+        pipe(function(entries) {
+		    QUnit.equal(entries.length, 3);
+		    
+		    var querySpec = navigator.smartstore.buildAllQuerySpec("Name", "descending");		
+	        return self.querySoup(self.defaultSoupName, querySpec);
+        })
+		.pipe(function(cursor) {
+			QUnit.equal(cursor.totalPages, 1, "totalPages correct");
+			QUnit.equal(cursor.currentPageOrderedEntries.length, 3, "check currentPageOrderedEntries");
+			QUnit.equal(cursor.currentPageOrderedEntries[0].Name,"Todd Stellanova","verify first entry");
+			QUnit.equal(cursor.currentPageOrderedEntries[2].Name,"Pro Bono Bonobo","verify last entry");
+            return self.closeCursor(cursor);
+        })
+        .done(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            self.finalizeTest(); 
+        });
 };
 
 /**
@@ -593,22 +529,22 @@ SmartStoreTestSuite.prototype.testQuerySoupBadQuerySpec = function()  {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testQuerySoupBadQuerySpec");	
 	
 	var self = this;
-	self.stuffTestSoup(function(entries) {
-		QUnit.equal(entries.length, 3);
-		
-		//query on a nonexistent index
-		var querySpec = navigator.smartstore.buildRangeQuerySpec("bottlesOfBeer",99,null,"descending");				
-		
-	    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
-			function(cursor) {
+	self.stuffTestSoup()
+        .pipe(function(entries) {
+		    QUnit.equal(entries.length, 3);
+		    
+		    //query on a nonexistent index
+		    var querySpec = navigator.smartstore.buildRangeQuerySpec("bottlesOfBeer",99,null,"descending");				
+		    
+	        return self.querySoupNoAssertion(self.defaultSoupName, querySpec);
+        })
+	    .done(function(cursor) {
 				self.setAssertionFailed("querySoup with bogus querySpec should fail");
-			}, 
-			function(param) { 
-				QUnit.ok(true,"querySoup with bogus querySpec should fail");
-				self.finalizeTest();                
-			}
-	    );
-	});
+		})
+        .fail(function(param) { 
+			QUnit.ok(true,"querySoup with bogus querySpec should fail");
+			self.finalizeTest();                
+		});
 };
 
 
@@ -619,23 +555,24 @@ SmartStoreTestSuite.prototype.testQuerySoupEndKeyNoBeginKey = function()  {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testQuerySoupEndKeyNoBeginKey");	
 	var self = this;
 	
-	self.stuffTestSoup(function(entries) {
-		QUnit.equal(entries.length, 3);
-		//keep in sync with stuffTestSoup
-		var querySpec = navigator.smartstore.buildRangeQuerySpec("Name",null,"Robot");				
+	self.stuffTestSoup()
+        .pipe(function(entries) {
+		    QUnit.equal(entries.length, 3);
+		    //keep in sync with stuffTestSoup
+		    var querySpec = navigator.smartstore.buildRangeQuerySpec("Name",null,"Robot");				
 
-	    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
-			function(cursor) {
-				var nEntries = cursor.currentPageOrderedEntries.length;
-				QUnit.equal(nEntries, 2, "nEntries matches endKey");
-				QUnit.equal(cursor.currentPageOrderedEntries[1].Name,"Robot","verify last entry");
-				self.finalizeTest();                
-			}, 
-			function(param) { 
-				self.setAssertionFailed("querySoup failed");              
-			}
-	    );
-	});
+	        return self.querySoup(self.defaultSoupName, querySpec);
+        })
+        .pipe(function(cursor) {
+			var nEntries = cursor.currentPageOrderedEntries.length;
+			QUnit.equal(nEntries, 2, "nEntries matches endKey");
+			QUnit.equal(cursor.currentPageOrderedEntries[1].Name,"Robot","verify last entry");
+            return self.closeCursor(cursor);
+        })
+        .done(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            self.finalizeTest(); 
+        });
 };
 
 /**
@@ -645,88 +582,86 @@ SmartStoreTestSuite.prototype.testQuerySoupBeginKeyNoEndKey = function()  {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testQuerySoupBeginKeyNoEndKey");	
 	var self = this;
 
-	self.stuffTestSoup(function(entries) {
-		QUnit.equal(entries.length, 3);
-		//keep in sync with stuffTestSoup
-		var querySpec = navigator.smartstore.buildRangeQuerySpec("Name","Robot",null);				
+	self.stuffTestSoup()
+        .pipe(function(entries) {
+		    QUnit.equal(entries.length, 3);
+		    //keep in sync with stuffTestSoup
+		    var querySpec = navigator.smartstore.buildRangeQuerySpec("Name","Robot",null);				
 
-	    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
-			function(cursor) {
-				var nEntries = cursor.currentPageOrderedEntries.length;
-				QUnit.equal(nEntries, 2, "nEntries matches beginKey");
-				QUnit.equal(cursor.currentPageOrderedEntries[0].Name,"Robot","verify first entry");
-				self.finalizeTest();                
-			}, 
-			function(param) { 
-				self.setAssertionFailed("querySoup failed");              
-			}
-	    );
-	});
-
+	        return self.querySoup(self.defaultSoupName, querySpec);
+        })
+		.pipe(function(cursor) {
+			var nEntries = cursor.currentPageOrderedEntries.length;
+			QUnit.equal(nEntries, 2, "nEntries matches beginKey");
+			QUnit.equal(cursor.currentPageOrderedEntries[0].Name,"Robot","verify first entry");
+            return self.closeCursor(cursor);
+        })
+        .done(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            self.finalizeTest(); 
+        });
 };
 
 /**
  * TEST testManipulateCursor
  */
-SmartStoreTestSuite.prototype.testManipulateCursor = function()  {
-	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testManipulateCursor");	
-	var self = this;
-	
-	this.addGeneratedEntriesToTestSoup(self.NUM_CURSOR_MANIPULATION_ENTRIES, 
-		function(entries) {
-			QUnit.equal(entries.length, self.NUM_CURSOR_MANIPULATION_ENTRIES);
-			var querySpec = navigator.smartstore.buildAllQuerySpec("Name",null,10);
-			
-		    navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
-				function(cursor) {
-					QUnit.equal(cursor.currentPageIndex, 0, "currentPageIndex correct");
-					QUnit.equal(cursor.pageSize, 10, "pageSize correct");
-				
-					var nEntries = cursor.currentPageOrderedEntries.length;
-					QUnit.equal(nEntries, cursor.pageSize, "nEntries matches pageSize");
-							
-					self.forwardCursorToEnd(cursor);
-				}, 
-				function(param) { self.setAssertionFailed("querySoup: " + param); }
-			);
-		});
-};
-
-/**
- * Page through the cursor til we reach the end.
- * Used by testManipulateCursor
- */
-SmartStoreTestSuite.prototype.forwardCursorToEnd = function(cursor) {
-	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.forwardCursorToEnd");	
-	var self = this;
-	
-	navigator.smartstore.moveCursorToNextPage(cursor, 
-		function(nextCursor) {
-			var pageCount = nextCursor.currentPageIndex + 1;
-			var nEntries = nextCursor.currentPageOrderedEntries.length;
-			
-			if (pageCount < nextCursor.totalPages) {
-				SFHybridApp.logToConsole("pageCount:" + pageCount + " of " + nextCursor.totalPages);
-				QUnit.equal(nEntries, nextCursor.pageSize, "nEntries matches pageSize [" + nextCursor.currentPageIndex + "]" );
-				
-				self.forwardCursorToEnd(nextCursor);
-			} 
-			else {
-				var expectedCurEntries = nextCursor.pageSize;
-				var remainder = self.NUM_CURSOR_MANIPULATION_ENTRIES % nextCursor.pageSize;
-				if (remainder > 0) {
-					expectedCurEntries = remainder;
-					SFHybridApp.logToConsole("remainder: " + remainder);
-				}
-				
-				QUnit.equal(nextCursor.currentPageIndex, nextCursor.totalPages-1, "final pageIndex correct");
-				QUnit.equal(nEntries, expectedCurEntries, "last page nEntries matches");
-                self.finalizeTest();
-			}
-		}, 
-		function(param) { self.setAssertionFailed("moveCursorToNextPage: " + param); }
-	);
-};
+//SmartStoreTestSuite.prototype.testManipulateCursor = function()  {
+//	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testManipulateCursor");	
+//	var self = this;
+//	
+//	self.addGeneratedEntriesToTestSoup(self.NUM_CURSOR_MANIPULATION_ENTRIES)
+//        .pipe(function(entries) {
+//			QUnit.equal(entries.length, self.NUM_CURSOR_MANIPULATION_ENTRIES);
+//			var querySpec = navigator.smartstore.buildAllQuerySpec("Name",null,10);
+//			
+//		    return.querySoup(self.defaultSoupName, querySpec);
+//        })
+//    .done(function(cursor) {
+//		QUnit.equal(cursor.currentPageIndex, 0, "currentPageIndex correct");
+//		QUnit.equal(cursor.pageSize, 10, "pageSize correct");
+//		
+//		var nEntries = cursor.currentPageOrderedEntries.length;
+//		QUnit.equal(nEntries, cursor.pageSize, "nEntries matches pageSize");
+//							
+//		return self.forwardCursorToEnd(cursor);
+//	});
+//};
+//
+///**
+// * Page through the cursor til we reach the end.
+// * Used by testManipulateCursor
+// */
+//SmartStoreTestSuite.prototype.forwardCursorToEnd = function(cursor) {
+//	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.forwardCursorToEnd");	
+//	var self = this;
+//	
+//	self.moveCursorToNextPage(cursor)
+//    .pipe(function(nextCursor) {
+//		var pageCount = nextCursor.currentPageIndex + 1;
+//		var nEntries = nextCursor.currentPageOrderedEntries.length;
+//		
+//		if (pageCount < nextCursor.totalPages) {
+//			SFHybridApp.logToConsole("pageCount:" + pageCount + " of " + nextCursor.totalPages);
+//			QUnit.equal(nEntries, nextCursor.pageSize, "nEntries matches pageSize [" + nextCursor.currentPageIndex + "]" );
+//			
+//			return self.forwardCursorToEnd(nextCursor);
+//		} 
+//		else {
+//			var expectedCurEntries = nextCursor.pageSize;
+//			var remainder = self.NUM_CURSOR_MANIPULATION_ENTRIES % nextCursor.pageSize;
+//			if (remainder > 0) {
+//				expectedCurEntries = remainder;
+//				SFHybridApp.logToConsole("remainder: " + remainder);
+//			}
+//			
+//			QUnit.equal(nextCursor.currentPageIndex, nextCursor.totalPages-1, "final pageIndex correct");
+//			QUnit.equal(nEntries, expectedCurEntries, "last page nEntries matches");
+//            self.finalizeTest();
+//		}
+//	}, 
+//		function(param) { self.setAssertionFailed("moveCursorToNextPage: " + param); }
+//	);
+//};
 
 
 /**
@@ -735,12 +670,11 @@ SmartStoreTestSuite.prototype.forwardCursorToEnd = function(cursor) {
 SmartStoreTestSuite.prototype.testArbitrarySoupNames = function() {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testArbitrarySoupNames");	
 	var self = this;
-	
 	var soupName = "123This should-be a_valid.soup+name!?100";
 	
 	//simply register and verify that the soup exists
-	self.removeAndRecreateSoup(soupName,self.defaultSoupIndexes,
-		function(soupName2) {
+	self.removeAndRecreateSoup(soupName,self.defaultSoupIndexes).
+        done(function(soupName2) {
 			self.finalizeTest();
 		});
 };
@@ -794,54 +728,51 @@ SmartStoreTestSuite.prototype.testLikeQuerySpecStartsWith  = function() {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testLikeQuerySpecStartsWith");
 	var self = this;
 	
-	self.stuffTestSoup(function(entries) {
-		QUnit.equal(entries.length, 3,"check stuffTestSoup result");
-		var querySpec = navigator.smartstore.buildLikeQuerySpec("Name","Todd%");
-		navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
-			function(cursor) {
-				var nEntries = cursor.currentPageOrderedEntries.length;
-				QUnit.equal(nEntries, 1, "currentPageOrderedEntries correct");
-                self.finalizeTest();
-			}, 
-			function(param) { self.setAssertionFailed("querySoup: " + param); }
-		);
-	});
+	self.stuffTestSoup()
+        .pipe(function(entries) {
+		    QUnit.equal(entries.length, 3,"check stuffTestSoup result");
+		    var querySpec = navigator.smartstore.buildLikeQuerySpec("Name","Todd%");
+		    return self.querySoup(self.defaultSoupName, querySpec);
+        })
+        .done(function(cursor) {
+			var nEntries = cursor.currentPageOrderedEntries.length;
+			QUnit.equal(nEntries, 1, "currentPageOrderedEntries correct");
+            self.finalizeTest();
+		}); 
 };
 
 SmartStoreTestSuite.prototype.testLikeQuerySpecEndsWith  = function() {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testLikeQuerySpecEndsWith");
 	var self = this;
 	
-	self.stuffTestSoup(function(entries) {
-		QUnit.equal(entries.length, 3,"check stuffTestSoup result");
-		var querySpec = navigator.smartstore.buildLikeQuerySpec("Name","%Stellanova");
-		navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
-			function(cursor) {
-				var nEntries = cursor.currentPageOrderedEntries.length;
-				QUnit.equal(nEntries, 1, "currentPageOrderedEntries correct");
-                self.finalizeTest();
-			}, 
-			function(param) { self.setAssertionFailed("querySoup: " + param); }
-		);
-	});
+	self.stuffTestSoup()
+        .pipe(function(entries) {
+		    QUnit.equal(entries.length, 3,"check stuffTestSoup result");
+		    var querySpec = navigator.smartstore.buildLikeQuerySpec("Name","%Stellanova");
+		    return self.querySoup(self.defaultSoupName, querySpec);
+        })
+        .done(function(cursor) {
+			var nEntries = cursor.currentPageOrderedEntries.length;
+			QUnit.equal(nEntries, 1, "currentPageOrderedEntries correct");
+            self.finalizeTest();
+		}); 
 };
 
 SmartStoreTestSuite.prototype.testLikeQueryInnerText  = function() {
 	SFHybridApp.logToConsole("In SFSmartStoreTestSuite.testLikeQueryInnerText");
 	var self = this;
 	
-	self.stuffTestSoup(function(entries) {
-		QUnit.equal(entries.length, 3,"check stuffTestSoup result");
-		var querySpec = navigator.smartstore.buildLikeQuerySpec("Name","%ono%");
-		navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
-			function(cursor) {
-				var nEntries = cursor.currentPageOrderedEntries.length;
-				QUnit.equal(nEntries, 1, "currentPageOrderedEntries correct");
-                self.finalizeTest();
-			}, 
-			function(param) { self.setAssertionFailed("querySoup: " + param); }
-		);
-	});
+	self.stuffTestSoup()
+        .pipe(function(entries) {
+		    QUnit.equal(entries.length, 3,"check stuffTestSoup result");
+		    var querySpec = navigator.smartstore.buildLikeQuerySpec("Name","%ono%");
+		    return self.querySoup(self.defaultSoupName, querySpec);
+        })
+        .done(function(cursor) {
+			var nEntries = cursor.currentPageOrderedEntries.length;
+			QUnit.equal(nEntries, 1, "currentPageOrderedEntries correct");
+            self.finalizeTest();
+		}); 
 };
 
 SmartStoreTestSuite.prototype.testCompoundQueryPath  = function() {
@@ -850,30 +781,29 @@ SmartStoreTestSuite.prototype.testCompoundQueryPath  = function() {
 	//attributes.url is a nonsensical path but it works for testing compound paths
 	var indices = [{path:"Name", type:"string"}, {path:"Id", type:"string"}, {path:"attributes.url", type:"string"}];
 	var soupName = "compoundPathSoup";
-	self.removeAndRecreateSoup(soupName,indices,
-		function(soupName) {
-			self.addGeneratedEntriesToSoup(soupName, 3, 
-				function(entries) {
-					QUnit.equal(entries.length, 3,"check addGeneratedEntriesToSoup result");
-					//pick out a compound path value and ensure that we can query for the same entry
-					var selectedEntry = entries[1];
-					var selectedUrl = selectedEntry.attributes.url;
-					var querySpec = navigator.smartstore.buildExactQuerySpec("attributes.url",selectedUrl);
-					navigator.smartstore.querySoup(soupName, querySpec, 
-						function(cursor) {
-							QUnit.equal(cursor.currentPageOrderedEntries.length, 1, "currentPageOrderedEntries correct");
-							var foundEntry = cursor.currentPageOrderedEntries[0];
-							QUnit.equal(foundEntry.attributes.url,selectedUrl,"Verify same entry");
-							navigator.smartstore.closeCursor(cursor,
-			                    function(param) { QUnit.ok(true,"closeCursor ok"); self.finalizeTest(); },
-			                    function(param) { self.setAssertionFailed("closeCursor: " + param); }
-			                    );
-						}, 
-						function(param) { self.setAssertionFailed("querySoup: " + param); }
-					);
-				});
-		});
-	
+    var selectedUrl;
+	self.removeAndRecreateSoup(soupName,indices)
+        .pipe(function(soupName) {
+			return self.addGeneratedEntriesToSoup(soupName, 3);
+        })
+        .pipe(function(entries) {
+			QUnit.equal(entries.length, 3,"check addGeneratedEntriesToSoup result");
+			//pick out a compound path value and ensure that we can query for the same entry
+			var selectedEntry = entries[1];
+			selectedUrl = selectedEntry.attributes.url;
+			var querySpec = navigator.smartstore.buildExactQuerySpec("attributes.url",selectedUrl);
+			return self.querySoup(soupName, querySpec); 
+        })
+        .pipe(function(cursor) {
+			QUnit.equal(cursor.currentPageOrderedEntries.length, 1, "currentPageOrderedEntries correct");
+			var foundEntry = cursor.currentPageOrderedEntries[0];
+			QUnit.equal(foundEntry.attributes.url,selectedUrl,"Verify same entry");
+			return self.closeCursor(cursor);
+        })
+        .done(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            self.finalizeTest(); 
+        });
 };
 
 SmartStoreTestSuite.prototype.testEmptyQuerySpec  = function() {
@@ -882,10 +812,13 @@ SmartStoreTestSuite.prototype.testEmptyQuerySpec  = function() {
 	
 	var querySpec = new SoupQuerySpec(null);
 	querySpec.queryType = null; 
-	navigator.smartstore.querySoup(self.defaultSoupName, querySpec, 
-		function(param) { self.setAssertionFailed("querySoup should have failed"); }, 
-		function(param) { self.finalizeTest(); }
-	);
+	self.querySoupNoAssertion(self.defaultSoupName, querySpec)
+    .done(function(param) { 
+        self.setAssertionFailed("querySoup should have failed"); 
+    })
+    .fail(function(param) { 
+        self.finalizeTest(); 
+    });
 };
 
 
@@ -898,26 +831,24 @@ SmartStoreTestSuite.prototype.testIntegerQuerySpec  = function() {
     var rawEntries = [myEntry1, myEntry2, myEntry3];
 	var soupName = "charmingSoup";
 
-	self.removeAndRecreateSoup(soupName, [{path:"Name", type:"string"}, {path:"shots", type:"integer"}], 
-		function(soupName) {
-			self.addEntriesToSoup(soupName,rawEntries,
-				function(entries) {
-					var querySpec = navigator.smartstore.buildRangeQuerySpec("shots", 10, 100,"ascending");
-					navigator.smartstore.querySoup(soupName, querySpec, 
-						function(cursor) {
-							QUnit.equal(cursor.currentPageOrderedEntries.length, 2, "check currentPageOrderedEntries");
-							QUnit.equal(cursor.currentPageOrderedEntries[0].Name,"Todd Stellanova","verify first entry");
-							QUnit.equal(cursor.currentPageOrderedEntries[1].Name,"Pro Bono Bonobo","verify last entry");
-							navigator.smartstore.closeCursor(cursor,
-				                function(param) { QUnit.ok(true,"closeCursor ok"); self.finalizeTest(); },
-				                function(param) { self.setAssertionFailed("closeCursor: " + param); }
-				                );
-						},
-						function(param) { self.setAssertionFailed("querySoup: " + param); }
-					);
-				});
-		});
-		
+	self.removeAndRecreateSoup(soupName, [{path:"Name", type:"string"}, {path:"shots", type:"integer"}])
+    .pipe(function(soupName) {
+		return self.upsertSoupEntries(soupName,rawEntries);
+    })
+    .pipe(function(entries) {
+		var querySpec = navigator.smartstore.buildRangeQuerySpec("shots", 10, 100,"ascending");
+		return self.querySoup(soupName, querySpec);
+    })
+    .pipe(function(cursor) {
+		QUnit.equal(cursor.currentPageOrderedEntries.length, 2, "check currentPageOrderedEntries");
+		QUnit.equal(cursor.currentPageOrderedEntries[0].Name,"Todd Stellanova","verify first entry");
+		QUnit.equal(cursor.currentPageOrderedEntries[1].Name,"Pro Bono Bonobo","verify last entry");
+		return self.closeCursor(cursor);
+    })
+    .done(function(param) { 
+        QUnit.ok(true,"closeCursor ok"); 
+        self.finalizeTest();
+    });
 };
 
 }
