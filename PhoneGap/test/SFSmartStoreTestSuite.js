@@ -50,7 +50,6 @@ SmartStoreTestSuite.prototype.constructor = SmartStoreTestSuite;
  * For each test, we first remove and re-add the default soup
  */
 SmartStoreTestSuite.prototype.runTest= function (methName) {
-    if (methName != "testUpsertSoupEntriesWithExternalId") return;
     console.log("In SFSmartStoreTestSuite.runTest: methName=" + methName);
     var self = this;
     self.removeAndRecreateSoup(this.defaultSoupName, this.defaultSoupIndexes)
