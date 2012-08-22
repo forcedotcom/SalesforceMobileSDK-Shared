@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2012, salesforce.com, inc.
  * All rights reserved.
@@ -27,7 +26,7 @@
 
 /**
  * A test suite for SmartStore
- * This file assumes that qunit.js has been previously loaded, as well as jquery.js and SFTestSuite.js
+ * This file assumes that qunit.js has been previously loaded, as well as jquery.js,  SFTestSuite.js and SFAbstractSmartStoreTestSuite.js
  * To display results you'll need to load qunit.css.
  */
 if (typeof SmartStoreTestSuite === 'undefined') { 
@@ -36,106 +35,18 @@ if (typeof SmartStoreTestSuite === 'undefined') {
  * Constructor for SmartStoreTestSuite
  */
 var SmartStoreTestSuite = function () {
-    SFTestSuite.call(this, "smartstore");
-
-    this.defaultSoupName = "myPeopleSoup";
-    this.defaultSoupIndexes = [{path:"Name", type:"string"}, {path:"Id", type:"string"}];
+    AbstractSmartStoreTestSuite.call(this, 
+                                     "smartstore", 
+                                     "myPeopleSoup", 
+                                     [
+                                         {path:"Name", type:"string"}, 
+                                         {path:"Id", type:"string"}
+                                     ]);
 };
 
-// We are sub-classing SFTestSuite
-SmartStoreTestSuite.prototype = new SFTestSuite();
+// We are sub-classing AbstractSmartStoreTestSuite
+SmartStoreTestSuite.prototype = new AbstractSmartStoreTestSuite();
 SmartStoreTestSuite.prototype.constructor = SmartStoreTestSuite;
-
-/*
- * For each test, we first remove and re-add the default soup
- */
-SmartStoreTestSuite.prototype.runTest= function (methName) {
-    console.log("In SFSmartStoreTestSuite.runTest: methName=" + methName);
-    var self = this;
-    self.removeAndRecreateSoup(this.defaultSoupName, this.defaultSoupIndexes)
-        .done(
-            function() {
-                self[methName]();
-            });
-};
-
-/**
- * Build a function returning a promise from a function that takes a success and error callback as last arguments
- * The new function will take the same arguments as the original function minus the two callback functions
- */
-var promiser = function(object, methodName, noAssertionOnFailure) {
-    var retfn = function () {
-        console.log("In SFSmartStoreTestSuite." + methodName);
-        var self = this;
-        var args = $.makeArray(arguments);
-        var d = $.Deferred();
-        args.push(function() {
-            console.log(methodName + " succeeded");
-            d.resolve.apply(d, arguments);
-        });
-        args.push(function() {
-            console.log(methodName + " failed");
-            //console.log("Failure-->" + JSON.stringify($.makeArray(arguments)));
-            if (!noAssertionOnFailure) self.setAssertionFailed(methodName + " failed");
-            d.reject.apply(d, arguments);
-        });
-        object[methodName].apply(object, args);
-        return d.promise();
-    };
-    return retfn;
-}
-
-/**
- * Helper methods to do smartstore operations using promises
- */
-SmartStoreTestSuite.prototype.registerSoup = promiser(navigator.smartstore, "registerSoup");
-SmartStoreTestSuite.prototype.soupExists = promiser(navigator.smartstore, "soupExists");
-SmartStoreTestSuite.prototype.removeSoup = promiser(navigator.smartstore, "removeSoup");
-SmartStoreTestSuite.prototype.removeFromSoup = promiser(navigator.smartstore, "removeFromSoup");
-SmartStoreTestSuite.prototype.querySoup = promiser(navigator.smartstore, "querySoup");
-SmartStoreTestSuite.prototype.upsertSoupEntries = promiser(navigator.smartstore, "upsertSoupEntries");
-SmartStoreTestSuite.prototype.upsertEntriesToSoupWithExternalIdPath = promiser(navigator.smartstore, "upsertSoupEntriesWithExternalId");
-SmartStoreTestSuite.prototype.retrieveSoupEntries = promiser(navigator.smartstore, "retrieveSoupEntries");
-SmartStoreTestSuite.prototype.closeCursor = promiser(navigator.smartstore, "closeCursor");
-SmartStoreTestSuite.prototype.moveCursorToNextPage = promiser(navigator.smartstore, "moveCursorToNextPage");
-
-SmartStoreTestSuite.prototype.registerSoupNoAssertion = promiser(navigator.smartstore, "registerSoup", true);
-SmartStoreTestSuite.prototype.querySoupNoAssertion = promiser(navigator.smartstore, "querySoup", true);
-SmartStoreTestSuite.prototype.upsertSoupEntriesNoAssertion = promiser(navigator.smartstore, "upsertSoupEntries", true);
-
-SmartStoreTestSuite.prototype.registerDefaultSoup = function() {
-    return this.registerSoup(this.defaultSoupName, this.defaultSoupIndexes);
-};
-
-SmartStoreTestSuite.prototype.removeDefaultSoup = function() {
-    return this.removeSoup(this.defaultSoupName);
-};
-
-/**
- * Helper method that removes and recreates a soup, ensuring a known good state
- */
-SmartStoreTestSuite.prototype.removeAndRecreateSoup = function(soupName, soupIndexes) {
-    var self = this;
-    // Start clean
-    return self.removeSoup(soupName)
-        .pipe(function() {
-            // Check soup does not exist
-            return self.soupExists(soupName);
-        })
-        .pipe(function(exists) {
-            QUnit.equals(exists, false, "soup should not already exist");
-            // Create soup
-            return self.registerSoup(soupName, soupIndexes);
-        })
-        .pipe(function(soupName2) {
-            QUnit.equals(soupName2,soupName,"registered soup OK");
-            // Check soup now exists
-            return self.soupExists(soupName);
-        })
-        .done(function(exists2) {
-            QUnit.equals(exists2, true, "soup should now exist");
-        });
-}
 
 
 /**
@@ -148,66 +59,6 @@ SmartStoreTestSuite.prototype.stuffTestSoup = function() {
     var myEntry3 = { Name: "Robot", Id: "00300C", attributes:{type:"Contact"}  };
     var entries = [myEntry1, myEntry2, myEntry3];
     return this.addEntriesToTestSoup(entries);
-};
-
-
-/**
- * Helper method that adds entry to the named soup
- */
-SmartStoreTestSuite.prototype.addGeneratedEntriesToSoup = function(soupName, nEntries) {
-    console.log("In SFSmartStoreTestSuite.addGeneratedEntriesToSoup: " + soupName + " nEntries=" + nEntries);
-    var entries = this.createGeneratedEntries(nEntries);
-    return this.upsertSoupEntries(soupName, entries);
-};
-
-/**
- * Creates a list of generated entries, with index fields that should order well automatically.
- *   nEntries - The number of generated entries to create.
- * Return: An array of generated entries.
- */
-SmartStoreTestSuite.prototype.createGeneratedEntries = function(nEntries) {
-    var entries = [];
-    for (var i = 0; i < nEntries; i++) {
-        var paddedIndex = this.padNumber(i, nEntries, "0");
-        var entityId = "003" + paddedIndex;
-        var myEntry = { Name: "Todd Stellanova" + paddedIndex, Id: entityId,  attributes:{type:"Contact", url:"/foo/Contact/"+paddedIndex} };
-        entries.push(myEntry);
-    }
-    return entries;
-};
-
-/**
- * Pads a number to match a specified number of numerals.
- *  numberToPad - The original number to pad.
- *  maxSize     - The ultimate size, in numerals, of the padded number.
- *  paddingChar - The character used to pad the number.
- * Returns: The padded number string.
- */
-SmartStoreTestSuite.prototype.padNumber = function(numberToPad, maxSize, paddingChar) {
-    var numberToPadString = numberToPad + "";
-    var numberToPadStringLength = numberToPadString.length;
-    var maxSizeString = maxSize + "";
-    var maxSizeStringLength = maxSizeString.length;
-    for (var i = 0; i < (maxSizeStringLength - numberToPadStringLength); i++) {
-        numberToPadString = paddingChar + numberToPadString;
-    }
-    return numberToPadString;
-};
-
-/**
- * Helper method that adds n soup entries to default soup
- */
-SmartStoreTestSuite.prototype.addGeneratedEntriesToTestSoup = function(nEntries) {
-    console.log("In SFSmartStoreTestSuite.addGeneratedEntriesToTestSoup: nEntries=" + nEntries);
-    return this.addGeneratedEntriesToSoup(this.defaultSoupName,nEntries);
-};
-
-/**
- * Helper method that adds soup entries to default soup
- */
-SmartStoreTestSuite.prototype.addEntriesToTestSoup = function(entries) {
-    console.log("In SFSmartStoreTestSuite.addEntriesToTestSoup: entries.length=" + entries.length);
-    return this.upsertSoupEntries(this.defaultSoupName,entries);
 };
 
 /** 
