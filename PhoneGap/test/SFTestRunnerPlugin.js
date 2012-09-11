@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, salesforce.com, inc.
+ * Copyright (c) 2012, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -24,64 +24,56 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+cordova.define("salesforce/plugin/testrunner", function(require, exports, module) {
 
+    // Private
+    var _testSuiteClassName = null;
+    var _testSuite = null;
 
-if (!PhoneGap.hasResource("testrunner")) {
+    // ====== Test and Suite setup ======
+    var setTestSuite = function (suiteClassName) {
+	    if (_testSuiteClassName !== suiteClassName) {
+		    console.log("TestRunner.setTestSuite: " + suiteClassName);
+		    _testSuiteClassName = suiteClassName;
+		    _testSuite = new window[suiteClassName]();
+	    }
+    };
 
-PhoneGap.addResource("testrunner");
+    var onReadyForTests = function (successCB, errorCB) {
+        console.log("TestRunner.onReadyForTests");
+        cordova.exec(successCB, errorCB, 
+                     "com.salesforce.testrunner",
+                     "onReadyForTests",
+                     []
+                    );                  
+    };
 
-var TestRunner = function () {
-    SFHybridApp.logToConsole("new TestRunner");
-	this.testSuiteClassName = null;
-	this.testSuite = null;
-};
- 
-// ====== Test and Suite setup ======
+    var startTest =  function(testName) {
+        console.log("TestRunner.startTest: " + testName);
+        _testSuite.startTest(testName);
+    };
 
-TestRunner.prototype.setTestSuite = function (suiteClassName) {
-	if (this.testSuiteClassName !== suiteClassName) {
-		SFHybridApp.logToConsole("TestRunner.setTestSuite: " + suiteClassName);
-	    
-		this.testSuiteClassName = suiteClassName;
-		this.testSuite = new window[suiteClassName]();
-	}
-};
+    var onTestComplete = function (testName, success, message, status, successCB, errorCB) {
+        console.log("TestRunner.onTestComplete: " + testName + ",success:" + success);
+        cordova.exec(successCB, errorCB, 
+                     "com.salesforce.testrunner",
+                     "onTestComplete",
+                     [{
+                         "testName": testName, 
+                         "success": success, 
+                         "message": message, 
+                         "testDuration": status.testDuration
+                     }]
+                    );
+    };
 
-TestRunner.prototype.onReadyForTests = function (successCB, errorCB) {
-    SFHybridApp.logToConsole("TestRunner.onReadyForTests");
-    
-    PhoneGap.exec(successCB, errorCB, 
-                  "com.salesforce.testrunner",
-                  "onReadyForTests",
-                  []
-                  );                  
-};
-
-TestRunner.prototype.onTestComplete = function (testName, success, message, status, successCB, errorCB) {
-    SFHybridApp.logToConsole("TestRunner.onTestComplete");
-
-    PhoneGap.exec(successCB, errorCB, 
-                  "com.salesforce.testrunner",
-                  "onTestComplete",
-                  [{
-                   "testName": testName, 
-                   "success": success, 
-                   "message": message, 
-                   "testDuration": status.testDuration
-                   }]
-                  );
-};
-
-
-//======Plugin creation / installation ======
-    
-    
-PhoneGap.addConstructor(function () {
-        SFHybridApp.logToConsole("TestRunner pre-install");
-         if (typeof navigator.testrunner === 'undefined') {
-             SFHybridApp.logToConsole("TestRunner.install");
-             navigator.testrunner = new TestRunner();
-         }
+    module.exports = {
+        setTestSuite: setTestSuite,
+        onReadyForTests: onReadyForTests,
+        startTest: startTest,
+        onTestComplete: onTestComplete
+    };
 });
 
-}
+// For backward compatibility
+navigator.testrunner = cordova.require("salesforce/plugin/testrunner");

@@ -16,107 +16,80 @@ var INDEXES_OPPORTUNITIES = [
     {path:"isDirty", type:"string"}
 ];
 
-function hasSmartstore() {
-    if (PhoneGap.hasResource("smartstore") && navigator.smartstore) {
-        SFHybridApp.logToConsole("hasSmartstore: " + true);
-        return true;
-    }
-    SFHybridApp.logToConsole("hasSmartstore: " + false);
-    return false;
-}
+var sfSmartstore = cordova.require("salesforce/plugin/smartstore");
 
 function regAccSoup() {
-    if (hasSmartstore()) {
-
-        // Registers soup for storing accounts.
-        navigator.smartstore.registerSoup(ACCOUNTS_SOUP_NAME,
-                INDEXES_ACCOUNTS, regOppSoup, regOppSoup);
-    }
+    cordova.require("salesforce/util/logger").logToConsole("In regAccSoup");
+    // Registers soup for storing accounts.
+    sfSmartstore.registerSoup(ACCOUNTS_SOUP_NAME,
+            INDEXES_ACCOUNTS, regOppSoup, regOppSoup);
 }
 
 function regOppSoup() {
-    if (hasSmartstore()) {
-
-        // Registers soup for storing opportunities.
-        navigator.smartstore.registerSoup(OPPORTUNITIES_SOUP_NAME,
-                INDEXES_OPPORTUNITIES, onSuccessRegSoup, onErrorRegSoup);
-    }
+    cordova.require("salesforce/util/logger").logToConsole("In regOppSoup");
+    // Registers soup for storing opportunities.
+    sfSmartstore.registerSoup(OPPORTUNITIES_SOUP_NAME,
+            INDEXES_OPPORTUNITIES, onSuccessRegSoup, onErrorRegSoup);
 }
 
 function removeAccSoup() {
-    navigator.smartstore.removeSoup(ACCOUNTS_SOUP_NAME, removeOppSoup, removeOppSoup);
+    sfSmartstore.removeSoup(ACCOUNTS_SOUP_NAME, removeOppSoup, removeOppSoup);
 }
 
 function removeOppSoup() {
-    navigator.smartstore.removeSoup(OPPORTUNITIES_SOUP_NAME, onSuccessRemoveSoup, onErrorRemoveSoup);
+    sfSmartstore.removeSoup(OPPORTUNITIES_SOUP_NAME, onSuccessRemoveSoup, onErrorRemoveSoup);
 }
 
 function addAccounts(entries, success, error) {
-    if (hasSmartstore()) {
-        navigator.smartstore.upsertSoupEntriesWithExternalId(ACCOUNTS_SOUP_NAME, entries, "Id",
-                success, error);
-    }
+    sfSmartstore.upsertSoupEntriesWithExternalId(ACCOUNTS_SOUP_NAME, entries, "Id",
+            success, error);
 }
 
 function addOpportunities(entries, success, error) {
-    if (hasSmartstore()) {
-        navigator.smartstore.upsertSoupEntriesWithExternalId(OPPORTUNITIES_SOUP_NAME, entries, "Id",
-                success, error);
-    }
+    sfSmartstore.upsertSoupEntriesWithExternalId(OPPORTUNITIES_SOUP_NAME, entries, "Id",
+            success, error);
 }
 
 function getAccounts(numAccounts, success, error) {
-    if (hasSmartstore()) {
-        var querySpec = navigator.smartstore.buildAllQuerySpec("Id", null, numAccounts);
-        navigator.smartstore.querySoup(ACCOUNTS_SOUP_NAME, querySpec, function(cursor) {
-            success(cursor);
-        }, error);
-    }
+    var querySpec = sfSmartstore.buildAllQuerySpec("Id", null, numAccounts);
+    sfSmartstore.querySoup(ACCOUNTS_SOUP_NAME, querySpec, function(cursor) {
+        success(cursor);
+    }, error);
 }
 
 function getOpportunities(numOpportunities, success, error) {
-    if (hasSmartstore()) {
-        var querySpec = navigator.smartstore.buildAllQuerySpec("Id", null, numOpportunities);
-        navigator.smartstore.querySoup(OPPORTUNITIES_SOUP_NAME, querySpec, function(cursor) {
-            success(cursor);
-        }, error);
-    }
+    var querySpec = sfSmartstore.buildAllQuerySpec("Id", null, numOpportunities);
+    sfSmartstore.querySoup(OPPORTUNITIES_SOUP_NAME, querySpec, function(cursor) {
+        success(cursor);
+    }, error);
 }
 
 function getAccById(id, success, error) {
-    if (hasSmartstore()) {
-        var querySpec = navigator.smartstore.buildExactQuerySpec("Id", id, 1);
-        navigator.smartstore.querySoup(ACCOUNTS_SOUP_NAME, querySpec, function(cursor) {
-            success(cursor);
-        }, error);
-    }
+    var querySpec = sfSmartstore.buildExactQuerySpec("Id", id, 1);
+    sfSmartstore.querySoup(ACCOUNTS_SOUP_NAME, querySpec, function(cursor) {
+        success(cursor);
+    }, error);
 }
 
 function getOppById(id, success, error) {
-    if (hasSmartstore()) {
-        var querySpec = navigator.smartstore.buildExactQuerySpec("Id", id, 1);
-        navigator.smartstore.querySoup(OPPORTUNITIES_SOUP_NAME, querySpec, function(cursor) {
-            success(cursor);
-        }, error);
-    }
+    var querySpec = sfSmartstore.buildExactQuerySpec("Id", id, 1);
+    sfSmartstore.querySoup(OPPORTUNITIES_SOUP_NAME, querySpec, function(cursor) {
+        success(cursor);
+    }, error);
 }
 
 function getNumAccounts(success, error) {
-    if (hasSmartstore()) {
-        var querySpec = navigator.smartstore.buildAllQuerySpec("Id", null, 1);
-        navigator.smartstore.querySoup(ACCOUNTS_SOUP_NAME, querySpec, function(cursor) {
-            success(cursor);
-        }, error);
-    }
+    var querySpec = sfSmartstore.buildAllQuerySpec("Id", null, 1);
+    sfSmartstore.querySoup(ACCOUNTS_SOUP_NAME, querySpec, function(cursor) {
+        success(cursor);
+    }, error);
 }
 
 function getNumOpportunities(success, error) {
-    if (hasSmartstore()) {
-        var querySpec = navigator.smartstore.buildAllQuerySpec("Id", null, 1);
-        navigator.smartstore.querySoup(OPPORTUNITIES_SOUP_NAME, querySpec, function(cursor) {
-            success(cursor);
-        }, error);
-    }
+    var querySpec = sfSmartstore.buildAllQuerySpec("Id", null, 1);
+    sfSmartstore.querySoup(OPPORTUNITIES_SOUP_NAME, querySpec, function(cursor) {
+        success(cursor);
+    }, error);
 }
 
 function updateAccount(id, newName, newDesc, success, error) {
@@ -151,25 +124,21 @@ function updateOpportunity(id, newName, newDesc, newAccountId, newCloseDate, new
 }
 
 function fetchDirtyAccounts(success, error) {
-    if (hasSmartstore()) {
-        var querySpec = navigator.smartstore.buildExactQuerySpec("isDirty", "true", 1);
-        navigator.smartstore.querySoup(ACCOUNTS_SOUP_NAME, querySpec, function(response) {
-            var allQuerySpec = navigator.smartstore.buildExactQuerySpec("isDirty", "true", response.totalPages - 1);
-            navigator.smartstore.querySoup(ACCOUNTS_SOUP_NAME, allQuerySpec, function(cursor) {
-                success(cursor);
-            }, error);
+    var querySpec = sfSmartstore.buildExactQuerySpec("isDirty", "true", 1);
+    sfSmartstore.querySoup(ACCOUNTS_SOUP_NAME, querySpec, function(response) {
+        var allQuerySpec = sfSmartstore.buildExactQuerySpec("isDirty", "true", response.totalPages - 1);
+        sfSmartstore.querySoup(ACCOUNTS_SOUP_NAME, allQuerySpec, function(cursor) {
+            success(cursor);
         }, error);
-    }
+    }, error);
 }
 
 function fetchDirtyOpportunities(success, error) {
-    if (hasSmartstore()) {
-        var querySpec = navigator.smartstore.buildExactQuerySpec("isDirty", "true", 1);
-        navigator.smartstore.querySoup(OPPORTUNITIES_SOUP_NAME, querySpec, function(response) {
-            var allQuerySpec = navigator.smartstore.buildExactQuerySpec("isDirty", "true", response.totalPages - 1);
-            navigator.smartstore.querySoup(OPPORTUNITIES_SOUP_NAME, allQuerySpec, function(cursor) {
-                success(cursor);
-            }, error);
+    var querySpec = sfSmartstore.buildExactQuerySpec("isDirty", "true", 1);
+    sfSmartstore.querySoup(OPPORTUNITIES_SOUP_NAME, querySpec, function(response) {
+        var allQuerySpec = sfSmartstore.buildExactQuerySpec("isDirty", "true", response.totalPages - 1);
+        sfSmartstore.querySoup(OPPORTUNITIES_SOUP_NAME, allQuerySpec, function(cursor) {
+            success(cursor);
         }, error);
-    }
+    }, error);
 }

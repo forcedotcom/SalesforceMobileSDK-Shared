@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0; user-scalable=no" />
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
 
     <!-- include jquery mobile -->
@@ -9,19 +9,23 @@
     <script src="jquery/jquery-1.6.2.min.js"></script>
     <script src="jquery/jquery.mobile-1.0b2.min.js"></script>
         
-    <!-- include phonegap / callback -->
-	<script type="text/javascript" charset="utf-8" src="phonegap-1.2.0.js"></script>
+    <!-- include cordova / callback -->
+	<script src="cordova-1.8.1.js"></script>
+    <!-- include local utility functionality -->
+    <script src="SFHybridApp.js"></script>
     <!-- required for oauth plugin support -->    
-    <script type="text/javascript" src="SalesforceOAuthPlugin.js"></script>
+    <script src="SalesforceOAuthPlugin.js"></script>
 
     <!-- include forcetk for REST transaction support -->
-    <script src="forcetk.js"></script>
-    
-    <!-- include local utility functionality -->
-    <link rel="stylesheet" type="text/css" href="SFHybridApp.css" />
-    <script type="text/javascript" charset="utf-8" src="SFHybridApp.js"></script>
+    <script src="forcetk.js"></script>    
 
-    <script type="text/javascript" charset="utf-8">
+    <!-- log window styling -->
+    <style>
+      .logWindow {display:none; width:700px;}
+      .logWindow > p {padding:0px; margin:0px; word-wrap:break-word;}
+    </style>
+
+    <script>
 
     
     // The version of the REST API you wish to use in your app.
@@ -48,19 +52,20 @@
 	
     var forcetkClient;
     var debugMode = true;
+    var logToConsole = cordova.require("salesforce/util/logger").logToConsole;
 
     jQuery(document).ready(function() {
         //Add event listeners and so forth here
-        SFHybridApp.logToConsole("onLoad: jquery ready");
+        logToConsole("onLoad: jquery ready");
 		document.addEventListener("deviceready", onDeviceReady,false);
 
     });
 
-    // When this function is called, PhoneGap has been initialized and is ready to roll 
+    // When this function is called, Cordova has been initialized and is ready to roll 
     function onDeviceReady() {
-        SFHybridApp.logToConsole("onDeviceReady: PhoneGap ready");
+        logToConsole("onDeviceReady: Cordova ready");
 		//Call getAuthCredentials to get the initial session credentials
-        SalesforceOAuthPlugin.getAuthCredentials(salesforceSessionRefreshed, getAuthCredentialsError);
+        cordova.require("salesforce/plugin/oauth").getAuthCredentials(salesforceSessionRefreshed, getAuthCredentialsError);
 
         //register to receive notifications when autoRefreshOnForeground refreshes the sfdc session
         document.addEventListener("salesforceSessionRefresh",salesforceSessionRefreshed,false);
@@ -71,17 +76,23 @@
         
 
     function salesforceSessionRefreshed(creds) {
-        SFHybridApp.logToConsole("salesforceSessionRefreshed");
-		
-        forcetkClient = new forcetk.Client(creds.clientId, creds.loginUrl);
-        forcetkClient.setSessionToken(creds.accessToken, apiVersion, creds.instanceUrl);
-        forcetkClient.setRefreshToken(creds.refreshToken);
-        forcetkClient.setUserAgentString(creds.userAgent);
+        logToConsole("salesforceSessionRefreshed");
+        
+        // Depending on how we come into this method, `creds` may be callback data from the auth
+        // plugin, or an event fired from the plugin.  The data is different between the two.
+        var credsData = creds;
+        if (creds.data)  // Event sets the `data` object with the auth data.
+            credsData = creds.data;
+
+        forcetkClient = new forcetk.Client(credsData.clientId, credsData.loginUrl);
+        forcetkClient.setSessionToken(credsData.accessToken, apiVersion, credsData.instanceUrl);
+        forcetkClient.setRefreshToken(credsData.refreshToken);
+        forcetkClient.setUserAgentString(credsData.userAgent);
     }
 
 
     function getAuthCredentialsError(error) {
-        SFHybridApp.logToConsole("getAuthCredentialsError: " + error);
+        logToConsole("getAuthCredentialsError: " + error);
     }
         
     </script>
@@ -93,7 +104,7 @@
   <body>
       <div data-role="page" data-theme="b" id="jqm-home"> 
           <div  data-role="header"> 
-              <h1>Hybrid REST Explorer (SalesforceMobileSDK + PhoneGap + JQM)</h1> 
+              <h1>Hybrid REST Explorer (SalesforceMobileSDK + Cordova + JQM)</h1> 
           </div> 
 
           <div id="#content" data-role="content"> 
