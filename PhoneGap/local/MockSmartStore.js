@@ -36,7 +36,7 @@ var MockSmartStore = (function(window) {
     var _soups = {};
     var _soupIndexSpecs = {};
     var _cursors = {};
-    var _nextSoupEltId = 1;
+    var _nextSoupEltIds = {};
     var _nextCursorId = 1;
 
     // Constructor
@@ -50,7 +50,7 @@ var MockSmartStore = (function(window) {
             _soups = {};
             _soupIndexSpecs = {};
             _cursors = {};
-            _nextSoupEltId = 1;
+            _nextSoupEltIds = {};
             _nextCursorId = 1;
         },
 
@@ -78,7 +78,7 @@ var MockSmartStore = (function(window) {
             return JSON.stringify({
                 soups: _soups,
                 soupIndexSpecs: _soupIndexSpecs,
-                nextSoupEltId: _nextSoupEltId,
+                nextSoupEltIds: _nextSoupEltIds,
                 nextCursorId: _nextCursorId
             });
         },
@@ -88,7 +88,7 @@ var MockSmartStore = (function(window) {
             _soups = obj.soups;
             _soupIndexSpecs = obj.soupIndexSpecs;
             _cursors = obj.cursors;
-            _nextSoupEltId = obj.nextSoupEltId;
+            _nextSoupEltIds = obj.nextSoupEltIds;
             _nextCursorId = obj.nextCursorId;
         },
 
@@ -124,6 +124,7 @@ var MockSmartStore = (function(window) {
         removeSoup: function(soupName) {
             delete _soups[soupName];
             delete _soupIndexSpecs[soupName];
+            delete _nextSoupEltIds[soupName];
         },
 
         upsertSoupEntries: function(soupName, entries, externalIdPath) {
@@ -153,8 +154,10 @@ var MockSmartStore = (function(window) {
                 }
 
                 // create
-                if (!("_soupEntryId" in entry)) 
-                    entry._soupEntryId = _nextSoupEltId++;
+                if (!("_soupEntryId" in entry)) { 
+                    _nextSoupEltIds[soupName] = (soupName in _nextSoupEltIds ? _nextSoupEltIds[soupName]+1 : 1);
+                    entry._soupEntryId = _nextSoupEltIds[soupName];
+                }
                 
                 // update/insert into soup
                 soup[ entry._soupEntryId ] = entry;
