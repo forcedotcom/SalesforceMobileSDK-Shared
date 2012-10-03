@@ -26,7 +26,7 @@
 
 cordova.define("salesforce/plugin/smartstore", function(require, exports, module) {
 
-    var sdkVersion = "2.0";
+    var sdkVersion = "v2.0";
 
     /**
      * SoupIndexSpec consturctor
