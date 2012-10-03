@@ -25,6 +25,9 @@
  */
 
 cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
+
+    var sdkVersion = "v2.0";
+
     /**
      * OAuthProperties data structure, for plugin arguments.
      *   remoteAccessConsumerKey - String containing the remote access object ID (client ID).
@@ -58,7 +61,7 @@ cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
 	 * 	userAgent
 	 */
     var getAuthCredentials = function(success, fail) {
-        cordova.exec(success, fail, "com.salesforce.oauth","getAuthCredentials",[]);
+        cordova.exec(success, fail, "com.salesforce.oauth","getAuthCredentials/" + sdkVersion,[]);
     };
     
     /**
@@ -78,7 +81,7 @@ cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
      *   userAgent
      */
     var authenticate = function(success, fail, oauthProperties) {
-        cordova.exec(success, fail, "com.salesforce.oauth", "authenticate", [JSON.stringify(oauthProperties)]);
+        cordova.exec(success, fail, "com.salesforce.oauth", "authenticate/" + sdkVersion, [JSON.stringify(oauthProperties)]);
     };
 
 
@@ -90,7 +93,7 @@ cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
      * will be logged out and asked to re-authenticate.
      */
     var logout = function() {
-        cordova.exec(null, null, "com.salesforce.oauth", "logoutCurrentUser", []);
+        cordova.exec(null, null, "com.salesforce.oauth", "logoutCurrentUser/" + sdkVersion, []);
     };
     
     /**
@@ -101,7 +104,14 @@ cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
      * initialized.
      */
     var getAppHomeUrl = function(success) {
-        cordova.exec(success, null, "com.salesforce.oauth", "getAppHomeUrl", []);
+        cordova.exec(success, null, "com.salesforce.oauth", "getAppHomeUrl/" + sdkVersion, []);
+    };
+
+    /**
+      * Return version
+      */
+    var getVersion = function() {
+        return sdkVersion;
     };
 
 
@@ -113,6 +123,7 @@ cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
         authenticate: authenticate,
         logout: logout,
         getAppHomeUrl: getAppHomeUrl,
+        getVersion: getVersion,
 
         // Constructor
         OAuthProperties: OAuthProperties,
