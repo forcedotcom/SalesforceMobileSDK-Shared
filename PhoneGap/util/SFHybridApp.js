@@ -246,7 +246,7 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
     var buildFrontDoorUrl = function(instanceServer, startPage, accessToken) {
         var baseUrl = buildAppUrl(instanceServer, "/secur/frontdoor.jsp");
         var fullUrl = baseUrl + "?sid=" + encodeURIComponent(accessToken) 
-            + "&retURL=" + encodeURIComponent(startPage);
+            + "&retURL=" + encodeURIComponent(startPage) + "&display=touch";
         return fullUrl;
     };
 
