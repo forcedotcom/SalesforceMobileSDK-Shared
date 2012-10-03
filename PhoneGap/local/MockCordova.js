@@ -80,6 +80,7 @@
         var exec = function(successCB, errorCB, service, action, args) {
             console.log("cordova.exec " + service + ":" + action);
             var found = false;
+            var action = action.split("/")[0]; // remove version if any
             var req = service + ":" + action;
             for (var key in interceptors) {
                 if (key === req) {
