@@ -25,6 +25,13 @@
  */
 
 cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
+
+    /**
+     * Whether or not logout has already been initiated.  Can only be initiated once
+     * per page load.
+     */
+    var logoutInitiated = false;
+    
     /**
      * OAuthProperties data structure, for plugin arguments.
      *   remoteAccessConsumerKey - String containing the remote access object ID (client ID).
@@ -87,10 +94,16 @@ cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
      * as well as any OAuth refresh token.  The user is forced to login again.
      * This method does not call back with a success or failure callback, as 
      * (1) this method must not fail and (2) in the success case, the current user
-     * will be logged out and asked to re-authenticate.
+     * will be logged out and asked to re-authenticate.  Note also that this method can only
+     * be called once per page load.  Initiating logout will ultimately redirect away from
+     * the given page (effectively resetting the logout flag), and calling this method again
+     * while it's currently processing will result in app state issues.
      */
     var logout = function() {
-        cordova.exec(null, null, "com.salesforce.oauth", "logoutCurrentUser", []);
+        if (!logoutInitiated) {
+            logoutInitiated = true;
+            cordova.exec(null, null, "com.salesforce.oauth", "logoutCurrentUser", []);
+        }
     };
     
     /**
