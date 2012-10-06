@@ -254,7 +254,6 @@ cordova.define("salesforce/plugin/smartstore", function(require, exports, module
         getVersion: getVersion,
         getLogLevel: getLogLevel,
         setLogLevel: setLogLevel,
-        getVersion: getVersion,
         buildAllQuerySpec: buildAllQuerySpec,
         buildExactQuerySpec: buildExactQuerySpec,
         buildRangeQuerySpec: buildRangeQuerySpec,

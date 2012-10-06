@@ -31,7 +31,6 @@ cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
         return SDK_VERSION;
     };
 
-    // ====== Versioned exec ======
     var versionedExec = function(successCB, errorCB, action, args) {
         args.unshift({"version": getVersion()});
         cordova.exec(successCB, errorCB, 
