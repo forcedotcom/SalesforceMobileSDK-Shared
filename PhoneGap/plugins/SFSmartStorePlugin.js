@@ -82,6 +82,15 @@ cordova.define("salesforce/plugin/smartstore", function(require, exports, module
         this.currentPageOrderedEntries = null;
     };
 
+    // ====== Versionning support ======
+    var SDK_VERSION = "v2.0";
+
+    var getVersion = function() {
+        return SDK_VERSION;
+    };
+
+
+    // ====== Logging support ======
     var logLevel = 0;
     var setLogLevel = function(l) {
         logLevel = l;
@@ -132,11 +141,20 @@ cordova.define("salesforce/plugin/smartstore", function(require, exports, module
 	    return inst;
     };
 
+    // ====== Versioned exec ======
+    var versionedExec = function(successCB, errorCB, action, args) {
+        args.unshift({"version": getVersion()});
+        cordova.exec(successCB, errorCB, 
+             "com.salesforce.smartstore", 
+             action,
+             args
+            );                  
+    };
+
     // ====== Soup manipulation ======
     var registerSoup = function (soupName, indexSpecs, successCB, errorCB) {
         console.log("SmartStore.registerSoup: '" + soupName + "' indexSpecs: " + indexSpecs);
-        cordova.exec(successCB, errorCB, 
-             "com.salesforce.smartstore", 
+        versionedExec(successCB, errorCB, 
              "pgRegisterSoup", 
              [{"soupName":soupName, "indexes":indexSpecs}]
             );                  
@@ -144,8 +162,7 @@ cordova.define("salesforce/plugin/smartstore", function(require, exports, module
 
     var removeSoup = function (soupName, successCB, errorCB) {
         console.log("SmartStore.removeSoup: " + soupName );
-        cordova.exec(successCB, errorCB, 
-             "com.salesforce.smartstore", 
+        versionedExec(successCB, errorCB, 
              "pgRemoveSoup", 
              [{"soupName":soupName}]
             );                  
@@ -153,8 +170,7 @@ cordova.define("salesforce/plugin/smartstore", function(require, exports, module
 
     var soupExists = function (soupName, successCB, errorCB) {
         console.log("SmartStore.soupExists: " + soupName );
-        cordova.exec(successCB, errorCB, 
-             "com.salesforce.smartstore", 
+        versionedExec(successCB, errorCB, 
              "pgSoupExists", 
              [{"soupName":soupName}]
             );                  
@@ -162,8 +178,7 @@ cordova.define("salesforce/plugin/smartstore", function(require, exports, module
 
     var querySoup = function (soupName, querySpec, successCB, errorCB) {
         console.log("SmartStore.querySoup: '" + soupName + "' indexPath: " + querySpec.indexPath);
-        cordova.exec(successCB, errorCB, 
-             "com.salesforce.smartstore", 
+        versionedExec(successCB, errorCB, 
              "pgQuerySoup", 
              [{"soupName":soupName, "querySpec":querySpec}]
             );
@@ -172,8 +187,7 @@ cordova.define("salesforce/plugin/smartstore", function(require, exports, module
     var retrieveSoupEntries = function (soupName, entryIds, successCB, errorCB) {
         if (logLevel > 0) 
             console.log("SmartStore.retrieveSoupEntry: '" + soupName + "' entryIds: " + entryIds);
-        cordova.exec(successCB, errorCB, 
-             "com.salesforce.smartstore", 
+        versionedExec(successCB, errorCB, 
              "pgRetrieveSoupEntries", 
              [{"soupName":soupName, "entryIds":entryIds}]
             );
@@ -186,8 +200,7 @@ cordova.define("salesforce/plugin/smartstore", function(require, exports, module
     var upsertSoupEntriesWithExternalId = function (soupName, entries, externalIdPath, successCB, errorCB) {
         if (logLevel > 0) 
             console.log("SmartStore.upsertSoupEntries: '" + soupName + "' entries.length: " + entries.length);
-        cordova.exec(successCB, errorCB, 
-             "com.salesforce.smartstore", 
+        versionedExec(successCB, errorCB, 
              "pgUpsertSoupEntries", 
              [{"soupName":soupName, "entries":entries, "externalIdPath": externalIdPath}]
             );
@@ -195,8 +208,7 @@ cordova.define("salesforce/plugin/smartstore", function(require, exports, module
 
     var removeFromSoup = function (soupName, entryIds, successCB, errorCB) {
         console.log("SmartStore.removeFromSoup: '" + soupName + "' entryIds: " + entryIds);
-        cordova.exec(successCB, errorCB, 
-             "com.salesforce.smartstore", 
+        versionedExec(successCB, errorCB, 
              "pgRemoveFromSoup", 
              [{"soupName":soupName, "entryIds":entryIds}]
             );
@@ -205,8 +217,7 @@ cordova.define("salesforce/plugin/smartstore", function(require, exports, module
     //====== Cursor manipulation ======
     var moveCursorToPageIndex = function (cursor, newPageIndex, successCB, errorCB) {
         console.log("moveCursorToPageIndex: " + cursor.cursorId + "  newPageIndex: " + newPageIndex);
-        cordova.exec(successCB, errorCB, 
-             "com.salesforce.smartstore", 
+        versionedExec(successCB, errorCB, 
              "pgMoveCursorToPageIndex", 
              [{"cursorId":cursor.cursorId, "index":newPageIndex}]
             );
@@ -230,8 +241,7 @@ cordova.define("salesforce/plugin/smartstore", function(require, exports, module
 
     var closeCursor = function (cursor, successCB, errorCB) {
         console.log("closeCursor: " + cursor.cursorId);
-        cordova.exec(successCB, errorCB, 
-             "com.salesforce.smartstore", 
+        versionedExec(successCB, errorCB, 
              "pgCloseCursor", 
              [{"cursorId":cursor.cursorId}]
             );
@@ -241,8 +251,10 @@ cordova.define("salesforce/plugin/smartstore", function(require, exports, module
      * Part of the module that is public
      */
     module.exports = {
+        getVersion: getVersion,
         getLogLevel: getLogLevel,
         setLogLevel: setLogLevel,
+        getVersion: getVersion,
         buildAllQuerySpec: buildAllQuerySpec,
         buildExactQuerySpec: buildExactQuerySpec,
         buildRangeQuerySpec: buildRangeQuerySpec,

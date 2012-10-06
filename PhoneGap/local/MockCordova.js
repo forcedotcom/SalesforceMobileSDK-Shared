@@ -78,7 +78,9 @@
 
         // Mocking cordova's exec method by calling the functions registered with interceptExec
         var exec = function(successCB, errorCB, service, action, args) {
-            console.log("cordova.exec " + service + ":" + action);
+            var version = (args.length > 1 && typeof args == "object" && "version" in args[0] ? args[0].version : null);
+            if (version != null) { args.shift(); }
+            console.log("cordova.exec " + service + ":" + action + (version != null ? ":" + version : ""));
             var found = false;
             var req = service + ":" + action;
             for (var key in interceptors) {

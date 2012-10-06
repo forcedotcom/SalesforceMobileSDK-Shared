@@ -25,6 +25,22 @@
  */
 
 cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
+    var SDK_VERSION = "v2.0";
+
+    var getVersion = function() {
+        return SDK_VERSION;
+    };
+
+    // ====== Versioned exec ======
+    var versionedExec = function(successCB, errorCB, action, args) {
+        args.unshift({"version": getVersion()});
+        cordova.exec(successCB, errorCB, 
+             "com.salesforce.oauth", 
+             action,
+             args
+            );                  
+    };
+
     /**
      * OAuthProperties data structure, for plugin arguments.
      *   remoteAccessConsumerKey - String containing the remote access object ID (client ID).
@@ -58,7 +74,7 @@ cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
 	 * 	userAgent
 	 */
     var getAuthCredentials = function(success, fail) {
-        cordova.exec(success, fail, "com.salesforce.oauth","getAuthCredentials",[]);
+        versionedExec(success, fail, "getAuthCredentials",[]);
     };
     
     /**
@@ -78,7 +94,7 @@ cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
      *   userAgent
      */
     var authenticate = function(success, fail, oauthProperties) {
-        cordova.exec(success, fail, "com.salesforce.oauth", "authenticate", [JSON.stringify(oauthProperties)]);
+        versionedExec(success, fail, "authenticate", [JSON.stringify(oauthProperties)]);
     };
 
 
@@ -90,7 +106,7 @@ cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
      * will be logged out and asked to re-authenticate.
      */
     var logout = function() {
-        cordova.exec(null, null, "com.salesforce.oauth", "logoutCurrentUser", []);
+        versionedExec(null, null, "logoutCurrentUser", []);
     };
     
     /**
@@ -101,7 +117,7 @@ cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
      * initialized.
      */
     var getAppHomeUrl = function(success) {
-        cordova.exec(success, null, "com.salesforce.oauth", "getAppHomeUrl", []);
+        versionedExec(success, null, "getAppHomeUrl", []);
     };
 
 
@@ -109,6 +125,7 @@ cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
      * Part of the module that is public
      */
     module.exports = {
+        getVersion: getVersion,
         getAuthCredentials: getAuthCredentials,
         authenticate: authenticate,
         logout: logout,
