@@ -25,20 +25,12 @@
  */
 
 cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
+    // Version this js was shipped with
     var SDK_VERSION = "v2.0";
 
-    var getVersion = function() {
-        return SDK_VERSION;
-    };
+    var SERVICE = "com.salesforce.oauth";
 
-    var versionedExec = function(successCB, errorCB, action, args) {
-        args.unshift({"version": getVersion()});
-        cordova.exec(successCB, errorCB, 
-             "com.salesforce.oauth", 
-             action,
-             args
-            );                  
-    };
+    var exec = require("salesforce/util/exec").exec;
 
     /**
      * OAuthProperties data structure, for plugin arguments.
@@ -73,7 +65,7 @@ cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
 	 * 	userAgent
 	 */
     var getAuthCredentials = function(success, fail) {
-        versionedExec(success, fail, "getAuthCredentials",[]);
+        exec(SDK_VERSION, success, fail, SERVICE, "getAuthCredentials",[]);
     };
     
     /**
@@ -93,7 +85,7 @@ cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
      *   userAgent
      */
     var authenticate = function(success, fail, oauthProperties) {
-        versionedExec(success, fail, "authenticate", [JSON.stringify(oauthProperties)]);
+        exec(SDK_VERSION, success, fail, SERVICE, "authenticate", [JSON.stringify(oauthProperties)]);
     };
 
 
@@ -105,7 +97,7 @@ cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
      * will be logged out and asked to re-authenticate.
      */
     var logout = function() {
-        versionedExec(null, null, "logoutCurrentUser", []);
+        exec(SDK_VERSION, null, null, SERVICE, "logoutCurrentUser", []);
     };
     
     /**
@@ -116,7 +108,7 @@ cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
      * initialized.
      */
     var getAppHomeUrl = function(success) {
-        versionedExec(success, null, "getAppHomeUrl", []);
+        exec(SDK_VERSION, success, null, SERVICE, "getAppHomeUrl", []);
     };
 
 
@@ -124,7 +116,6 @@ cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
      * Part of the module that is public
      */
     module.exports = {
-        getVersion: getVersion,
         getAuthCredentials: getAuthCredentials,
         authenticate: authenticate,
         logout: logout,

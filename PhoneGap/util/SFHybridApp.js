@@ -343,6 +343,50 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
     };
 });
 
+/**
+ * Helper function used to call the native side
+ */
+cordova.define("salesforce/util/exec", function(require, exports, module) {
+
+    var exec = function(pluginVersion, successCB, errorCB, service, action, args) {
+        args.unshift({"version": pluginVersion});
+        return cordova.exec(successCB, errorCB, service, action, args);                  
+    };
+
+    /**
+     * Part of the module that is public
+     */
+    module.exports = {
+        exec: exec
+    };
+});
+
+cordova.define("salesforce/plugin/sdkinfo", function(require, exports, module) {
+    // Version this js was shipped with
+    var SDK_VERSION = "v2.0";
+
+    var SERVICE = "com.salesforce.sdkinfo";
+
+    var exec = require("salesforce/util/exec").exec;
+
+    /**
+     * Gets the SDK info
+     */
+    var getInfo = function(success) {
+        exec(SDK_VERSION, success, null, SERVICE, "getInfo", []);
+    };
+
+
+    /**
+     * Part of the module that is public
+     */
+    module.exports = {
+        getInfo: getInfo
+    };
+});
+
+
+
 // For backward compatibility
 var SFHybridApp = {
     LocalAppStartData: cordova.require("salesforce/util/bootstrap").LocalAppStartData,
