@@ -372,9 +372,9 @@ cordova.define("salesforce/plugin/sdkinfo", function(require, exports, module) {
     /**
       * SDKInfo data structure
       */
-    var SDKInfo = function(sdkVersion, smartStoreAvailable, appName, appVersion) {
+    var SDKInfo = function(sdkVersion, forcePluginsAvailable, appName, appVersion) {
         this.sdkVersion = sdkVersion;
-        this.smartStoreAvailable = smartStoreAvailable;
+        this.forcePluginsAvailable = forcePluginsAvailable;
         this.appName = appName;
         this.appVersion = appVersion;
     };
