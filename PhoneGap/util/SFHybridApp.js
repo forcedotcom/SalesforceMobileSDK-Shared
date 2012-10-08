@@ -363,7 +363,7 @@ cordova.define("salesforce/util/exec", function(require, exports, module) {
 
 cordova.define("salesforce/plugin/sdkinfo", function(require, exports, module) {
     // Version this js was shipped with
-    var SDK_VERSION = "v2.0";
+    var SDK_VERSION = "2.0";
 
     var SERVICE = "com.salesforce.sdkinfo";
 
