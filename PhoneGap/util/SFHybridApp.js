@@ -370,10 +370,20 @@ cordova.define("salesforce/plugin/sdkinfo", function(require, exports, module) {
     var exec = require("salesforce/util/exec").exec;
 
     /**
-     * Gets the SDK info
+      * SDKInfo data structure
+      */
+    var SDKInfo = function(sdkVersion, smartStoreAvailable, appName, appVersion) {
+        this.sdkVersion = sdkVersion;
+        this.smartStoreAvailable = smartStoreAvailable;
+        this.appName = appName;
+        this.appVersion = appVersion;
+    };
+
+    /**
+     * Returns a populated SDKInfo object (via a callback)
      */
-    var getInfo = function(success) {
-        exec(SDK_VERSION, success, null, SERVICE, "getInfo", []);
+    var getInfo = function(successCB, errorCB) {
+        exec(SDK_VERSION, successCB, errorCB, SERVICE, "getInfo", []);
     };
 
 
@@ -381,7 +391,10 @@ cordova.define("salesforce/plugin/sdkinfo", function(require, exports, module) {
      * Part of the module that is public
      */
     module.exports = {
-        getInfo: getInfo
+        getInfo: getInfo,
+
+        // Constructor
+        SDKInfo: SDKInfo
     };
 });
 
