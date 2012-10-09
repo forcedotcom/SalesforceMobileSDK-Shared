@@ -57,32 +57,6 @@ AbstractSmartStoreTestSuite.prototype.runTest= function (methName) {
 };
 
 /**
- * Build a function returning a promise from a function that takes a success and error callback as last arguments
- * The new function will take the same arguments as the original function minus the two callback functions
- */
-var promiser = function(object, methodName, noAssertionOnFailure) {
-    var retfn = function () {
-        console.log("In " + methodName);
-        var self = this;
-        var args = $.makeArray(arguments);
-        var d = $.Deferred();
-        args.push(function() {
-            console.log(methodName + " succeeded");
-            d.resolve.apply(d, arguments);
-        });
-        args.push(function() {
-            console.log(methodName + " failed");
-            //console.log("Failure-->" + JSON.stringify($.makeArray(arguments)));
-            if (!noAssertionOnFailure) self.setAssertionFailed(methodName + " failed");
-            d.reject.apply(d, arguments);
-        });
-        object[methodName].apply(object, args);
-        return d.promise();
-    };
-    return retfn;
-}
-
-/**
  * Helper methods to do smartstore operations using promises
  */
 AbstractSmartStoreTestSuite.prototype.registerSoup = promiser(navigator.smartstore, "registerSoup");
