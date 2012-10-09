@@ -15,7 +15,24 @@
         </style>
 
         <script>
-        document.addEventListener("deviceready", cordova.require("salesforce/util/bootstrap").onDeviceReady);
+            document.addEventListener("deviceready", cordova.require("salesforce/util/bootstrap").onDeviceReady);
+        </script>
+
+        <script>
+            document.addEventListener("bootstrapStatusEvent", handleStatus);
+            function handleStatus(statusEvent) {
+
+            	/**
+            	 * If an error occurs, display a popup, and reload the page.
+            	 */
+                if (statusEvent.isError) {
+                    alert(statusEvent.description);
+                    location.reload();
+                } else {
+                    var statusDiv = document.getElementById("statusText");
+                    statusDiv.innerHTML = statusEvent.description;
+                }
+            };
         </script>
     </head>
 
@@ -28,6 +45,9 @@
             <fieldset id="console" class="logWindow">
                 <legend>Debug Console</legend>
             </fieldset>
+        </div>
+        <div id="status">
+            <div id="statusText">Loading...</div>
         </div>
     </body>
 </html>
