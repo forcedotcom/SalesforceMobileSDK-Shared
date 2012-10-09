@@ -84,6 +84,40 @@ cordova.define("salesforce/util/logger", function(require, exports, module) {
     };
 });
 
+cordova.define("salesforce/util/event", function(require, exports, module) {
+
+    var logger = require("salesforce/util/logger");
+
+    /**
+     * Enumeration of event types.
+     */
+    var EventType = {
+        AUTHENTICATING: {code: 0, description: "Authenticating...", isError: false},
+        STARTING: {code: 1, description: "Loading application", isError: false},
+        OFFLINE: {code: 2, description: "Your device is offline. Can't continue.", isError: true}
+    };
+           
+    /**
+     * Dispatches event with current status text and success indicator.
+     */
+    var sendStatusEvent = function(statusEvent) {
+        if (statusEvent.isError) {
+            logger.logError(statusEvent.description);
+        } else {
+            logger.logToConsole(statusEvent.description);
+        }
+        cordova.fireDocumentEvent('bootstrapStatusEvent', statusEvent);
+    };
+
+    /**
+     * Part of the module that is public
+     */
+    module.exports = {
+        EventType: EventType,
+        sendStatusEvent: sendStatusEvent
+    };
+});
+
 /**
  * Utility functions used at startup 
  */
@@ -139,7 +173,8 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
     var onDeviceReady = function() {
         logger.logToConsole("onDeviceReady called: Cordova is ready.");
         var oauth = require("salesforce/plugin/oauth");
-        
+        var event = require("salesforce/util/event");
+
         // Validate the start data configuration.
         if (!isValidStartData(startData)) {
             return;
@@ -154,10 +189,9 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
             ((startData instanceof RemoteAppStartData)
              || startData.shouldAuthenticate)) {
             logger.logToConsole("Device is OFFLINE.  Trying to load cached app data.");
-            
             oauth.getAppHomeUrl(function (urlString) {
                 if (urlString === "") {
-                    logger.logError("Device is offline, and no cached data could be found.  Cannot continue.");
+                    event.sendStatusEvent(event.EventType.OFFLINE);
                 } else {
                     logger.logToConsole("Trying to load cached app at " + urlString);
                     loadUrl(urlString);
@@ -166,7 +200,8 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
         } else {
             logger.logToConsole("Device is ONLINE, OR app is not otherwise required to be online.");
             if (startData.shouldAuthenticate) {
-                logger.logToConsole("Calling authenticate");
+                event.sendStatusEvent(event.EventType.AUTHENTICATING);
+
                 // Authenticate via the Salesforce OAuth plugin.
                 var oauthProperties = new oauth.OAuthProperties(remoteAccessConsumerKey, 
                                                                 oauthRedirectURI, 
@@ -184,7 +219,6 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
         }
     };
 
-
     /**
      * Creates the local URL to load.
      *   page - The local page value used to create the URL.
@@ -200,7 +234,6 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
             return page; 
         }
     };
-
 
     /**
      * Creates a fullly qualified URL from server and page information.
@@ -320,6 +353,7 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
             }
         }
         logger.logToConsole("fullAppUrl: " + logger.sanitizeUrlParamsForLogging(fullAppUrl, [ "sid" ]));
+        event.sendStatusEvent(event.EventType.STARTING);
         loadUrl(fullAppUrl);
     };
     
@@ -397,8 +431,6 @@ cordova.define("salesforce/plugin/sdkinfo", function(require, exports, module) {
         SDKInfo: SDKInfo
     };
 });
-
-
 
 // For backward compatibility
 var SFHybridApp = {
