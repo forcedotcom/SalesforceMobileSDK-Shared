@@ -343,6 +343,7 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
     var loginSuccess = function(oauthCredentials) {
         logger.logToConsole("loginSuccess");
         var fullAppUrl;
+        var event = require("salesforce/util/event");
         if (startData instanceof LocalAppStartData) {
             fullAppUrl =  buildLocalUrl(startData.appStartUrl);
         } else if (startData instanceof RemoteAppStartData) {
