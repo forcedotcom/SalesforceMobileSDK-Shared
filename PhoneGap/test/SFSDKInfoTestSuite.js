@@ -60,7 +60,11 @@ SDKInfoTestSuite.prototype.testGetInfo = function()  {
             QUnit.equal(sdkInfo.sdkVersion.indexOf("2.0"), 0, "expected different sdk version");
             QUnit.equal(sdkInfo.appName, "ForcePluginsTest", "expected different app name");
             QUnit.equal(sdkInfo.appVersion, "1.0", "expected different app version");
-            // TBD QUnit.equal(sdkInfo.forcePluginsAvailable.length, 0, "expected different force plugins available");
+            QUnit.equal(sdkInfo.forcePluginsAvailable.length, 4, "wrong force plugins");
+            QUnit.equal(sdkInfo.forcePluginsAvailable[0], "com.salesforce.oauth", "wrong force plugins");
+            QUnit.equal(sdkInfo.forcePluginsAvailable[1], "com.salesforce.sdkinfo", "wrong force plugins");
+            QUnit.equal(sdkInfo.forcePluginsAvailable[2], "com.salesforce.testrunner", "wrong force plugins");
+            QUnit.equal(sdkInfo.forcePluginsAvailable[3], "com.salesforce.smartstore", "wrong force plugins");
             self.finalizeTest();
         });
 }; 
