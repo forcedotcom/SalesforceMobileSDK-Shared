@@ -134,7 +134,7 @@ cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
         getAppHomeUrl: getAppHomeUrl,
 
         // Constructor
-        OAuthProperties: OAuthProperties,
+        OAuthProperties: OAuthProperties
     };
 });
 
