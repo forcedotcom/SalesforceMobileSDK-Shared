@@ -1,5 +1,3 @@
-     
-     
 //-----------------------------------------------------------------
 // Replace the values below with your own app configuration values.
 //-----------------------------------------------------------------
@@ -32,9 +30,9 @@ var autoRefreshOnForeground = true;
 // Whether the container app should automatically refresh our oauth session periodically
 var autoRefreshPeriodically = true; 
 
+// At launch, should the app attempt to load previously cached content, when offline?
+var attemptOfflineLoad = false;
+
 //-----------------------------------------------------------------
 // End configuration block
 //-----------------------------------------------------------------
-        
-            
-
