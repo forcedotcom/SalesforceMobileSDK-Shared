@@ -31,7 +31,7 @@ var autoRefreshOnForeground = true;
 var autoRefreshPeriodically = true; 
 
 // At launch, should the app attempt to load previously cached content, when offline?
-var attemptOfflineLoad = false;
+var attemptOfflineLoad = true;
 
 //-----------------------------------------------------------------
 // End configuration block
