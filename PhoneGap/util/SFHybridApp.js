@@ -16,12 +16,14 @@ cordova.define("salesforce/util/logger", function(require, exports, module) {
      */
     var log = function(section, txt) {
         console.log("jslog: " + txt);
-        var now = new Date();
-        var fullTxt = "<p><i><b>* At " + (now.getTime() - appStartTime) + "ms:</b></i> " + txt + "</p>";
-        var sectionElt = document.getElementById(section);
-        if (sectionElt) {
-            sectionElt.style.display = "block";
-            document.getElementById(section).innerHTML += fullTxt;
+        if ((typeof debugMode !== "undefined") && (debugMode === true)) {
+            var now = new Date();
+            var fullTxt = "<p><i><b>* At " + (now.getTime() - appStartTime) + "ms:</b></i> " + txt + "</p>";
+            var sectionElt = document.getElementById(section);
+            if (sectionElt) {
+                sectionElt.style.display = "block";
+                document.getElementById(section).innerHTML += fullTxt;
+            }
         }
     };
 
@@ -31,9 +33,7 @@ cordova.define("salesforce/util/logger", function(require, exports, module) {
      *   txt - The text (html) to log to the console.
      */
     var logToConsole = function(txt) {
-        if ((typeof debugMode !== "undefined") && (debugMode === true)) {
-            log("console", txt);
-        }
+        log("console", txt);
     };
 
     /**
@@ -188,15 +188,21 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
         if (!isDeviceOnline &&
             ((startData instanceof RemoteAppStartData)
              || startData.shouldAuthenticate)) {
-            logger.logToConsole("Device is OFFLINE.  Trying to load cached app data.");
-            oauth.getAppHomeUrl(function (urlString) {
-                if (urlString === "") {
-                    event.sendStatusEvent(event.EventType.OFFLINE);
-                } else {
-                    logger.logToConsole("Trying to load cached app at " + urlString);
-                    loadUrl(urlString);
-                }
-            });
+            // Only attempt to load cached data if the app allows it.  Default is true (if attemptOfflineLoad
+            // is undefined), for backwards compatibility.
+            if ((typeof attemptOfflineLoad === 'undefined') || attemptOfflineLoad === true) {
+                logger.logToConsole("Device is OFFLINE.  Trying to load cached app data.");
+                oauth.getAppHomeUrl(function (urlString) {
+                    if (urlString === "") {
+                        event.sendStatusEvent(event.EventType.OFFLINE);
+                    } else {
+                        logger.logToConsole("Trying to load cached app at " + urlString);
+                        loadUrl(urlString);
+                    }
+                });
+            } else {
+                event.sendStatusEvent(event.EventType.OFFLINE);
+            }
         } else {
             logger.logToConsole("Device is ONLINE, OR app is not otherwise required to be online.");
             if (startData.shouldAuthenticate) {
