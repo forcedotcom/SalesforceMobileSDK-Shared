@@ -390,7 +390,7 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
 cordova.define("salesforce/util/exec", function(require, exports, module) {
 
     var exec = function(pluginVersion, successCB, errorCB, service, action, args) {
-        args.unshift({"version": pluginVersion});
+        args.unshift("pluginSDKVersion:" + pluginVersion);
         return cordova.exec(successCB, errorCB, service, action, args);                  
     };
 
