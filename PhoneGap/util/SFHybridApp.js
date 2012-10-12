@@ -307,8 +307,8 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
      */
     var deviceIsOnline = function() {
         var connType;
-        if (navigator && navigator.network && navigator.network.connection) {
-            connType = navigator.network.connection.type;
+        if (navigator && navigator.connection) {
+            connType = navigator.connection.type;
             logger.logToConsole("deviceIsOnline connType: " + connType);
         } else {
             logger.logToConsole("deviceIsOnline connType is undefined.");
