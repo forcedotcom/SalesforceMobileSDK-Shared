@@ -25,6 +25,10 @@
  */
 
 cordova.define("salesforce/plugin/testrunner", function(require, exports, module) {
+    // Version this js was shipped with
+    var SDK_VERSION = "2.0";
+    var SERVICE = "com.salesforce.testrunner";
+    var exec = require("salesforce/util/exec").exec;
 
     // Private
     var _testSuiteClassName = null;
@@ -41,11 +45,12 @@ cordova.define("salesforce/plugin/testrunner", function(require, exports, module
 
     var onReadyForTests = function (successCB, errorCB) {
         console.log("TestRunner.onReadyForTests");
-        cordova.exec(successCB, errorCB, 
-                     "com.salesforce.testrunner",
-                     "onReadyForTests",
-                     []
-                    );                  
+        exec(SDK_VERSION,
+             successCB, errorCB, 
+             SERVICE,
+             "onReadyForTests",
+             []
+            );                  
     };
 
     var startTest =  function(testName) {
@@ -55,16 +60,17 @@ cordova.define("salesforce/plugin/testrunner", function(require, exports, module
 
     var onTestComplete = function (testName, success, message, status, successCB, errorCB) {
         console.log("TestRunner.onTestComplete: " + testName + ",success:" + success);
-        cordova.exec(successCB, errorCB, 
-                     "com.salesforce.testrunner",
-                     "onTestComplete",
-                     [{
-                         "testName": testName, 
-                         "success": success, 
-                         "message": message, 
-                         "testDuration": status.testDuration
-                     }]
-                    );
+        exec(SDK_VERSION,
+             successCB, errorCB, 
+             SERVICE,
+             "onTestComplete",
+             [{
+                 "testName": testName, 
+                 "success": success, 
+                 "message": message, 
+                 "testDuration": status.testDuration
+             }]
+            );
     };
 
     module.exports = {
