@@ -38,22 +38,6 @@ cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
      */
     var logoutInitiated = false;
  
-    /**
-     * OAuthProperties data structure, for plugin arguments.
-     *   remoteAccessConsumerKey - String containing the remote access object ID (client ID).
-     *   oauthRedirectURI        - String containing the redirect URI configured for the remote access object.
-     *   oauthScopes             - Array of strings specifying the authorization scope of the app (e.g ["api", "visualforce"]).
-     *   autoRefreshOnForeground - Boolean, determines whether the container automatically refreshes OAuth session when app is foregrounded
-     *   autoRefreshPeriodically - Boolean, determines whether the container automatically refreshes OAuth session periodically
-     */
-    var OAuthProperties = function (remoteAccessConsumerKey, oauthRedirectURI, oauthScopes, autoRefreshOnForeground, autoRefreshPeriodically) {
-        this.remoteAccessConsumerKey = remoteAccessConsumerKey;
-        this.oauthRedirectURI = oauthRedirectURI;
-        this.oauthScopes = oauthScopes;
-        this.autoRefreshOnForeground = autoRefreshOnForeground;
-        this.autoRefreshPeriodically = autoRefreshPeriodically;
-    };
-
 	/**
 	 * Obtain authentication credentials, calling 'authenticate' only if necessary.
 	 * Most index.html authors can simply use this method to obtain auth credentials
@@ -78,8 +62,6 @@ cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
      * Initiates the authentication process, with the given app configuration.
      *   success         - The success callback function to use.
      *   fail            - The failure/error callback function to use.
-     *   oauthProperties - The configuration properties for the authentication process.
-     *                     See OAuthProperties() below.
      * cordova returns a dictionary with:
      *   accessToken
      *   refreshToken
@@ -90,8 +72,8 @@ cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
      *   instanceUrl
      *   userAgent
      */
-    var authenticate = function (success, fail, oauthProperties) {
-        exec(SDK_VERSION, success, fail, SERVICE, "authenticate", [JSON.stringify(oauthProperties)]);
+    var authenticate = function (success, fail) {
+        exec(SDK_VERSION, success, fail, SERVICE, "authenticate");
     };
 
     /**
