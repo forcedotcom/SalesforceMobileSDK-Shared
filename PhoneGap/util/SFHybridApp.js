@@ -150,7 +150,7 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
      * Part of the module that is public
      */
     module.exports = {
-        deviceIsOnline: deviceIsOnline,
+        deviceIsOnline: deviceIsOnline
     };
 });
 
