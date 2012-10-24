@@ -26,7 +26,7 @@
 
 cordova.define("salesforce/plugin/smartstore", function (require, exports, module) {
     // Version this js was shipped with
-    var SDK_VERSION = "2.0";
+    var SDK_VERSION = "1.4";
 
     var SERVICE = "com.salesforce.smartstore";
 
