@@ -74,6 +74,8 @@ AbstractSmartStoreTestSuite.prototype.moveCursorToPreviousPage = promiser(naviga
 AbstractSmartStoreTestSuite.prototype.registerSoupNoAssertion = promiser(navigator.smartstore, "registerSoup", true);
 AbstractSmartStoreTestSuite.prototype.querySoupNoAssertion = promiser(navigator.smartstore, "querySoup", true);
 AbstractSmartStoreTestSuite.prototype.upsertSoupEntriesNoAssertion = promiser(navigator.smartstore, "upsertSoupEntries", true);
+AbstractSmartStoreTestSuite.prototype.moveCursorToNextPageNoAssertion = promiser(navigator.smartstore, "moveCursorToNextPage", true);
+AbstractSmartStoreTestSuite.prototype.moveCursorToPreviousPageNoAssertion = promiser(navigator.smartstore, "moveCursorToPreviousPage", true);
 
 AbstractSmartStoreTestSuite.prototype.registerDefaultSoup = function() {
     return this.registerSoup(this.defaultSoupName, this.defaultSoupIndexes);

@@ -219,17 +219,21 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
     var moveCursorToNextPage = function (cursor, successCB, errorCB) {
         var newPageIndex = cursor.currentPageIndex + 1;
         if (newPageIndex >= cursor.totalPages) {
-            throw new Error("moveCursorToNextPage called while on last page");
+            errorCB(cursor, new Error("moveCursorToNextPage called while on last page"));
         }
-        moveCursorToPageIndex(cursor, newPageIndex, successCB, errorCB);
+        else {
+            moveCursorToPageIndex(cursor, newPageIndex, successCB, errorCB);
+        }
     };
 
     var moveCursorToPreviousPage = function (cursor, successCB, errorCB) {
         var newPageIndex = cursor.currentPageIndex - 1;
         if (newPageIndex < 0) {
-            throw new Error("moveCursorToPreviousPage called while on first page");
+            errorCB(cursor, new Error("moveCursorToPreviousPage called while on first page"));
         }
-        moveCursorToPageIndex(cursor, newPageIndex, successCB, errorCB);
+        else {
+            moveCursorToPageIndex(cursor, newPageIndex, successCB, errorCB);
+        }
     };
 
     var closeCursor = function (cursor, successCB, errorCB) {
