@@ -45,20 +45,20 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
      * SoupQuerySpec constructor
      */
     var SoupQuerySpec = function (path) {
-	//the kind of query, one of: "exact","range", or "like":
-	//"exact" uses matchKey, "range" uses beginKey and endKey, "like" uses likeKey
-	this.queryType = "exact";
+    //the kind of query, one of: "exact","range", or "like":
+    //"exact" uses matchKey, "range" uses beginKey and endKey, "like" uses likeKey
+    this.queryType = "exact";
 
         //path for the original IndexSpec you wish to use for search: may be a compound path eg Account.Owner.Name
         this.indexPath = path;
 
-	//for queryType "exact"
+        //for queryType "exact"
         this.matchKey = null;
 
         //for queryType "like"
-	this.likeKey = null;
- 
-	//for queryType "range"
+        this.likeKey = null;
+        
+        //for queryType "range"
         //the value at which query results may begin
         this.beginKey = null;
         //the value at which query results may end
@@ -106,40 +106,40 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
     // Returns a cursor that will page through all soup entries in order by the given path value
     // Internally it simply does a range query with null begin and end keys
     var buildAllQuerySpec = function (path, order, pageSize) {
-	    var inst = new SoupQuerySpec(path);
-	    inst.queryType = "range";
-	    if (order) { inst.order = order; } // override default only if a value was specified
-	    if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
-	    return inst;
+        var inst = new SoupQuerySpec(path);
+        inst.queryType = "range";
+        if (order) { inst.order = order; } // override default only if a value was specified
+        if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+        return inst;
     };
 
     // Returns a cursor that will page all entries exactly matching the matchKey value for path
     var buildExactQuerySpec = function (path, matchKey, pageSize) {
-	    var inst = new SoupQuerySpec(path);
-	    inst.matchKey = matchKey;
-	    if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
-	    return inst;
+        var inst = new SoupQuerySpec(path);
+        inst.matchKey = matchKey;
+        if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+        return inst;
     };
 
     // Returns a cursor that will page all entries in the range beginKey ...endKey for path
     var buildRangeQuerySpec = function (path, beginKey, endKey, order, pageSize) {
-	    var inst = new SoupQuerySpec(path);
-	    inst.queryType = "range";
-	    inst.beginKey = beginKey;
-	    inst.endKey = endKey;
-	    if (order) { inst.order = order; } // override default only if a value was specified
-	    if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
-	    return inst;
+        var inst = new SoupQuerySpec(path);
+        inst.queryType = "range";
+        inst.beginKey = beginKey;
+        inst.endKey = endKey;
+        if (order) { inst.order = order; } // override default only if a value was specified
+        if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+        return inst;
     };
 
     // Returns a cursor that will page all entries matching the given likeKey value for path
     var buildLikeQuerySpec = function (path, likeKey, order, pageSize) {
-	    var inst = new SoupQuerySpec(path);
-	    inst.queryType = "like";
-	    inst.likeKey = likeKey;
-	    if (order) { inst.order = order; } // override default only if a value was specified
-	    if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
-	    return inst;
+        var inst = new SoupQuerySpec(path);
+        inst.queryType = "like";
+        inst.likeKey = likeKey;
+        if (order) { inst.order = order; } // override default only if a value was specified
+        if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+        return inst;
     };
 
     // ====== Soup manipulation ======
@@ -186,7 +186,7 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
     };
 
     var upsertSoupEntries = function (soupName, entries, successCB, errorCB) {
-	    upsertSoupEntriesWithExternalId(soupName, entries, "_soupEntryId", successCB, errorCB);
+        upsertSoupEntriesWithExternalId(soupName, entries, "_soupEntryId", successCB, errorCB);
     };
 
     var upsertSoupEntriesWithExternalId = function (soupName, entries, externalIdPath, successCB, errorCB) {
@@ -219,7 +219,7 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
     var moveCursorToNextPage = function (cursor, successCB, errorCB) {
         var newPageIndex = cursor.currentPageIndex + 1;
         if (newPageIndex >= cursor.totalPages) {
-            return;//TODO callback with error?
+            throw new Error("moveCursorToNextPage called while on last page");
         }
         moveCursorToPageIndex(cursor, newPageIndex, successCB, errorCB);
     };
@@ -227,7 +227,7 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
     var moveCursorToPreviousPage = function (cursor, successCB, errorCB) {
         var newPageIndex = cursor.currentPageIndex - 1;
         if (newPageIndex < 0) {
-            return;//TODO callback with error?
+            throw new Error("moveCursorToPreviousPage called while on first page");
         }
         moveCursorToPageIndex(cursor, newPageIndex, successCB, errorCB);
     };

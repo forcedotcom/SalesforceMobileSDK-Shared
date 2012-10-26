@@ -69,6 +69,7 @@ AbstractSmartStoreTestSuite.prototype.upsertEntriesToSoupWithExternalIdPath = pr
 AbstractSmartStoreTestSuite.prototype.retrieveSoupEntries = promiser(navigator.smartstore, "retrieveSoupEntries");
 AbstractSmartStoreTestSuite.prototype.closeCursor = promiser(navigator.smartstore, "closeCursor");
 AbstractSmartStoreTestSuite.prototype.moveCursorToNextPage = promiser(navigator.smartstore, "moveCursorToNextPage");
+AbstractSmartStoreTestSuite.prototype.moveCursorToPreviousPage = promiser(navigator.smartstore, "moveCursorToPreviousPage");
 
 AbstractSmartStoreTestSuite.prototype.registerSoupNoAssertion = promiser(navigator.smartstore, "registerSoup", true);
 AbstractSmartStoreTestSuite.prototype.querySoupNoAssertion = promiser(navigator.smartstore, "querySoup", true);

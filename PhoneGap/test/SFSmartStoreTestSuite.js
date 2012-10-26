@@ -503,6 +503,58 @@ SmartStoreTestSuite.prototype.testManipulateCursor = function()  {
 };
 
 /**
+ * TEST testManipulateCursorOutOfBounds
+ */
+SmartStoreTestSuite.prototype.testManipulateCursorOutOfBounds = function()  {
+  console.log("In SFSmartStoreTestSuite.testManipulateCursorOutOfBounds");  
+  var self = this;
+
+  var NUM_ENTRIES = 8;
+  var PAGE_SIZE = 5;
+  var NUM_PAGES = Math.ceil(NUM_ENTRIES / PAGE_SIZE); // 2
+  
+  self.addGeneratedEntriesToTestSoup(NUM_ENTRIES)
+        .pipe(function(entries) {
+            QUnit.equal(entries.length, NUM_ENTRIES);
+            var querySpec = navigator.smartstore.buildAllQuerySpec("Name",null,PAGE_SIZE);
+            return self.querySoup(self.defaultSoupName, querySpec);
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(cursor.currentPageIndex, 0, "currentPageIndex correct");
+            try {
+                self.moveCursorToPreviousPage(cursor);
+                self.setAssertionFailed("moveCursorToPreviousPage should have thrown an exception");
+            }
+            catch (e) {
+                QUnit.ok(e.message.indexOf("moveCursorToPreviousPage") == 0, "Expected error about moveCursorToPreviousPage");
+                QUnit.equal(cursor.currentPageIndex, 0, "currentPageIndex should not have changed");
+            }
+            return self.moveCursorToNextPage(cursor);
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(cursor.currentPageIndex, 1, "currentPageIndex correct");
+            try {
+                self.moveCursorToNextPage(cursor);
+                self.setAssertionFailed("moveCursorToMextPage should have thrown an exception");
+            }
+            catch (e) {
+                QUnit.ok(e.message.indexOf("moveCursorToNextPage") == 0, "Expected error about moveCursorToNextPage");
+                QUnit.equal(cursor.currentPageIndex, 1, "currentPageIndex should not have changed");
+            }
+            return self.moveCursorToPreviousPage(cursor);
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(cursor.currentPageIndex, 0, "currentPageIndex correct");
+            return self.closeCursor(cursor);
+        })
+        .done(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            self.finalizeTest(); 
+        });
+};
+
+
+/**
  * TEST unusual soup names
  */
 SmartStoreTestSuite.prototype.testArbitrarySoupNames = function() {
