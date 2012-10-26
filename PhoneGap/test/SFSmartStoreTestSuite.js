@@ -391,7 +391,7 @@ SmartStoreTestSuite.prototype.testQuerySoupBadQuerySpec = function()  {
             return self.querySoupNoAssertion(self.defaultSoupName, querySpec);
         })
         .done(function(cursor) {
-                self.setAssertionFailed("querySoup with bogus querySpec should fail");
+            self.setAssertionFailed("querySoup with bogus querySpec should fail");
         })
         .fail(function(param) { 
             QUnit.ok(true,"querySoup with bogus querySpec should fail");
@@ -494,6 +494,14 @@ SmartStoreTestSuite.prototype.testManipulateCursor = function()  {
         })
         .pipe(function(cursor) {
             checkPage(cursor, 2);
+            return self.moveCursorToPreviousPage(cursor);
+        })
+        .pipe(function(cursor) {
+            checkPage(cursor, 1);
+            return self.moveCursorToNextPage(cursor);
+        })
+        .pipe(function(cursor) {
+            checkPage(cursor, 2);
             return self.closeCursor(cursor);
         })
         .done(function(param) { 
@@ -501,6 +509,76 @@ SmartStoreTestSuite.prototype.testManipulateCursor = function()  {
             self.finalizeTest(); 
         });
 };
+
+/**
+ * TEST testMoveCursorToPreviousPageFromFirstPage
+ */
+SmartStoreTestSuite.prototype.testMoveCursorToPreviousPageFromFirstPage = function()  {
+  console.log("In SFSmartStoreTestSuite.testMoveCursorToPreviousPageFromFirstPage");  
+  var self = this;
+
+  var NUM_ENTRIES = 8;
+  var PAGE_SIZE = 5;
+  var NUM_PAGES = Math.ceil(NUM_ENTRIES / PAGE_SIZE); // 2
+  
+  self.addGeneratedEntriesToTestSoup(NUM_ENTRIES)
+        .pipe(function(entries) {
+            QUnit.equal(entries.length, NUM_ENTRIES);
+            var querySpec = navigator.smartstore.buildAllQuerySpec("Name",null,PAGE_SIZE);
+            return self.querySoup(self.defaultSoupName, querySpec);
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(cursor.currentPageIndex, 0, "currentPageIndex correct");
+            return self.moveCursorToPreviousPageNoAssertion(cursor);
+        })
+        .fail(function(cursor, error) {
+            QUnit.equal(cursor.currentPageIndex, 0, "currentPageIndex should not have changed");
+            QUnit.ok(error.message.indexOf("moveCursorToPreviousPage") == 0, "error should be about moveCursorToPreviousPage");
+            self.closeCursor(cursor)
+                .done(function(param) { 
+                    QUnit.ok(true,"closeCursor ok"); 
+                    self.finalizeTest(); 
+                });
+        });
+};
+
+
+/**
+ * TEST testMoveCursorToNextPageFromLastPage
+ */
+SmartStoreTestSuite.prototype.testMoveCursorToNextPageFromLastPage = function()  {
+  console.log("In SFSmartStoreTestSuite.testMoveCursorToNextPageFromLastPage");  
+  var self = this;
+
+  var NUM_ENTRIES = 8;
+  var PAGE_SIZE = 5;
+  var NUM_PAGES = Math.ceil(NUM_ENTRIES / PAGE_SIZE); // 2
+  
+  self.addGeneratedEntriesToTestSoup(NUM_ENTRIES)
+        .pipe(function(entries) {
+            QUnit.equal(entries.length, NUM_ENTRIES);
+            var querySpec = navigator.smartstore.buildAllQuerySpec("Name",null,PAGE_SIZE);
+            return self.querySoup(self.defaultSoupName, querySpec);
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(cursor.currentPageIndex, 0, "currentPageIndex correct");
+            return self.moveCursorToNextPage(cursor);
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(cursor.currentPageIndex, 1, "currentPageIndex correct");
+            return self.moveCursorToNextPageNoAssertion(cursor);
+        })
+        .fail(function(cursor, error) {
+            QUnit.equal(cursor.currentPageIndex, 1, "currentPageIndex should not have changed");
+            QUnit.ok(error.message.indexOf("moveCursorToNextPage") == 0, "error should be about moveCursorToNextPage");
+            self.closeCursor(cursor)
+                .done(function(param) { 
+                    QUnit.ok(true,"closeCursor ok"); 
+                    self.finalizeTest(); 
+                });
+        });
+};
+
 
 /**
  * TEST unusual soup names
