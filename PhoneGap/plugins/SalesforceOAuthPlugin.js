@@ -91,7 +91,14 @@ cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
      *   userAgent
      */
     var authenticate = function (success, fail, oauthProperties) {
-        exec(SDK_VERSION, success, fail, SERVICE, "authenticate", [JSON.stringify(oauthProperties)]);
+        var oauthPropertiesJson = {
+            "remoteAccessConsumerKey": oauthProperties.remoteAccessConsumerKey,
+            "oauthRedirectURI": oauthProperties.oauthRedirectURI,
+            "oauthScopes": oauthProperties.oauthScopes,
+            "autoRefreshOnForeground": oauthProperties.autoRefreshOnForeground,
+            "autoRefreshPeriodically": oauthProperties.autoRefreshPeriodically
+        };
+        exec(SDK_VERSION, success, fail, SERVICE, "authenticate", [ oauthPropertiesJson ]);
     };
 
     /**
