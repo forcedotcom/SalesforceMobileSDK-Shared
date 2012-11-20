@@ -150,7 +150,7 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
      * Part of the module that is public
      */
     module.exports = {
-        deviceIsOnline: deviceIsOnline,
+        deviceIsOnline: deviceIsOnline
     };
 });
 
@@ -222,8 +222,6 @@ cordova.define("salesforce/plugin/sdkinfo", function(require, exports, module) {
 
 // For backward compatibility
 var SFHybridApp = {
-    LocalAppStartData: cordova.require("salesforce/util/bootstrap").LocalAppStartData,
-    RemoteAppStartData: cordova.require("salesforce/util/bootstrap").RemoteAppStartData,
     logToConsole: cordova.require("salesforce/util/logger").logToConsole,
     logError: cordova.require("salesforce/util/logger").logError
 };
