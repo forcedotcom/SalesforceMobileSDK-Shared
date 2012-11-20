@@ -78,6 +78,7 @@ var MockSmartStore = (function(window) {
             return JSON.stringify({
                 soups: _soups,
                 soupIndexSpecs: _soupIndexSpecs,
+                cursors: _cursors,
                 nextSoupEltIds: _nextSoupEltIds,
                 nextCursorId: _nextCursorId
             });
