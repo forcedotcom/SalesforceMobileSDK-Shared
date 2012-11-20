@@ -160,6 +160,17 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
 cordova.define("salesforce/util/exec", function(require, exports, module) {
 
     var exec = function(pluginVersion, successCB, errorCB, service, action, args) {
+        var defaultSuccessCB = function() {
+            console.log(service + ":" + action + " succeeded");
+        };
+
+        var defaultErrorCB = function() {
+            console.log(service + ":" + action + " failed");
+        };
+
+        successCB = typeof successCB !== "function" ? defaultSuccessCB : successCB;
+        error = typeof errorCB !== "function" ? defaultErrorCB : errorCB;
+
         args.unshift("pluginSDKVersion:" + pluginVersion);
         return cordova.exec(successCB, errorCB, service, action, args);                  
     };

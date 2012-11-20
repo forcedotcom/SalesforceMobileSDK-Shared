@@ -133,7 +133,7 @@ var SFTestSuite = function (moduleName) {
  * Method to run all the tests
  */
 SFTestSuite.prototype.startTests = function() {
-	SFHybridApp.logToConsole("In startTests");
+	console.log("In startTests");
 	var self = this;
 
 	//collect a list of testFoo methods by introspection
@@ -155,7 +155,7 @@ SFTestSuite.prototype.startTests = function() {
     SFTestModuleCollection.currentRunningModuleName = self.module.moduleName;
 	
 	self.allTests.forEach(function(methName){
-		SFHybridApp.logToConsole("Queueing: " + methName);
+		console.log("Queueing: " + methName);
 		QUnit.asyncTest(methName, function() {
 			self.preRun(methName);
 			self.runTest(methName);
@@ -169,7 +169,7 @@ SFTestSuite.prototype.startTests = function() {
  * Method to run a single test
  */
 SFTestSuite.prototype.startTest = function(methName) {
-	SFHybridApp.logToConsole("In startTest: methName=" + methName);	
+	console.log("In startTest: methName=" + methName);	
 	var self = this;
 	
 	self.allTests.push(methName);
@@ -192,7 +192,7 @@ SFTestSuite.prototype.startTest = function(methName) {
  * Method run before running a test
  */
 SFTestSuite.prototype.preRun = function(methName) {
-	SFHybridApp.logToConsole("In preRun: methName=" + methName);
+	console.log("In preRun: methName=" + methName);
 	this.module.currentTestName = methName;
 	var testStatus = this.module.testStatusCollection[methName];	
     testStatus.testState = SFTestStatus.RUNNING_TEST_STATE;
@@ -205,7 +205,7 @@ SFTestSuite.prototype.preRun = function(methName) {
  * Sub-classes should override this method if they need anything to be setup before running tests
  */
 SFTestSuite.prototype.runTest = function (methName) {
-	SFHybridApp.logToConsole("In runTest: methName=" + methName);
+	console.log("In runTest: methName=" + methName);
 	this[methName]();
 };
 
@@ -230,7 +230,7 @@ SFTestSuite.prototype.finalizeTest = function() {
  * Method called to report that the current test failed
  */
 SFTestSuite.prototype.setAssertionFailed = function(error) {
-	SFHybridApp.logToConsole("In setAssertionFailed: currentTestName=" + this.module.currentTestName + " , error=" + error);
+	console.log("In setAssertionFailed: currentTestName=" + this.module.currentTestName + " , error=" + error);
 
     // navigator.testrunner.onTestComplete will be called back by QUnit.testDone
     
@@ -246,7 +246,7 @@ SFTestSuite.prototype.setAssertionSuccess = function(message) {
     if (typeof message === 'undefined' || message === null)
         message = "";
     
-	SFHybridApp.logToConsole("In setAssertionSuccess: currentTestName=" + this.module.currentTestName + ", message=" + message);
+	console.log("In setAssertionSuccess: currentTestName=" + this.module.currentTestName + ", message=" + message);
 
     // navigator.testrunner.onTestComplete will be called back by QUnit.testDone
 	
@@ -285,7 +285,7 @@ QUnit.testDone = function(status) {
 			statsMsg += "\n" + (i+1) + "/" + countAssertions + ":" + test.assertions[i].message;
 		}
 	}
-    SFHybridApp.logToConsole("testDone: " + status.name + statsMsg);
+    console.log("testDone: " + status.name + statsMsg);
     
     var currentModuleName = SFTestModuleCollection.currentRunningModuleName;
     var currentModule = SFTestModuleCollection.collection[currentModuleName];
@@ -317,20 +317,20 @@ QUnit.testDone = function(status) {
  * Called when a module of tests completes.
  */
 QUnit.moduleDone = function(status) {
-    SFHybridApp.logToConsole("In QUnit.moduleDone:");
+    console.log("In QUnit.moduleDone:");
     var testModule = SFTestModuleCollection.collection[SFTestModuleCollection.currentRunningModuleName];
-    SFHybridApp.logToConsole("For module " + testModule.moduleName + ":");
-    SFHybridApp.logToConsole("Tests finished: " + testModule.numTestsFinished);
-    SFHybridApp.logToConsole("Tests passed: " + testModule.numPassedTests);
-    SFHybridApp.logToConsole("Tests failed: " + testModule.numFailedTests);
+    console.log("For module " + testModule.moduleName + ":");
+    console.log("Tests finished: " + testModule.numTestsFinished);
+    console.log("Tests passed: " + testModule.numPassedTests);
+    console.log("Tests failed: " + testModule.numFailedTests);
     for (var testStatusName in testModule.testStatusCollection) {
         var testStatus = testModule.testStatusCollection[testStatusName];
-        SFHybridApp.logToConsole("For test " + testStatus.testName + ":");
-        SFHybridApp.logToConsole("Test state: " + testStatus.testState);
-        SFHybridApp.logToConsole("Successful assertions: " + testStatus.successfulAssertions);
-        SFHybridApp.logToConsole("Failed assertions: " + testStatus.failedAssertions);
-        SFHybridApp.logToConsole("Total assertions: " + testStatus.totalAssertions);
-        SFHybridApp.logToConsole(testStatus.testName + " completed in: " + (testStatus.testDuration/1000.0) + 's');
+        console.log("For test " + testStatus.testName + ":");
+        console.log("Test state: " + testStatus.testState);
+        console.log("Successful assertions: " + testStatus.successfulAssertions);
+        console.log("Failed assertions: " + testStatus.failedAssertions);
+        console.log("Total assertions: " + testStatus.totalAssertions);
+        console.log(testStatus.testName + " completed in: " + (testStatus.testDuration/1000.0) + 's');
 
     }
 };
