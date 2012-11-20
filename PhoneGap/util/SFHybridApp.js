@@ -211,9 +211,7 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
                 // Authenticate via the Salesforce OAuth plugin.
                 var oauthProperties = new oauth.OAuthProperties(remoteAccessConsumerKey, 
                                                                 oauthRedirectURI, 
-                                                                oauthScopes, 
-                                                                autoRefreshOnForeground,
-                                                                autoRefreshPeriodically);
+                                                                oauthScopes);
                 oauth.authenticate(loginSuccess, loginFailure, oauthProperties);
             } else {
                 if (startData instanceof LocalAppStartData) {
