@@ -183,7 +183,7 @@ if (forcetk.Client === undefined) {
                 if (that.proxyUrl !== null) {
                     xhr.setRequestHeader('SalesforceProxy-Endpoint', url);
                 }
-                xhr.setRequestHeader(that.authzHeader, "OAuth " + that.sessionId);
+                xhr.setRequestHeader(that.authzHeader, "Bearer " + that.sessionId);
                 xhr.setRequestHeader('X-User-Agent', 'salesforce-toolkit-rest-javascript/' + that.apiVersion);
                 		
                 if (that.userAgentString !== null) {
