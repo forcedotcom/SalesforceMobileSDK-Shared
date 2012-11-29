@@ -326,7 +326,9 @@ var MockSmartStore = (function(window) {
             cordova.interceptExec(SMARTSTORE_SERVICE, "pgCloseCursor", function (successCB, errorCB, args) {
                 var cursorId = args[0].cursorId;
                 self.closeCursor(cursorId);
-                successCB("OK");
+                if (successCB) {
+                    successCB("OK");
+                }
             });
         }
 
