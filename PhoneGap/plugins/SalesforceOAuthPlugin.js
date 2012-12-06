@@ -24,28 +24,30 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
+cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
+    // Version this js was shipped with
+    var SDK_VERSION = "1.4";
+
+    var SERVICE = "com.salesforce.oauth";
+
+    var exec = require("salesforce/util/exec").exec;
 
     /**
      * Whether or not logout has already been initiated.  Can only be initiated once
      * per page load.
      */
     var logoutInitiated = false;
-    
+ 
     /**
      * OAuthProperties data structure, for plugin arguments.
      *   remoteAccessConsumerKey - String containing the remote access object ID (client ID).
      *   oauthRedirectURI        - String containing the redirect URI configured for the remote access object.
      *   oauthScopes             - Array of strings specifying the authorization scope of the app (e.g ["api", "visualforce"]).
-     *   autoRefreshOnForeground - Boolean, determines whether the container automatically refreshes OAuth session when app is foregrounded
-     *   autoRefreshPeriodically - Boolean, determines whether the container automatically refreshes OAuth session periodically
      */
-    var OAuthProperties = function (remoteAccessConsumerKey, oauthRedirectURI, oauthScopes, autoRefreshOnForeground, autoRefreshPeriodically) {
+    var OAuthProperties = function (remoteAccessConsumerKey, oauthRedirectURI, oauthScopes) {
         this.remoteAccessConsumerKey = remoteAccessConsumerKey;
         this.oauthRedirectURI = oauthRedirectURI;
         this.oauthScopes = oauthScopes;
-        this.autoRefreshOnForeground = autoRefreshOnForeground;
-        this.autoRefreshPeriodically = autoRefreshPeriodically;
     };
 
 	/**
@@ -55,19 +57,19 @@ cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
      *   success - The success callback function to use.
      *   fail    - The failure/error callback function to use.
 	 * cordova returns a dictionary with:
-	 * 	accessToken
-	 * 	refreshToken
+	 *     accessToken
+	 *     refreshToken
      *  clientId
-	 * 	userId
-	 * 	orgId
+	 *     userId
+	 *     orgId
      *  loginUrl
-	 * 	instanceUrl
-	 * 	userAgent
+	 *     instanceUrl
+	 *     userAgent
 	 */
-    var getAuthCredentials = function(success, fail) {
-        cordova.exec(success, fail, "com.salesforce.oauth","getAuthCredentials",[]);
+    var getAuthCredentials = function (success, fail) {
+        exec(SDK_VERSION, success, fail, SERVICE, "getAuthCredentials", []);
     };
-    
+ 
     /**
      * Initiates the authentication process, with the given app configuration.
      *   success         - The success callback function to use.
@@ -84,10 +86,9 @@ cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
      *   instanceUrl
      *   userAgent
      */
-    var authenticate = function(success, fail, oauthProperties) {
-        cordova.exec(success, fail, "com.salesforce.oauth", "authenticate", [JSON.stringify(oauthProperties)]);
+    var authenticate = function (success, fail, oauthProperties) {
+        exec(SDK_VERSION, success, fail, SERVICE, "authenticate", [ {"oauthProperties": oauthProperties} ]);
     };
-
 
     /**
      * Logout the current authenticated user. This removes any current valid session token
@@ -99,13 +100,13 @@ cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
      * the given page (effectively resetting the logout flag), and calling this method again
      * while it's currently processing will result in app state issues.
      */
-    var logout = function() {
+    var logout = function () {
         if (!logoutInitiated) {
             logoutInitiated = true;
-            cordova.exec(null, null, "com.salesforce.oauth", "logoutCurrentUser", []);
+            exec(SDK_VERSION, null, null, SERVICE, "logoutCurrentUser", []);
         }
     };
-    
+ 
     /**
      * Gets the app's homepage as an absolute URL.  Used for attempting to load any cached
      * content that the developer may have built into the app (via HTML5 caching).
@@ -113,8 +114,8 @@ cordova.define("salesforce/plugin/oauth", function(require, exports, module) {
      * This method will either return the URL as a string, or an empty string if the URL has not been
      * initialized.
      */
-    var getAppHomeUrl = function(success) {
-        cordova.exec(success, null, "com.salesforce.oauth", "getAppHomeUrl", []);
+    var getAppHomeUrl = function (success) {
+        exec(SDK_VERSION, success, null, SERVICE, "getAppHomeUrl", []);
     };
 
 

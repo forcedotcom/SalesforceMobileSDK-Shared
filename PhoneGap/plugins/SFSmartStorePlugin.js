@@ -24,7 +24,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-cordova.define("salesforce/plugin/smartstore", function(require, exports, module) {
+cordova.define("salesforce/plugin/smartstore", function (require, exports, module) {
+    // Version this js was shipped with
+    var SDK_VERSION = "1.4";
+
+    var SERVICE = "com.salesforce.smartstore";
+
+    var exec = require("salesforce/util/exec").exec;
+
+
     /**
      * SoupIndexSpec consturctor
      */
@@ -37,19 +45,20 @@ cordova.define("salesforce/plugin/smartstore", function(require, exports, module
      * SoupQuerySpec constructor
      */
     var SoupQuerySpec = function (path) {
-	    //the kind of query, one of: "exact","range", or "like":
-	    //"exact" uses matchKey, "range" uses beginKey and endKey, "like" uses likeKey
-	    this.queryType = "exact";
-	    
+    //the kind of query, one of: "exact","range", or "like":
+    //"exact" uses matchKey, "range" uses beginKey and endKey, "like" uses likeKey
+    this.queryType = "exact";
+
         //path for the original IndexSpec you wish to use for search: may be a compound path eg Account.Owner.Name
         this.indexPath = path;
 
-	    //for queryType "exact"
+        //for queryType "exact"
         this.matchKey = null;
-	    //for queryType "like"
-	    this.likeKey = null;
+
+        //for queryType "like"
+        this.likeKey = null;
         
-	    //for queryType "range"
+        //for queryType "range"
         //the value at which query results may begin
         this.beginKey = null;
         //the value at which query results may end
@@ -82,12 +91,13 @@ cordova.define("salesforce/plugin/smartstore", function(require, exports, module
         this.currentPageOrderedEntries = null;
     };
 
+    // ====== Logging support ======
     var logLevel = 0;
-    var setLogLevel = function(l) {
+    var setLogLevel = function (l) {
         logLevel = l;
     };
 
-    var getLogLevel = function() {
+    var getLogLevel = function () {
         return logLevel;
     };
 
@@ -95,145 +105,142 @@ cordova.define("salesforce/plugin/smartstore", function(require, exports, module
     // ====== querySpec factory methods
     // Returns a cursor that will page through all soup entries in order by the given path value
     // Internally it simply does a range query with null begin and end keys
-    var buildAllQuerySpec = function(path, order, pageSize) {
-	    var inst = new SoupQuerySpec(path);
-	    inst.queryType = "range";
-	    if (order) { inst.order = order; } // override default only if a value was specified
-	    if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
-	    return inst;
+    var buildAllQuerySpec = function (path, order, pageSize) {
+        var inst = new SoupQuerySpec(path);
+        inst.queryType = "range";
+        if (order) { inst.order = order; } // override default only if a value was specified
+        if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+        return inst;
     };
 
     // Returns a cursor that will page all entries exactly matching the matchKey value for path
-    var buildExactQuerySpec = function(path, matchKey, pageSize) {
-	    var inst = new SoupQuerySpec(path);
-	    inst.matchKey = matchKey;
-	    if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
-	    return inst;
+    var buildExactQuerySpec = function (path, matchKey, pageSize) {
+        var inst = new SoupQuerySpec(path);
+        inst.matchKey = matchKey;
+        if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+        return inst;
     };
 
     // Returns a cursor that will page all entries in the range beginKey ...endKey for path
-    var buildRangeQuerySpec = function(path, beginKey, endKey, order, pageSize) {
-	    var inst = new SoupQuerySpec(path);
-	    inst.queryType = "range";
-	    inst.beginKey = beginKey;
-	    inst.endKey = endKey;
-	    if (order) { inst.order = order; } // override default only if a value was specified
-	    if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
-	    return inst;
+    var buildRangeQuerySpec = function (path, beginKey, endKey, order, pageSize) {
+        var inst = new SoupQuerySpec(path);
+        inst.queryType = "range";
+        inst.beginKey = beginKey;
+        inst.endKey = endKey;
+        if (order) { inst.order = order; } // override default only if a value was specified
+        if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+        return inst;
     };
 
     // Returns a cursor that will page all entries matching the given likeKey value for path
-    var buildLikeQuerySpec = function(path, likeKey, order, pageSize) {
-	    var inst = new SoupQuerySpec(path);
-	    inst.queryType = "like";
-	    inst.likeKey = likeKey;
-	    if (order) { inst.order = order; } // override default only if a value was specified
-	    if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
-	    return inst;
+    var buildLikeQuerySpec = function (path, likeKey, order, pageSize) {
+        var inst = new SoupQuerySpec(path);
+        inst.queryType = "like";
+        inst.likeKey = likeKey;
+        if (order) { inst.order = order; } // override default only if a value was specified
+        if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+        return inst;
     };
 
     // ====== Soup manipulation ======
     var registerSoup = function (soupName, indexSpecs, successCB, errorCB) {
         console.log("SmartStore.registerSoup: '" + soupName + "' indexSpecs: " + indexSpecs);
-        cordova.exec(successCB, errorCB, 
-             "com.salesforce.smartstore", 
-             "pgRegisterSoup", 
-             [{"soupName":soupName, "indexes":indexSpecs}]
-            );                  
+        exec(SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgRegisterSoup",
+             [{"soupName": soupName, "indexes": indexSpecs}]
+            );
     };
 
     var removeSoup = function (soupName, successCB, errorCB) {
-        console.log("SmartStore.removeSoup: " + soupName );
-        cordova.exec(successCB, errorCB, 
-             "com.salesforce.smartstore", 
-             "pgRemoveSoup", 
-             [{"soupName":soupName}]
-            );                  
+        console.log("SmartStore.removeSoup: " + soupName);
+        exec(SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgRemoveSoup",
+             [{"soupName": soupName}]
+            );
     };
 
     var soupExists = function (soupName, successCB, errorCB) {
-        console.log("SmartStore.soupExists: " + soupName );
-        cordova.exec(successCB, errorCB, 
-             "com.salesforce.smartstore", 
-             "pgSoupExists", 
-             [{"soupName":soupName}]
-            );                  
+        console.log("SmartStore.soupExists: " + soupName);
+        exec(SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgSoupExists",
+             [{"soupName": soupName}]
+            );
     };
 
     var querySoup = function (soupName, querySpec, successCB, errorCB) {
         console.log("SmartStore.querySoup: '" + soupName + "' indexPath: " + querySpec.indexPath);
-        cordova.exec(successCB, errorCB, 
-             "com.salesforce.smartstore", 
-             "pgQuerySoup", 
-             [{"soupName":soupName, "querySpec":querySpec}]
+        exec(SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgQuerySoup",
+             [{"soupName": soupName, "querySpec": querySpec}]
             );
     };
 
     var retrieveSoupEntries = function (soupName, entryIds, successCB, errorCB) {
-        if (logLevel > 0) 
+        if (logLevel > 0) {
             console.log("SmartStore.retrieveSoupEntry: '" + soupName + "' entryIds: " + entryIds);
-        cordova.exec(successCB, errorCB, 
-             "com.salesforce.smartstore", 
-             "pgRetrieveSoupEntries", 
-             [{"soupName":soupName, "entryIds":entryIds}]
+        }
+        exec(SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgRetrieveSoupEntries",
+             [{"soupName": soupName, "entryIds": entryIds}]
             );
     };
 
     var upsertSoupEntries = function (soupName, entries, successCB, errorCB) {
-	    upsertSoupEntriesWithExternalId(soupName, entries, "_soupEntryId", successCB, errorCB);
+        upsertSoupEntriesWithExternalId(soupName, entries, "_soupEntryId", successCB, errorCB);
     };
 
     var upsertSoupEntriesWithExternalId = function (soupName, entries, externalIdPath, successCB, errorCB) {
-        if (logLevel > 0) 
+        if (logLevel > 0) { 
             console.log("SmartStore.upsertSoupEntries: '" + soupName + "' entries.length: " + entries.length);
-        cordova.exec(successCB, errorCB, 
-             "com.salesforce.smartstore", 
+        }
+        exec(SDK_VERSION, successCB, errorCB, SERVICE,
              "pgUpsertSoupEntries", 
-             [{"soupName":soupName, "entries":entries, "externalIdPath": externalIdPath}]
+             [{"soupName": soupName, "entries": entries, "externalIdPath": externalIdPath}]
             );
     };
 
     var removeFromSoup = function (soupName, entryIds, successCB, errorCB) {
         console.log("SmartStore.removeFromSoup: '" + soupName + "' entryIds: " + entryIds);
-        cordova.exec(successCB, errorCB, 
-             "com.salesforce.smartstore", 
-             "pgRemoveFromSoup", 
-             [{"soupName":soupName, "entryIds":entryIds}]
+        exec(SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgRemoveFromSoup",
+             [{"soupName": soupName, "entryIds": entryIds}]
             );
     };
 
     //====== Cursor manipulation ======
     var moveCursorToPageIndex = function (cursor, newPageIndex, successCB, errorCB) {
         console.log("moveCursorToPageIndex: " + cursor.cursorId + "  newPageIndex: " + newPageIndex);
-        cordova.exec(successCB, errorCB, 
-             "com.salesforce.smartstore", 
-             "pgMoveCursorToPageIndex", 
-             [{"cursorId":cursor.cursorId, "index":newPageIndex}]
+        exec(SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgMoveCursorToPageIndex",
+             [{"cursorId": cursor.cursorId, "index": newPageIndex}]
             );
     };
 
     var moveCursorToNextPage = function (cursor, successCB, errorCB) {
         var newPageIndex = cursor.currentPageIndex + 1;
         if (newPageIndex >= cursor.totalPages) {
-            return;//TODO callback with error?
+            errorCB(cursor, new Error("moveCursorToNextPage called while on last page"));
         }
-        moveCursorToPageIndex(cursor, newPageIndex, successCB, errorCB);
+        else {
+            moveCursorToPageIndex(cursor, newPageIndex, successCB, errorCB);
+        }
     };
 
     var moveCursorToPreviousPage = function (cursor, successCB, errorCB) {
         var newPageIndex = cursor.currentPageIndex - 1;
         if (newPageIndex < 0) {
-            return;//TODO callback with error?
+            errorCB(cursor, new Error("moveCursorToPreviousPage called while on first page"));
         }
-        moveCursorToPageIndex(cursor, newPageIndex, successCB, errorCB);
+        else {
+            moveCursorToPageIndex(cursor, newPageIndex, successCB, errorCB);
+        }
     };
 
     var closeCursor = function (cursor, successCB, errorCB) {
         console.log("closeCursor: " + cursor.cursorId);
-        cordova.exec(successCB, errorCB, 
-             "com.salesforce.smartstore", 
-             "pgCloseCursor", 
-             [{"cursorId":cursor.cursorId}]
+        exec(SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgCloseCursor",
+             [{"cursorId": cursor.cursorId}]
             );
     };
 
@@ -263,7 +270,7 @@ cordova.define("salesforce/plugin/smartstore", function(require, exports, module
         // Constructors
         SoupQuerySpec: SoupQuerySpec,
         SoupIndexSpec: SoupIndexSpec,
-        PagedSoupCursor: PagedSoupCursor,
+        PagedSoupCursor: PagedSoupCursor
     };
 });
 
