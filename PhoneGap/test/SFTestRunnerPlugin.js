@@ -26,7 +26,7 @@
 
 cordova.define("salesforce/plugin/testrunner", function(require, exports, module) {
     // Version this js was shipped with
-    var SDK_VERSION = "1.4";
+    var SDK_VERSION = "1.5";
     var SERVICE = "com.salesforce.testrunner";
     var exec = require("salesforce/util/exec").exec;
 
