@@ -317,6 +317,10 @@ var MockSmartStore = (function(window) {
                 successCB("OK");
             });
 
+            cordova.interceptExec(SMARTSTORE_SERVICE, "pgRunSmartSql", function (successCB, errorCB, args) {
+                errorCB("Not implemented");
+            });
+
             cordova.interceptExec(SMARTSTORE_SERVICE, "pgMoveCursorToPageIndex", function (successCB, errorCB, args) {
                 var cursorId = args[0].cursorId;
                 var index = args[0].index;

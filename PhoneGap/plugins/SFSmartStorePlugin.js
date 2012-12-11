@@ -207,6 +207,14 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
             );
     };
 
+    var runSmartSql = function(sql, successCB, errorCB) {
+        console.log("SmartStore.runSmartSql: '" + sql + "'");
+        exec(SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgRunSmartSql",
+             [sql]
+            );
+    };
+
     //====== Cursor manipulation ======
     var moveCursorToPageIndex = function (cursor, newPageIndex, successCB, errorCB) {
         console.log("moveCursorToPageIndex: " + cursor.cursorId + "  newPageIndex: " + newPageIndex);
