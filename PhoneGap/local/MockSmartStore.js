@@ -297,6 +297,10 @@ var MockSmartStore = (function(window) {
                 successCB(self.querySoup(soupName, querySpec));
             });
 
+            cordova.interceptExec(SMARTSTORE_SERVICE, "pgRunSmartSql", function (successCB, errorCB, args) {
+                errorCB("pgRunSmartSql not implemented in MockSmartStore");
+            });
+
             cordova.interceptExec(SMARTSTORE_SERVICE, "pgRetrieveSoupEntries", function (successCB, errorCB, args) {
                 var soupName = args[0].soupName;
                 var entryIds = args[0].entryIds;
@@ -315,10 +319,6 @@ var MockSmartStore = (function(window) {
                 var entryIds = args[0].entryIds;
                 self.removeFromSoup(soupName, entryIds);
                 successCB("OK");
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgRunSmartSql", function (successCB, errorCB, args) {
-                errorCB("Not implemented");
             });
 
             cordova.interceptExec(SMARTSTORE_SERVICE, "pgMoveCursorToPageIndex", function (successCB, errorCB, args) {
@@ -344,6 +344,3 @@ var MockSmartStore = (function(window) {
 
 var mockStore = new MockSmartStore();
 mockStore.hookToCordova(cordova);
-
-
-
