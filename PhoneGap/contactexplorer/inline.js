@@ -5,7 +5,8 @@ function regLinkClickHandlers() {
     var logToConsole = cordova.require("salesforce/util/logger").logToConsole;
     $j('#link_fetch_device_contacts').click(function() {
                                            logToConsole("link_fetch_device_contacts clicked");
-                                           var options = cordova.require("cordova/plugin/ContactFindOptions");
+                                           var contactOptionsType = cordova.require("cordova/plugin/ContactFindOptions");
+                                           var options = new contactOptionsType();
                                            options.filter = ""; // empty search string returns all contacts
                                            options.multiple = true;
                                            var fields = ["name"];
