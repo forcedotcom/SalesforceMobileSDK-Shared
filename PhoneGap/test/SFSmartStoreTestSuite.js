@@ -726,7 +726,7 @@ SmartStoreTestSuite.prototype.testEmptyQuerySpec  = function() {
     console.log("In SFSmartStoreTestSuite.testEmptyQuerySpec");
     var self = this;
     
-    var querySpec = new SoupQuerySpec(null);
+    var querySpec = new QuerySpec(null);
     querySpec.queryType = null; 
     self.querySoupNoAssertion(self.defaultSoupName, querySpec)
     .done(function(param) { 
