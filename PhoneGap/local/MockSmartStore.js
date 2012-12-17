@@ -297,8 +297,8 @@ var MockSmartStore = (function(window) {
                 successCB(self.querySoup(soupName, querySpec));
             });
 
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgRunSmartSql", function (successCB, errorCB, args) {
-                errorCB("pgRunSmartSql not implemented in MockSmartStore");
+            cordova.interceptExec(SMARTSTORE_SERVICE, "pgRunSmartQuery", function (successCB, errorCB, args) {
+                errorCB("pgRunSmartQuery not implemented in MockSmartStore");
             });
 
             cordova.interceptExec(SMARTSTORE_SERVICE, "pgRetrieveSoupEntries", function (successCB, errorCB, args) {
