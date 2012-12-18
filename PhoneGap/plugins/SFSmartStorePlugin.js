@@ -145,7 +145,7 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
     var buildSmartQuerySpec = function (smartSql, pageSize) {
         var inst = new QuerySpec();
         inst.queryType = "smart";
-        inst.smartSql = "smartSql";
+        inst.smartSql = smartSql;
         if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
         return inst;
     };
@@ -272,10 +272,12 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
         buildExactQuerySpec: buildExactQuerySpec,
         buildRangeQuerySpec: buildRangeQuerySpec,
         buildLikeQuerySpec: buildLikeQuerySpec,
+        buildSmartQuerySpec: buildSmartQuerySpec,
         registerSoup: registerSoup,
         removeSoup: removeSoup,
         soupExists: soupExists,
         querySoup: querySoup,
+        runSmartQuery: runSmartQuery,
         retrieveSoupEntries: retrieveSoupEntries,
         upsertSoupEntries: upsertSoupEntries,
         upsertSoupEntriesWithExternalId: upsertSoupEntriesWithExternalId,
@@ -286,7 +288,6 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
         closeCursor: closeCursor,
         
         // Constructors
-        SmartQuerySpec: SmartQuerySpec,
         QuerySpec: QuerySpec,
         SoupIndexSpec: SoupIndexSpec,
         StoreCursor: StoreCursor
@@ -297,6 +298,5 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
 navigator.smartstore = cordova.require("salesforce/plugin/smartstore");
 var SoupIndexSpec = navigator.smartstore.SoupIndexSpec;
 var QuerySpec = navigator.smartstore.QuerySpec;
-var SmartQuerySpec = navigator.smartstore.SmartQuerySpec;
 var StoreCursor = navigator.smartstore.StoreCursor;
 
