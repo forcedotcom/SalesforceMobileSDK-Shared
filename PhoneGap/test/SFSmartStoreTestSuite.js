@@ -650,11 +650,15 @@ SmartStoreTestSuite.prototype.testLikeQuerySpecStartsWith  = function() {
             var querySpec = navigator.smartstore.buildLikeQuerySpec("Name","Todd%");
             return self.querySoup(self.defaultSoupName, querySpec);
         })
-        .done(function(cursor) {
+        .pipe(function(cursor) {
             var nEntries = cursor.currentPageOrderedEntries.length;
             QUnit.equal(nEntries, 1, "currentPageOrderedEntries correct");
+            return self.closeCursor(cursor);
+        })
+        .done(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
             self.finalizeTest();
-        }); 
+        });
 };
 
 SmartStoreTestSuite.prototype.testLikeQuerySpecEndsWith  = function() {
@@ -667,11 +671,15 @@ SmartStoreTestSuite.prototype.testLikeQuerySpecEndsWith  = function() {
             var querySpec = navigator.smartstore.buildLikeQuerySpec("Name","%Stellanova");
             return self.querySoup(self.defaultSoupName, querySpec);
         })
-        .done(function(cursor) {
+        .pipe(function(cursor) {
             var nEntries = cursor.currentPageOrderedEntries.length;
             QUnit.equal(nEntries, 1, "currentPageOrderedEntries correct");
-            self.finalizeTest();
-        }); 
+            return self.closeCursor(cursor);
+        })
+        .done(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            self.finalizeTest(); 
+        });
 };
 
 SmartStoreTestSuite.prototype.testLikeQueryInnerText  = function() {
@@ -684,11 +692,15 @@ SmartStoreTestSuite.prototype.testLikeQueryInnerText  = function() {
             var querySpec = navigator.smartstore.buildLikeQuerySpec("Name","%ono%");
             return self.querySoup(self.defaultSoupName, querySpec);
         })
-        .done(function(cursor) {
+        .pipe(function(cursor) {
             var nEntries = cursor.currentPageOrderedEntries.length;
             QUnit.equal(nEntries, 1, "currentPageOrderedEntries correct");
-            self.finalizeTest();
-        }); 
+            return self.closeCursor(cursor);
+        })
+        .done(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            self.finalizeTest(); 
+        });
 };
 
 SmartStoreTestSuite.prototype.testCompoundQueryPath  = function() {
@@ -726,7 +738,7 @@ SmartStoreTestSuite.prototype.testEmptyQuerySpec  = function() {
     console.log("In SFSmartStoreTestSuite.testEmptyQuerySpec");
     var self = this;
     
-    var querySpec = new SoupQuerySpec(null);
+    var querySpec = new QuerySpec(null);
     querySpec.queryType = null; 
     self.querySoupNoAssertion(self.defaultSoupName, querySpec)
     .done(function(param) { 
@@ -766,6 +778,58 @@ SmartStoreTestSuite.prototype.testIntegerQuerySpec  = function() {
         self.finalizeTest();
     });
 };
+
+SmartStoreTestSuite.prototype.testSmartQueryWithCount  = function() {
+    console.log("In SFSmartStoreTestSuite.testSmartQueryWithCount");
+    var self = this;
+    
+    self.stuffTestSoup()
+        .pipe(function(entries) {
+            QUnit.equal(entries.length, 3,"check stuffTestSoup result");
+            var querySpec = navigator.smartstore.buildSmartQuerySpec("select count(*) from {myPeopleSoup}", 1);
+            return self.runSmartQuery(querySpec);
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(1, cursor.currentPageOrderedEntries.length, "check number of rows returned");
+            QUnit.equal(1, cursor.currentPageOrderedEntries[0].length, "check number of fields returned");
+            QUnit.equal("[[3]]", JSON.stringify(cursor.currentPageOrderedEntries), "check currentPageOrderedEntries");
+            return self.closeCursor(cursor);
+        })
+        .done(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            self.finalizeTest();
+        });
+};
+
+SmartStoreTestSuite.prototype.testSmartQueryWithSpecialFields  = function() {
+    console.log("In SFSmartStoreTestSuite.testSmartQueryWithSpecialFields");
+    var self = this;
+    var expectedEntry;
+    
+    self.stuffTestSoup()
+        .pipe(function(entries) {
+            QUnit.equal(entries.length, 3,"check stuffTestSoup result");
+            expectedEntry = entries[0];
+            var sql = "select {myPeopleSoup:_soup}, {myPeopleSoup:_soupEntryId}, {myPeopleSoup:_soupLastModifiedDate} from {myPeopleSoup} where {myPeopleSoup:Id} = '" + expectedEntry.Id + "'";
+            var querySpec = navigator.smartstore.buildSmartQuerySpec(sql, 1);
+            return self.runSmartQuery(querySpec);
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(1, cursor.currentPageOrderedEntries.length, "check number of rows returned");
+            QUnit.equal(3, cursor.currentPageOrderedEntries[0].length, "check number of fields returned");
+            QUnit.equal(expectedEntry._soupEntryId, cursor.currentPageOrderedEntries[0][0]._soupEntryId, "check _soup's soupEntryId returned");
+            QUnit.equal(expectedEntry.Id, cursor.currentPageOrderedEntries[0][0].Id, "check _soup's Id returned");
+            QUnit.equal(expectedEntry.Name, cursor.currentPageOrderedEntries[0][0].Name, "check _soup's Name returned");
+            QUnit.equal(expectedEntry._soupEntryId, cursor.currentPageOrderedEntries[0][1], "check _soupEntryId returned");
+            QUnit.equal(expectedEntry._soupLastModifiedDate, cursor.currentPageOrderedEntries[0][2], "check _soupLastModifieddate returned");
+            return self.closeCursor(cursor);
+        })
+        .done(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            self.finalizeTest();
+        });
+};
+
 
 }
 
