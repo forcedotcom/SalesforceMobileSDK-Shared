@@ -64,6 +64,7 @@ AbstractSmartStoreTestSuite.prototype.soupExists = promiser(navigator.smartstore
 AbstractSmartStoreTestSuite.prototype.removeSoup = promiser(navigator.smartstore, "removeSoup");
 AbstractSmartStoreTestSuite.prototype.removeFromSoup = promiser(navigator.smartstore, "removeFromSoup");
 AbstractSmartStoreTestSuite.prototype.querySoup = promiser(navigator.smartstore, "querySoup");
+AbstractSmartStoreTestSuite.prototype.runSmartQuery = promiser(navigator.smartstore, "runSmartQuery");
 AbstractSmartStoreTestSuite.prototype.upsertSoupEntries = promiser(navigator.smartstore, "upsertSoupEntries");
 AbstractSmartStoreTestSuite.prototype.upsertEntriesToSoupWithExternalIdPath = promiser(navigator.smartstore, "upsertSoupEntriesWithExternalId");
 AbstractSmartStoreTestSuite.prototype.retrieveSoupEntries = promiser(navigator.smartstore, "retrieveSoupEntries");
