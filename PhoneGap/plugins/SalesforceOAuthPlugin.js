@@ -26,7 +26,7 @@
 
 cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
     // Version this js was shipped with
-    var SDK_VERSION = "1.5";
+    var SDK_VERSION = "1.6unstable";
 
     var SERVICE = "com.salesforce.oauth";
 
