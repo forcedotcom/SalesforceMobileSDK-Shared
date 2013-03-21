@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Users</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
+<link rel="stylesheet" href="css/styles.css"/>
+</head>
+
+<body>
+
+<div id="content"></div>
+
+<!-- Scripts -->
+<script src="../libs/jquery-1.8.3.min.js"></script>
+<script src="../libs/underscore-1.4.4.min.js"></script>
+<script src="../libs/backbone-1.0.0.min.js"></script>
+<!-- Uncomment following when in container -->
+<!--
+<script src="cordova-2.3.0.js"></script>
+<script src="SFHybridApp.js"></script>
+<script src="SalesforceOAuthPlugin.js"></script>
+-->
+<script src="../../forcetk.js"></script>
+<script src="../sobject.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+    jQuery(document).ready(function() {
+        //Add event listeners and so forth here
+        console.log("onLoad: jquery ready");
+
+        // Use following when in container
+		// document.addEventListener("deviceready", onDeviceReady,false);
+
+        // Use  when testing in browser
+        // Also make sure to start browser with same origin policy disable
+        // See http://joshuamcginnis.com/2011/02/28/how-to-disable-same-origin-policy-in-chrome/
+        var creds = {
+            accessToken: "--will-be-obtained-by-refres",
+            refreshToken: "5Aep861_OKMvio5gy9sGt9Z9mdt62xXK.9ugif6nZJYknXeANTICBf4ityN9j6YDgHjFvbzu6FTUQ==",
+            clientId: "3MVG92.uWdyphVj4bnolD7yuIpCQsNgddWtqRND3faxrv9uKnbj47H4RkwheHA2lKY4cBusvDVp0M6gdGE8hp",
+            loginUrl: "https://test.salesforce.com",
+            instanceUrl: "https://tapp0.salesforce.com",
+            userAgent: "sobject-proto"
+        };
+        getAuthCredentialsSuccess(creds);
+    });
+
+    // When this function is called, cordova has been initialized and is ready to roll 
+    function onDeviceReady() {
+        console.log("onDeviceReady: cordova ready");
+		//Call getAuthCredentials to get the initial session credentials
+        cordova.require("salesforce/plugin/oauth").getAuthCredentials(getAuthCredentialsSuccess, getAuthCredentialsError);
+    }
+        
+    function  getAuthCredentialsSuccess(creds) {
+    	appStart(creds);
+    }
+
+    function getAuthCredentialsError(error) {
+        console.log("getAuthCredentialsError: " + error);
+    }
+</script>
+
+</body>
+</html>
