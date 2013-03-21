@@ -1,0 +1,89 @@
+"use strict";
+
+(function(Backbone, _, $) {
+    // Private forcetk client
+    var forcetkClient;
+
+    // Private function
+    var getFrontDoorURL = function(url) {
+        return forcetkClient.instanceUrl + "/secur/frontdoor.jsp?"
+            + "sid=" + encodeURIComponent(forcetkClient.sessionId) 
+            + "&retURL=" + encodeURIComponent(url);
+    };
+
+    // Create namespace
+    Backbone.sfdc = {};
+
+    // Init function
+    Backbone.sfdc.init = function(creds, apiVersion) {
+        forcetkClient = new forcetk.Client(creds.clientId, creds.loginUrl);
+        forcetkClient.setSessionToken(creds.accessToken, apiVersion, creds.instanceUrl);
+        forcetkClient.setRefreshToken(creds.refreshToken);
+        forcetkClient.setUserAgentString(creds.userAgent);
+    };
+
+    // Sync function
+    Backbone.sfdc.sync = function(method, model, options) {
+        var that = this;
+        if (method == "read")
+        {
+            forcetkClient.retrieve(model.sobjectType, model.Id, model.fieldsOfInterest, 
+                                   function(result) {
+                                       options.success(result, {'parse':true});
+                                   },
+                                   function(error) {
+                                       options.error(error);
+                                   });
+        }
+        else
+        {
+            // TBD
+        }
+    };
+
+    Backbone.sfdc.Model = Backbone.Model.extend({
+        // NB: subclass must define properties sobjectType and fieldsOfInterest
+        sobjectType:null,
+        fieldsOfInterest:null,
+
+        sync: Backbone.sfdc.sync,
+
+        parse: function(response, options) {
+            var result = {};
+            var fields = (this.fieldsOfInterest != null ? this.fieldsOfInterest : Object.keys(response));
+            for (var i = 0; i < fields.length; i++) {
+                var key = fields[i];
+                var value = response[key] || '';
+                if (key == "type") {
+                    this.sobjectType = value;
+                }
+                else
+                {
+                    result[key] = value;
+                }
+            }
+            result.Id = response.Id;
+            return result;
+        }
+    });
+
+    Backbone.sfdc.Collection = Backbone.Collection.extend({
+        search: function(sosl) {
+            var that = this;
+            forcetkClient.search(sosl,
+                                function(response) {
+                                    var results = [];
+                                    for(var i=0; i<response.length; i++)
+                                    {
+                                        results.push($.extend({Id:response[i].Id}, response[i].attributes));
+                                    }
+                                    that.reset(results.records, {'parse':true});
+                                },
+                                function(error) {
+                                    console.log(error);
+                                });
+        }
+    });
+
+
+})(Backbone, _, $);
