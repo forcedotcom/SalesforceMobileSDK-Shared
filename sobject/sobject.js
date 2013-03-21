@@ -4,6 +4,13 @@
     // Private forcetk client
     var forcetkClient;
 
+    // Private function
+    var getFrontDoorURL = function(url) {
+        return forcetkClient.instanceUrl + "/secur/frontdoor.jsp?"
+            + "sid=" + encodeURIComponent(forcetkClient.sessionId) 
+            + "&retURL=" + encodeURIComponent(url);
+    };
+
     // Create namespace
     Backbone.sfdc = {};
 
@@ -23,14 +30,10 @@
         {
             forcetkClient.retrieve(modelClass.sobjectType, model.Id, modelClass.fieldsOfInterest, 
                                    function(result) {
-                                       for (var key in modelClass.fieldsOfInterest) {
-                                           result[key] = result[key] || '';
-                                       }
-
-                                       options.success(result);
+                                       options.success(result, {'parse':true});
                                    },
                                    function(error) {
-                                       console.log(error)
+                                       options.error(error);
                                    });
         }
         else
@@ -41,7 +44,19 @@
 
     Backbone.sfdc.Model = Backbone.Model.extend({
         // NB: subclass must have class properties sobjectType and fieldsOfInterest
-        sync: Backbone.sfdc.sync
+        sync: Backbone.sfdc.sync,
+
+        parse: function(response, options) {
+            var modelClass = this.__proto__.constructor;
+            var result = {};
+            for (var i = 0; i < modelClass.fieldsOfInterest.length; i++) {
+                var key = modelClass.fieldsOfInterest[i];
+                var value = response[key] || '';
+                result[key] = value;
+            }
+            result.Id = response.Id;
+            return result;
+        }
     });
 
     Backbone.sfdc.Collection = Backbone.Collection.extend({
@@ -51,7 +66,7 @@
                                 + " FROM "  + this.model.sobjectType
                                 + " WHERE " + whereClause,
                                 function(results) {
-                                    that.reset(results.records);
+                                    that.reset(results.records, {'parse':true});
                                 },
                                 function(error) {
                                     console.log(error);
