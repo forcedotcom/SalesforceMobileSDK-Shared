@@ -14,6 +14,7 @@
 <script src="../libs/jquery-1.8.3.min.js"></script>
 <script src="../libs/underscore-1.4.4.min.js"></script>
 <script src="../libs/backbone-1.0.0.min.js"></script>
+<script src="../libs/backbone.force.js"></script>
 <!-- Uncomment following when in container -->
 <!--
 <script src="cordova-2.3.0.js"></script>
@@ -21,45 +22,330 @@
 <script src="SalesforceOAuthPlugin.js"></script>
 -->
 <script src="../../forcetk.js"></script>
-<script src="../sobject.js"></script>
-<script src="js/app.js"></script>
+
+<!-- ----------------------------------------------- Templates --------------------------------------------------- -->
+
+<script id="search-page" type="text/template">
+<div class="header">
+    <h1>Users</h1>
+    <a href="#" class="header-button header-button-icon header-button-right search" id="view-home-refresh"><button><img src="css/images/refresh-icon.png" alt="Refresh" width="14" height="18"></button></a>
+</div>
+
+<div style="height: 34px; padding-left:6px;padding-right: 6px;padding-top: 5px;margin-bottom: 6px;border-bottom: solid 1px #666">
+    <input type="search" class="search-key" placeholder="Search" style="width:100%;font-size: 14px;padding-top:2px;padding-bottom:2px;margin-top:2px;margin-bottom:2px;border: solid 1px #777777;"/>
+</div>
+
+<div class="scroll striped" style="top:84px;">
+    <ul id="myList" class="tableview tableview-links"></ul>
+</div>
+</script>
+
+<script id="user-list-item" type="text/template">
+<a href='#users/<%= Id %>' class="pad-right">
+    <img src="<%= SmallPhotoUrl %>" width="50" class="list-icon" style="padding-right:6px;"/>
+    <div class="story">
+    	<b><%= FirstName %> <%= LastName %></b>
+    	<span class="metadata">
+            <span class="link-text"><%= Title %></span><br/>
+        </span>
+    </div>
+</a>
+</script>
+
+<script id="user-page" type="text/template">
+<div class="header">
+    <a href="#" class="header-button header-button-left header-back-button">
+        <button>Back</button>
+    </a>
+    <a href="#" class="header-button header-button-icon header-button-right search" id="view-home-refresh">
+        <button><img src="css/images/search-icon.png" alt="Refresh" width="16" height="16"></button>
+    </a>
+
+    <h1>User</h1>
+</div>
+
+<div class="scroll striped" style="top:44px;">
+    <div class="employee-summary">
+        <header>
+            <img id="employeePic" src="<%= SmallPhotoUrl %>" width="100"/>
+
+            <h1><%= FirstName %> <%= LastName %></h1>
+            <span class="link-text"><%= Title %></span><br/>
+            <span class="metadata"><%= City %></span>
+        </header>
+    </div>
+
+    <ul class="tableview tableview-links">
+        <li>
+            <a href="tel:<%= MobilePhone %>">
+                <div class="story">
+                    <b>Call Cell</b><br/>
+                    <span class="metadata"><%= MobilePhone %></span>
+                </div>
+                <img src="css/images/call.png" class="action-icon"/>
+            </a>
+        </li>
+        <li>
+            <a href="sms:<%= MobilePhone %>">
+                <div class="story">
+                    <b>SMS</b><br/>
+                    <span class="metadata"><%= MobilePhone %></span>
+                </div>
+                <img src="css/images/message.png" class="action-icon"/>
+            </a>
+        </li>
+        <li>
+            <a href="mailto:<%= Email %>">
+                <div class="story">
+                    <b>Email</b><br/>
+                    <span class="metadata"><%= Email %></span>
+                </div>
+                <img src="css/images/mail.png" class="action-icon"/>
+            </a>
+        </li>
+    </ul>
+</div>
+</script>
 
 <script>
-    jQuery(document).ready(function() {
-        //Add event listeners and so forth here
-        console.log("onLoad: jquery ready");
+// ----------------------------------------------- Application bootstrap ------------------------------------------- //
 
-        // Use following when in container
-		// document.addEventListener("deviceready", onDeviceReady,false);
+jQuery(document).ready(function() {
+    //Add event listeners and so forth here
+    console.log("onLoad: jquery ready");
 
-        // Use  when testing in browser
-        // Also make sure to start browser with same origin policy disable
-        // See http://joshuamcginnis.com/2011/02/28/how-to-disable-same-origin-policy-in-chrome/
-        var creds = {
-            accessToken: "--will-be-obtained-by-refres",
-            refreshToken: "5Aep861_OKMvio5gy9sGt9Z9mdt62xXK.9ugif6nZJYknXeANTICBf4ityN9j6YDgHjFvbzu6FTUQ==",
-            clientId: "3MVG92.uWdyphVj4bnolD7yuIpCQsNgddWtqRND3faxrv9uKnbj47H4RkwheHA2lKY4cBusvDVp0M6gdGE8hp",
-            loginUrl: "https://test.salesforce.com",
-            instanceUrl: "https://tapp0.salesforce.com",
-            userAgent: "sobject-proto"
-        };
-        getAuthCredentialsSuccess(creds);
-    });
+    // Use following when in container
+	// document.addEventListener("deviceready", onDeviceReady,false);
 
-    // When this function is called, cordova has been initialized and is ready to roll 
-    function onDeviceReady() {
-        console.log("onDeviceReady: cordova ready");
-		//Call getAuthCredentials to get the initial session credentials
-        cordova.require("salesforce/plugin/oauth").getAuthCredentials(getAuthCredentialsSuccess, getAuthCredentialsError);
+    // Use  when testing in browser
+    // Also make sure to start browser with same origin policy disable
+    // See http://joshuamcginnis.com/2011/02/28/how-to-disable-same-origin-policy-in-chrome/
+    var creds = {
+        accessToken: "--will-be-obtained-by-refres",
+        refreshToken: "5Aep861_OKMvio5gy9sGt9Z9mdt62xXK.9ugif6nZJYknXeANTICBf4ityN9j6YDgHjFvbzu6FTUQ==",
+        clientId: "3MVG92.uWdyphVj4bnolD7yuIpCQsNgddWtqRND3faxrv9uKnbj47H4RkwheHA2lKY4cBusvDVp0M6gdGE8hp",
+        loginUrl: "https://test.salesforce.com",
+        instanceUrl: "https://tapp0.salesforce.com",
+        userAgent: "sobject-proto"
+    };
+    getAuthCredentialsSuccess(creds);
+});
+
+// When this function is called, cordova has been initialized and is ready to roll 
+function onDeviceReady() {
+    console.log("onDeviceReady: cordova ready");
+	//Call getAuthCredentials to get the initial session credentials
+    cordova.require("salesforce/plugin/oauth").getAuthCredentials(getAuthCredentialsSuccess, getAuthCredentialsError);
+}
+
+function  getAuthCredentialsSuccess(creds) {
+    appStart(creds);
+}
+
+function getAuthCredentialsError(error) {
+    console.log("getAuthCredentialsError: " + error);
+}
+
+// Creating the application namespace
+var app = {
+    models: {},
+    views: {},
+    utils: {}
+};
+
+function appStart(creds)
+{
+    var apiVersion = "v26.0";
+
+    // forcetkClient
+    var forcetkClient = new forcetk.Client(creds.clientId, creds.loginUrl);
+    forcetkClient.setSessionToken(creds.accessToken, apiVersion, creds.instanceUrl);
+    forcetkClient.setRefreshToken(creds.refreshToken);
+    forcetkClient.setUserAgentString(creds.userAgent);
+    Backbone.Force.initialize(forcetkClient);(creds, apiVersion);
+
+    // router
+    app.router = new app.Router();
+
+    // Go!
+    Backbone.history.start();
+}
+
+// -------------------------------------------------- The Models ---------------------------------------------------- //
+
+// The User Model
+app.models.User = Backbone.Force.Model.extend({
+    type: 'User',
+    fields: ['Id', 'FirstName', 'LastName', 'SmallPhotoUrl', 'Title', 'Email', 'MobilePhone','City']
+});
+
+// The UserCollection Model
+app.models.UserCollection = Backbone.Force.Collection.extend({
+    model: app.models.User
+});
+
+
+// -------------------------------------------------- The Views ---------------------------------------------------- //
+
+app.views.SearchPage = Backbone.View.extend({
+
+    template: _.template($('#search-page').html()),
+
+    render: function(eventName) {
+        $(this.el).html(this.template(this.model.toJSON()));
+        this.listView = new app.views.UserListView({el: $('ul', this.el), model: this.model});
+        this.listView.render();
+        return this;
+    },
+
+    events: {
+        "keyup .search-key": "search"
+    },
+
+    search: function(event) {
+        var key = $('.search-key').val();
+        this.model.query = "WHERE Name like '" + key + "%'";
+        this.model.fetch();
     }
-        
-    function  getAuthCredentialsSuccess(creds) {
-    	appStart(creds);
+});
+
+app.views.UserListView = Backbone.View.extend({
+
+    initialize: function() {
+        this.model.bind("reset", this.render, this);
+    },
+
+    render: function(eventName) {
+        $(this.el).empty();
+        _.each(this.model.models, function(user) {
+            $(this.el).append(new app.views.UserListItemView({model: user}).render().el);
+        }, this);
+        return this;
     }
 
-    function getAuthCredentialsError(error) {
-        console.log("getAuthCredentialsError: " + error);
+});
+
+app.views.UserListItemView = Backbone.View.extend({
+
+    tagName: "li",
+    template: _.template($('#user-list-item').html()),
+
+    render: function(eventName) {
+        $(this.el).html(this.template(this.model.toJSON()));
+        return this;
     }
+
+});
+
+app.views.UserPage = Backbone.View.extend({
+
+    initialize: function() {
+        this.template = _.template(app.utils.templateLoader.get('user-page'));
+    },
+
+    render: function(eventName) {
+        $(this.el).html(this.template(this.model.toJSON()));
+        return this;
+    }
+
+});
+
+
+// ----------------------------------------------- The Application Router ------------------------------------------ //
+
+app.Router = Backbone.Router.extend({
+
+    routes: {
+        "": "list",
+        "list": "list",
+        "users/:id": "userDetails"
+    },
+
+    initialize: function() {
+
+        var self = this;
+
+        // Keep track of the history of pages (we only store the page URL). Used to identify the direction
+        // (left or right) of the sliding transition between pages.
+        this.pageHistory = [];
+
+        // Register event listener for back button troughout the app
+        $('#content').on('click', '.header-back-button', function(event) {
+            window.history.back();
+            return false;
+        });
+
+        // We keep a single instance of the SearchPage and its associated User collection throughout the app
+        this.searchResults = new app.models.UserCollection();
+        this.searchPage = new app.views.SearchPage({model: this.searchResults});
+        this.searchPage.render();
+        $(this.searchPage.el).attr('id', 'searchPage');
+    },
+
+    list: function() {
+        var self = this;
+        this.slidePage(this.searchPage);
+    },
+
+    userDetails: function(id) {
+        var user = new app.models.User(),
+            self = this;
+        user.Id = id;
+        user.fetch({
+            success: function(data) {
+                self.slidePage(new app.views.UserPage({model: data}).render());
+            }
+        });
+    },
+
+    slidePage: function(page) {
+        var slideFrom,
+            self = this;
+
+        if (!this.currentPage) {
+            // If there is no current page (app just started) -> No transition: Position new page in the view port
+            $(page.el).attr('class', 'page stage-center');
+            $('#content').append(page.el);
+            this.pageHistory = [window.location.hash];
+            this.currentPage = page;
+            return;
+        }
+
+        // Cleaning up: remove old pages that were moved out of the viewport
+        $('.stage-right, .stage-left').not('#searchPage').remove();
+
+        if (page === this.searchPage) {
+            // Always apply a Back (slide from left) transition when we go back to the search page
+            slideFrom = "left";
+            $(page.el).attr('class', 'page stage-left');
+            // Reinitialize page history
+            this.pageHistory = [window.location.hash];
+        } else if (this.pageHistory.length > 1 && window.location.hash === this.pageHistory[this.pageHistory.length - 2]) {
+            // The new page is the same as the previous page -> Back transition
+            slideFrom = "left";
+            $(page.el).attr('class', 'page stage-left');
+            this.pageHistory.pop();
+        } else {
+            // Forward transition (slide from right)
+            slideFrom = "right";
+            $(page.el).attr('class', 'page stage-right');
+            this.pageHistory.push(window.location.hash);
+        }
+
+        $('#content').append(page.el);
+
+        // Wait until the new page has been added to the DOM...
+        setTimeout(function() {
+            // Slide out the current page: If new page slides from the right -> slide current page to the left, and vice versa
+            $(self.currentPage.el).attr('class', 'page transition ' + (slideFrom === "right" ? 'stage-left' : 'stage-right'));
+            // Slide in the new page
+            $(page.el).attr('class', 'page stage-center transition');
+            self.currentPage = page;
+        });
+
+    }
+
+});
 </script>
 
 </body>
