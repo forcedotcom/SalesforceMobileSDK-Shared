@@ -17,14 +17,13 @@
 
     Backbone.Force.Model = Backbone.Model.extend({
         // Fields that need to be defined on every instance
-        Id:null,
         sobjectType:null,
         fieldsOfInterest:null,
         
         sync: function(method, model, options) {
             if (method == "read")
             {
-                forcetkClient.retrieve(this.sobjectType, this.Id, this.fieldsOfInterest, 
+                forcetkClient.retrieve(this.sobjectType, this.get("Id"), this.fieldsOfInterest, 
                                        function(result) {
                                            options.success(result, {'parse':true});
                                        },
