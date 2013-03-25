@@ -57,12 +57,8 @@
                     if (client.proxyUrl !== null) {
                         xhr.setRequestHeader('SalesforceProxy-Endpoint', options.url);
                     }
-                    xhr.setRequestHeader(client.authzHeader, "Bearer " + client.sessionId);
+                    xhr.setRequestHeader(client.authzHeader, "OAuth " + client.sessionId);
                     xhr.setRequestHeader('X-User-Agent', 'salesforce-toolkit-rest-javascript/' + client.apiVersion);
-                	
-                    if (client.userAgentString !== null) {
-                        xhr.setRequestHeader('User-Agent',client.userAgentString);
-                    }
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
                     if (client.refreshToken && jqXHR.status === 401) {
@@ -285,8 +281,7 @@
                 }
 
             };
-            // wrapError was removed from backbone before 1.0
-            // options.error = Backbone.wrapError(options.error, collection, options);
+            options.error = Backbone.wrapError(options.error, collection, options);
             return this.sync.call(this, 'read', this, options);
         }
     });

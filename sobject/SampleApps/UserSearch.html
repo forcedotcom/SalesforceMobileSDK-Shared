@@ -14,14 +14,14 @@
 <script src="../libs/jquery-1.8.3.min.js"></script>
 <script src="../libs/underscore-1.4.4.min.js"></script>
 <script src="../libs/backbone-1.0.0.min.js"></script>
-<script src="../libs/backbone.force.js"></script>
 <!-- Uncomment following when in container -->
 <!--
 <script src="cordova-2.3.0.js"></script>
 <script src="SFHybridApp.js"></script>
 <script src="SalesforceOAuthPlugin.js"></script>
 -->
-<script src="../../forcetk.js"></script>
+<script src="../libs/forcetk.js"></script>
+<script src="../libs/forcebone.js"></script>
 
 <!-- ----------------------------------------------- Templates --------------------------------------------------- -->
 
@@ -128,22 +128,21 @@ jQuery(document).ready(function() {
         instanceUrl: "https://tapp0.salesforce.com",
         userAgent: "sobject-proto"
     };
-    getAuthCredentialsSuccess(creds);
+    appStart(creds);
 });
 
 // When this function is called, cordova has been initialized and is ready to roll 
 function onDeviceReady() {
     console.log("onDeviceReady: cordova ready");
 	//Call getAuthCredentials to get the initial session credentials
-    cordova.require("salesforce/plugin/oauth").getAuthCredentials(getAuthCredentialsSuccess, getAuthCredentialsError);
-}
+    cordova.require("salesforce/plugin/oauth").getAuthCredentials(
+        function(creds) {
+            appStart(creds);
+        }, 
+        function(error) { 
+            console.log("Auth failed: " + error); 
+        });
 
-function  getAuthCredentialsSuccess(creds) {
-    appStart(creds);
-}
-
-function getAuthCredentialsError(error) {
-    console.log("getAuthCredentialsError: " + error);
 }
 
 // Creating the application namespace
@@ -157,12 +156,8 @@ function appStart(creds)
 {
     var apiVersion = "v26.0";
 
-    // forcetkClient
-    var forcetkClient = new forcetk.Client(creds.clientId, creds.loginUrl);
-    forcetkClient.setSessionToken(creds.accessToken, apiVersion, creds.instanceUrl);
-    forcetkClient.setRefreshToken(creds.refreshToken);
-    forcetkClient.setUserAgentString(creds.userAgent);
-    Backbone.Force.initialize(forcetkClient);(creds, apiVersion);
+    // Backbone.Force init
+    Backbone.Force.init(creds, apiVersion);
 
     // router
     app.router = new app.Router();
@@ -173,15 +168,25 @@ function appStart(creds)
 
 // -------------------------------------------------- The Models ---------------------------------------------------- //
 
+var userFields = ['Id', 'FirstName', 'LastName', 'SmallPhotoUrl', 'Title', 'Email', 'MobilePhone','City'];
+
 // The User Model
 app.models.User = Backbone.Force.Model.extend({
-    type: 'User',
-    fields: ['Id', 'FirstName', 'LastName', 'SmallPhotoUrl', 'Title', 'Email', 'MobilePhone','City']
+    sobjectType: 'User',
+    fieldsOfInterest: userFields
 });
 
 // The UserCollection Model
 app.models.UserCollection = Backbone.Force.Collection.extend({
-    model: app.models.User
+    key: null,
+
+    model: app.models.User,
+    soql: function() {
+        return "SELECT " + userFields.join(",")  
+            + " FROM User"
+            + " WHERE Name like '" + this.key + "%'";
+    }
+
 });
 
 
@@ -192,7 +197,7 @@ app.views.SearchPage = Backbone.View.extend({
     template: _.template($('#search-page').html()),
 
     render: function(eventName) {
-        $(this.el).html(this.template(this.model.toJSON()));
+        $(this.el).html(this.template());
         this.listView = new app.views.UserListView({el: $('ul', this.el), model: this.model});
         this.listView.render();
         return this;
@@ -203,8 +208,7 @@ app.views.SearchPage = Backbone.View.extend({
     },
 
     search: function(event) {
-        var key = $('.search-key').val();
-        this.model.query = "WHERE Name like '" + key + "%'";
+        this.model.key = $('.search-key').val();
         this.model.fetch();
     }
 });
@@ -230,6 +234,7 @@ app.views.UserListItemView = Backbone.View.extend({
     tagName: "li",
     template: _.template($('#user-list-item').html()),
 
+
     render: function(eventName) {
         $(this.el).html(this.template(this.model.toJSON()));
         return this;
@@ -239,9 +244,7 @@ app.views.UserListItemView = Backbone.View.extend({
 
 app.views.UserPage = Backbone.View.extend({
 
-    initialize: function() {
-        this.template = _.template(app.utils.templateLoader.get('user-page'));
-    },
+    template: _.template($('#user-page').html()),
 
     render: function(eventName) {
         $(this.el).html(this.template(this.model.toJSON()));
@@ -263,7 +266,7 @@ app.Router = Backbone.Router.extend({
 
     initialize: function() {
 
-        var self = this;
+        var that = this;
 
         // Keep track of the history of pages (we only store the page URL). Used to identify the direction
         // (left or right) of the sliding transition between pages.
@@ -283,24 +286,24 @@ app.Router = Backbone.Router.extend({
     },
 
     list: function() {
-        var self = this;
+        var that = this;
         this.slidePage(this.searchPage);
     },
 
     userDetails: function(id) {
-        var user = new app.models.User(),
-            self = this;
+        var that = this;
+        var user = new app.models.User();
         user.Id = id;
         user.fetch({
             success: function(data) {
-                self.slidePage(new app.views.UserPage({model: data}).render());
+                that.slidePage(new app.views.UserPage({model: data}).render());
             }
         });
     },
 
     slidePage: function(page) {
         var slideFrom,
-            self = this;
+            that = this;
 
         if (!this.currentPage) {
             // If there is no current page (app just started) -> No transition: Position new page in the view port
@@ -337,10 +340,10 @@ app.Router = Backbone.Router.extend({
         // Wait until the new page has been added to the DOM...
         setTimeout(function() {
             // Slide out the current page: If new page slides from the right -> slide current page to the left, and vice versa
-            $(self.currentPage.el).attr('class', 'page transition ' + (slideFrom === "right" ? 'stage-left' : 'stage-right'));
+            $(that.currentPage.el).attr('class', 'page transition ' + (slideFrom === "right" ? 'stage-left' : 'stage-right'));
             // Slide in the new page
             $(page.el).attr('class', 'page stage-center transition');
-            self.currentPage = page;
+            that.currentPage = page;
         });
 
     }
