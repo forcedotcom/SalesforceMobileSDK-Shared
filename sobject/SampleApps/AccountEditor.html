@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Users</title>
+<title>Accounts</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
 <link rel="stylesheet" href="css/styles.css"/>
 </head>
@@ -27,9 +27,9 @@
 
 <script id="search-page" type="text/template">
 <div class="header">
-    <h1>Users</h1>
-    <a href="#" class="header-button header-button-icon header-button-right search">
-      <button><img src="css/images/refresh-icon.png" alt="Refresh" width="14" height="18"></button>
+    <h1>Accounts</h1>
+    <a href="#add" class="header-button header-button-icon header-button-right search">
+      <button><span style="font-size:18px;font-weight:bold">+</span></button>
     </a>
 </div>
 
@@ -42,67 +42,41 @@
 </div>
 </script>
 
-<script id="user-list-item" type="text/template">
-<a href='#users/<%= Id %>' class="pad-right">
-    <img src="<%= SmallPhotoUrl %>" width="50" class="list-icon" style="padding-right:6px;"/>
+<script id="account-list-item" type="text/template">
+<a href='#accounts/<%= Id %>' class="pad-right">
     <div class="story">
-    	<b><%= FirstName %> <%= LastName %></b>
-    	<span class="metadata">
-            <span class="link-text"><%= Title %></span><br/>
-        </span>
+    	<b><%= Name %></b>
     </div>
 </a>
 </script>
 
-<script id="user-page" type="text/template">
+<script id="account-page" type="text/template">
 <div class="header">
     <a href="#" class="header-button header-button-left header-back-button">
         <button>Back</button>
     </a>
-    <a href="#" class="header-button header-button-icon header-button-right search">
-        <button><img src="css/images/search-icon.png" alt="Refresh" width="16" height="16"></button>
+    <a href="#edit/accounts/<%= Id %>" class="header-button header-button-icon header-button-right search">
+        <button><span style="font-size:18px;font-weight:bold">&#9998;</span></button>
     </a>
 
-    <h1>User</h1>
+    <h1>Account</h1>
 </div>
 
 <div class="scroll striped" style="top:44px;">
     <div class="sobject-summary">
         <header>
-            <img id="employeePic" src="<%= SmallPhotoUrl %>" width="100"/>
-
-            <h1><%= FirstName %> <%= LastName %></h1>
-            <span class="link-text"><%= Title %></span><br/>
-            <span class="metadata"><%= City %></span>
+            <h1><%= Name %></h1>
         </header>
     </div>
 
     <ul class="tableview tableview-links">
         <li>
-            <a href="tel:<%= MobilePhone %>">
+            <a href="tel:<%= Phone %>">
                 <div class="story">
-                    <b>Call Cell</b><br/>
-                    <span class="metadata"><%= MobilePhone %></span>
+                    <b>Call</b><br/>
+                    <span class="metadata"><%= Phone %></span>
                 </div>
                 <img src="css/images/call.png" class="action-icon"/>
-            </a>
-        </li>
-        <li>
-            <a href="sms:<%= MobilePhone %>">
-                <div class="story">
-                    <b>SMS</b><br/>
-                    <span class="metadata"><%= MobilePhone %></span>
-                </div>
-                <img src="css/images/message.png" class="action-icon"/>
-            </a>
-        </li>
-        <li>
-            <a href="mailto:<%= Email %>">
-                <div class="story">
-                    <b>Email</b><br/>
-                    <span class="metadata"><%= Email %></span>
-                </div>
-                <img src="css/images/mail.png" class="action-icon"/>
             </a>
         </li>
     </ul>
@@ -128,7 +102,7 @@ jQuery(document).ready(function() {
         clientId: "3MVG92.uWdyphVj4bnolD7yuIpCQsNgddWtqRND3faxrv9uKnbj47H4RkwheHA2lKY4cBusvDVp0M6gdGE8hp",
         loginUrl: "https://test.salesforce.com",
         instanceUrl: "https://tapp0.salesforce.com",
-        userAgent: "sobject-proto"
+        accountAgent: "sobject-proto"
     };
     appStart(creds);
 });
@@ -170,22 +144,22 @@ function appStart(creds)
 
 // -------------------------------------------------- The Models ---------------------------------------------------- //
 
-var userFields = ['Id', 'FirstName', 'LastName', 'SmallPhotoUrl', 'Title', 'Email', 'MobilePhone','City'];
+var accountFields = ['Id', 'Name', 'Phone'];
 
-// The User Model
-app.models.User = Backbone.Force.Model.extend({
-    sobjectType: 'User',
-    fieldsOfInterest: userFields
+// The Account Model
+app.models.Account = Backbone.Force.Model.extend({
+    sobjectType: 'Account',
+    fieldsOfInterest: accountFields
 });
 
-// The UserCollection Model
-app.models.UserCollection = Backbone.Force.Collection.extend({
+// The AccountCollection Model
+app.models.AccountCollection = Backbone.Force.Collection.extend({
     key: null,
 
-    model: app.models.User,
+    model: app.models.Account,
     soql: function() {
-        return "SELECT " + userFields.join(",")  
-            + " FROM User"
+        return "SELECT " + accountFields.join(",")  
+            + " FROM Account"
             + " WHERE Name like '" + this.key + "%'";
     }
 
@@ -200,7 +174,7 @@ app.views.SearchPage = Backbone.View.extend({
 
     render: function(eventName) {
         $(this.el).html(this.template());
-        this.listView = new app.views.UserListView({el: $('ul', this.el), model: this.model});
+        this.listView = new app.views.AccountListView({el: $('ul', this.el), model: this.model});
         this.listView.render();
         return this;
     },
@@ -215,7 +189,7 @@ app.views.SearchPage = Backbone.View.extend({
     }
 });
 
-app.views.UserListView = Backbone.View.extend({
+app.views.AccountListView = Backbone.View.extend({
 
     initialize: function() {
         this.model.bind("reset", this.render, this);
@@ -223,18 +197,18 @@ app.views.UserListView = Backbone.View.extend({
 
     render: function(eventName) {
         $(this.el).empty();
-        _.each(this.model.models, function(user) {
-            $(this.el).append(new app.views.UserListItemView({model: user}).render().el);
+        _.each(this.model.models, function(account) {
+            $(this.el).append(new app.views.AccountListItemView({model: account}).render().el);
         }, this);
         return this;
     }
 
 });
 
-app.views.UserListItemView = Backbone.View.extend({
+app.views.AccountListItemView = Backbone.View.extend({
 
     tagName: "li",
-    template: _.template($('#user-list-item').html()),
+    template: _.template($('#account-list-item').html()),
 
 
     render: function(eventName) {
@@ -244,9 +218,9 @@ app.views.UserListItemView = Backbone.View.extend({
 
 });
 
-app.views.UserPage = Backbone.View.extend({
+app.views.AccountPage = Backbone.View.extend({
 
-    template: _.template($('#user-page').html()),
+    template: _.template($('#account-page').html()),
 
     render: function(eventName) {
         $(this.el).html(this.template(this.model.toJSON()));
@@ -263,7 +237,9 @@ app.Router = Backbone.Router.extend({
     routes: {
         "": "list",
         "list": "list",
-        "users/:id": "viewUser"
+        "add": "addAccount",
+        "accounts/:id": "viewAccount",
+        "edit/accounts/:id": "editAccount"
     },
 
     initialize: function() {
@@ -280,8 +256,8 @@ app.Router = Backbone.Router.extend({
             return false;
         });
 
-        // We keep a single instance of the SearchPage and its associated User collection throughout the app
-        this.searchResults = new app.models.UserCollection();
+        // We keep a single instance of the SearchPage and its associated Account collection throughout the app
+        this.searchResults = new app.models.AccountCollection();
         this.searchPage = new app.views.SearchPage({model: this.searchResults});
         this.searchPage.render();
         $(this.searchPage.el).attr('id', 'searchPage');
@@ -292,15 +268,23 @@ app.Router = Backbone.Router.extend({
         this.slidePage(this.searchPage);
     },
 
-    viewUser: function(id) {
+    addAccount: function() {
+        alert("Add account");
+    },
+
+    viewAccount: function(id) {
         var that = this;
-        var user = new app.models.User();
-        user.Id = id;
-        user.fetch({
+        var account = new app.models.Account();
+        account.Id = id;
+        account.fetch({
             success: function(data) {
-                that.slidePage(new app.views.UserPage({model: data}).render());
+                that.slidePage(new app.views.AccountPage({model: data}).render());
             }
         });
+    },
+
+    editAccount: function() {
+        alert("Edit account");
     },
 
     slidePage: function(page) {
