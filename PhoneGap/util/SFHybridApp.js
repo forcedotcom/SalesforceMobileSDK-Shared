@@ -158,21 +158,18 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
  * Helper function used to call the native side
  */
 cordova.define("salesforce/util/exec", function(require, exports, module) {
-
     var exec = function(pluginVersion, successCB, errorCB, service, action, args) {
         var defaultSuccessCB = function() {
             console.log(service + ":" + action + " succeeded");
         };
-
         var defaultErrorCB = function() {
             console.log(service + ":" + action + " failed");
         };
-
         successCB = typeof successCB !== "function" ? defaultSuccessCB : successCB;
         error = typeof errorCB !== "function" ? defaultErrorCB : errorCB;
-
         args.unshift("pluginSDKVersion:" + pluginVersion);
-        return cordova.exec(successCB, errorCB, service, action, args);                  
+        var cordovaExec = require('cordova/exec');
+        return cordovaExec(successCB, errorCB, service, action, args);                  
     };
 
     /**
@@ -185,7 +182,7 @@ cordova.define("salesforce/util/exec", function(require, exports, module) {
 
 cordova.define("salesforce/plugin/sdkinfo", function(require, exports, module) {
     // Version this js was shipped with
-    var SDK_VERSION = "2.0";
+    var SDK_VERSION = "2.0unstable";
 
     var SERVICE = "com.salesforce.sdkinfo";
 
