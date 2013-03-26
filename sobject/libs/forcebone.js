@@ -19,13 +19,36 @@
         // Fields that need to be defined on every instance
         sobjectType:null,
         fieldsOfInterest:null,
-        
+        idAttribute: 'Id',
+
         sync: function(method, model, options) {
+            var that = this;
             if (method == "read")
             {
-                forcetkClient.retrieve(this.sobjectType, this.get("Id"), this.fieldsOfInterest, 
+                forcetkClient.retrieve(this.sobjectType, this.id, this.fieldsOfInterest, 
                                        function(result) {
-                                           options.success(result, {'parse':true});
+                                           options.success(result);
+                                       },
+                                       function(error) {
+                                           options.error(error);
+                                       });
+            }
+            else if (method == "create")
+            {
+                forcetkClient.create(this.sobjectType, _.omit(this.attributes, 'Id'),
+                                       function(result) {
+                                           that.set('Id', result.id);
+                                           options.success(that);
+                                       },
+                                       function(error) {
+                                           options.error(error);
+                                       });
+            }
+            else if (method == "update")
+            {
+                forcetkClient.update(this.sobjectType, this.id, this.changed,
+                                       function(result) {
+                                           options.success(that);
                                        },
                                        function(error) {
                                            options.error(error);
@@ -35,17 +58,6 @@
             {
                 // TBD
             }
-        },
-
-        parse: function(response, options) {
-            var result = {};
-            for (var i = 0; i < this.fieldsOfInterest.length; i++) {
-                var key = this.fieldsOfInterest[i];
-                var value = response[key] || '';
-                result[key] = value;
-            }
-            result.Id = response.Id;
-            return result;
         }
     });
 
@@ -60,7 +72,7 @@
                 if (this.soql != null) {
                     forcetkClient.query(_.isFunction(this.soql) ? this.soql() : this.soql,
                                         function(results) {
-                                            that.reset(results.records, {'parse':true});
+                                            that.reset(results.records);
                                         },
                                         function(error) {
                                             options.error(error);

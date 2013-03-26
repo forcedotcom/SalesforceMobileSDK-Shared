@@ -47,6 +47,10 @@
 <a href='#accounts/<%= Id %>' class="pad-right">
     <div class="story">
     	<b><%= Name %></b>
+    	<span class="metadata">
+            <span class="link-text"><%= Id %></span><br/>
+            <span class="link-text"><%= Industry %></span><br/>
+        </span>
     </div>
 </a>
 </script>
@@ -57,7 +61,7 @@
         <button>Back</button>
     </a>
     <a href="#edit/accounts/<%= Id %>" class="header-button header-button-icon header-button-right search">
-        <button><span style="font-size:18px;font-weight:bold">&#9998;</span></button>
+        <button><span style="font-size:20px;font-weight:bold">&#9998;</span></button>
     </a>
 
     <h1>Account</h1>
@@ -66,7 +70,9 @@
 <div class="scroll striped" style="top:44px;">
     <div class="sobject-summary">
         <header>
-            <h1><%= Name %></h1>
+            <h1><%= Name %> </h1>
+            <span class="link-text"><%= Id %></span><br/>
+            <span class="link-text"><%= Industry %></span><br/>
         </header>
     </div>
 
@@ -89,14 +95,26 @@
     <a href="#" class="header-button header-button-left header-back-button">
         <button>Back</button>
     </a>
+    <a href="#" class="header-button header-button-icon header-button-right search save">
+        <button><span style="font-size:20px;font-weight:bold">&#9745;</span></button>
+    </a>
+
     <h1><%= action %> Account</h1>
 </div>
+<div class="scroll striped" style="top:44px;">
+  <label for="accountName">Name:</label><br/>
+  <input type="text" name="Name" value="<%= Name %>" /><br/>
+  <label for="accountIndustry">Industry:</label><br/>
+  <input type="text" name="Industry" value="<%= Industry %>" /><br/>
+  <label for="accountPhone">Phone:</label><br/>
+  <input type="text" name="Phone" value="<%= Phone %>" /><br/>
+  </div>
 </script>
 
 <script>
 // -------------------------------------------------- The Models ---------------------------------------------------- //
 
-var accountFields = ['Id', 'Name', 'Phone'];
+var accountFields = ['Id', 'Name', 'Industry', 'Phone'];
 
 // The Account Model
 app.models.Account = Backbone.Force.Model.extend({
@@ -106,7 +124,7 @@ app.models.Account = Backbone.Force.Model.extend({
 
 // The AccountCollection Model
 app.models.AccountCollection = Backbone.Force.Collection.extend({
-    key: null,
+    key: "",
 
     model: app.models.Account,
     soql: function() {
@@ -187,10 +205,28 @@ app.views.EditAccountPage = Backbone.View.extend({
 
     render: function(eventName) {
         var action = (null == this.model.get('Id')) ? 'Add' : 'Edit';
+        if (action == "Add") { this.model.set({Name:'', Industry:'', Phone:''}); }
         $(this.el).html(this.template(_.extend({action: action}, this.model.toJSON())));
         return this;
-    }
+    },
 
+    events: {
+        'change': 'change',
+        'click .save': 'save'
+    },
+
+    change: function(evt) {
+        // apply change to model
+        var target = event.target;
+        this.model.set(target.name, target.value);
+    },
+
+    save: function(evt) {
+        evt.preventDefault();
+        this.model.save(null, {success: function(data) {
+            app.router.navigate('#accounts/' + data.get('Id'), {trigger:true});
+        }});
+    }
 });
 
 
@@ -214,7 +250,6 @@ app.Router = Backbone.StackRouter.extend({
         this.searchResults = new app.models.AccountCollection();
         this.startPage = new app.views.SearchPage({model: this.searchResults});
         this.startPage.render();
-        $(this.startPage.el).attr('id', 'searchPage');
     },
 
     list: function() {
