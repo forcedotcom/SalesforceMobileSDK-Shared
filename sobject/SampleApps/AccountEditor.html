@@ -29,7 +29,7 @@
 <script id="search-page" type="text/template">
 <div class="header">
     <h1>Accounts</h1>
-    <a href="#add" class="header-button header-button-icon header-button-right search">
+    <a href="#add" class="header-button header-button-icon header-button-right">
       <button><span style="font-size:18px;font-weight:bold">+</span></button>
     </a>
 </div>
@@ -64,6 +64,10 @@
         <button><span style="font-size:20px;font-weight:bold">&#9998;</span></button>
     </a>
 
+    <a href="#" class="header-button header-button-icon header-button-second-from-right delete">
+        <button><span style="font-size:20px;font-weight:bold">&#10007;</span></button>
+    </a>
+
     <h1>Account</h1>
 </div>
 
@@ -95,7 +99,7 @@
     <a href="#" class="header-button header-button-left header-back-button">
         <button>Back</button>
     </a>
-    <a href="#" class="header-button header-button-icon header-button-right search save">
+    <a href="#" class="header-button header-button-icon header-button-right save">
         <button><span style="font-size:20px;font-weight:bold">&#9745;</span></button>
     </a>
 
@@ -195,6 +199,14 @@ app.views.AccountPage = Backbone.View.extend({
     render: function(eventName) {
         $(this.el).html(this.template(this.model.toJSON()));
         return this;
+    },
+
+    events: {
+        'click .delete': 'delete'
+    },
+
+    delete: function(evt) {
+        this.model.destroy(null);
     }
 
 });
@@ -212,7 +224,8 @@ app.views.EditAccountPage = Backbone.View.extend({
 
     events: {
         'change': 'change',
-        'click .save': 'save'
+        'click .save': 'save',
+        'click .delete': 'delete'
     },
 
     change: function(evt) {

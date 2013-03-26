@@ -54,9 +54,15 @@
                                            options.error(error);
                                        });
             }
-            else
+            else if (method == "delete")
             {
-                // TBD
+                forcetkClient.del(this.sobjectType, this.id,
+                                  function(result) {
+                                      // TBD
+                                  },
+                                  function(error) {
+                                      options.error(error);
+                                  });
             }
         }
     });
