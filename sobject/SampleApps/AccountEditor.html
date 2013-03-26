@@ -25,7 +25,7 @@
 <script src="stackrouter.js"></script>
 <script src="bootstrap.js"></script>
 
-<!-- ----------------------------------------------- Templates --------------------------------------------------- -->
+<!-- --------------------------------------- Search page template ------------------------------------------------- -->
 <script id="search-page" type="text/template">
 <div class="header">
     <h1>Accounts</h1>
@@ -43,6 +43,7 @@
 </div>
 </script>
 
+<!-- --------------------------------------- Account list item Template ------------------------------------------- -->
 <script id="account-list-item" type="text/template">
 <a href='#accounts/<%= Id %>' class="pad-right">
     <div class="story">
@@ -55,6 +56,7 @@
 </a>
 </script>
 
+<!-- --------------------------------------- View account page template ------------------------------------------- -->
 <script id="account-page" type="text/template">
 <div class="header">
     <a href="#" class="header-button header-button-left header-back-button">
@@ -81,6 +83,7 @@
     </div>
 
     <ul class="tableview tableview-links">
+        <% if (Phone) { %>
         <li>
             <a href="tel:<%= Phone %>">
                 <div class="story">
@@ -90,10 +93,12 @@
                 <img src="css/images/call.png" class="action-icon"/>
             </a>
         </li>
+        <% } %>
     </ul>
 </div>
 </script>
 
+<!-- --------------------------------------- Add/edit account page template --------------------------------------- -->
 <script id="edit-account-page" type="text/template">
 <div class="header">
     <a href="#" class="header-button header-button-left header-back-button">
@@ -116,29 +121,23 @@
 </script>
 
 <script>
-// -------------------------------------------------- The Models ---------------------------------------------------- //
-
-var accountFields = ['Id', 'Name', 'Industry', 'Phone'];
-
+// -------------------------------------------------- The Models --------------------------------------------------- //
 // The Account Model
 app.models.Account = Backbone.Force.Model.extend({
     sobjectType: 'Account',
-    fieldsOfInterest: accountFields
+    fieldlist: ['Id', 'Name', 'Industry', 'Phone']
 });
 
 // The AccountCollection Model
 app.models.AccountCollection = Backbone.Force.Collection.extend({
-    key: "",
-
     model: app.models.Account,
-    soql: function() {
-        return "SELECT " + accountFields.join(",")  
+    fieldlist: ['Id', 'Name', 'Industry'],
+    setCriteria: function(key) {
+        this.soql = "SELECT " + this.fieldlist.join(",")  
             + " FROM Account"
-            + " WHERE Name like '" + this.key + "%'";
+            + " WHERE Name like '" + key + "%'";
     }
-
 });
-
 
 // -------------------------------------------------- The Views ---------------------------------------------------- //
 
@@ -158,7 +157,7 @@ app.views.SearchPage = Backbone.View.extend({
     },
 
     search: function(event) {
-        this.model.key = $('.search-key').val();
+        this.model.setCriteria($('.search-key').val());
         this.model.fetch();
     }
 });
@@ -263,6 +262,7 @@ app.Router = Backbone.StackRouter.extend({
         this.searchResults = new app.models.AccountCollection();
         this.startPage = new app.views.SearchPage({model: this.searchResults});
         this.startPage.render();
+        $(this.startPage.el).attr('id', 'searchPage');
     },
 
     list: function() {
@@ -278,6 +278,7 @@ app.Router = Backbone.StackRouter.extend({
         var that = this;
         var account = new app.models.Account({Id: id});
         account.fetch({
+            options:account.fieldlist,
             success: function(data) {
                 that.slidePage(new app.views.AccountPage({model: data}).render());
             }

@@ -18,14 +18,13 @@
     Backbone.Force.Model = Backbone.Model.extend({
         // Fields that need to be defined on every instance
         sobjectType:null,
-        fieldsOfInterest:null,
         idAttribute: 'Id',
 
         sync: function(method, model, options) {
             var that = this;
             if (method == "read")
             {
-                forcetkClient.retrieve(this.sobjectType, this.id, this.fieldsOfInterest, 
+                forcetkClient.retrieve(this.sobjectType, this.id, options.fieldlist, 
                                        function(result) {
                                            options.success(result);
                                        },
@@ -76,13 +75,17 @@
             if (method == "read")
             {
                 if (this.soql != null) {
-                    forcetkClient.query(_.isFunction(this.soql) ? this.soql() : this.soql,
+                    forcetkClient.query(this.soql,
                                         function(results) {
                                             that.reset(results.records);
                                         },
                                         function(error) {
                                             options.error(error);
                                         });
+                }
+                else 
+                {
+                    // TBD
                 }
             }
             else
