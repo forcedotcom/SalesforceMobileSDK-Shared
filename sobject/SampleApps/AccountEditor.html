@@ -4,6 +4,7 @@
 <title>Accounts</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
 <link rel="stylesheet" href="css/styles.css"/>
+<link rel="stylesheet" href="css/bootstrap.min.css"/>
 </head>
 
 <body>
@@ -13,7 +14,7 @@
 <!-- Scripts -->
 <script src="../libs/jquery-1.8.3.min.js"></script>
 <script src="../libs/underscore-1.4.4.min.js"></script>
-<script src="../libs/backbone-1.0.0.min.js"></script>
+<script src="../libs/backbone-1.0.0.js"></script>
 <!-- Uncomment following when in container -->
 <!--
 <script src="cordova-2.3.0.js"></script>
@@ -23,7 +24,7 @@
 <script src="../libs/forcetk.js"></script>
 <script src="../libs/forcebone.js"></script>
 <script src="stackrouter.js"></script>
-<script src="bootstrap.js"></script>
+<script src="auth.js"></script>
 
 <!-- --------------------------------------- Search page template ------------------------------------------------- -->
 <script id="search-page" type="text/template">
@@ -35,7 +36,7 @@
 </div>
 
 <div style="height: 34px; padding-left:6px;padding-right: 6px;padding-top: 5px;margin-bottom: 6px;border-bottom: solid 1px #666">
-    <input type="search" class="search-key" placeholder="Search" style="width:100%;font-size: 14px;padding-top:2px;padding-bottom:2px;margin-top:2px;margin-bottom:2px;border: solid 1px #777777;"/>
+    <input type="search" class="search-key" placeholder="Search" style="width:100%;font-size: 14px;padding:2px 0px;margin-top:2px;margin-bottom:2px;border: solid 1px #777777;"/>
 </div>
 
 <div class="scroll striped" style="top:84px;">
@@ -104,20 +105,32 @@
     <a href="#" class="header-button header-button-left header-back-button">
         <button>Back</button>
     </a>
-    <a href="#" class="header-button header-button-icon header-button-right save">
-        <button><span style="font-size:20px;font-weight:bold">&#9745;</span></button>
-    </a>
-
     <h1><%= action %> Account</h1>
 </div>
 <div class="scroll striped" style="top:44px;">
-  <label for="accountName">Name:</label><br/>
-  <input type="text" name="Name" value="<%= Name %>" /><br/>
-  <label for="accountIndustry">Industry:</label><br/>
-  <input type="text" name="Industry" value="<%= Industry %>" /><br/>
-  <label for="accountPhone">Phone:</label><br/>
-  <input type="text" name="Phone" value="<%= Phone %>" /><br/>
-  </div>
+  <form style="margin:20px">
+    <div class="control-group" id="accountName">
+      <label class="control-label" for="accountName">Name</label>
+      <input class="controls" type="text" name="Name" value="<%= Name %>" />
+      <span class="help-inline" id="accountNameHelp" />
+    </div>
+    <div class="control-group" id="accountIndustry">
+      <label class="control-label" for="accountIndustry">Industry</label>
+      <input class="controls" type="text" name="Industry" value="<%= Industry %>" />
+      <span class="help-inline" id="accountIndustryHelp" />
+    </div>
+    <div class="control-group" id="accountPhone">
+      <label class="control-label" for="accountPhone">Phone</label>
+      <input class="controls" type="text" name="Phone" value="<%= Phone %>" />
+      <span class="help-inline" id="accountPhoneHelp" />
+    </div>
+    <div class="control-group" id="saveGroup">
+      <label class="control-label"/>
+      <button type="submit" class="controls btn save">Save</button>
+      <span class="help-inline" id="saveHelp" />
+    </div>
+  </form>
+</div>
 </script>
 
 <script>
@@ -205,9 +218,16 @@ app.views.AccountPage = Backbone.View.extend({
     },
 
     delete: function(evt) {
-        this.model.destroy(null);
+        evt.preventDefault();
+        this.model.destroy({
+            success: function(data) {
+                app.router.navigate('#', {trigger:true});
+            },
+            error: function(data, xhr, options) {
+                alert("Failed to delete record");
+            }
+        });
     }
-
 });
 
 app.views.EditAccountPage = Backbone.View.extend({
@@ -224,20 +244,34 @@ app.views.EditAccountPage = Backbone.View.extend({
     events: {
         'change': 'change',
         'click .save': 'save',
-        'click .delete': 'delete'
     },
 
     change: function(evt) {
         // apply change to model
         var target = event.target;
         this.model.set(target.name, target.value);
+        // Remove error if any
+        $('#account' + target.name).removeClass('error');
+        $('#account' + target.name + "Help").html("");
     },
 
     save: function(evt) {
         evt.preventDefault();
-        this.model.save(null, {success: function(data) {
-            app.router.navigate('#accounts/' + data.get('Id'), {trigger:true});
-        }});
+        this.model.save(null, {
+            success: function(data) {
+                app.router.navigate('#accounts/' + data.get('Id'), {trigger:true});
+            },
+            error: function(data, xhr, options) {
+                var error = new Backbone.Force.RestError(xhr);
+                _.each(error.details, function(detail) {
+                    _.each(detail.fields, function(field) {
+                        $('#account' + field).addClass('error');
+                        $('#account' + field + "Help").html(detail.errorCode);
+                    });
+                    // TBD error that are not field specific
+                });
+            }
+        });
     }
 });
 
@@ -261,12 +295,16 @@ app.Router = Backbone.StackRouter.extend({
         // We keep a single instance of the SearchPage and its associated Account collection throughout the app
         this.searchResults = new app.models.AccountCollection();
         this.startPage = new app.views.SearchPage({model: this.searchResults});
-        this.startPage.render();
         $(this.startPage.el).attr('id', 'searchPage');
     },
 
     list: function() {
-        this.slidePage(this.startPage);
+        var that = this;
+        this.searchResults.fetch({
+            success: function() {
+                that.slidePage(that.startPage.render());
+            }
+        });
     },
 
     addAccount: function() {
