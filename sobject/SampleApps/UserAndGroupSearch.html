@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Global Search</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
+<link rel="stylesheet" href="css/styles.css"/>
+</head>
+
+<body>
+
+<div id="content"></div>
+
+<!-- Scripts -->
+<script src="../libs/jquery-1.8.3.min.js"></script>
+<script src="../libs/underscore-1.4.4.min.js"></script>
+<script src="../libs/backbone-1.0.0.min.js"></script>
+<!-- Uncomment following when in container -->
+<!--
+<script src="cordova-2.3.0.js"></script>
+<script src="SFHybridApp.js"></script>
+<script src="SalesforceOAuthPlugin.js"></script>
+-->
+<script src="../libs/forcetk.js"></script>
+<script src="../libs/forcebone.js"></script>
+<script src="stackrouter.js"></script>
+<script src="auth.js"></script>
+
+<!-- --------------------------------------- Search page template ------------------------------------------------- -->
+<script id="search-page" type="text/template">
+<div class="header">
+    <h1>User and Group Search</h1>
+    <a href="#" class="header-button header-button-icon header-button-right search">
+      <button><img src="css/images/refresh-icon.png" alt="Refresh" width="14" height="18"></button>
+    </a>
+</div>
+
+<div style="height: 34px; padding-left:6px;padding-right: 6px;padding-top: 5px;margin-bottom: 6px;border-bottom: solid 1px #666">
+    <input type="search" class="search-key" placeholder="Search" style="width:100%;font-size: 14px;padding-top:2px;padding-bottom:2px;margin-top:2px;margin-bottom:2px;border: solid 1px #777777;"/>
+</div>
+
+<div class="scroll striped" style="top:84px;">
+    <ul id="myList" class="tableview tableview-links"></ul>
+</div>
+</script>
+
+<!-- --------------------------------------- CollaborationGroup list item Template --------------------------------- -->
+<script id="group-list-item" type="text/template">
+  <img src="<%= SmallPhotoUrl %>" width="50" class="list-icon" style="padding-right:6px;"/>
+  <div class="story">
+    <b><%= Name %></b><br/>
+    <span class="metadata">
+      <span class="link-text"><%= MemberCount %> members</span>
+    </span>
+  </div>
+</script>
+
+<!-- --------------------------------------- User list item template ---------------------------------------------- -->
+<script id="user-list-item" type="text/template">
+  <img src="<%= SmallPhotoUrl %>" width="50" class="list-icon" style="padding-right:6px;"/>
+  <div class="story">
+    <b><%= FirstName %> <%= LastName %></b><br/>
+    <span class="metadata">
+      <span class="link-text"><%= Title %></span>
+    </span>
+  </div>
+</script>
+<script>
+// -------------------------------------------------- The Models ---------------------------------------------------- //
+
+// Collection
+app.models.SearchCollection = Backbone.Force.Collection.extend({
+    model: Backbone.Force.Model,
+    setCriteria: function(key) {
+        this.sosl = "FIND {" + key + "*} IN ALL FIELDS RETURNING "
+            + "CollaborationGroup (Id, Name, SmallPhotoUrl, MemberCount), "
+            + "User (Id, FirstName, LastName, SmallPhotoUrl, Title) ";
+    }
+});
+
+
+// -------------------------------------------------- The Views ---------------------------------------------------- //
+
+app.views.SearchPage = Backbone.View.extend({
+
+    template: _.template($('#search-page').html()),
+
+    render: function(eventName) {
+        $(this.el).html(this.template());
+        this.listView = new app.views.ListView({el: $('ul', this.el), model: this.model});
+        this.listView.render();
+        return this;
+    },
+
+    events: {
+        "keyup .search-key": "search"
+    },
+
+    search: function(event) {
+        var key = $('.search-key').val();
+        if (key.length >= 2) {
+            this.model.setCriteria(key);
+            this.model.fetch();
+        }
+    }
+});
+
+app.views.ListView = Backbone.View.extend({
+
+    initialize: function() {
+        this.model.bind("reset", this.render, this);
+    },
+
+    render: function(eventName) {
+        $(this.el).empty();
+        _.each(this.model.models, function(sobject) {
+            $(this.el).append(new app.views.ListItemView({model: sobject}).render().el);
+        }, this);
+        return this;
+    }
+
+});
+
+app.views.ListItemView = Backbone.View.extend({
+
+    tagName: "li",
+    groupTemplate: _.template($('#group-list-item').html()),
+    userTemplate: _.template($('#user-list-item').html()),
+
+    render: function(eventName) {
+        var template = this.model.sobjectType == "User" ? this.userTemplate : this.groupTemplate;
+        $(this.el).html(template(this.model.toJSON()));
+        return this;
+    }
+
+});
+
+// ----------------------------------------------- The Application Router ------------------------------------------ //
+
+app.Router = Backbone.StackRouter.extend({
+
+    routes: {
+        "": "list",
+        "list": "list",
+    },
+
+    initialize: function() {
+
+        Backbone.Router.prototype.initialize.call(this);
+
+        // We keep a single instance of the SearchPage and its associated Searchcollection throughout the app
+        this.searchResults = new app.models.SearchCollection();
+        this.startPage = new app.views.SearchPage({model: this.searchResults});
+        this.startPage.render();
+        $(this.startPage.el).attr('id', 'searchPage');
+    },
+
+    list: function() {
+        this.slidePage(this.startPage);
+    }
+});
+</script>
+</body>
+</html>

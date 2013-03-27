@@ -39,13 +39,14 @@
 
 
     Backbone.Force.Model = Backbone.Model.extend({
-        // Fields that need to be defined on every instance
+        // NB: sobjectType is expected on every instance
         sobjectType:null,
         idAttribute: 'Id',
 
         sync: function(method, model, options) {
             var that = this;
 
+            // NB: pass a fieldlist in options if you don't want to fetch the whole object
             if (method == "read")
             {
                 forcetkClient.retrieve(this.sobjectType, this.id, options.fieldlist, 
@@ -93,6 +94,21 @@
                                             options.success(results.records);
                                         },
                                         options.error);
+                }
+                else if (this.sosl != null) {
+                    forcetkClient.search(this.sosl,
+                                         function(results) {
+                                             var records = [];
+                                             _.each(results, function(result) {
+                                                 var sobjectType = result.attributes.type;
+                                                 var sobject = new that.model(_.omit(result, 'attributes'));
+                                                 sobject.sobjectType = sobjectType;
+                                                 records.push(sobject);
+                                             });
+                                             options.success(records);
+                                         },
+                                         function(error) {alert(JSON.stringify(arguments)); });
+                    //options.error);
                 }
                 else 
                 {
