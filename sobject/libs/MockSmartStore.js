@@ -1,0 +1,1 @@
+../../PhoneGap/local/MockSmartStore.js

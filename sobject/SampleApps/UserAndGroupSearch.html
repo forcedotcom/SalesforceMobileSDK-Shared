@@ -34,8 +34,8 @@
     </a>
 </div>
 
-<div style="height: 34px; padding-left:6px;padding-right: 6px;padding-top: 5px;margin-bottom: 6px;border-bottom: solid 1px #666">
-    <input type="search" class="search-key" placeholder="Search" style="width:100%;font-size: 14px;padding-top:2px;padding-bottom:2px;margin-top:2px;margin-bottom:2px;border: solid 1px #777777;"/>
+<div class="search">
+    <input type="search" class="search-key" placeholder="Search"/>
 </div>
 
 <div class="scroll striped" style="top:84px;">
@@ -45,7 +45,7 @@
 
 <!-- --------------------------------------- CollaborationGroup list item Template --------------------------------- -->
 <script id="group-list-item" type="text/template">
-  <img src="<%= SmallPhotoUrl %>" width="50" class="list-icon" style="padding-right:6px;"/>
+  <img src="<%= SmallPhotoUrl %>" width="50" class="list-icon" />
   <div class="story">
     <b><%= Name %></b><br/>
     <span class="metadata">
@@ -56,7 +56,7 @@
 
 <!-- --------------------------------------- User list item template ---------------------------------------------- -->
 <script id="user-list-item" type="text/template">
-  <img src="<%= SmallPhotoUrl %>" width="50" class="list-icon" style="padding-right:6px;"/>
+  <img src="<%= SmallPhotoUrl %>" width="50" class="list-icon" />
   <div class="story">
     <b><%= FirstName %> <%= LastName %></b><br/>
     <span class="metadata">

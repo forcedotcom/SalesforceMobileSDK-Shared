@@ -1,0 +1,1 @@
+../../PhoneGap/plugins/SFSmartStorePlugin.js

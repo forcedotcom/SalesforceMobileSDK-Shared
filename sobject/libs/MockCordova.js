@@ -1,0 +1,1 @@
+../../PhoneGap/local/MockCordova.js

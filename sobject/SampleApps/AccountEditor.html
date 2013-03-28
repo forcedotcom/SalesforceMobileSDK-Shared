@@ -4,7 +4,6 @@
 <title>Accounts</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
 <link rel="stylesheet" href="css/styles.css"/>
-<link rel="stylesheet" href="css/bootstrap.min.css"/>
 </head>
 
 <body>
@@ -31,12 +30,12 @@
 <div class="header">
     <h1>Accounts</h1>
     <a href="#add" class="header-button header-button-icon header-button-right">
-      <button><span style="font-size:18px;font-weight:bold">+</span></button>
+      <button>+</button>
     </a>
 </div>
 
-<div style="height: 34px; padding-left:6px;padding-right: 6px;padding-top: 5px;margin-bottom: 6px;border-bottom: solid 1px #666">
-    <input type="search" class="search-key" placeholder="Search" style="width:100%;font-size: 14px;padding:2px 0px;margin-top:2px;margin-bottom:2px;border: solid 1px #777777;"/>
+<div class="search">
+    <input type="search" class="search-key" placeholder="Search"/>
 </div>
 
 <div class="scroll striped" style="top:84px;">
@@ -64,11 +63,11 @@
         <button>Back</button>
     </a>
     <a href="#edit/accounts/<%= Id %>" class="header-button header-button-icon header-button-right search">
-        <button><span style="font-size:20px;font-weight:bold">&#9998;</span></button>
+        <button>&#9998;</button>
     </a>
 
     <a href="#" class="header-button header-button-icon header-button-second-from-right delete">
-        <button><span style="font-size:20px;font-weight:bold">&#10007;</span></button>
+        <button>&#10007;</button>
     </a>
 
     <h1>Account</h1>
