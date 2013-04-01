@@ -44,8 +44,8 @@ function appStart(creds)
 {
     var apiVersion = "v26.0";
 
-    // Backbone.Force init
-    Backbone.Force.init(creds, apiVersion);
+    // Force init
+    Force.init(creds, apiVersion);
 
     // router
     app.router = new app.Router();

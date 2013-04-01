@@ -1,21 +1,62 @@
 "use strict";
 
 (function(Backbone, _, $) {
-    // Private forcetk client
-    var forcetkClient;
+    // Save a reference to the global object (`window` in the browser)
+    var root = this;
 
-    // Create namespace
-    Backbone.Force = {};
+    // Save the previous value of the `Force` variable, so that it can be
+    // restored later on, if `noConflict` is used.
+    var previousForce = root.Force;
 
-    // Init function
-    Backbone.Force.init = function(creds, apiVersion) {
-        forcetkClient = new forcetk.Client(creds.clientId, creds.loginUrl);
-        forcetkClient.setSessionToken(creds.accessToken, apiVersion, creds.instanceUrl);
-        forcetkClient.setRefreshToken(creds.refreshToken);
-        forcetkClient.setUserAgentString(creds.userAgent);
+    // The top-level namespace. All public Backbone classes and modules will
+    // be attached to this. Exported for both the browser and the server.
+    var Force = root.Force = {};
+
+    // Runs in *noConflict* mode, returning the `Force` variable
+    // to its previous owner. Returns a reference to this Force object.
+    Force.noConflict = function() {
+        root.Force = previousForce;
+        return this;
     };
 
-    Backbone.Force.RestError = function(xhr) {
+    // Function to turn methods with callbacks into jQuery promises
+    var promiser = function(object, methodName) {
+        var retfn = function () {
+            var self = this;
+            var args = $.makeArray(arguments);
+            var d = $.Deferred();
+            args.push(function() {
+                d.resolve.apply(d, arguments);
+            });
+            args.push(function() {
+                d.reject.apply(d, arguments);
+            });
+            object[methodName].apply(object, args);
+            return d.promise();
+        };
+        return retfn;
+    };
+
+    // Private forcetk client with promise-wrapped methods
+    var forcetkClient;
+
+    // Init function
+    Force.init = function(creds, apiVersion) {
+        var innerForcetkClient = new forcetk.Client(creds.clientId, creds.loginUrl);
+        innerForcetkClient.setSessionToken(creds.accessToken, apiVersion, creds.instanceUrl);
+        innerForcetkClient.setRefreshToken(creds.refreshToken);
+        innerForcetkClient.setUserAgentString(creds.userAgent);
+
+        forcetkClient = new Object();
+        forcetkClient.create = promiser(innerForcetkClient, "create");
+        forcetkClient.retrieve = promiser(innerForcetkClient, "retrieve");
+        forcetkClient.update = promiser(innerForcetkClient, "update");
+        forcetkClient.del = promiser(innerForcetkClient, "del");
+        forcetkClient.query = promiser(innerForcetkClient, "query");
+        forcetkClient.search = promiser(innerForcetkClient, "search");
+    };
+
+    Force.RestError = function(xhr) {
         // 200	“OK” success code, for GET or HEAD request.
         // 201	“Created” success code, for POST request.
         // 204	“No Content” success code, for DELETE request.
@@ -38,77 +79,65 @@
     };
 
 
-    Backbone.Force.Model = Backbone.Model.extend({
+    Force.Model = Backbone.Model.extend({
         // NB: sobjectType is expected on every instance
         sobjectType:null,
         idAttribute: 'Id',
 
-        sync: function(method, model, options) {
-            var that = this;
+        getClass: function() {
+            return this.__proto__.constructor;
+        },
 
-            // NB: pass a fieldlist in options if you don't want to fetch the whole object
-            if (method == "read")
-            {
-                forcetkClient.retrieve(this.sobjectType, this.id, options.fieldlist, 
-                                       options.success,
-                                       options.error);
+        // Pass a fieldlist in options if you don't want to fetch the whole record
+        // Pass a refetch:true in options during save do refetch record from server
+        sync: function(method, model, options) {
+            var promise = null;
+            switch(method) {
+            case "create": 
+                promise = forcetkClient.create(model.sobjectType, _.omit(model.attributes, 'Id'))
+                    .then(function(data) {model.id = data.id;}) 
+                break;
+            case "read":   promise = forcetkClient.retrieve(model.sobjectType, model.id, options.fieldlist); break;
+            case "update": promise = forcetkClient.update(model.sobjectType, model.id, model.changed); break;
+            case "delete": promise = forcetkClient.del(model.sobjectType, model.id); break;
             }
-            else if (method == "create")
-            {
-                forcetkClient.create(this.sobjectType, _.omit(this.attributes, 'Id'),
-                                     function(result) {
-                                         that.set('Id', result.id);
-                                         options.success(that);
-                                     }, 
-                                     options.error);
+
+            if (options.refetch) {
+                promise = promise.then(function() { return forcetkClient.retrieve(model.sobjectType, model.id, options.fieldlist); });
             }
-            else if (method == "update")
-            {
-                forcetkClient.update(this.sobjectType, this.id, this.changed, 
-                                     options.success,
-                                     options.error);
-                                     
-            }
-            else if (method == "delete")
-            {
-                forcetkClient.del(this.sobjectType, this.id,
-                                  options.success,
-                                  options.error);
-            }
+
+            promise.done(options.success).fail(options.error);
         }
     });
 
-    Backbone.Force.Collection = Backbone.Collection.extend({
+    Force.Collection = Backbone.Collection.extend({
         soql:null,
         sosl:null,
 
         sync: function(method, model, options) {
-            var that = this;
-
             if (method == "read")
             {
                 options.reset = true;
                 if (this.soql != null) {
-                    forcetkClient.query(this.soql,
-                                        function(results) {
-                                            options.success(results.records);
-                                        },
-                                        options.error);
+                    forcetkClient.query(this.soql)
+                    .done(function(results) {
+                        options.success(results.records);
+                    })
+                    .fail(options.error);
                 }
                 else if (this.sosl != null) {
-                    forcetkClient.search(this.sosl,
-                                         function(results) {
-                                             var records = [];
-                                             _.each(results, function(result) {
-                                                 var sobjectType = result.attributes.type;
-                                                 var sobject = new that.model(_.omit(result, 'attributes'));
-                                                 sobject.sobjectType = sobjectType;
-                                                 records.push(sobject);
-                                             });
-                                             options.success(records);
-                                         },
-                                         function(error) {alert(JSON.stringify(arguments)); });
-                    //options.error);
+                    forcetkClient.search(this.sosl)
+                        .done(function(results) {
+                            var records = [];
+                            _.each(results, function(result) {
+                                var sobjectType = result.attributes.type;
+                                var sobject = new model.model(_.omit(result, 'attributes'));
+                                sobject.sobjectType = sobjectType;
+                                records.push(sobject);
+                            });
+                            options.success(records);
+                        })
+                    .fail(options.error);
                 }
                 else 
                 {
@@ -123,4 +152,5 @@
     });
 
 
-})(Backbone, _, $);
+})
+.call(this, Backbone, _, $);

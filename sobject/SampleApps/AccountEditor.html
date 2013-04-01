@@ -135,13 +135,13 @@
 <script>
 // -------------------------------------------------- The Models --------------------------------------------------- //
 // The Account Model
-app.models.Account = Backbone.Force.Model.extend({
+app.models.Account = Force.Model.extend({
     sobjectType: 'Account',
     fieldlist: ['Id', 'Name', 'Industry', 'Phone']
 });
 
 // The AccountCollection Model
-app.models.AccountCollection = Backbone.Force.Collection.extend({
+app.models.AccountCollection = Force.Collection.extend({
     model: app.models.Account,
     fieldlist: ['Id', 'Name', 'Industry'],
     setCriteria: function(key) {
@@ -261,7 +261,7 @@ app.views.EditAccountPage = Backbone.View.extend({
                 app.router.navigate('#accounts/' + data.get('Id'), {trigger:true});
             },
             error: function(data, xhr, options) {
-                var error = new Backbone.Force.RestError(xhr);
+                var error = new Force.RestError(xhr);
                 _.each(error.details, function(detail) {
                     _.each(detail.fields, function(field) {
                         $('#account' + field).addClass('error');

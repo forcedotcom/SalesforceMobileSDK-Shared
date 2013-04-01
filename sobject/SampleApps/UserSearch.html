@@ -119,13 +119,13 @@
 <script>
 // -------------------------------------------------- The Models ---------------------------------------------------- //
 // The User Model
-app.models.User = Backbone.Force.Model.extend({
+app.models.User = Force.Model.extend({
     sobjectType: 'User',
     fieldlist: ['Id', 'FirstName', 'LastName', 'SmallPhotoUrl', 'Title', 'Email', 'MobilePhone','City']
 });
 
 // The UserCollection Model
-app.models.UserCollection = Backbone.Force.Collection.extend({
+app.models.UserCollection = Force.Collection.extend({
     model: app.models.User,
     fieldlist: ['Id', 'FirstName', 'LastName', 'SmallPhotoUrl', 'Title'],
     setCriteria: function(key) {
