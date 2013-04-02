@@ -82,21 +82,23 @@ app.models.SearchCollection = Force.Collection.extend({
 
 app.views.SearchPage = Backbone.View.extend({
 
-    template: _.template($('#search-page').html()),
+    template: _.template($("#search-page").html()),
 
     render: function(eventName) {
         $(this.el).html(this.template());
-        this.listView = new app.views.ListView({el: $('ul', this.el), model: this.model});
+        this.listView = new app.views.ListView({el: $("ul", this.el), model: this.model});
         this.listView.render();
         return this;
     },
 
     events: {
-        "keyup .search-key": "search"
+        "keyup .search-key": "search",
+        "click .search": "search"
     },
 
     search: function(event) {
-        var key = $('.search-key').val();
+        event.preventDefault();
+        var key = $(".search-key").val();
         if (key.length >= 2) {
             this.model.setCriteria(key);
             this.model.fetch();
@@ -123,8 +125,8 @@ app.views.ListView = Backbone.View.extend({
 app.views.ListItemView = Backbone.View.extend({
 
     tagName: "li",
-    groupTemplate: _.template($('#group-list-item').html()),
-    userTemplate: _.template($('#user-list-item').html()),
+    groupTemplate: _.template($("#group-list-item").html()),
+    userTemplate: _.template($("#user-list-item").html()),
 
     render: function(eventName) {
         var template = this.model.sobjectType == "User" ? this.userTemplate : this.groupTemplate;
@@ -151,7 +153,7 @@ app.Router = Backbone.StackRouter.extend({
         this.searchResults = new app.models.SearchCollection();
         this.startPage = new app.views.SearchPage({model: this.searchResults});
         this.startPage.render();
-        $(this.startPage.el).attr('id', 'searchPage');
+        $(this.startPage.el).attr("id", "startPage");
     },
 
     list: function() {

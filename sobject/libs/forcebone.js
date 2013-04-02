@@ -40,7 +40,7 @@
     var forcetkClient;
 
     // Private smartstore client with promise-wrapped methods
-    var smartstoreClient; 
+    /* var smartstoreClient; */
 
     // Init function
     Force.init = function(creds, apiVersion) {
@@ -57,11 +57,13 @@
         forcetkClient.query = promiser(innerForcetkClient, "query");
         forcetkClient.search = promiser(innerForcetkClient, "search");
 
+        /* TBD
         smartstoreClient = new Object();
         smartstoreClient.registerSoup = promiser(navigator.smartstore, "registerSoup");
         smartstoreClient.upsertSoupEntries = promiser(navigator.smartstore, "upsertSoupEntries");
         smartstoreClient.retrieveSoupEntries = promiser(navigator.smartstore, "retrieveSoupEntries");
         smartstoreClient.removeFromSoup = promiser(navigator.smartstore, "removeFromSoup");
+        */
     };
 
     // Force.RestError
@@ -88,21 +90,28 @@
         }
     };
 
-    // Force.ObjectSpace
+    // Force.ModelCache
     // -----------------
-    Force.ObjectSpace = function() {
-        this.space = {};
+    Force.ModelCache = function() {
+        this.cache = {};
     };
 
-    _.extend(Force.ObjectSpace.prototype, {
-        get: function(id) {
-            return this.space[id];
+    _.extend(Force.ModelCache.prototype, {
+        has: function(model) {
+            return !_.isUndefined(this.cache[model.id]);
         },
 
-        set: function(model) {
-            if (!_.isUndefined(model.id)) {
-                this.space[model.id] = model;
-            }
+        retrieve: function(model) {
+            model.set(this.cache[model.id].attributes);
+            return model;
+        },
+
+        save: function(model) {
+            this.cache[model.id] = _.clone(model);
+        },
+
+        remove: function(model) {
+            delete this.cache[model.id];
         }
     })
 
@@ -118,50 +127,58 @@
             return this.__proto__.constructor;
         },
 
-        // Pass a fieldlist in options if you don't want to fetch the whole record
-        // Pass a refetch:true in options during save do refetch record from server
-        // Pass a store:true in options to keep smartstore in sync
+        initialize: function() {
+            if (this.getClass().cache != null) {
+                this.bind('sync', this.afterSync);
+                this.bind('destroy', this.afterDestroy);
+            }
+        },
+
+        afterSync: function(model, resp, options) {
+            if (options.cache) {
+                model.getClass().cache.save(model);
+            }
+        },
+
+        afterDestroy: function(model, resp, options) {
+            if (options.cache) {
+                model.getClass().cache.remove(model);
+            }
+        },
+
+        // Extra options:
+        // * fieldlist:<array of fields> during read if you don't want to fetch the whole record
+        // * refetch:true during create/update to do a fetch following the create/update
+        // * cache:true during create/update/read/delete to save/retrieve model to/from cache
         sync: function(method, model, options) {
-            var promise = null;
-            switch(method) {
-            case "create": 
-                promise = forcetkClient.create(model.sobjectType, _.omit(model.attributes, 'Id'))
-                    .then(function(data) {model.id = data.id;}) 
-                break;
-            case "read":   promise = forcetkClient.retrieve(model.sobjectType, model.id, options.fieldlist); break;
-            case "update": promise = forcetkClient.update(model.sobjectType, model.id, model.changed); break;
-            case "delete": promise = forcetkClient.del(model.sobjectType, model.id); break;
-            }
-
-            if (options.refetch)
+            if (options.cache && method=="read" && model.getClass().cache.has(model))  
             {
-                promise = promise.then(function() { 
-                    return forcetkClient.retrieve(model.sobjectType, model.id, options.fieldlist); 
-                });
+                options.success(model.getClass().cache.retrieve(model));
             }
+            else 
+            {
+                var promise = null;
+                switch(method) {
+                case "create": promise = forcetkClient.create(model.sobjectType, _.omit(model.attributes, 'Id')).then(function(data) {model.id = data.id; return data;}); break;
+                case "read":   promise = forcetkClient.retrieve(model.sobjectType, model.id, options.fieldlist); break;
+                case "update": promise = forcetkClient.update(model.sobjectType, model.id, model.changed); break;
+                case "delete": promise = forcetkClient.del(model.sobjectType, model.id); break;
+                }
 
-            if (options.store) {
-                promise = promise.then(function() { 
-                    if (method == "delete") {
-                        return smartstoreClient.removeFromSoup(model.getClass().soupName, [ model.id ]);
-                    }
-                    else {
-                        return smartstoreClient.upsertSoupEntries(model.getClass().soupName, [ model ]);
-                    }
-                });
+                if (options.refetch)
+                {
+                    promise = promise.then(function() {return forcetkClient.retrieve(model.sobjectType, model.id, options.fieldlist);});
+                }
+
+                promise.done(options.success).fail(options.error);
             }
-
-            promise.done(options.success).fail(options.error);
         }
     },{
-        // soupName: backing soup to which models are saved when store:true is specified during CRUD operation
-        soupName: null,
+        // Cache used when cache:true is specified during CRUD operation
+        cache: null,
 
-        setupSoup: function(soupName, fieldlist) {
-            this.soupName = soupName;
-            var indexSpecs = [];
-            _.each(fieldlist, function(field) { indexSpecs.push({path: field, type:"string"}); });
-            return smartstoreClient.registerSoup(soupName, indexSpecs)
+        setupCache: function(cache) {
+            this.cache = cache;
         }
     });
 
@@ -171,7 +188,6 @@
         soql:null,
         sosl:null,
 
-        // Pass a store:true in options to keep smartstore in sync
         sync: function(method, model, options) {
             var promise = null;
             switch(method) {
@@ -202,15 +218,7 @@
 
             if (promise != null)
             {
-                if (options.store) {
-                    promise = promise.then(function(records) { 
-                        return smartstoreClient.upsertSoupEntries(model.model.getClass().soupName, records);
-                    });
-                }
-
-                promise.done(function(data) {
-                    options.success(data);
-                }).fail(options.error);
+                promise.done(options.success).fail(options.error);
             }
             else
             {

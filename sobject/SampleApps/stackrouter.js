@@ -35,7 +35,7 @@
             }
 
             // Cleaning up: remove old pages that were moved out of the viewport
-            $('.stage-right, .stage-left').not('#searchPage').remove();
+            $('.stage-right, .stage-left').not('#startPage').remove();
 
             if (page === this.startPage) {
                 // Always apply a Back (slide from left) transition when we go back to the search page

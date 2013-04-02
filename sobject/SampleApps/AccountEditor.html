@@ -45,7 +45,7 @@
 
 <!-- --------------------------------------- Account list item Template ------------------------------------------- -->
 <script id="account-list-item" type="text/template">
-<a href='#accounts/<%= Id %>' class="pad-right">
+<a href="#accounts/<%= Id %>" class="pad-right">
     <div class="story">
     	<b><%= Name %></b>
     	<span class="metadata">
@@ -136,14 +136,14 @@
 // -------------------------------------------------- The Models --------------------------------------------------- //
 // The Account Model
 app.models.Account = Force.Model.extend({
-    sobjectType: 'Account',
-    fieldlist: ['Id', 'Name', 'Industry', 'Phone']
+    sobjectType: "Account",
+    fieldlist: ["Id", "Name", "Industry", "Phone"]
 });
 
 // The AccountCollection Model
 app.models.AccountCollection = Force.Collection.extend({
     model: app.models.Account,
-    fieldlist: ['Id', 'Name', 'Industry'],
+    fieldlist: ["Id", "Name", "Industry"],
     setCriteria: function(key) {
         this.soql = "SELECT " + this.fieldlist.join(",")  
             + " FROM Account"
@@ -155,11 +155,11 @@ app.models.AccountCollection = Force.Collection.extend({
 
 app.views.SearchPage = Backbone.View.extend({
 
-    template: _.template($('#search-page').html()),
+    template: _.template($("#search-page").html()),
 
     render: function(eventName) {
         $(this.el).html(this.template());
-        this.listView = new app.views.AccountListView({el: $('ul', this.el), model: this.model});
+        this.listView = new app.views.AccountListView({el: $("ul", this.el), model: this.model});
         this.listView.render();
         return this;
     },
@@ -169,7 +169,7 @@ app.views.SearchPage = Backbone.View.extend({
     },
 
     search: function(event) {
-        this.model.setCriteria($('.search-key').val());
+        this.model.setCriteria($(".search-key").val());
         this.model.fetch();
     }
 });
@@ -193,7 +193,7 @@ app.views.AccountListView = Backbone.View.extend({
 app.views.AccountListItemView = Backbone.View.extend({
 
     tagName: "li",
-    template: _.template($('#account-list-item').html()),
+    template: _.template($("#account-list-item").html()),
 
 
     render: function(eventName) {
@@ -205,7 +205,7 @@ app.views.AccountListItemView = Backbone.View.extend({
 
 app.views.AccountPage = Backbone.View.extend({
 
-    template: _.template($('#account-page').html()),
+    template: _.template($("#account-page").html()),
 
     render: function(eventName) {
         $(this.el).html(this.template(this.model.toJSON()));
@@ -213,14 +213,14 @@ app.views.AccountPage = Backbone.View.extend({
     },
 
     events: {
-        'click .delete': 'delete'
+        "click .delete": "delete"
     },
 
     delete: function(evt) {
         evt.preventDefault();
         this.model.destroy({
             success: function(data) {
-                app.router.navigate('#', {trigger:true});
+                app.router.navigate("#", {trigger:true});
             },
             error: function(data, xhr, options) {
                 alert("Failed to delete record");
@@ -231,18 +231,18 @@ app.views.AccountPage = Backbone.View.extend({
 
 app.views.EditAccountPage = Backbone.View.extend({
 
-    template: _.template($('#edit-account-page').html()),
+    template: _.template($("#edit-account-page").html()),
 
     render: function(eventName) {
-        var action = (null == this.model.get('Id')) ? 'Add' : 'Edit';
-        if (action == "Add") { this.model.set({Name:'', Industry:'', Phone:''}); }
+        var action = (null == this.model.get("Id")) ? "Add" : "Edit";
+        if (action == "Add") { this.model.set({Name:"", Industry:"", Phone:""}); }
         $(this.el).html(this.template(_.extend({action: action}, this.model.toJSON())));
         return this;
     },
 
     events: {
-        'change': 'change',
-        'click .save': 'save',
+        "change": "change",
+        "click .save": "save",
     },
 
     change: function(evt) {
@@ -250,22 +250,23 @@ app.views.EditAccountPage = Backbone.View.extend({
         var target = event.target;
         this.model.set(target.name, target.value);
         // Remove error if any
-        $('#account' + target.name).removeClass('error');
-        $('#account' + target.name + "Help").html("");
+        $("#account" + target.name).removeClass("error");
+        $("#account" + target.name + "Help").html("");
     },
 
     save: function(evt) {
         evt.preventDefault();
         this.model.save(null, {
+            cache: true,
             success: function(data) {
-                app.router.navigate('#accounts/' + data.get('Id'), {trigger:true});
+                app.router.navigate("#accounts/" + data.get("Id"), {trigger:true});
             },
             error: function(data, xhr, options) {
                 var error = new Force.RestError(xhr);
                 _.each(error.details, function(detail) {
                     _.each(detail.fields, function(field) {
-                        $('#account' + field).addClass('error');
-                        $('#account' + field + "Help").html(detail.errorCode);
+                        $("#account" + field).addClass("error");
+                        $("#account" + field + "Help").html(detail.errorCode);
                     });
                     // TBD error that are not field specific
                 });
@@ -291,10 +292,12 @@ app.Router = Backbone.StackRouter.extend({
 
         Backbone.Router.prototype.initialize.call(this);
 
+        app.models.Account.setupCache(new Force.ModelCache());
+
         // We keep a single instance of the SearchPage and its associated Account collection throughout the app
         this.searchResults = new app.models.AccountCollection();
         this.startPage = new app.views.SearchPage({model: this.searchResults});
-        $(this.startPage.el).attr('id', 'searchPage');
+        $(this.startPage.el).attr("id", "startPage");
     },
 
     list: function() {
@@ -315,7 +318,8 @@ app.Router = Backbone.StackRouter.extend({
         var that = this;
         var account = new app.models.Account({Id: id});
         account.fetch({
-            options:account.fieldlist,
+            fieldlist: account.fieldlist,
+            cache: true,
             success: function(data) {
                 that.slidePage(new app.views.AccountPage({model: data}).render());
             }
@@ -326,6 +330,8 @@ app.Router = Backbone.StackRouter.extend({
         var that = this;
         var account = new app.models.Account({Id: id});
         account.fetch({
+            fieldlist: account.fieldlist,
+            cache: true,
             success: function(data) {
                 that.slidePage(new app.views.EditAccountPage({model: data}).render());
             }

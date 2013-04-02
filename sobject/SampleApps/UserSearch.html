@@ -45,7 +45,7 @@
 
 <!-- --------------------------------------- User list item template ---------------------------------------------- -->
 <script id="user-list-item" type="text/template">
-<a href='#users/<%= Id %>' class="pad-right">
+<a href="#users/<%= Id %>" class="pad-right">
     <img src="<%= SmallPhotoUrl %>" width="50" class="list-icon" />
     <div class="story">
     	<b><%= FirstName %> <%= LastName %></b>
@@ -120,14 +120,14 @@
 // -------------------------------------------------- The Models ---------------------------------------------------- //
 // The User Model
 app.models.User = Force.Model.extend({
-    sobjectType: 'User',
-    fieldlist: ['Id', 'FirstName', 'LastName', 'SmallPhotoUrl', 'Title', 'Email', 'MobilePhone','City']
+    sobjectType: "User",
+    fieldlist: ["Id", "FirstName", "LastName", "SmallPhotoUrl", "Title", "Email", "MobilePhone","City"]
 });
 
 // The UserCollection Model
 app.models.UserCollection = Force.Collection.extend({
     model: app.models.User,
-    fieldlist: ['Id', 'FirstName', 'LastName', 'SmallPhotoUrl', 'Title'],
+    fieldlist: ["Id", "FirstName", "LastName", "SmallPhotoUrl", "Title"],
     setCriteria: function(key) {
         this.soql = "SELECT " + this.fieldlist.join(",")  
             + " FROM User"
@@ -140,21 +140,23 @@ app.models.UserCollection = Force.Collection.extend({
 
 app.views.SearchPage = Backbone.View.extend({
 
-    template: _.template($('#search-page').html()),
+    template: _.template($("#search-page").html()),
+
+    events: {
+        "keyup .search-key": "search",
+        "click .search": "search"
+    },
 
     render: function(eventName) {
         $(this.el).html(this.template());
-        this.listView = new app.views.UserListView({el: $('ul', this.el), model: this.model});
+        this.listView = new app.views.UserListView({el: $("ul", this.el), model: this.model});
         this.listView.render();
         return this;
     },
 
-    events: {
-        "keyup .search-key": "search"
-    },
-
     search: function(event) {
-        this.model.setCriteria($('.search-key').val());
+        event.preventDefault();
+        this.model.setCriteria($(".search-key").val());
         this.model.fetch();
     }
 });
@@ -178,7 +180,7 @@ app.views.UserListView = Backbone.View.extend({
 app.views.UserListItemView = Backbone.View.extend({
 
     tagName: "li",
-    template: _.template($('#user-list-item').html()),
+    template: _.template($("#user-list-item").html()),
 
 
     render: function(eventName) {
@@ -190,7 +192,7 @@ app.views.UserListItemView = Backbone.View.extend({
 
 app.views.UserPage = Backbone.View.extend({
 
-    template: _.template($('#user-page').html()),
+    template: _.template($("#user-page").html()),
 
     render: function(eventName) {
         $(this.el).html(this.template(this.model.toJSON()));
@@ -216,9 +218,8 @@ app.Router = Backbone.StackRouter.extend({
 
         // We keep a single instance of the SearchPage and its associated User collection throughout the app
         this.searchResults = new app.models.UserCollection();
-        this.startPage = new app.views.SearchPage({model: this.searchResults});
-        this.startPage.render();
-        $(this.startPage.el).attr('id', 'searchPage');
+        this.startPage = new app.views.SearchPage({model: this.searchResults}).render();
+        $(this.startPage.el).attr("id", "startPage");
     },
 
     list: function() {
