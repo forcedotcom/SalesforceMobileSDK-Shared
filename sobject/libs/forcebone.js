@@ -64,6 +64,8 @@
         smartstoreClient.removeFromSoup = promiser(navigator.smartstore, "removeFromSoup");
     };
 
+    // Force.RestError
+    // -----------------
     Force.RestError = function(xhr) {
         // 200	“OK” success code, for GET or HEAD request.
         // 201	“Created” success code, for POST request.
@@ -86,6 +88,24 @@
         }
     };
 
+    // Force.ObjectSpace
+    // -----------------
+    Force.ObjectSpace = function() {
+        this.space = {};
+    };
+
+    _.extend(Force.ObjectSpace.prototype, {
+        get: function(id) {
+            return this.space[id];
+        },
+
+        set: function(model) {
+            if (!_.isUndefined(model.id)) {
+                this.space[model.id] = model;
+            }
+        }
+    })
+
 
     // Force.Model
     // --------------
@@ -100,7 +120,7 @@
 
         // Pass a fieldlist in options if you don't want to fetch the whole record
         // Pass a refetch:true in options during save do refetch record from server
-        // Pass a local:true in options to keep smartstore in sync
+        // Pass a store:true in options to keep smartstore in sync
         sync: function(method, model, options) {
             var promise = null;
             switch(method) {
@@ -120,7 +140,7 @@
                 });
             }
 
-            if (options.local) {
+            if (options.store) {
                 promise = promise.then(function() { 
                     if (method == "delete") {
                         return smartstoreClient.removeFromSoup(model.getClass().soupName, [ model.id ]);
@@ -134,7 +154,7 @@
             promise.done(options.success).fail(options.error);
         }
     },{
-        // soupName: backing soup to which models are saved when local:true is specified during CRUD operation
+        // soupName: backing soup to which models are saved when store:true is specified during CRUD operation
         soupName: null,
 
         setupSoup: function(soupName, fieldlist) {
@@ -151,7 +171,7 @@
         soql:null,
         sosl:null,
 
-        // Pass a local:true in options to keep smartstore in sync
+        // Pass a store:true in options to keep smartstore in sync
         sync: function(method, model, options) {
             var promise = null;
             switch(method) {
@@ -182,7 +202,7 @@
 
             if (promise != null)
             {
-                if (options.local) {
+                if (options.store) {
                     promise = promise.then(function(records) { 
                         return smartstoreClient.upsertSoupEntries(model.model.getClass().soupName, records);
                     });
