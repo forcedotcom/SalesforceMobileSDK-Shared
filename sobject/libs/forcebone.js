@@ -20,7 +20,7 @@
     };
 
     // Function to turn methods with callbacks into jQuery promises
-    var promiser = function(object, methodName) {
+    var promiser = function(object, methodName, objectName) {
         var retfn = function () {
             var args = $.makeArray(arguments);
             var d = $.Deferred();
@@ -30,6 +30,7 @@
             args.push(function() {
                 d.reject.apply(d, arguments);
             });
+            console.log("Calling " + objectName + ":" + methodName);
             object[methodName].apply(object, args);
             return d.promise();
         };
@@ -50,20 +51,20 @@
         innerForcetkClient.setUserAgentString(creds.userAgent);
 
         forcetkClient = new Object();
-        forcetkClient.create = promiser(innerForcetkClient, "create");
-        forcetkClient.retrieve = promiser(innerForcetkClient, "retrieve");
-        forcetkClient.update = promiser(innerForcetkClient, "update");
-        forcetkClient.del = promiser(innerForcetkClient, "del");
-        forcetkClient.query = promiser(innerForcetkClient, "query");
-        forcetkClient.search = promiser(innerForcetkClient, "search");
+        forcetkClient.create = promiser(innerForcetkClient, "create", "forcetkClient");
+        forcetkClient.retrieve = promiser(innerForcetkClient, "retrieve", "forcetkClient");
+        forcetkClient.update = promiser(innerForcetkClient, "update", "forcetkClient");
+        forcetkClient.del = promiser(innerForcetkClient, "del", "forcetkClient");
+        forcetkClient.query = promiser(innerForcetkClient, "query", "forcetkClient");
+        forcetkClient.search = promiser(innerForcetkClient, "search", "forcetkClient");
 
         if (navigator.smartstore) 
         {
             smartstoreClient = new Object();
-            smartstoreClient.registerSoup = promiser(navigator.smartstore, "registerSoup");
-            smartstoreClient.upsertSoupEntriesWithExternalId = promiser(navigator.smartstore, "upsertSoupEntriesWithExternalId");
-            smartstoreClient.retrieveSoupEntries = promiser(navigator.smartstore, "retrieveSoupEntries");
-            smartstoreClient.removeFromSoup = promiser(navigator.smartstore, "removeFromSoup");
+            smartstoreClient.registerSoup = promiser(navigator.smartstore, "registerSoup", "smartstoreClient");
+            smartstoreClient.upsertSoupEntriesWithExternalId = promiser(navigator.smartstore, "upsertSoupEntriesWithExternalId", "smartstoreClient");
+            smartstoreClient.retrieveSoupEntries = promiser(navigator.smartstore, "retrieveSoupEntries", "smartstoreClient");
+            smartstoreClient.removeFromSoup = promiser(navigator.smartstore, "removeFromSoup", "smartstoreClient");
         }
     };
 
@@ -98,21 +99,24 @@
     };
 
     _.extend(Force.ModelMemCache.prototype, {
-        retrieve: function(model) {
+        retrieve: function(id) {
+            console.log("In ModelMemCache:retrieve " + id + ":" + (this.data[id] == null ? "miss" : "hit"));
             var d = $.Deferred();
-            d.resolve(this.data[model.id]);
+            d.resolve(this.data[id]);
             return d.promise();
         },
 
         save: function(model) {
+            console.log("In ModelMemCache:save " + model.id);
             this.data[model.id] = _.clone(model.attributes);
             var d = $.Deferred();
-            d.resolve();
+            d.resolve(model);
             return d.promise();
         },
 
-        remove: function(model) {
-            delete this.data[model.id];
+        remove: function(id) {
+            console.log("In ModelMemCache:remove " + id);
+            delete this.data[id];
             var d = $.Deferred();
             d.resolve();
             return d.promise();
@@ -130,9 +134,9 @@
     };
 
     _.extend(Force.ModelStoreCache.prototype, {
-        retrieve: function(model) {
+        retrieve: function(id) {
             if (smartstoreClient == null) return;
-            var querySpec = navigator.smartstore.buildExactQuerySpec("Id", model.id);
+            var querySpec = navigator.smartstore.buildExactQuerySpec("Id", id);
             return smartstoreClient.querySoup(this.soupName, querySpec).then(function(cursor) {
                 return cursor.currentPageOrderedEntries.length == 1 
                         ? cursor.currentPageOrderedEntries[0] 
@@ -142,12 +146,12 @@
 
         save: function(model) {
             if (smartstoreClient == null) return;
-            return smartstoreClient.upsertSoupEntriesWithExternalId(this.soupName, model, "Id");
+            return smartstoreClient.upsertSoupEntriesWithExternalId(this.soupName, model.attributes, "Id");
         },
 
-        remove: function(model) {
+        remove: function(id) {
             if (smartstoreClient == null) return;
-            var querySpec = navigator.smartstore.buildExactQuerySpec("Id", model.id);
+            var querySpec = navigator.smartstore.buildExactQuerySpec("Id", id);
             return smartstoreClient.querySoup(this.soupName, querySpec).then(function(cursor) {
                 return cursor.currentPageOrderedEntries.length == 1 
                         ? smartstoreClient.removeFromSoup(this.soupName, [cursor.currentPageOrderedEntries[0]._soupEntryId]) 
@@ -168,24 +172,21 @@
             return this.__proto__.constructor;
         },
 
-        initialize: function() {
-            if (this.getClass().cache != null) {
-                this.on('sync', this.updateCache);
-                this.on('destroy', this.removeFromCache);
-            }
+        hasCache: function() {
+            return this.getClass().cache != null;
         },
-
-        updateCache: function(model, resp, options) {
-            if (options.writeCache) {
-                console.log("Force.Model:updateCache:model.id=" + model.id);
-                model.getClass().cache.save(model);
+        
+        // Read from cache (return a promise)
+        // Resolve to null if cache is not setup or options.cache is not true or model.is is not found in cache
+        readFromCacheIfPossible: function(options) {
+            if (options.cache && this.hasCache()) {
+                return this.getClass().cache.retrieve(this.id);
             }
-        },
-
-        removeFromCache: function(model, resp, options) {
-            console.log("Force.Model:removeFromCache:model.id=" + model.id);
-            options.writeCache = false; // sync event is also fired during destroy, but we don't want to write the model back into the cache
-            model.getClass().cache.remove(model);
+            else {
+                var d = $.Deferred();
+                d.resolve(null);
+                return d.promise();
+            }
         },
 
         // Extra options:
@@ -193,42 +194,37 @@
         // * refetch:true during create/update to do a fetch following the create/update
         // * cache:true during read to check cache first (if one is setup) and only go to server if it's a miss
         sync: function(method, model, options) {
-            console.log("Force.Model:sync:method=" + method + ",model.id=" + model.id);
-            // Writing back to cache if one is setup
-            options.writeCache = model.getClass().cache != null; 
+            console.log("In Force.Model:sync method=" + method + " model.id=" + model.id);
+
+            // Go to server (or to the cache if applicable)
             var promise = null;
-
-            if (method == "read") 
-            {
-                if (options.cache && model.getClass().cache != null)
-                {
-                    console.log("Force.Model:sync:checking cache for model.id=" + model.id);
-                    promise = model.getClass().cache.retrieve(model)
-                        .then(function(data) {
-                            console.log("Force.Model:sync:cache " + (data == null ? "miss" : "hit") + " for model.id=" + model.id);
-                            if (data != null) options.writeCache = false; // not writing back to cache what we just read from the cache
-                            return (data != null ? data : forcetkClient.retrieve(model.sobjectType, model.id, options.fieldlist));
-                        });
-                }
-                else
-                {
-                    promise = forcetkClient.retrieve(model.sobjectType, model.id, options.fieldlist);
-                }
-            }
-            else 
-            {
-                switch(method) {
-                case "create": promise = forcetkClient.create(model.sobjectType, _.omit(model.attributes, 'Id')).then(function(data) {model.set("Id", data.id); return data;}); break;
-                case "update": promise = forcetkClient.update(model.sobjectType, model.id, model.changed); break;
-                case "delete": promise = forcetkClient.del(model.sobjectType, model.id); break;
-                }
+            var readFromCache = false;
+            switch(method) {
+            case "read":   promise = model.readFromCacheIfPossible(options).then(function(data) {readFromCache = (data != null); return readFromCache ? data : forcetkClient.retrieve(model.sobjectType, model.id, options.fieldlist);}); break;
+            case "delete": promise = forcetkClient.del(model.sobjectType, model.id); break;
+            case "create": promise = forcetkClient.create(model.sobjectType, _.omit(model.attributes, 'Id')).then(function(data) {model.set("Id", data.id); return data;}); break;
+            case "update": promise = forcetkClient.update(model.sobjectType, model.id, model.changed); break;
             }
 
+            // Refetch if requested
             if (options.refetch)
             {
                 promise = promise.then(function() {return forcetkClient.retrieve(model.sobjectType, model.id, options.fieldlist);});
             }
 
+            // Update cache if applicable
+            promise = promise.then(function(data) {
+                model.set(data);
+                if (model.hasCache()) {
+                    if (method == "delete") return model.getClass().cache.remove(model.id);
+                    if (!readFromCache) return model.getClass().cache.save(model);
+                }
+                else {
+                    return data;
+                }
+            });
+
+            // Done!
             promise.done(options.success).fail(options.error);
         }
     },{
