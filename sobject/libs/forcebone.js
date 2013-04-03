@@ -37,10 +37,10 @@
     };
 
     // Private forcetk client with promise-wrapped methods
-    var forcetkClient;
+    var forcetkClient = null;
 
     // Private smartstore client with promise-wrapped methods
-    /* var smartstoreClient; */
+    var smartstoreClient = null; 
 
     // Init function
     Force.init = function(creds, apiVersion) {
@@ -57,13 +57,14 @@
         forcetkClient.query = promiser(innerForcetkClient, "query");
         forcetkClient.search = promiser(innerForcetkClient, "search");
 
-        /* TBD
-        smartstoreClient = new Object();
-        smartstoreClient.registerSoup = promiser(navigator.smartstore, "registerSoup");
-        smartstoreClient.upsertSoupEntries = promiser(navigator.smartstore, "upsertSoupEntries");
-        smartstoreClient.retrieveSoupEntries = promiser(navigator.smartstore, "retrieveSoupEntries");
-        smartstoreClient.removeFromSoup = promiser(navigator.smartstore, "removeFromSoup");
-        */
+        if (navigator.smartstore) 
+        {
+            smartstoreClient = new Object();
+            smartstoreClient.registerSoup = promiser(navigator.smartstore, "registerSoup");
+            smartstoreClient.upsertSoupEntriesWithExternalId = promiser(navigator.smartstore, "upsertSoupEntriesWithExternalId");
+            smartstoreClient.retrieveSoupEntries = promiser(navigator.smartstore, "retrieveSoupEntries");
+            smartstoreClient.removeFromSoup = promiser(navigator.smartstore, "removeFromSoup");
+        }
     };
 
     // Force.RestError
@@ -90,31 +91,70 @@
         }
     };
 
-    // Force.ModelCache
-    // -----------------
-    Force.ModelCache = function() {
-        this.cache = {};
+    // Force.ModelMemCache
+    // -------------------
+    Force.ModelMemCache = function() {
+        this.data = {};
     };
 
-    _.extend(Force.ModelCache.prototype, {
-        has: function(model) {
-            return !_.isUndefined(this.cache[model.id]);
-        },
-
+    _.extend(Force.ModelMemCache.prototype, {
         retrieve: function(model) {
-            model.set(this.cache[model.id].attributes);
-            return model;
+            var d = $.Deferred();
+            d.resolve(this.data[model.id]);
+            return d.promise();
         },
 
         save: function(model) {
-            this.cache[model.id] = _.clone(model);
+            this.data[model.id] = _.clone(model.attributes);
+            var d = $.Deferred();
+            d.resolve();
+            return d.promise();
         },
 
         remove: function(model) {
-            delete this.cache[model.id];
+            delete this.data[model.id];
+            var d = $.Deferred();
+            d.resolve();
+            return d.promise();
         }
-    })
+    });
 
+    // Force.ModelStoreCache
+    // ---------------------
+    Force.ModelStoreCache = function(soupName, fieldlist) {
+        if (smartstoreClient == null) return;
+        this.soupName = soupName;
+        var indexSpecs = [];
+        _.each(fieldlist, function(field) { indexSpecs.push({path:field, type:"string"}); });
+        smartstoreClient.registerSoup(soupName, indexSpecs); // XXX this is an async call!
+    };
+
+    _.extend(Force.ModelStoreCache.prototype, {
+        retrieve: function(model) {
+            if (smartstoreClient == null) return;
+            var querySpec = navigator.smartstore.buildExactQuerySpec("Id", model.id);
+            return smartstoreClient.querySoup(this.soupName, querySpec).then(function(cursor) {
+                return cursor.currentPageOrderedEntries.length == 1 
+                        ? cursor.currentPageOrderedEntries[0] 
+                        : null;
+            });
+        },
+
+        save: function(model) {
+            if (smartstoreClient == null) return;
+            return smartstoreClient.upsertSoupEntriesWithExternalId(this.soupName, model, "Id");
+        },
+
+        remove: function(model) {
+            if (smartstoreClient == null) return;
+            var querySpec = navigator.smartstore.buildExactQuerySpec("Id", model.id);
+            return smartstoreClient.querySoup(this.soupName, querySpec).then(function(cursor) {
+                return cursor.currentPageOrderedEntries.length == 1 
+                        ? smartstoreClient.removeFromSoup(this.soupName, [cursor.currentPageOrderedEntries[0]._soupEntryId]) 
+                        : null;
+            });
+        }
+    });
 
     // Force.Model
     // --------------
@@ -122,6 +162,7 @@
         // sobjectType is expected on every instance
         sobjectType:null,
         idAttribute: 'Id',
+        destroyed: false,
 
         getClass: function() {
             return this.__proto__.constructor;
@@ -129,52 +170,70 @@
 
         initialize: function() {
             if (this.getClass().cache != null) {
-                this.bind('sync', this.afterSync);
-                this.bind('destroy', this.afterDestroy);
+                this.on('sync', this.updateCache);
+                this.on('destroy', this.removeFromCache);
             }
         },
 
-        afterSync: function(model, resp, options) {
-            if (options.cache) {
+        updateCache: function(model, resp, options) {
+            if (options.writeCache) {
+                console.log("Force.Model:updateCache:model.id=" + model.id);
                 model.getClass().cache.save(model);
             }
         },
 
-        afterDestroy: function(model, resp, options) {
-            if (options.cache) {
-                model.getClass().cache.remove(model);
-            }
+        removeFromCache: function(model, resp, options) {
+            console.log("Force.Model:removeFromCache:model.id=" + model.id);
+            options.writeCache = false; // sync event is also fired during destroy, but we don't want to write the model back into the cache
+            model.getClass().cache.remove(model);
         },
 
         // Extra options:
         // * fieldlist:<array of fields> during read if you don't want to fetch the whole record
         // * refetch:true during create/update to do a fetch following the create/update
-        // * cache:true during create/update/read/delete to save/retrieve model to/from cache
+        // * cache:true during read to check cache first (if one is setup) and only go to server if it's a miss
         sync: function(method, model, options) {
-            if (options.cache && method=="read" && model.getClass().cache.has(model))  
+            console.log("Force.Model:sync:method=" + method + ",model.id=" + model.id);
+            // Writing back to cache if one is setup
+            options.writeCache = model.getClass().cache != null; 
+            var promise = null;
+
+            if (method == "read") 
             {
-                options.success(model.getClass().cache.retrieve(model));
+                if (options.cache && model.getClass().cache != null)
+                {
+                    console.log("Force.Model:sync:checking cache for model.id=" + model.id);
+                    promise = model.getClass().cache.retrieve(model)
+                        .then(function(data) {
+                            console.log("Force.Model:sync:cache " + (data == null ? "miss" : "hit") + " for model.id=" + model.id);
+                            if (data != null) options.writeCache = false; // not writing back to cache what we just read from the cache
+                            return (data != null ? data : forcetkClient.retrieve(model.sobjectType, model.id, options.fieldlist));
+                        });
+                }
+                else
+                {
+                    promise = forcetkClient.retrieve(model.sobjectType, model.id, options.fieldlist);
+                }
             }
             else 
             {
-                var promise = null;
                 switch(method) {
-                case "create": promise = forcetkClient.create(model.sobjectType, _.omit(model.attributes, 'Id')).then(function(data) {model.id = data.id; return data;}); break;
-                case "read":   promise = forcetkClient.retrieve(model.sobjectType, model.id, options.fieldlist); break;
+                case "create": promise = forcetkClient.create(model.sobjectType, _.omit(model.attributes, 'Id')).then(function(data) {model.set("Id", data.id); return data;}); break;
                 case "update": promise = forcetkClient.update(model.sobjectType, model.id, model.changed); break;
                 case "delete": promise = forcetkClient.del(model.sobjectType, model.id); break;
                 }
-
-                if (options.refetch)
-                {
-                    promise = promise.then(function() {return forcetkClient.retrieve(model.sobjectType, model.id, options.fieldlist);});
-                }
-
-                promise.done(options.success).fail(options.error);
             }
+
+            if (options.refetch)
+            {
+                promise = promise.then(function() {return forcetkClient.retrieve(model.sobjectType, model.id, options.fieldlist);});
+            }
+
+            promise.done(options.success).fail(options.error);
         }
     },{
-        // Cache used when cache:true is specified during CRUD operation
+        // Cache used to store local copies of any record fetched or saved
+        // Read go to cache first when cache:true is passed as option
         cache: null,
 
         setupCache: function(cache) {
