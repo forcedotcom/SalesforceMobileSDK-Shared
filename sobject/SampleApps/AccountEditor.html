@@ -298,9 +298,9 @@ app.Router = Backbone.StackRouter.extend({
         Backbone.Router.prototype.initialize.call(this);
 
         // To use mem caching
-        var cache = new Force.ModelMemCache()
+        // var cache = new Force.ModelMemCache()
         // To use store caching
-        // var cache = new Force.ModelStoreCache('accounts', ['Id']); // XXX not tested yet
+        var cache = new Force.ModelStoreCache('accounts', ['Id']);
         app.models.Account.setupCache(cache);
 
         // We keep a single instance of the SearchPage and its associated Account collection throughout the app

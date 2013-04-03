@@ -63,8 +63,9 @@
             smartstoreClient = new Object();
             smartstoreClient.registerSoup = promiser(navigator.smartstore, "registerSoup", "smartstoreClient");
             smartstoreClient.upsertSoupEntriesWithExternalId = promiser(navigator.smartstore, "upsertSoupEntriesWithExternalId", "smartstoreClient");
-            smartstoreClient.retrieveSoupEntries = promiser(navigator.smartstore, "retrieveSoupEntries", "smartstoreClient");
+            smartstoreClient.querySoup = promiser(navigator.smartstore, "querySoup", "smartstoreClient");
             smartstoreClient.removeFromSoup = promiser(navigator.smartstore, "removeFromSoup", "smartstoreClient");
+            smartstoreClient.closeCursor = promiser(navigator.smartstore, "closeCursor", "smartstoreClient");
         }
     };
 
@@ -137,26 +138,41 @@
         retrieve: function(id) {
             if (smartstoreClient == null) return;
             var querySpec = navigator.smartstore.buildExactQuerySpec("Id", id);
-            return smartstoreClient.querySoup(this.soupName, querySpec).then(function(cursor) {
-                return cursor.currentPageOrderedEntries.length == 1 
-                        ? cursor.currentPageOrderedEntries[0] 
-                        : null;
-            });
+            var result = null;
+            return smartstoreClient.querySoup(this.soupName, querySpec)
+                .then(function(cursor) {
+                    if (cursor.currentPageOrderedEntries.length == 1) result = cursor.currentPageOrderedEntries[0];
+                    return smartstoreClient.closeCursor(cursor);
+                })
+                .then(function() { 
+                    console.log("In ModelStoreCache:retrieve " + id + ":" + (result == null ? "miss" : "hit"));
+                    return result;
+                });
         },
 
         save: function(model) {
             if (smartstoreClient == null) return;
-            return smartstoreClient.upsertSoupEntriesWithExternalId(this.soupName, model.attributes, "Id");
+            console.log("In ModelStoreCache:save " + model.id);
+            return smartstoreClient.upsertSoupEntriesWithExternalId(this.soupName, [ model.attributes ], "Id");
         },
 
         remove: function(id) {
             if (smartstoreClient == null) return;
+            console.log("In ModelStoreCache:remove " + id);
             var querySpec = navigator.smartstore.buildExactQuerySpec("Id", id);
-            return smartstoreClient.querySoup(this.soupName, querySpec).then(function(cursor) {
-                return cursor.currentPageOrderedEntries.length == 1 
-                        ? smartstoreClient.removeFromSoup(this.soupName, [cursor.currentPageOrderedEntries[0]._soupEntryId]) 
+            return smartstoreClient.querySoup(this.soupName, querySpec)
+                .then(function(cursor) {
+                    return cursor.currentPageOrderedEntries.length == 1 
+                        ? smartstoreClient.removeFromSoup(that.soupName, [cursor.currentPageOrderedEntries[0]._soupEntryId])
                         : null;
-            });
+                    
+                })
+                .then(function(cursor) {
+                    return smartstoreClient.closeCursor(cursor);
+                })
+                .then(function() { 
+                    return null;
+                });
         }
     });
 

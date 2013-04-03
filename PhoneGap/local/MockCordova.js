@@ -109,6 +109,12 @@
         };
     });
 
+    define("cordova/exec", function(require, exports, module) {
+        var cordova = require("cordova");
+
+        module.exports = cordova.exec;
+    });
+
     window.cordova = require("cordova");
 
 })(window);
