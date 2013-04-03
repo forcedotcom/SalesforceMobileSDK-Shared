@@ -42,10 +42,8 @@ function onDeviceReady() {
 
 function appStart(creds)
 {
-    var apiVersion = "v26.0";
-
     // Force init
-    Force.init(creds, apiVersion);
+    Force.init(creds);
 
     // router
     app.router = new app.Router();

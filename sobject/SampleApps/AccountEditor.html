@@ -264,7 +264,7 @@ app.views.EditAccountPage = Backbone.View.extend({
             error: function(data, xhr, options) {
                 var error = new Force.RestError(xhr);
                 _.each(error.details, function(detail) {
-                    if (detail.fields.length == 0) {
+                    if (detail.fields == null || detail.fields.length == 0) {
                         alert(detail.message);
                     }
                     else {
@@ -300,7 +300,7 @@ app.Router = Backbone.StackRouter.extend({
         // To use mem caching
         // var cache = new Force.ModelMemCache()
         // To use store caching
-        var cache = new Force.ModelStoreCache('accounts', ['Id']);
+        var cache = new Force.ModelStoreCache('accounts');
         app.models.Account.setupCache(cache);
 
         // We keep a single instance of the SearchPage and its associated Account collection throughout the app
