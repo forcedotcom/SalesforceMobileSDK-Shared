@@ -60,6 +60,7 @@
         forcetkClient.del = promiser(innerForcetkClient, "del", "forcetkClient");
         forcetkClient.query = promiser(innerForcetkClient, "query", "forcetkClient");
         forcetkClient.search = promiser(innerForcetkClient, "search", "forcetkClient");
+        forcetkClient.metadata = promiser(innerForcetkClient, "metadata", "forcetkClient");
 
         if (navigator.smartstore) 
         {
@@ -96,53 +97,6 @@
         }
     };
 
-    // Force.ModelMemCache
-    // -------------------
-    // In memory cache for Force.Model's
-    //
-    // The cache can be shared by several Force.Model subclasses
-    // Once the cache is setup, data for any model fetched or saved will also be saved in the cache
-    // To read from the cache during a fetch, simply pass the option cache:true
-    //
-    // Usage: 
-    //   MyModel = Force.Model.extend({...});
-    //   var cache = new Force.ModelMemCache();
-    //   MyModel.setupCache(cache)
-    //   var model = new MyModel({Id: ...});
-    //   model.fetch({cache:true, ...});
-    //
-    Force.ModelMemCache = function() {
-        this.data = {};
-    };
-
-    _.extend(Force.ModelMemCache.prototype, {
-        // Return promise which retrieves cached model attributes or null if not cached
-        retrieve: function(id) {
-            console.log("In ModelMemCache:retrieve " + id + ":" + (this.data[id] == null ? "miss" : "hit"));
-            var d = $.Deferred();
-            d.resolve(this.data[id]);
-            return d.promise();
-        },
-
-        // Return promise which stores model attributes in cache
-        save: function(attrs) {
-            console.log("In ModelMemCache:save " + attrs.Id);
-            this.data[attrs.Id] = _.clone(attrs);
-            var d = $.Deferred();
-            d.resolve();
-            return d.promise();
-        },
-
-        // Return promise which deletes model from cache
-        remove: function(id) {
-            console.log("In ModelMemCache:remove " + id);
-            delete this.data[id];
-            var d = $.Deferred();
-            d.resolve();
-            return d.promise();
-        }
-    });
-
     // Force.ModelStoreCache
     // -------------------
     // SmartStore-backed cache for Force.Model's
@@ -169,7 +123,7 @@
 
     _.extend(Force.ModelStoreCache.prototype, {
         // Return promise which retrieves cached model attributes or null if not cached
-        retrieve: function(id) {
+        retrieve: function(id, fieldlist) {
             if (smartstoreClient == null) return;
             var querySpec = navigator.smartstore.buildExactQuerySpec("id", id);
             var result = null;
@@ -179,7 +133,14 @@
                     return smartstoreClient.closeCursor(cursor);
                 })
                 .then(function() { 
-                    console.log("In ModelStoreCache:retrieve " + id + ":" + (result == null ? "miss" : "hit"));
+                    // if the cached record doesn't have all the field we are interested in the return null
+                    if (result != null && fieldlist != null && _.any(fieldlist, function(field) { 
+                        return !_.has(result, field); 
+                    })) {
+                        console.log("In ModelStoreCache:retrieve id=" + id + ":in cache but missing some fields");
+                        result = null;
+                    }
+                    console.log("In ModelStoreCache:retrieve id=" + id + ":" + (result == null ? "miss" : "hit"));
                     return result;
                 });
         },
@@ -187,14 +148,24 @@
         // Return promise which stores model attributes in cache
         save: function(attrs) {
             if (smartstoreClient == null) return;
-            console.log("In ModelStoreCache:save " + attrs.Id);
+            console.log("In ModelStoreCache:save id=" + attrs.Id);
             return smartstoreClient.upsertSoupEntriesWithExternalId(this.soupName, [ {'id': attrs.Id, 'attributes': attrs} ], "id");
+        },
+
+        // Return promise which stores several model attributes in cache
+        saveAll: function(arrayOfattrs) {
+            if (smartstoreClient == null) return;
+            console.log("In ModelStoreCache:saveAll ids=" + _.pluck(arrayOfattrs, 'Id'));
+            var soupEntries = _.map(arrayOfattrs, function(attrs) { 
+                return {'id': attrs.Id, 'attributes': attrs}; 
+            });
+            return smartstoreClient.upsertSoupEntriesWithExternalId(this.soupName, soupEntries, "id");
         },
 
         // Return promise which deletes model from cache
         remove: function(id) {
             if (smartstoreClient == null) return;
-            console.log("In ModelStoreCache:remove " + id);
+            console.log("In ModelStoreCache:remove id=" + id);
             var that = this;
             var querySpec = navigator.smartstore.buildExactQuerySpec("id", id);
             return smartstoreClient.querySoup(this.soupName, querySpec)
@@ -229,25 +200,6 @@
             return this.__proto__.constructor;
         },
 
-        // Return true if setupCache has been called for class
-        hasCache: function() {
-            return this.getClass().cache != null;
-        },
-        
-        // Private
-        // Read from cache if a cache has been setup and options.cache is true
-        // Return a promise that resolves to null if cache is not setup or options.cache is not true or model.is is not found in cache
-        readFromCacheIfApplicable: function(options) {
-            if (options.cache && this.hasCache()) {
-                return this.getClass().cache.retrieve(this.id);
-            }
-            else {
-                var d = $.Deferred();
-                d.resolve(null);
-                return d.promise();
-            }
-        },
-
         // Overriding Backbone sync method (responsible for all server interactions)
         //
         // Extra options:
@@ -258,81 +210,86 @@
         sync: function(method, model, options) {
             console.log("In Force.Model:sync method=" + method + " model.id=" + model.id);
 
-            //
-            // We are chaining promises that either return 
-            // * another promise or 
-            // * the full model attributes (for create/read/update) 
-            // * or null (for delete)
-            //
+            // Server actions helper
+            var serverCreate   = function() { 
+                return forcetkClient.create(model.sobjectType, _.omit(model.attributes, 'Id'))
+                    .then(function(resp) {
+                        return _.extend(model.attributes, {Id: resp.id});
+                    }) 
+            };
 
+            var serverRetrieve = function() { 
+                return forcetkClient.retrieve(model.sobjectType, model.id, options.fieldlist)
+                    .then(function(resp) {
+                        return _.omit(resp, "attributes");
+                    });
+            };
+
+            var serverUpdate   = function() { 
+                return forcetkClient.update(model.sobjectType, model.id, model.changed)
+                    .then(function(resp) { 
+                        return model.attributes; 
+                    }) 
+            };
+
+            var serverDelete   = function() { 
+                return forcetkClient.del(model.sobjectType, model.id)
+                    .then(function(resp) { 
+                        return null;
+                    }) 
+            };
+
+            var serverRefetchIfRequested  = function(data) { 
+                return options.refetch ? serverRetrieve() : data; 
+            };
+
+            var serverRetrieveUnlessFound = function(data) { 
+                return !options.wasReadFromCache ? serverRetrieve() : data; 
+            };
+
+            // Cache actions helper
+            var cache = model.getClass().cache;
+            var cacheRetrieveIfApplicable  = function(data) { 
+                if (cache != null && options.cache) {
+                    return cache.retrieve(model.id, options.fieldlist)
+                        .then(function(data) { 
+                            options.wasReadFromCache = (data != null); 
+                            return data; 
+                        });
+                }
+                else {
+                    var d = $.Deferred();
+                    d.resolve(null);
+                    return d.promise();
+                }
+            };
+
+            var cacheSaveIfApplicable = function(data) { 
+                if (cache != null &&  !options.wasReadFromCache) {
+                    return cache.save(data)
+                        .then(function() { 
+                            return data; 
+                        });
+                }
+                else {
+                    return data;
+                }
+            };
+
+            var cacheRemoveIfApplicable = function(data) {
+                return cache != null ? cache.remove(model.id) : null;
+            };
+
+            // Chaining promises that return either a promise or created/upated/reda model attributes or null in the case of delete
             var promise = null;
-
-            // True if we end up getting the data from the cache instead of going to the server
-            var readFromCache = false;
-
             switch(method) {
-            case "read":   
-                // Go to the cache first if applicable
-                promise = model.readFromCacheIfApplicable(options)
-                    .then(function(data) {
-                        readFromCache = (data != null); // data is null if cache is not setup or doesn't contain the record
-                        return readFromCache 
-                            ? data // all the attributes for the model
-                            : forcetkClient.retrieve(model.sobjectType, model.id, options.fieldlist) // we need to go to the server
-                            .then(function(data) {
-                                return _.omit(data, "attributes");                                
-                            });
-                    }); 
-                break;
-
-            case "delete": 
-                // Go to the server
-                promise = forcetkClient.del(model.sobjectType, model.id); break;
-
-            case "create": 
-                // Go to the server
-                promise = forcetkClient.create(model.sobjectType, _.omit(model.attributes, 'Id')) 
-                    .then(function(data) {
-                        model.set('Id', data.id);
-                        return model.attributes; // all the attributes for the model
-                    }); 
-                break;
-
-            case "update":
-                // Go to the server
-                promise = forcetkClient.update(model.sobjectType, model.id, model.changed)
-                    .then(function() {
-                        return model.attributes; // all the attributes for the model
-                    });
-                break;
+                case "create": promise = serverCreate().then(serverRefetchIfRequested).then(cacheSaveIfApplicable); break;
+                case "read":   promise = cacheRetrieveIfApplicable().then(serverRetrieveUnlessFound).then(cacheSaveIfApplicable); break;
+                case "update": promise = serverUpdate().then(serverRefetchIfRequested).then(cacheSaveIfApplicable); break;
+                case "delete": promise = serverDelete().then(cacheRemoveIfApplicable); break;
             }
 
-            // Refetch if requested
-            if (options.refetch)
-            {
-                promise = promise
-                    .then(function() {
-                        return forcetkClient.retrieve(model.sobjectType, model.id, options.fieldlist); // going back to server to refetch data
-                    })
-                    .then(function(data) {
-                        return _.omit(data, "attributes");
-                    });
-            }
-
-            // Updating cache if applicable
-            if (model.hasCache()) {
-                promise = promise
-                    .then(function(data) {
-                        // At this point data should contain all the model attributes (new and old) or be null (delete)
-                        // For a delete, we need to remove the model from the cache
-                        if (method == "delete") return model.getClass().cache.remove(model.id);
-                        // In all other cases, if the data was not read from the cache, we need to update the cache
-                        if (!readFromCache) return model.getClass().cache.save(data).then(function() { return data;});
-                        else return data;
-                    });
-            }
-
-            // Done!
+            // Done
             promise.done(options.success).fail(options.error);
         }
     },{
@@ -351,51 +308,101 @@
     // Subclass of Backbone.Collection that can talk to Salesforce REST API
     // 
     Force.Collection = Backbone.Collection.extend({
-        // soql or sosl should be not null but not both at once
+        // soql or sosl or mru should be not null but not more than one at a time
         soql:null,
         sosl:null,
+        mru:null,
 
+        // Return class object
+        getClass: function() {
+            return this.__proto__.constructor;
+        },
 
         // Overriding Backbone sync method (responsible for all server interactions)
         //
         sync: function(method, model, options) {
-            var promise = null;
-            switch(method) {
-            case "read": 
-                options.reset = true;
-                // soql-backed collection
-                if (this.soql != null) {
-                    promise = forcetkClient.query(this.soql).then(function(results) { return results.records; });
-                }
-                // sosl-backed collection
-                else if (this.sosl != null) {
-                    promise = forcetkClient.search(this.sosl);
-                }
-                break;
+            var that = this;
+            if (method != "read") {
+                throw "Method " + method  + " not supported";
             }
 
-            if (promise != null)
-            {
-                promise.done(options.success).fail(options.error);
-            }
-            else
-            {
+            // Server actions helper
+            var serverSoql = function() { 
+                return forcetkClient.query(that.soql)
+                    .then(function(resp) { 
+                        return resp.records; 
+                    });
+            };
+
+            var serverSosl = function() {
+                return forcetkClient.search(that.sosl)
+            };
+
+            var serverMru = function() {
+                return forcetkClient.metadata(that.mru)
+                .then(function(resp) {
+                    return resp.recentItems;
+                });
+            };
+
+            // Cache action helper
+            var cache = model.getClass().cache;
+            var cacheSaveIfApplicable = function(records) { 
+                if (cache != null) {
+                    var cleanRecords = _.map(records, function(record) { 
+                        return _.omit(record, "attributes"); 
+                    });
+                    return cache.saveAll(cleanRecords)
+                        .then(function() { 
+                            return records; 
+                        });
+                }
+                else {
+                    return records
+                }
+            };
+
+
+            options.reset = true;
+
+            var collectionType = (this.soql != null ? "soql" : (this.sosl != null ? "sosl" : (this.mru != null ? "mru" : null)));
+            if (collectionType == null) {
                 options.success([]);
+                return;
             }
+
+            var promise = null;
+            switch(collectionType) {
+            case "soql": promise = serverSoql(); break;
+            case "sosl": promise = serverSosl(); break;
+            case "mru":  promise = serverMru(); break;
+            }
+
+            promise
+                .then(cacheSaveIfApplicable)
+                .done(options.success)
+                .fail(options.error);
         },
 
         // Overriding Backbone parse method (responsible for parsing server response)
         //
         parse: function(resp, options) {
             var that = this;
-            var records = [];
-            _.each(resp, function(result) {
+            return _.map(resp, function(result) {
                 var sobjectType = result.attributes.type;
                 var sobject = new that.model(_.omit(result, 'attributes'));
                 sobject.sobjectType = sobjectType;
-                records.push(sobject);
+                return sobject;
             });
-            return records;
+        }
+    },{
+        // Cache used to store local copies of any record fetched or saved
+        // Read go to cache first when cache:true is passed as option
+        cache: null,
+
+        // Method to setup cache for all models of this class
+        setupCache: function(cache) {
+            this.cache = cache;
         }
     });
 
