@@ -145,9 +145,9 @@ app.models.AccountCollection = Force.SObjectCollection.extend({
     model: app.models.Account,
     fieldlist: ["Id", "Name", "Industry"],
     setCriteria: function(key) {
-        this.soql = "SELECT " + this.fieldlist.join(",")  
-            + " FROM Account"
-            + " WHERE Name like '" + key + "%'";
+        this.configureForSOQL("SELECT " + this.fieldlist.join(",")  
+                              + " FROM Account"
+                              + " WHERE Name like '" + key + "%'");
     }
 });
 
@@ -301,6 +301,7 @@ app.Router = Backbone.StackRouter.extend({
         app.models.AccountCollection.setupCache(cache);
 
         this.searchResults = new app.models.AccountCollection();
+        this.searchResults.configureForMRU("Account", this.searchResults.fieldlist);
         // We keep a single instance of the SearchPage and its associated Account collection throughout the app
         this.startPage = new app.views.SearchPage({model: this.searchResults});
         $(this.startPage.el).attr("id", "startPage");

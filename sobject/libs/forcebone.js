@@ -303,16 +303,29 @@
     // Force.SObjectCollection
     // -----------------------
     // Subclass of Backbone.Collection to represent Force.SObjectCollection backed by SOQL, SOSL or MRU
+    // TODO: query-more support
     // 
     Force.SObjectCollection = Backbone.Collection.extend({
-        // soql or sosl or mru should be not null but not more than one at a time
-        soql:null,
-        sosl:null,
-        mru:null,
+        config: null, // don't set directly, use configureFor* methods
 
         // Return class object
         getClass: function() {
             return this.__proto__.constructor;
+        },
+
+        // To run SOQL on fetch
+        configureForSOQL: function(soql) {
+            this.config = {collectionType:"soql", soql: soql};
+        },
+
+        // To run SOSL on fetch
+        configureForSOSL: function(sosl) {
+            this.config = {collectionType:"sosl", sosl: sosl};
+        },
+
+        // To get MRU on fetch
+        configureForMRU: function(sobjectType, fieldlist) {
+            this.config = {collectionType:"mru", sobjectType:sobjectType, fieldlist:fieldlist};
         },
 
         // Overriding Backbone sync method (responsible for all server interactions)
@@ -324,21 +337,24 @@
             }
 
             // Server actions helper
-            var serverSoql = function() { 
-                return forcetkClient.query(that.soql)
+            var serverSoql = function(soql) { 
+                return forcetkClient.query(soql)
                     .then(function(resp) { 
                         return resp.records; 
                     });
             };
 
-            var serverSosl = function() {
-                return forcetkClient.search(that.sosl)
+            var serverSosl = function(sosl) {
+                return forcetkClient.search(sosl)
             };
 
-            var serverMru = function() {
-                return forcetkClient.metadata(that.mru)
+            var serverMru = function(sobjectType, fieldlist) {
+                return forcetkClient.metadata(sobjectType)
                 .then(function(resp) {
-                    return resp.recentItems;
+                    var soql = "SELECT " + fieldlist.join(",") 
+                        + " FROM " + sobjectType
+                        + " WHERE Id IN ('" + _.pluck(resp.recentItems, "Id").join("','") + "')";
+                    return serverSoql(soql);
                 });
             };
 
@@ -362,17 +378,16 @@
 
             options.reset = true;
 
-            var collectionType = (this.soql != null ? "soql" : (this.sosl != null ? "sosl" : (this.mru != null ? "mru" : null)));
-            if (collectionType == null) {
+            if (this.config == null) {
                 options.success([]);
                 return;
             }
 
             var promise = null;
-            switch(collectionType) {
-            case "soql": promise = serverSoql(); break;
-            case "sosl": promise = serverSosl(); break;
-            case "mru":  promise = serverMru(); break;
+            switch(this.config.collectionType) {
+            case "soql": promise = serverSoql(this.config.soql); break;
+            case "sosl": promise = serverSosl(this.config.sosl); break;
+            case "mru":  promise = serverMru(this.config.sobjectType, this.config.fieldlist); break;
             }
 
             promise
