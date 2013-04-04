@@ -61,6 +61,7 @@
         forcetkClient.query = promiser(innerForcetkClient, "query", "forcetkClient");
         forcetkClient.search = promiser(innerForcetkClient, "search", "forcetkClient");
         forcetkClient.metadata = promiser(innerForcetkClient, "metadata", "forcetkClient");
+        forcetkClient.describe = promiser(innerForcetkClient, "describe", "forcetkClient");
 
         if (navigator.smartstore) 
         {
@@ -101,6 +102,7 @@
     // ----------------
     // SmartStore-backed key-value cache
     // Soup elements of the form {key:.., value:...} indexed by key
+    // Fires a ready event when ready and an invalid event if initialization fails
     //
     Force.StoreCache = function(soupName) {
         if (smartstoreClient == null) return;
@@ -114,7 +116,7 @@
 
             })
             .fail(function() {
-                that.trigger("initerror");
+                that.trigger("invalid");
                 console.log("Force.StoreCache: " + soupName + " registration failed");
                 that.soupName = null;
             });
@@ -181,9 +183,67 @@
         }
     });
 
+    // Force.SObjectType
+    // -----------------
+    // Represent the meta-data of a SObject type on the client.
+    Force.SObjectType = function (sobjectType, cache) {
+        this.sobjectType = sobjectType;
+        this.cache = cache;
+    };
+
+    _.extend(Force.SObjectType.prototype, Backbone.Events, {
+        fetch: function(options) {
+            var options = options || {};
+            var that = this;
+
+            // Server action helper
+            var serverDescribeUnlessCached = function(data) { 
+                return data == null ? forcetkClient.describe(that.sobjectType) : data; 
+            };
+
+            // Cache actions helper
+            var cacheRetrieve = function() { 
+                return that.cache.retrieve(that.sobjectType)
+                    .then(function(data) { 
+                        options.wasReadFromCache = (data != null); 
+                        return data;
+                    })
+            };
+
+            var cacheSave = function(data) {
+                return that.cache.save({key:that.sobjectType, value:data})
+                    .then(function() { 
+                        return data;
+                    })
+            };
+            
+            var promise = null;
+            // No cache is setup
+            if (this.cache == null) {
+                promise = serverDescribeUnlessCached(null);
+            }
+            // Cache is setup
+            else {
+                promise = cacheRetrieve()
+                    .then(serverDescribeUnlessCached)
+                    .then(cacheSave);
+            }
+
+            promise = promise
+                .done(function(data) {
+                    that.attributes = data;
+                    if (options.success) options.success(data);
+                })
+                .fail(options.error);
+        }
+    });
+
     // Force.SObject
     // --------------
-    // Subclass of Backbone.Model that can talk to Salesforce REST API and supports caching in SmartStore or in memory
+    // Subclass of Backbone.Model to represent a SObject on the client (fetch/save/delete update server through the REST API)
+    // When a cache is setup (by calling setupCache), the cache gets a copy of the record after any fetch/save operation (and also destroys any copy of the record after a destroy)
+    // During a fetch, set options.cache to true to check the cache first and skip going to the server if a cached copy is found.
+    // Furthermore, if options.fieldlist is not null, the cached copy will be returned only if it has all the desired fields.
     // 
     Force.SObject = Backbone.Model.extend({
         // sobjectType is expected on every instance
@@ -240,13 +300,13 @@
                 return options.refetch ? serverRetrieve() : data; 
             };
 
-            var serverRetrieveUnlessFound = function(data) { 
+            var serverRetrieveUnlessCached = function(data) { 
                 return !options.wasReadFromCache ? serverRetrieve() : data; 
             };
 
             // Cache actions helper
             var cache = model.getClass().cache;
-            var cacheRetrieveIfApplicable  = function(data) { 
+            var cacheRetrieveIfApplicable  = function() { 
                 if (cache != null && options.cache) {
                     return cache.retrieve(model.id, options.fieldlist)
                         .then(function(data) { 
@@ -281,7 +341,7 @@
             var promise = null;
             switch(method) {
                 case "create": promise = serverCreate().then(serverRefetchIfRequested).then(cacheSaveIfApplicable); break;
-                case "read":   promise = cacheRetrieveIfApplicable().then(serverRetrieveUnlessFound).then(cacheSaveIfApplicable); break;
+                case "read":   promise = cacheRetrieveIfApplicable().then(serverRetrieveUnlessCached).then(cacheSaveIfApplicable); break;
                 case "update": promise = serverUpdate().then(serverRefetchIfRequested).then(cacheSaveIfApplicable); break;
                 case "delete": promise = serverDelete().then(cacheRemoveIfApplicable); break;
             }
@@ -302,7 +362,10 @@
 
     // Force.SObjectCollection
     // -----------------------
-    // Subclass of Backbone.Collection to represent Force.SObjectCollection backed by SOQL, SOSL or MRU
+    // Subclass of Backbone.Collection to represent a collection of SObject's on the client.
+    // Only fetch is supported (no create/update or delete).
+    // To define the set of SObject's to fetch, use configureForSOQL, configureForSOSL or configureForMRU.
+    // When a cache is setup (by calling setupCache), the cache gets a copy of all records after any fetch operations.
     // TODO: query-more support
     // 
     Force.SObjectCollection = Backbone.Collection.extend({
@@ -408,11 +471,9 @@
             });
         }
     },{
-        // Cache used to store local copies of any record fetched or saved
-        // Read go to cache first when cache:true is passed as option
         cache: null,
 
-        // Method to setup cache for all models of this class
+        // Method to setup cache for all objects of this class
         setupCache: function(cache) {
             this.cache = cache;
         }
