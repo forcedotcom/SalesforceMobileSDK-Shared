@@ -147,7 +147,11 @@ var MockSmartStore = (function(window) {
                         var soupElt = soup[soupEltId];
                         var projection = this.project(soupElt, externalIdPath);
                         if (projection == externalId) {
-                            if (!isNew) throw "There are more than one soup elements where " + externalIdPath + " is " + externalId;
+                            if (!isNew) {
+                                msg = "There are more than one soup elements where " + externalIdPath + " is " + externalId;
+                                console.error(msg);
+                                throw msg;
+                            }
                             entry._soupEntryId = soupEltId;
                             isNew = false;
                         }

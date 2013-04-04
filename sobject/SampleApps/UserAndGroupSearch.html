@@ -68,8 +68,8 @@
 // -------------------------------------------------- The Models ---------------------------------------------------- //
 
 // Collection
-app.models.SearchCollection = Force.Collection.extend({
-    model: Force.Model,
+app.models.SearchCollection = Force.SObjectCollection.extend({
+    model: Force.SObject,
     setCriteria: function(key) {
         this.sosl = "FIND {" + key + "*} IN ALL FIELDS RETURNING "
             + "CollaborationGroup (Id, Name, SmallPhotoUrl, MemberCount), "

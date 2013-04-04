@@ -119,13 +119,13 @@
 <script>
 // -------------------------------------------------- The Models ---------------------------------------------------- //
 // The User Model
-app.models.User = Force.Model.extend({
+app.models.User = Force.SObject.extend({
     sobjectType: "User",
     fieldlist: ["Id", "FirstName", "LastName", "SmallPhotoUrl", "Title", "Email", "MobilePhone","City"]
 });
 
 // The UserCollection Model
-app.models.UserCollection = Force.Collection.extend({
+app.models.UserCollection = Force.SObjectCollection.extend({
     model: app.models.User,
     fieldlist: ["Id", "FirstName", "LastName", "SmallPhotoUrl", "Title"],
     setCriteria: function(key) {

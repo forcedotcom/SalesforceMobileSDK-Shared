@@ -74,7 +74,7 @@
     };
 
     // Force.RestError
-    // -----------------
+    // ---------------
     Force.RestError = function(xhr) {
         // 200	“OK” success code, for GET or HEAD request.
         // 201	“Created” success code, for POST request.
@@ -97,39 +97,39 @@
         }
     };
 
-    // Force.ModelStoreCache
-    // -------------------
-    // SmartStore-backed cache for Force.Model's
+    // Force.StoreCache
+    // ----------------
+    // SmartStore-backed key-value cache
+    // Soup elements of the form {key:.., value:...} indexed by key
     //
-    // The cache can be shared by several Force.Model subclasses
-    // Once the cache is setup, data for any model fetched or saved will also be saved in the cache
-    // To read from the cache during a fetch, simply pass the option cache:true
-    //
-    // Records are stored in soup elements of the form {id:sobject-id, attributes:{sobject-attributes}}
-    //
-    // Usage: 
-    //   MyModel = Force.Model.extend({...});
-    //   var cache = new Force.ModelStoreCache("soupName");
-    //   MyModel.setupCache(cache)
-    //   var model = new MyModel({Id: ...});
-    //   model.fetch({cache:true, ...});
-    //
-    Force.ModelStoreCache = function(soupName) {
+    Force.StoreCache = function(soupName) {
         if (smartstoreClient == null) return;
-        this.soupName = soupName;
-        var indexSpecs = [{path:"id", type:"string"}];
-        smartstoreClient.registerSoup(soupName, indexSpecs); // XXX need callback when async all completes
+        var indexSpecs = [{path:"key", type:"string"}];
+        var that = this;
+        smartstoreClient.registerSoup(soupName, indexSpecs)
+            .done(function() { 
+                that.trigger("ready");
+                console.log("Force.StoreCache: " + soupName + " ready");
+                that.soupName = soupName;
+
+            })
+            .fail(function() {
+                that.trigger("initerror");
+                console.log("Force.StoreCache: " + soupName + " registration failed");
+                that.soupName = null;
+            });
     };
 
-    _.extend(Force.ModelStoreCache.prototype, {
-        // Return promise which retrieves cached model attributes or null if not cached
-        retrieve: function(id, fieldlist) {
-            if (smartstoreClient == null) return;
-            var querySpec = navigator.smartstore.buildExactQuerySpec("id", id);
+    _.extend(Force.StoreCache.prototype, Backbone.Events, {
+        // Return promise which retrieves cached value for the given key
+        // When fieldlist is not null, the cached value is only returned when it has all the fields specified in fieldlist
+        retrieve: function(key, fieldlist) {
+            if (this.soupName == null) return;
+            var querySpec = navigator.smartstore.buildExactQuerySpec("key", key);
             var result = null;
             return smartstoreClient.querySoup(this.soupName, querySpec)
                 .then(function(cursor) {
-                    if (cursor.currentPageOrderedEntries.length == 1) result = cursor.currentPageOrderedEntries[0].attributes;
+                    if (cursor.currentPageOrderedEntries.length == 1) result = cursor.currentPageOrderedEntries[0].value;
                     return smartstoreClient.closeCursor(cursor);
                 })
                 .then(function() { 
@@ -137,37 +137,34 @@
                     if (result != null && fieldlist != null && _.any(fieldlist, function(field) { 
                         return !_.has(result, field); 
                     })) {
-                        console.log("In ModelStoreCache:retrieve id=" + id + ":in cache but missing some fields");
+                        console.log("In StoreCache:retrieve key=" + key + ":in cache but missing some fields");
                         result = null;
                     }
-                    console.log("In ModelStoreCache:retrieve id=" + id + ":" + (result == null ? "miss" : "hit"));
+                    console.log("In StoreCache:retrieve key=" + key + ":" + (result == null ? "miss" : "hit"));
                     return result;
                 });
         },
 
-        // Return promise which stores model attributes in cache
-        save: function(attrs) {
-            if (smartstoreClient == null) return;
-            console.log("In ModelStoreCache:save id=" + attrs.Id);
-            return smartstoreClient.upsertSoupEntriesWithExternalId(this.soupName, [ {'id': attrs.Id, 'attributes': attrs} ], "id");
+        // Return promise which stores key-value in cache
+        save: function(keyValue) {
+            if (this.soupName == null) return;
+            console.log("In StoreCache:save key=" + keyValue.key);
+            return smartstoreClient.upsertSoupEntriesWithExternalId(this.soupName, [ keyValue ], "key");
         },
 
-        // Return promise which stores several model attributes in cache
-        saveAll: function(arrayOfattrs) {
-            if (smartstoreClient == null) return;
-            console.log("In ModelStoreCache:saveAll ids=" + _.pluck(arrayOfattrs, 'Id'));
-            var soupEntries = _.map(arrayOfattrs, function(attrs) { 
-                return {'id': attrs.Id, 'attributes': attrs}; 
-            });
-            return smartstoreClient.upsertSoupEntriesWithExternalId(this.soupName, soupEntries, "id");
+        // Return promise which stores several key-value in cache
+        saveAll: function(arrayKeyValue) {
+            if (this.soupName == null) return;
+            console.log("In StoreCache:saveAll arrayKeyValue.length=" + arrayKeyValue.length);
+            return smartstoreClient.upsertSoupEntriesWithExternalId(this.soupName, arrayKeyValue, "key");
         },
 
-        // Return promise which deletes model from cache
-        remove: function(id) {
-            if (smartstoreClient == null) return;
-            console.log("In ModelStoreCache:remove id=" + id);
+        // Return promise which deletes key-value from cache
+        remove: function(key) {
+            if (this.soupName == null) return;
+            console.log("In StoreCache:remove key=" + key);
             var that = this;
-            var querySpec = navigator.smartstore.buildExactQuerySpec("id", id);
+            var querySpec = navigator.smartstore.buildExactQuerySpec("key", key);
             return smartstoreClient.querySoup(this.soupName, querySpec)
                 .then(function(cursor) {
                     return cursor.currentPageOrderedEntries.length == 1 
@@ -184,11 +181,11 @@
         }
     });
 
-    // Force.Model
+    // Force.SObject
     // --------------
     // Subclass of Backbone.Model that can talk to Salesforce REST API and supports caching in SmartStore or in memory
     // 
-    Force.Model = Backbone.Model.extend({
+    Force.SObject = Backbone.Model.extend({
         // sobjectType is expected on every instance
         sobjectType:null,
 
@@ -208,7 +205,7 @@
         // * cache:true during read to check cache first (if one is setup) and only go to server if it's a miss
         //
         sync: function(method, model, options) {
-            console.log("In Force.Model:sync method=" + method + " model.id=" + model.id);
+            console.log("In Force.SObject:sync method=" + method + " model.id=" + model.id);
 
             // Server actions helper
             var serverCreate   = function() { 
@@ -266,7 +263,7 @@
 
             var cacheSaveIfApplicable = function(data) { 
                 if (cache != null &&  !options.wasReadFromCache) {
-                    return cache.save(data)
+                    return cache.save({key:data.Id, value:data})
                         .then(function() { 
                             return data; 
                         });
@@ -303,11 +300,11 @@
         }
     });
 
-    // Force.Collection
-    // --------------
-    // Subclass of Backbone.Collection that can talk to Salesforce REST API
+    // Force.SObjectCollection
+    // -----------------------
+    // Subclass of Backbone.Collection to represent Force.SObjectCollection backed by SOQL, SOSL or MRU
     // 
-    Force.Collection = Backbone.Collection.extend({
+    Force.SObjectCollection = Backbone.Collection.extend({
         // soql or sosl or mru should be not null but not more than one at a time
         soql:null,
         sosl:null,
@@ -349,10 +346,10 @@
             var cache = model.getClass().cache;
             var cacheSaveIfApplicable = function(records) { 
                 if (cache != null) {
-                    var cleanRecords = _.map(records, function(record) { 
-                        return _.omit(record, "attributes"); 
+                    var keyValues = _.map(records, function(record) { 
+                        return {key:record.Id, value:_.omit(record, "attributes")}; 
                     });
-                    return cache.saveAll(cleanRecords)
+                    return cache.saveAll(keyValues)
                         .then(function() { 
                             return records; 
                         });
