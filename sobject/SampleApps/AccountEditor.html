@@ -21,6 +21,7 @@
 <script src="../libs/SFSmartStorePlugin.js"></script>
 <script src="../libs/MockSmartStore.js"></script>  <!-- Uncomment when testing in browser -->
 <script src="../libs/forcetk.js"></script>
+<script src="../libs/force.js"></script>
 <script src="../libs/forcebone.js"></script>
 <script src="stackrouter.js"></script>
 <script src="auth.js"></script>
@@ -297,6 +298,7 @@ app.Router = Backbone.StackRouter.extend({
         Backbone.Router.prototype.initialize.call(this);
 
         var cache = new Force.StoreCache('accounts');
+        cache.init();
         app.models.Account.setupCache(cache);
         app.models.AccountCollection.setupCache(cache);
 
