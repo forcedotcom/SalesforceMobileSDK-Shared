@@ -1,1 +1,0 @@
-../../PhoneGap/util/SFHybridApp.js

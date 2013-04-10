@@ -1,1 +1,0 @@
-../../PhoneGap/plugins/SalesforceOAuthPlugin.js
