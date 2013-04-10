@@ -10,11 +10,13 @@ jQuery(document).ready(function() {
     console.log("onLoad: jquery ready");
 
     // Use following when in container
-	// document.addEventListener("deviceready", onDeviceReady,false);
+	document.addEventListener("deviceready", onDeviceReady,false);
+    // End container
 
     // Use  when testing in browser
     // Also make sure to start browser with same origin policy disable
     // See http://joshuamcginnis.com/2011/02/28/how-to-disable-same-origin-policy-in-chrome/
+    /*
     var creds = {
         accessToken: "--will-be-obtained-by-refres",
         refreshToken: "5Aep861_OKMvio5gy9sGt9Z9mdt62xXK.9ugif6nZJYknXeANTICBf4ityN9j6YDgHjFvbzu6FTUQ==",
@@ -23,6 +25,8 @@ jQuery(document).ready(function() {
         instanceUrl: "https://tapp0.salesforce.com",
         accountAgent: "sobject-proto"
     };
+    */
+    // End local testing
     appStart(creds);
 });
 
