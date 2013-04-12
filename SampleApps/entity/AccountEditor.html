@@ -42,7 +42,7 @@
 <!-- --------------------------------------- Search page template ------------------------------------------------- -->
 <script id="search-page" type="text/template">
 <div class="header">
-    <h1>Accounts<span id="onlineOfflineStatus"/></h1>
+    <h1>Accounts<span id="offlineStatus"/></h1>
     <a href="#add" class="header-button header-button-icon header-button-right">
       <button>+</button>
     </a>
@@ -59,8 +59,8 @@
 
 <!-- --------------------------------------- Online/Offline Toggler Template ------------------------------------------- -->
 
-<script id="online-offline-toggler" type="text/template">
-<a href="#" class="header-button <%= onlineOfflineStatus %>">
+<script id="offline-toggler" type="text/template">
+<a href="#" class="header-button <%= offlineStatus %>">
   <button class="online">Online</button>
   <button class="offline">Offline</button>
 </a>
@@ -92,7 +92,7 @@
     <a href="#" class="header-button header-button-icon header-button-second-from-right delete">
         <button>&#10007;</button>
     </a>
-    <h1>Account<span id="onlineOfflineStatus"/></h1>
+    <h1>Account<span id="offlineStatus"/></h1>
 </div>
 
 <div class="scroll striped" style="top:44px;">
@@ -126,7 +126,7 @@
     <a href="<%= backAction %>" class="header-button header-button-left header-back-button">
         <button>Back</button>
     </a>
-    <h1><%= action %> Account <span id="onlineOfflineStatus"/></h1>
+    <h1><%= action %> Account <span id="offlineStatus"/></h1>
 </div>
 <div class="scroll striped" style="top:44px;">
   <form style="margin:20px">
@@ -165,7 +165,7 @@ app.models.Account = Force.SObject.extend({
 // The AccountCollection Model
 app.models.AccountCollection = Force.SObjectCollection.extend({
     model: app.models.Account,
-    fieldlist: ["Id", "Name", "Industry"],
+    fieldlist: ["Id", "Name", "Industry", "Phone"],
     setCriteria: function(key) {
         this.configureForSOQL("SELECT " + this.fieldlist.join(",")  
                               + " FROM Account"
@@ -174,7 +174,7 @@ app.models.AccountCollection = Force.SObjectCollection.extend({
 });
 
 // Online/Offline Tracker
-app.models.OnlineOfflineTracker = Backbone.Model.extend({
+app.models.OfflineTracker = Backbone.Model.extend({
     // TODO track actual online/offline state as reported by Cordova
 });
 
@@ -186,7 +186,7 @@ app.views.SearchPage = Backbone.View.extend({
 
     render: function(eventName) {
         $(this.el).html(this.template());
-        (new app.views.OnlineOfflineToggler({el: $("#onlineOfflineStatus", this.el), model: app.onlineOfflineTracker})).render();
+        (new app.views.OfflineToggler({el: $("#offlineStatus", this.el), model: app.offlineTracker})).render();
         this.listView = new app.views.AccountListView({el: $("ul", this.el), model: this.model});
         this.listView.render();
         return this;
@@ -197,10 +197,18 @@ app.views.SearchPage = Backbone.View.extend({
     },
 
     search: function(event) {
-        this.model.setCriteria($(".search-key").val());
-        this.model.fetch();
-    }
+        var key = $(".search-key").val();
+        this.model.setCriteria(key);
 
+        if (app.offlineTracker.get("offlineStatus") == "offline") {
+            if (key == "") {
+                this.model.fetch({cacheMode:"cache-only"}); // fetch all cached entries            
+            }
+        }
+        else {
+            this.model.fetch();
+        }
+    }
 });
 
 app.views.AccountListView = Backbone.View.extend({
@@ -230,9 +238,9 @@ app.views.AccountListItemView = Backbone.View.extend({
     }
 });
 
-app.views.OnlineOfflineToggler = Backbone.View.extend({
+app.views.OfflineToggler = Backbone.View.extend({
 
-    template: _.template($("#online-offline-toggler").html()),
+    template: _.template($("#offline-toggler").html()),
 
     render: function(eventName) {
         $(this.el).html(this.template(this.model.toJSON()));
@@ -246,13 +254,13 @@ app.views.OnlineOfflineToggler = Backbone.View.extend({
 
     goOffline: function(event) {
         event.preventDefault();
-        this.model.set("onlineOfflineStatus", "offline");
+        this.model.set("offlineStatus", "offline");
         this.render(); // TODO bind view to model changes
     },
 
     goOnline: function(event) {
         event.preventDefault();
-        this.model.set("onlineOfflineStatus", "online");
+        this.model.set("offlineStatus", "online");
         this.render();
     }
 });
@@ -263,7 +271,7 @@ app.views.AccountPage = Backbone.View.extend({
 
     render: function(eventName) {
         $(this.el).html(this.template(this.model.toJSON()));
-        (new app.views.OnlineOfflineToggler({el: $("#onlineOfflineStatus", this.el), model: app.onlineOfflineTracker})).render();
+        (new app.views.OfflineToggler({el: $("#offlineStatus", this.el), model: app.offlineTracker})).render();
         return this;
     },
 
@@ -274,6 +282,7 @@ app.views.AccountPage = Backbone.View.extend({
     delete: function(evt) {
         evt.preventDefault();
         this.model.destroy({
+            cacheMode: (app.offlineTracker.get("offlineStatus") == "online" ? null : "cache-only"),
             success: function(data) {
                 app.router.navigate("#", {trigger:true});
             },
@@ -294,7 +303,7 @@ app.views.EditAccountPage = Backbone.View.extend({
         var backAction = (action == "Add") ? "#" : "#accounts/" + this.model.get("Id");
         if (action == "Add") { this.model.set({Name:"", Industry:"", Phone:""}); }
         $(this.el).html(this.template(_.extend({action: action, backAction: backAction}, this.model.toJSON())));
-        (new app.views.OnlineOfflineToggler({el: $("#onlineOfflineStatus", this.el), model: app.onlineOfflineTracker})).render();
+        (new app.views.OfflineToggler({el: $("#offlineStatus", this.el), model: app.offlineTracker})).render();
         return this;
     },
 
@@ -315,6 +324,7 @@ app.views.EditAccountPage = Backbone.View.extend({
     save: function(evt) {
         evt.preventDefault();
         this.model.save(null, {
+            cacheMode: (app.offlineTracker.get("offlineStatus") == "online" ? null : "cache-only"),
             success: function(data) {
                 app.router.navigate("#accounts/" + data.get("Id"), {trigger:true});
             },
@@ -353,7 +363,7 @@ app.Router = Backbone.StackRouter.extend({
     initialize: function() {
         Backbone.Router.prototype.initialize.call(this);
 
-        app.onlineOfflineTracker = new app.models.OnlineOfflineTracker({onlineOfflineStatus: "online"});
+        app.offlineTracker = new app.models.OfflineTracker({offlineStatus: "online"});
 
         var cache = new Force.StoreCache('accounts');
         cache.init().fail(function(error) { console.log(error);} );
@@ -369,11 +379,21 @@ app.Router = Backbone.StackRouter.extend({
 
     list: function() {
         var that = this;
-        this.searchResults.fetch({
-            success: function() {
-                that.slidePage(that.startPage.render());
-            }
-        });
+        if(app.offlineTracker.get("offlineStatus") == "offline") {
+            this.slidePage(this.startPage.render());
+        }
+        else 
+        {
+            this.searchResults.fetch({
+                success: function() {
+                    that.slidePage(that.startPage.render());
+                },
+                error: function() {
+                    alert("Failed to get records for list");
+                }
+            });
+        }
+
     },
 
     addAccount: function() {
@@ -386,9 +406,12 @@ app.Router = Backbone.StackRouter.extend({
         var account = new app.models.Account({Id: id});
         account.fetch({
             fieldlist: account.fieldlist,
-            cache: true,
+            cacheMode: (app.offlineTracker.get("offlineStatus") == "online" ? "cache-first" : "cache-only"),
             success: function(data) {
                 that.slidePage(new app.views.AccountPage({model: data}).render());
+            },
+            error: function() {
+                alert("Failed to get record for view");
             }
         });
     },
@@ -398,9 +421,12 @@ app.Router = Backbone.StackRouter.extend({
         var account = new app.models.Account({Id: id});
         account.fetch({
             fieldlist: account.fieldlist,
-            cache: true,
+            cacheMode: (app.offlineTracker.get("offlineStatus") == "online" ? "cache-first" : "cache-only"),
             success: function(data) {
                 that.slidePage(new app.views.EditAccountPage({model: data}).render());
+            },
+            error: function() {
+                alert("Failed to get record for edit");
             }
         });
     }
