@@ -13,7 +13,6 @@
 <!-- Scripts -->
 
 <!-- Local Testing -->
-<!--
 <script src="../../external/jquery/jquery-1.8.3.min.js"></script>
 <script src="../../external/backbone/underscore-1.4.4.min.js"></script>
 <script src="../../external/backbone/backbone-1.0.0.min.js"></script>
@@ -22,10 +21,11 @@
 <script src="../../libs/cordova.force.js"></script>
 <script src="../../test/MockSmartStore.js"></script>
 <script src="../../libs/force.entity.js"></script>
--->
+
 <!-- End Local Testing -->
 
 <!-- Container -->
+<!--
 <script src="jquery/jquery-1.8.3.min.js"></script>
 <script src="backbone/underscore-1.4.4.min.js"></script>
 <script src="backbone/backbone-1.0.0.min.js"></script>
@@ -33,6 +33,7 @@
 <script src="forcetk.js"></script>
 <script src="cordova.force.js"></script>
 <script src="force.entity.js"></script>
+-->
 <!-- End Container -->
 
 <script src="stackrouter.js"></script>
@@ -41,7 +42,7 @@
 <!-- --------------------------------------- Search page template ------------------------------------------------- -->
 <script id="search-page" type="text/template">
 <div class="header">
-    <h1>Accounts</h1>
+    <h1>Accounts<span id="onlineOfflineStatus"/></h1>
     <a href="#add" class="header-button header-button-icon header-button-right">
       <button>+</button>
     </a>
@@ -55,6 +56,16 @@
     <ul id="myList" class="tableview tableview-links"></ul>
 </div>
 </script>
+
+<!-- --------------------------------------- Online/Offline Toggler Template ------------------------------------------- -->
+
+<script id="online-offline-toggler" type="text/template">
+<a href="#" class="header-button <%= onlineOfflineStatus %>">
+  <button class="online">Online</button>
+  <button class="offline">Offline</button>
+</a>
+</script>
+
 
 <!-- --------------------------------------- Account list item Template ------------------------------------------- -->
 <script id="account-list-item" type="text/template">
@@ -78,12 +89,10 @@
     <a href="#edit/accounts/<%= Id %>" class="header-button header-button-icon header-button-right search">
         <button>&#9998;</button>
     </a>
-
     <a href="#" class="header-button header-button-icon header-button-second-from-right delete">
         <button>&#10007;</button>
     </a>
-
-    <h1>Account</h1>
+    <h1>Account<span id="onlineOfflineStatus"/></h1>
 </div>
 
 <div class="scroll striped" style="top:44px;">
@@ -114,10 +123,10 @@
 <!-- --------------------------------------- Add/edit account page template --------------------------------------- -->
 <script id="edit-account-page" type="text/template">
 <div class="header">
-    <a href="#" class="header-button header-button-left header-back-button">
+    <a href="<%= backAction %>" class="header-button header-button-left header-back-button">
         <button>Back</button>
     </a>
-    <h1><%= action %> Account</h1>
+    <h1><%= action %> Account <span id="onlineOfflineStatus"/></h1>
 </div>
 <div class="scroll striped" style="top:44px;">
   <form style="margin:20px">
@@ -164,6 +173,11 @@ app.models.AccountCollection = Force.SObjectCollection.extend({
     }
 });
 
+// Online/Offline Tracker
+app.models.OnlineOfflineTracker = Backbone.Model.extend({
+    // TODO track actual online/offline state as reported by Cordova
+});
+
 // -------------------------------------------------- The Views ---------------------------------------------------- //
 
 app.views.SearchPage = Backbone.View.extend({
@@ -172,6 +186,7 @@ app.views.SearchPage = Backbone.View.extend({
 
     render: function(eventName) {
         $(this.el).html(this.template());
+        (new app.views.OnlineOfflineToggler({el: $("#onlineOfflineStatus", this.el), model: app.onlineOfflineTracker})).render();
         this.listView = new app.views.AccountListView({el: $("ul", this.el), model: this.model});
         this.listView.render();
         return this;
@@ -185,6 +200,7 @@ app.views.SearchPage = Backbone.View.extend({
         this.model.setCriteria($(".search-key").val());
         this.model.fetch();
     }
+
 });
 
 app.views.AccountListView = Backbone.View.extend({
@@ -208,12 +224,37 @@ app.views.AccountListItemView = Backbone.View.extend({
     tagName: "li",
     template: _.template($("#account-list-item").html()),
 
-
     render: function(eventName) {
         $(this.el).html(this.template(this.model.toJSON()));
         return this;
     }
+});
 
+app.views.OnlineOfflineToggler = Backbone.View.extend({
+
+    template: _.template($("#online-offline-toggler").html()),
+
+    render: function(eventName) {
+        $(this.el).html(this.template(this.model.toJSON()));
+        return this;
+    },
+
+    events: {
+        "click .offline": "goOnline",
+        "click .online": "goOffline"
+    },
+
+    goOffline: function(event) {
+        event.preventDefault();
+        this.model.set("onlineOfflineStatus", "offline");
+        this.render(); // TODO bind view to model changes
+    },
+
+    goOnline: function(event) {
+        event.preventDefault();
+        this.model.set("onlineOfflineStatus", "online");
+        this.render();
+    }
 });
 
 app.views.AccountPage = Backbone.View.extend({
@@ -222,6 +263,7 @@ app.views.AccountPage = Backbone.View.extend({
 
     render: function(eventName) {
         $(this.el).html(this.template(this.model.toJSON()));
+        (new app.views.OnlineOfflineToggler({el: $("#onlineOfflineStatus", this.el), model: app.onlineOfflineTracker})).render();
         return this;
     },
 
@@ -249,8 +291,10 @@ app.views.EditAccountPage = Backbone.View.extend({
 
     render: function(eventName) {
         var action = (null == this.model.get("Id")) ? "Add" : "Edit";
+        var backAction = (action == "Add") ? "#" : "#accounts/" + this.model.get("Id");
         if (action == "Add") { this.model.set({Name:"", Industry:"", Phone:""}); }
-        $(this.el).html(this.template(_.extend({action: action}, this.model.toJSON())));
+        $(this.el).html(this.template(_.extend({action: action, backAction: backAction}, this.model.toJSON())));
+        (new app.views.OnlineOfflineToggler({el: $("#onlineOfflineStatus", this.el), model: app.onlineOfflineTracker})).render();
         return this;
     },
 
@@ -309,8 +353,10 @@ app.Router = Backbone.StackRouter.extend({
     initialize: function() {
         Backbone.Router.prototype.initialize.call(this);
 
+        app.onlineOfflineTracker = new app.models.OnlineOfflineTracker({onlineOfflineStatus: "online"});
+
         var cache = new Force.StoreCache('accounts');
-        cache.init();
+        cache.init().fail(function(error) { console.log(error);} );
         app.models.Account.setupCache(cache);
         app.models.AccountCollection.setupCache(cache);
 
