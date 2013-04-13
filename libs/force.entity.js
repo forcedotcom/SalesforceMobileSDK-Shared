@@ -24,9 +24,11 @@
             var args = $.makeArray(arguments);
             var d = $.Deferred();
             args.push(function() {
+                console.log("------> Calling successCB for " + objectName + ":" + methodName);
                 d.resolve.apply(d, arguments);
             });
             args.push(function() {
+                console.log("------> Calling errorCB for " + objectName + ":" + methodName);
                 d.reject.apply(d, arguments);
             });
             console.log("-----> Calling " + objectName + ":" + methodName);
@@ -99,20 +101,25 @@
 
     // Force.StoreCache
     // ----------------
-    // SmartStore-backed key-value cache
-    // Soup elements of the form {key:"...", value:"...", dirty:true|false} indexed by key
-    // Fires a ready event when ready and an invalid event if initialization fails
+    // SmartStore-backed cache
+    // Soup elements are the records passed in, extended with the boolean fields __locally_created__, __locally_updated__, __locally_deleted__
+    // Index are created for keyField and __locally_*__ fields
     //
-    Force.StoreCache = function(soupName) {
+    Force.StoreCache = function(soupName, keyField, additionalIndexSpecs) {
         this.soupName = soupName;
+        this.keyField = keyField || "Id";
+        this.additionalIndexSpecs = additionalIndexSpecs;
     };
 
     _.extend(Force.StoreCache.prototype, {
         // Return promise which initializes backing soup
         init: function() {
             if (smartstoreClient == null) return;
-            var indexSpecs = [{path:"key", type:"string"}, {path:"dirty", type:"boolean"}];
-            var that = this;
+            var indexSpecs = _.union([{path:this.keyField, type:"string"}, 
+                                      {path:"__locally_created__", type:"boolean"}, 
+                                      {path:"__locally_updated__", type:"boolean"}, 
+                                      {path:"__locally_deleted__", type:"boolean"}
+                                     ], this.additionalIndexSpecs);
             return smartstoreClient.registerSoup(this.soupName, indexSpecs);
         },
 
@@ -120,61 +127,61 @@
         // When fieldlist is not null, the cached value is only returned when it has all the fields specified in fieldlist
         retrieve: function(key, fieldlist) {
             if (this.soupName == null) return;
-            var querySpec = navigator.smartstore.buildExactQuerySpec("key", key);
-            var result = null;
+            var querySpec = navigator.smartstore.buildExactQuerySpec(this.keyField, key);
+            var record = null;
             return smartstoreClient.querySoup(this.soupName, querySpec)
                 .then(function(cursor) {
-                    if (cursor.currentPageOrderedEntries.length == 1) result = cursor.currentPageOrderedEntries[0].value;
+                    if (cursor.currentPageOrderedEntries.length == 1) record = cursor.currentPageOrderedEntries[0];
                     return smartstoreClient.closeCursor(cursor);
                 })
                 .then(function() { 
                     // if the cached record doesn't have all the field we are interested in the return null
-                    if (result != null && fieldlist != null && _.any(fieldlist, function(field) { 
-                        return !_.has(result, field); 
+                    if (record != null && fieldlist != null && _.any(fieldlist, function(field) { 
+                        return !_.has(record, field); 
                     })) {
-                        console.log("----> In StoreCache:retrieve key=" + key + ":in cache but missing some fields");
-                        result = null;
+                        console.log("----> In StoreCache:retrieve " + key + ":in cache but missing some fields");
+                        record = null;
                     }
-                    console.log("----> In StoreCache:retrieve key=" + key + ":" + (result == null ? "miss" : "hit"));
-                    return result;
+                    console.log("----> In StoreCache:retrieve " + key + ":" + (record == null ? "miss" : "hit"));
+                    return record;
                 });
         },
 
-        // Return promise which stores key-value in cache
-        save: function(keyValue) {
+        // Return promise which stores a record in cache
+        save: function(record) {
             if (this.soupName == null) return;
-            console.log("----> In StoreCache:save key=" + keyValue.key);
-            return smartstoreClient.upsertSoupEntriesWithExternalId(this.soupName, [ keyValue ], "key");
+            console.log("----> In StoreCache:save " + record[this.keyField]);
+            return smartstoreClient.upsertSoupEntriesWithExternalId(this.soupName, [ record ], this.keyField);
         },
 
-        // Return promise which stores several key-value in cache
-        saveAll: function(arrayKeyValue) {
+        // Return promise which stores several records in cache
+        saveAll: function(records) {
             if (this.soupName == null) return;
-            console.log("----> In StoreCache:saveAll arrayKeyValue.length=" + arrayKeyValue.length);
-            return smartstoreClient.upsertSoupEntriesWithExternalId(this.soupName, arrayKeyValue, "key");
+            console.log("----> In StoreCache:saveAll records.length=" + records.length);
+            return smartstoreClient.upsertSoupEntriesWithExternalId(this.soupName, records, this.keyField);
         },
 
-        // Return promise which  return key-value from cache matching filter
+        // Return promise which return all records from cache
         // TODO: paging support
         findAll: function() {
-            var querySpec = navigator.smartstore.buildAllQuerySpec("key");
-            var result = null;
+            var querySpec = navigator.smartstore.buildAllQuerySpec(this.keyField);
+            var records = null;
             return smartstoreClient.querySoup(this.soupName, querySpec)
                 .then(function(cursor) {
-                    result = _.pluck(cursor.currentPageOrderedEntries, "value")
+                    records = cursor.currentPageOrderedEntries;
                     return smartstoreClient.closeCursor(cursor);
                 })
                 .then(function() { 
-                    return result;
+                    return records;
                 });
         },
 
-        // Return promise which deletes key-value from cache
+        // Return promise which deletes record from cache
         remove: function(key) {
             if (this.soupName == null) return;
-            console.log("----> In StoreCache:remove key=" + key);
+            console.log("----> In StoreCache:remove " + key);
             var that = this;
-            var querySpec = navigator.smartstore.buildExactQuerySpec("key", key);
+            var querySpec = navigator.smartstore.buildExactQuerySpec(this.keyField, key);
             return smartstoreClient.querySoup(this.soupName, querySpec)
                 .then(function(cursor) {
                     return cursor.currentPageOrderedEntries.length == 1 
@@ -210,20 +217,22 @@
                 return that.cache.retrieve(that.sobjectType)
                     .then(function(data) { 
                         wasReadFromCache = (data != null); 
-                        return data;
+                        return data.describeData;
                     })
             };
 
-            var cacheSave = function(data) {
-                return that.cache.save({key:that.sobjectType, value:data})
+            var cacheSave = function(describeData) {
+                var record = {describeData: describeData};
+                record[that.cache.keyField] = that.sobjectType;
+                return that.cache.save(record)
                     .then(function() { 
-                        return data;
+                        return describeData;
                     })
             };
             
             // Server action helper
-            var serverDescribeUnlessCached = function(data) { 
-                return data == null ? forcetkClient.describe(that.sobjectType) : data; 
+            var serverDescribeUnlessCached = function(describeData) { 
+                return describeData == null ? forcetkClient.describe(that.sobjectType) : describeData; 
             };
 
             var promise = null;
@@ -239,8 +248,8 @@
             }
 
             promise = promise
-                .done(function(data) {
-                    that.attributes = data;
+                .done(function(describeData) {
+                    that.attributes = describeData;
                     if (options.success) options.success(data);
                 })
                 .fail(options.error);
@@ -257,19 +266,26 @@
     // sobjectType: record type
     // id: record id (null for create)
     // attributes: record attributes given by a map of field name to value
-    // fieldlist:<fields>    for read, when not null, the cached record is only returned if it has all the requested fields
-    // cache: cache into which created/read/updated/deleted record are cached    
+    // fieldlist:<fields>       for read, when not null, the cached record is only returned if it has all the requested fields
+    // cache: cache into which  created/read/updated/deleted record are cached    
+    // localChange:true|false   pass true if the change is done against the cache only (and has not been done against the server)
     //
-    Force.syncSObjectWithCache = function(method, sobjectType, id, attributes, fieldlist, cache) {
+    Force.syncSObjectWithCache = function(method, sobjectType, id, attributes, fieldlist, cache, localAction) {
         console.log("---> In Force.syncSObjectWithCache:method=" + method + " id=" + id);
 
         // Cache actions helper
         var cacheCreate = function() {
-            var uuid = _.uniqueId("local_");
-            return cache.save({key:uuid, value:attributes})
-                .then(function() { 
-                    return data; 
-                });
+            if (localAction) {
+                var uuid = _.uniqueId("local_");
+                return cache.save(_.extend(attributes, {Id: uuid, __locally_created__:true, __locally_updated__:false, __locally_deleted__:false}))
+                    .then(function() { 
+                        return data; 
+                    });
+            }
+            else {
+                console.error("Force.syncSObjectWithCache called with localAction=false and method=create");
+                return null;
+            }
         };
 
         var cacheRead = function() { 
@@ -278,16 +294,26 @@
                     return data; 
                 });
         };
-
+        
         var cacheUpdate = function() { 
-            return cache.save({key:id, value:attributes})
-                .then(function() { 
-                    return attributes; 
+            var localCreated = id.indexOf("local_") == 0; // cheaper than reading back from smartstore to check for __locally_created__
+
+            return cache.save(_.extend(attributes, {Id: id, __locally_created__: localCreated, __locally_updated__: localAction, __locally_deleted__: false}))
+                .then(function() {
+                    return attributes;
                 });
         };
+                             
 
         var cacheDelete = function() {
-            return cache.remove(id);
+            var localCreated = id.indexOf("local_") == 0; // cheaper than reading back from smartstore to check for __locally_created__
+            
+            if (!localAction || localCreated) {
+                return cache.remove(id);
+            }
+            else {
+                // TBD pull record, update __locally_deleted__ to true
+            }
         };
 
         // Chaining promises that return either a promise or created/upated/reda model attributes or null in the case of delete
@@ -381,15 +407,15 @@
             return Force.syncSObjectWithServer(method, sobjectType, id, attributes, fieldlist, refetch);
         };
 
-        var cacheSync = function(method, id, attributes) {
-            return Force.syncSObjectWithCache(method, sobjectType, id, attributes, fieldlist, cache);
+        var cacheSync = function(method, id, attributes, localAction) {
+            return Force.syncSObjectWithCache(method, sobjectType, id, attributes, fieldlist, cache, localAction);
         }            
 
         if (cache == null || cacheMode == "server-only") {
             return serverSync();
         }
         if (cache != null && cacheMode == "cache-only") {
-            return cacheSync(method, id, attributes);
+            return cacheSync(method, id, attributes, true);
         }
         
         // Chaining promises that return either a promise or created/upated/reda model attributes or null in the case of delete
@@ -507,10 +533,10 @@
 
         // Cache action helper
         var cacheSave = function(records) { 
-            var keyValues = _.map(records, function(record) { 
-                return {key:record.Id, value:record}; 
+            var keys = _.map(records, function(record) { 
+                return _.extend(record, {__locally_created__: false, __locally_updated__: false, __locally_deleted__: false})
             });
-            return cache.saveAll(keyValues)
+            return cache.saveAll(keys)
                 .then(function() { 
                     return records; 
                 });
