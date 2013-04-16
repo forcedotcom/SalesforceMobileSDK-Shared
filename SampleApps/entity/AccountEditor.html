@@ -75,6 +75,9 @@
     	<span class="metadata">
             <span class="link-text"><%= Id %></span><br/>
             <span class="link-text"><%= Industry %></span><br/>
+            <% if (__locally_created__) { %><span class="dirty">Locally Created</span><% } %>
+            <% if (__locally_updated__) { %><span class="dirty">Locally Updated</span><% } %>
+            <% if (__locally_deleted__) { %><span class="dirty">Locally Deleted</span><% } %>
         </span>
     </div>
 </a>
@@ -101,6 +104,9 @@
             <h1><%= Name %> </h1>
             <span class="link-text"><%= Id %></span><br/>
             <span class="link-text"><%= Industry %></span><br/>
+            <% if (__locally_created__) { %><span class="dirty">Locally Created</span><% } %>
+            <% if (__locally_updated__) { %><span class="dirty">Locally Updated</span><% } %>
+            <% if (__locally_deleted__) { %><span class="dirty">Locally Deleted</span><% } %>
         </header>
     </div>
 
@@ -166,10 +172,29 @@ app.models.Account = Force.SObject.extend({
 app.models.AccountCollection = Force.SObjectCollection.extend({
     model: app.models.Account,
     fieldlist: ["Id", "Name", "Industry", "Phone"],
+
     setCriteria: function(key) {
-        this.configureForSOQL("SELECT " + this.fieldlist.join(",")  
-                              + " FROM Account"
-                              + " WHERE Name like '" + key + "%'");
+        this.key = key;
+    },
+
+    fetch: function(options) {
+        var config;
+        if (app.offlineTracker.get("offlineStatus") == "offline") {
+            config =  {type:"cache", cacheQuery:{queryType:"like", indexPath:"Name", likeKey: this.key+"%"}};
+        }
+        else {
+            if (this.key == null) {
+                config = {type:"mru", sobjectType:"Account", fieldlist: this.fieldlist};
+            }
+            else {
+                var soql = "SELECT " + this.fieldlist.join(",")  
+                    + " FROM Account"
+                    + " WHERE Name like '" + this.key + "%'";
+                config =  {type:"soql", query:soql, fieldlist: this.fieldlist};
+            }
+        }
+        
+        Force.SObjectCollection.prototype.fetch.call(this, _.extend({config:config}, options));
     }
 });
 
@@ -199,15 +224,7 @@ app.views.SearchPage = Backbone.View.extend({
     search: function(event) {
         var key = $(".search-key").val();
         this.model.setCriteria(key);
-
-        if (app.offlineTracker.get("offlineStatus") == "offline") {
-            if (key == "") {
-                this.model.fetch({cacheMode:"cache-only"}); // fetch all cached entries            
-            }
-        }
-        else {
-            this.model.fetch();
-        }
+        this.model.fetch();
     }
 });
 
@@ -324,6 +341,7 @@ app.views.EditAccountPage = Backbone.View.extend({
     save: function(evt) {
         evt.preventDefault();
         this.model.save(null, {
+            fieldlist: this.model.fieldlist,
             cacheMode: (app.offlineTracker.get("offlineStatus") == "online" ? null : "cache-only"),
             success: function(data) {
                 app.router.navigate("#accounts/" + data.get("Id"), {trigger:true});
@@ -365,13 +383,12 @@ app.Router = Backbone.StackRouter.extend({
 
         app.offlineTracker = new app.models.OfflineTracker({offlineStatus: "online"});
 
-        var cache = new Force.StoreCache('accounts');
+        var cache = new Force.StoreCache("accounts", [ {path:"Name", type:"string"} ]);
         cache.init().fail(function(error) { console.log(error);} );
         app.models.Account.setupCache(cache);
         app.models.AccountCollection.setupCache(cache);
 
         this.searchResults = new app.models.AccountCollection();
-        this.searchResults.configureForMRU("Account", this.searchResults.fieldlist);
         // We keep a single instance of the SearchPage and its associated Account collection throughout the app
         this.startPage = new app.views.SearchPage({model: this.searchResults});
         $(this.startPage.el).attr("id", "startPage");
@@ -379,21 +396,14 @@ app.Router = Backbone.StackRouter.extend({
 
     list: function() {
         var that = this;
-        if(app.offlineTracker.get("offlineStatus") == "offline") {
-            this.slidePage(this.startPage.render());
-        }
-        else 
-        {
-            this.searchResults.fetch({
-                success: function() {
-                    that.slidePage(that.startPage.render());
-                },
-                error: function() {
-                    alert("Failed to get records for list");
-                }
-            });
-        }
-
+        this.searchResults.fetch({
+            success: function() {
+                that.slidePage(that.startPage.render());
+            },
+            error: function() {
+                alert("Failed to get records for list");
+            }
+        });
     },
 
     addAccount: function() {

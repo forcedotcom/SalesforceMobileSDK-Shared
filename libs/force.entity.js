@@ -105,7 +105,7 @@
     // Soup elements are the records passed in, extended with the boolean fields __locally_created__, __locally_updated__, __locally_deleted__
     // Index are created for keyField and __locally_*__ fields
     //
-    Force.StoreCache = function(soupName, keyField, additionalIndexSpecs) {
+    Force.StoreCache = function(soupName, additionalIndexSpecs, keyField) {
         this.soupName = soupName;
         this.keyField = keyField || "Id";
         this.additionalIndexSpecs = additionalIndexSpecs;
@@ -161,10 +161,10 @@
             return smartstoreClient.upsertSoupEntriesWithExternalId(this.soupName, records, this.keyField);
         },
 
-        // Return promise which return all records from cache
+
+        // Return promise which records matching query from cache
         // TODO: paging support
-        findAll: function() {
-            var querySpec = navigator.smartstore.buildAllQuerySpec(this.keyField);
+        find: function(querySpec) {
             var records = null;
             return smartstoreClient.querySoup(this.soupName, querySpec)
                 .then(function(cursor) {
@@ -273,11 +273,22 @@
     Force.syncSObjectWithCache = function(method, sobjectType, id, attributes, fieldlist, cache, localAction) {
         console.log("---> In Force.syncSObjectWithCache:method=" + method + " id=" + id);
 
+        localAction = localAction || false;
+
+        var uuid = function() {
+            return _.uniqueId("local_" + (new Date()).getTime());
+        };
+
+        var locallyCreated = function() {
+            // Cheaper than retrieving the soup entry and checking the __locally_created__ field
+            return id.indexOf("local_") == 0;
+        };
+
         // Cache actions helper
         var cacheCreate = function() {
             if (localAction) {
-                var uuid = _.uniqueId("local_");
-                return cache.save(_.extend(attributes, {Id: uuid, __locally_created__:true, __locally_updated__:false, __locally_deleted__:false}))
+                var data = _.extend(attributes, {Id: uuid(), __locally_created__:true, __locally_updated__:false, __locally_deleted__:false});
+                return cache.save(data)
                     .then(function() { 
                         return data; 
                     });
@@ -296,23 +307,26 @@
         };
         
         var cacheUpdate = function() { 
-            var localCreated = id.indexOf("local_") == 0; // cheaper than reading back from smartstore to check for __locally_created__
-
-            return cache.save(_.extend(attributes, {Id: id, __locally_created__: localCreated, __locally_updated__: localAction, __locally_deleted__: false}))
+            var data = _.extend(attributes, {Id: id, __locally_created__: locallyCreated(), __locally_updated__: localAction, __locally_deleted__: false});
+            return cache.save(data)
                 .then(function() {
-                    return attributes;
+                    return data;
                 });
         };
                              
 
         var cacheDelete = function() {
-            var localCreated = id.indexOf("local_") == 0; // cheaper than reading back from smartstore to check for __locally_created__
-            
-            if (!localAction || localCreated) {
+            if (!localAction || locallyCreated()) {
                 return cache.remove(id);
             }
             else {
-                // TBD pull record, update __locally_deleted__ to true
+                cache.retrieve(id).
+                    then(function(data) {
+                        return cache.save(_.extend(data, {__locally_deleted__: true}));
+                    })
+                    .then(function() {
+                        return null;
+                    });
             }
         };
 
@@ -338,7 +352,7 @@
     // sobjectType: record type
     // id: record id (null for create)
     // attributes: record attributes given by a map of field name to value
-    // fieldlist:<fields>    fields to fetch for read or to save for update, otherwise full record is fetched or saved
+    // fieldlist:<fields>    fields to fetch for read  otherwise full record is fetched, fields to save for update or create (required)
     // refetch:true          for create or update to refetch the record following the save (useful in case of calculated fields)
     //
     Force.syncSObjectWithServer = function(method, sobjectType, id, attributes, fieldlist, refetch) {
@@ -346,7 +360,8 @@
 
         // Server actions helper
         var serverCreate   = function() { 
-            return forcetkClient.create(sobjectType, _.omit(attributes, 'Id'))
+            var attributesToSave = _.pick(attributes, fieldlist);
+            return forcetkClient.create(sobjectType, _.omit(attributesToSave, "Id"))
                 .then(function(resp) {
                     return _.extend(attributes, {Id: resp.id});
                 }) 
@@ -357,8 +372,8 @@
         };
 
         var serverUpdate   = function() { 
-            var attributesToSave = fieldlist != null ? _.pick(attributes, fieldlist) : attributes;
-            return forcetkClient.update(sobjectType, id, attributesToSave)
+            var attributesToSave = _.pick(attributes, fieldlist);
+            return forcetkClient.update(sobjectType, id, _.omit(attributesToSave, "Id"))
                 .then(function(resp) { 
                     return attributes; 
                 }) 
@@ -458,11 +473,12 @@
     // Return promise 
     //
     // cache: cache into which fetched records should be cached
+    // cacheQuery: cache-specific query
     // 
-    Force.fetchSObjectsFromCache = function(cache) {
+    Force.fetchSObjectsFromCache = function(cache, cacheQuery) {
         console.log("---> In Force.fetchSObjectsFromCache");
 
-        return cache.findAll();
+        return cache.find(cacheQuery);
     };
 
 
@@ -471,7 +487,9 @@
     // Helper method to fetch a collection of SObjects from server, using SOQL, SOSL or MRU
     // Return promise 
     //
-    // config: {type:"soql", query:"<soql query>"} or {type:"sosl", query:"<sosl query>"} or {type:"mru", sobjectType:"<sobject type>", fieldlist:"<fields to fetch>"}
+    // config: {type:"soql", query:"<soql query>"} 
+    //   or {type:"sosl", query:"<sosl query>"} 
+    //   or {type:"mru", sobjectType:"<sobject type>", fieldlist:"<fields to fetch>"}
     // 
     Force.fetchSObjectsFromServer = function(config) {
         console.log("---> In Force.fetchSObjectsFromServer:config=" + JSON.stringify(config));
@@ -516,19 +534,17 @@
     // Returns a promise
     //
     // If cache is null, it simply calls Force.fetchSObjectsFromServer
-    // If cache is not null:
-    // * if cacheMode is "server-only" then it simply calls Force.fetchSObjectsFromServer
-    // * if cacheMode is "cache-only" then it simply calls Force.fetchSObjectsFromCache
-    // * otherwise, the server is queried first and the cache is updated afterwards
+    // If cache is not null and config.type is cache then it simply calls Force.fetchSObjectsFromCache with config.cacheQuery
+    // Otherwise, the server is queried first and the cache is updated afterwards
     //
-    Force.fetchSObjects = function(config, cache, cacheMode) {
-        console.log("--> In Force.fetchSObjects:config=" + JSON.stringify(config) + " cacheMode=" + cacheMode);
+    Force.fetchSObjects = function(config, cache) {
+        console.log("--> In Force.fetchSObjects:config.type=" + config.type);
 
-        if (cache == null || cacheMode == "server-only") {
+        if (cache == null) {
             return Force.fetchSObjectsFromServer(config);
         }
-        if (cache != null && cacheMode == "cache-only") {
-            return Force.fetchSObjectsFromCache(cache);
+        if (cache != null && config.type == "cache") {
+            return Force.fetchSObjectsFromCache(cache, config.cacheQuery);
         }
 
         // Cache action helper
@@ -571,16 +587,12 @@
             // Overriding Backbone sync method (responsible for all server interactions)
             //
             // Extra options:
-            // * fieldlist:<array of fields> during read if you don't want to fetch the whole record
+            // * fieldlist:<array of fields> during read if you don't want to fetch the whole record, during save fields to save
             // * refetch:true during create/update to do a fetch following the create/update
             // * cacheMode: "server-only" | "cache-only" | "cache-first" | null (see Force.syncSObject for details)
             //
             sync: function(method, model, options) {
                 console.log("-> In Force.SObject:sync method=" + method + " model.id=" + model.id);
-
-                if (method == "update") {
-                    options.fieldlist = _.keys(model.changed);
-                }
 
                 Force.syncSObject(method, this.sobjectType, model.id, model.attributes, options.fieldlist, options.refetch, this.getClass().cache, options.cacheMode)
                     .done(options.success)
@@ -602,52 +614,36 @@
         // -----------------------
         // Subclass of Backbone.Collection to represent a collection of SObject's on the client.
         // Only fetch is supported (no create/update or delete).
-        // To define the set of SObject's to fetch, use configureForSOQL, configureForSOSL or configureForMRU.
+        // To define the set of SObject's to fetch pass an options.config
+        // Where the config is 
+        // config: {type:"soql", query:"<soql query>"} 
+        //   or {type:"sosl", query:"<sosl query>"} 
+        //   or {type:"mru", sobjectType:"<sobject type>", fieldlist:"<fields to fetch>"}
+        //   or {type:"cache", cacheQuery:<cache query>}
+        //
         // TODO: query-more support
         // 
         Force.SObjectCollection = Backbone.Collection.extend({
-            config: null, // don't set directly, use configureFor* methods
-
             // Return class object
             getClass: function() {
                 return this.__proto__.constructor;
             },
 
-            // To run SOQL on fetch
-            configureForSOQL: function(soql) {
-                this.config = {type:"soql", query: soql};
-            },
-
-            // To run SOSL on fetch
-            configureForSOSL: function(sosl) {
-                this.config = {type:"sosl", query: sosl};
-            },
-
-            // To get MRU on fetch
-            configureForMRU: function(sobjectType, fieldlist) {
-                this.config = {type:"mru", sobjectType:sobjectType, fieldlist:fieldlist};
-            },
-
             // Overriding Backbone sync method (responsible for all server interactions)
-            //
-            // Extra options:
-            // * cacheMode: "server-only" | "cache-only" | null (see Force.fetchSObjects for details)
             //
             sync: function(method, model, options) {
                 console.log("-> In Force.SObjectCollection:sync method=" + method);
                 if (method != "read") {
                     throw "Method " + method  + " not supported";
                 }
-                if (this.config == null) {
+                if (options.config == null) {
                     options.success([]);
                     return;
                 }
 
                 options.reset = true;
-                Force.fetchSObjects(this.config, this.getClass().cache, options.cacheMode)
-                    .done(function(data) {
-                        options.success(data);
-                    })
+                Force.fetchSObjects(options.config, this.getClass().cache)
+                    .done(options.success)
                     .fail(options.error);
             },
 

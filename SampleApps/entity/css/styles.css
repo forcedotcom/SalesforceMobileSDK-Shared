@@ -462,3 +462,7 @@ button.offline {
     border-width:0px;
     -webkit-border-image:none;
 }
+
+.dirty {
+    background: red;
+}
