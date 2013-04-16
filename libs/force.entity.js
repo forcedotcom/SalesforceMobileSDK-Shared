@@ -320,7 +320,7 @@
                 return cache.remove(id);
             }
             else {
-                cache.retrieve(id).
+                return cache.retrieve(id).
                     then(function(data) {
                         return cache.save(_.extend(data, {__locally_deleted__: true}));
                     })

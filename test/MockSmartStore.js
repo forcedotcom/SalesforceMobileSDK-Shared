@@ -207,7 +207,7 @@ var MockSmartStore = (function(window) {
 
             var soup = _soups[soupName];
             var results = [];
-            var likeRegexp = (querySpec.likeKey ? new RegExp(querySpec.likeKey.replace(/%/g, ".*")) : null);
+            var likeRegexp = (querySpec.likeKey ? new RegExp("^" + querySpec.likeKey.replace(/%/g, ".*")) : null);
             for (var soupEntryId in soup) {
                 var soupElt = soup[soupEntryId];
                 var projection = this.project(soupElt, querySpec.indexPath);

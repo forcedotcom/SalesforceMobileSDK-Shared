@@ -135,7 +135,7 @@
     <h1><%= action %> Account <span id="offlineStatus"/></h1>
 </div>
 <div class="scroll striped" style="top:44px;">
-  <form style="margin:20px">
+  <form style="margin:20px" class="form-horizontal">
     <div class="control-group" id="accountName">
       <label class="control-label" for="accountName">Name</label>
       <input class="controls" type="text" name="Name" value="<%= Name %>" />
@@ -165,7 +165,17 @@
 // The Account Model
 app.models.Account = Force.SObject.extend({
     sobjectType: "Account",
-    fieldlist: ["Id", "Name", "Industry", "Phone"]
+    fieldlist: ["Id", "Name", "Industry", "Phone"],
+
+    fetch: function(options) {
+        var cacheMode = (app.offlineTracker.get("offlineStatus") == "online" ? "cache-first" : "cache-only");
+        Force.SObject.prototype.fetch.call(this, _.extend({cacheMode: cacheMode, fieldlist:this.fieldlist}, options));
+    },
+
+    save: function(attributes, options) {
+        var cacheMode = (app.offlineTracker.get("offlineStatus") == "online" ? null : "cache-only");
+        Force.SObject.prototype.save.call(this, attributes, _.extend({cacheMode: cacheMode, fieldlist:this.fieldlist}, options));
+    }
 });
 
 // The AccountCollection Model
@@ -341,8 +351,6 @@ app.views.EditAccountPage = Backbone.View.extend({
     save: function(evt) {
         evt.preventDefault();
         this.model.save(null, {
-            fieldlist: this.model.fieldlist,
-            cacheMode: (app.offlineTracker.get("offlineStatus") == "online" ? null : "cache-only"),
             success: function(data) {
                 app.router.navigate("#accounts/" + data.get("Id"), {trigger:true});
             },
@@ -358,7 +366,6 @@ app.views.EditAccountPage = Backbone.View.extend({
                             $("#account" + field + "Help").html(detail.message);
                         });
                     }
-                    // TBD error that are not field specific
                 });
             }
         });
@@ -415,8 +422,6 @@ app.Router = Backbone.StackRouter.extend({
         var that = this;
         var account = new app.models.Account({Id: id});
         account.fetch({
-            fieldlist: account.fieldlist,
-            cacheMode: (app.offlineTracker.get("offlineStatus") == "online" ? "cache-first" : "cache-only"),
             success: function(data) {
                 that.slidePage(new app.views.AccountPage({model: data}).render());
             },
@@ -430,8 +435,6 @@ app.Router = Backbone.StackRouter.extend({
         var that = this;
         var account = new app.models.Account({Id: id});
         account.fetch({
-            fieldlist: account.fieldlist,
-            cacheMode: (app.offlineTracker.get("offlineStatus") == "online" ? "cache-first" : "cache-only"),
             success: function(data) {
                 that.slidePage(new app.views.EditAccountPage({model: data}).render());
             },
