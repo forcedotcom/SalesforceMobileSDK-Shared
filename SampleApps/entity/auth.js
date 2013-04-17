@@ -24,8 +24,8 @@ jQuery(document).ready(function() {
         instanceUrl: "https://tapp0.salesforce.com",
         accountAgent: "sobject-proto"
     };
-    // End local testing
     appStart(creds);
+    // End local testing
 });
 
 // When this function is called, cordova has been initialized and is ready to roll 

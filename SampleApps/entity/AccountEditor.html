@@ -53,11 +53,11 @@
 </div>
 
 <div class="scroll striped" style="top:84px;">
-    <ul id="myList" class="tableview tableview-links"></ul>
+    <ul class="tableview tableview-links"></ul>
 </div>
 </script>
 
-<!-- --------------------------------------- Online/Offline Toggler Template ------------------------------------------- -->
+<!-- --------------------------------------- Online/Offline Toggler Template -------------------------------------- -->
 
 <script id="offline-toggler" type="text/template">
 <a href="#" class="header-button <%= offlineStatus %>">
@@ -66,8 +66,26 @@
 </a>
 </script>
 
+<!-- --------------------------------------- Sync Page Template --------------------------------------------------- -->
 
-<!-- --------------------------------------- Account list item Template ------------------------------------------- -->
+<script id="sync-page" type="text/template">
+<div class="header">
+    <a href="#" class="header-button header-button-left header-back-button">
+        <button>Back</button>
+    </a>
+    <h1>Account<span id="offlineStatus"/></h1>
+</div>
+
+<div class="search">
+    <button>Sync</button>
+</div>
+
+<div class="scroll striped" style="top:84px;">
+    <ul class="tableview tableview-links"></ul>
+</div>
+</script>
+
+<!-- --------------------------------------- Account list item Template ------------------------------------------ -->
 <script id="account-list-item" type="text/template">
 <a href="#accounts/<%= Id %>" class="pad-right">
     <div class="story">
@@ -83,7 +101,7 @@
 </a>
 </script>
 
-<!-- --------------------------------------- View account page template ------------------------------------------- -->
+<!-- --------------------------------------- View account page template ------------------------------------------ -->
 <script id="account-page" type="text/template">
 <div class="header">
     <a href="#" class="header-button header-button-left header-back-button">
@@ -126,7 +144,7 @@
 </div>
 </script>
 
-<!-- --------------------------------------- Add/edit account page template --------------------------------------- -->
+<!-- --------------------------------------- Add/edit account page template -------------------------------------- -->
 <script id="edit-account-page" type="text/template">
 <div class="header">
     <a href="<%= backAction %>" class="header-button header-button-left header-back-button">
@@ -173,7 +191,7 @@ app.models.Account = Force.SObject.extend({
     },
 
     save: function(attributes, options) {
-        var cacheMode = (app.offlineTracker.get("offlineStatus") == "online" ? null : "cache-only");
+        var cacheMode = (app.offlineTracker.get("offlineStatus") == "online" ? "server-first" : "cache-only");
         Force.SObject.prototype.save.call(this, attributes, _.extend({cacheMode: cacheMode, fieldlist:this.fieldlist}, options));
     }
 });
@@ -188,23 +206,24 @@ app.models.AccountCollection = Force.SObjectCollection.extend({
     },
 
     fetch: function(options) {
-        var config;
-        if (app.offlineTracker.get("offlineStatus") == "offline") {
-            config =  {type:"cache", cacheQuery:{queryType:"like", indexPath:"Name", likeKey: this.key+"%"}};
-        }
-        else {
-            if (this.key == null) {
-                config = {type:"mru", sobjectType:"Account", fieldlist: this.fieldlist};
+        options = options || {};
+        if (options.config == null) {
+            if (app.offlineTracker.get("offlineStatus") == "offline") {
+                options.config =  {type:"cache", cacheQuery:{queryType:"like", indexPath:"Name", likeKey: this.key+"%"}};
             }
             else {
-                var soql = "SELECT " + this.fieldlist.join(",")  
-                    + " FROM Account"
-                    + " WHERE Name like '" + this.key + "%'";
-                config =  {type:"soql", query:soql, fieldlist: this.fieldlist};
+                if (this.key == null) {
+                    options.config = {type:"mru", sobjectType:"Account", fieldlist: this.fieldlist};
+                }
+                else {
+                    var soql = "SELECT " + this.fieldlist.join(",")  
+                        + " FROM Account"
+                        + " WHERE Name like '" + this.key + "%'";
+                    options.config =  {type:"soql", query:soql, fieldlist: this.fieldlist};
+                }
             }
         }
-        
-        Force.SObjectCollection.prototype.fetch.call(this, _.extend({config:config}, options));
+        Force.SObjectCollection.prototype.fetch.call(this, options);
     }
 });
 
@@ -288,7 +307,28 @@ app.views.OfflineToggler = Backbone.View.extend({
     goOnline: function(event) {
         event.preventDefault();
         this.model.set("offlineStatus", "online");
-        this.render();
+        app.router.navigate("#sync", {trigger:true});        
+    }
+});
+
+app.views.SyncPage = app.views.SearchPage.extend({
+
+    template: _.template($("#sync-page").html()),
+
+    events: {
+        "click .sync": "sync"
+    },
+
+    sync: function(evt) {
+        var that = this;
+        if(this.model,length > 0) {
+            var record = this.model.shift();
+            record.save({
+                success: function() {
+                    that.sync();
+                }
+            });
+        }
     }
 });
 
@@ -309,7 +349,7 @@ app.views.AccountPage = Backbone.View.extend({
     delete: function(evt) {
         evt.preventDefault();
         this.model.destroy({
-            cacheMode: (app.offlineTracker.get("offlineStatus") == "online" ? null : "cache-only"),
+            cacheMode: (app.offlineTracker.get("offlineStatus") == "online" ? "server-first" : "cache-only"),
             success: function(data) {
                 app.router.navigate("#", {trigger:true});
             },
@@ -382,18 +422,19 @@ app.Router = Backbone.StackRouter.extend({
         "list": "list",
         "add": "addAccount",
         "accounts/:id": "viewAccount",
-        "edit/accounts/:id": "editAccount"
+        "edit/accounts/:id": "editAccount",
+        "sync":"sync"
     },
 
     initialize: function() {
         Backbone.Router.prototype.initialize.call(this);
 
+        // Initializing offline tracker and cache 
         app.offlineTracker = new app.models.OfflineTracker({offlineStatus: "online"});
-
-        var cache = new Force.StoreCache("accounts", [ {path:"Name", type:"string"} ]);
-        cache.init().fail(function(error) { console.log(error);} );
-        app.models.Account.setupCache(cache);
-        app.models.AccountCollection.setupCache(cache);
+        app.cache = new Force.StoreCache("accounts", [ {path:"Name", type:"string"} ]);
+        app.cache.init().fail(function(error) { console.log(error);} );
+        app.models.Account.setupCache(app.cache);
+        app.models.AccountCollection.setupCache(app.cache);
 
         this.searchResults = new app.models.AccountCollection();
         // We keep a single instance of the SearchPage and its associated Account collection throughout the app
@@ -440,6 +481,16 @@ app.Router = Backbone.StackRouter.extend({
             },
             error: function() {
                 alert("Failed to get record for edit");
+            }
+        });
+    },
+
+    sync: function() {
+        var localAccounts = new app.models.AccountCollection();
+        localAccounts.fetch({
+            config: {type:"cache", cacheQuery: {queryType:"exact", indexPath:"__local__", matchKey:true}},
+            success: function(data) {
+                that.slidePage(new app.views.SyncPage({model: data}).render());
             }
         });
     }

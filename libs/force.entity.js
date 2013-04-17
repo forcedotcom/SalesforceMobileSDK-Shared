@@ -102,8 +102,9 @@
     // Force.StoreCache
     // ----------------
     // SmartStore-backed cache
-    // Soup elements are the records passed in, extended with the boolean fields __locally_created__, __locally_updated__, __locally_deleted__
-    // Index are created for keyField and __locally_*__ fields
+    // Soup elements are expected to have the boolean fields __locally_created__, __locally_updated__ and __locally_deleted__
+    // A __local__ boolean field is added automatically on save
+    // Index are created for keyField and __local__
     //
     Force.StoreCache = function(soupName, additionalIndexSpecs, keyField) {
         this.soupName = soupName;
@@ -115,11 +116,8 @@
         // Return promise which initializes backing soup
         init: function() {
             if (smartstoreClient == null) return;
-            var indexSpecs = _.union([{path:this.keyField, type:"string"}, 
-                                      {path:"__locally_created__", type:"boolean"}, 
-                                      {path:"__locally_updated__", type:"boolean"}, 
-                                      {path:"__locally_deleted__", type:"boolean"}
-                                     ], this.additionalIndexSpecs);
+            var indexSpecs = _.union([{path:this.keyField, type:"string"}, {path:"__local__", type:"boolean"}], 
+                                     this.additionalIndexSpecs);
             return smartstoreClient.registerSoup(this.soupName, indexSpecs);
         },
 
@@ -151,6 +149,7 @@
         save: function(record) {
             if (this.soupName == null) return;
             console.log("----> In StoreCache:save " + record[this.keyField]);
+            record.__local__ =  (record.__locally_created__ || record.__locally_updated__ || record.__locally_deleted__);
             return smartstoreClient.upsertSoupEntriesWithExternalId(this.soupName, [ record ], this.keyField);
         },
 
@@ -158,11 +157,15 @@
         saveAll: function(records) {
             if (this.soupName == null) return;
             console.log("----> In StoreCache:saveAll records.length=" + records.length);
+            records = _.map(records, function(record) { 
+                record.__local__ =  (record.__locally_created__ || record.__locally_updated__ || record.__locally_deleted__);
+                return record;
+            });
             return smartstoreClient.upsertSoupEntriesWithExternalId(this.soupName, records, this.keyField);
         },
 
 
-        // Return promise which records matching query from cache
+        // Return promise which returns records matching the passed querySpec
         // TODO: paging support
         find: function(querySpec) {
             var records = null;
@@ -413,7 +416,7 @@
     // * if cacheMode is "server-only" then it simply calls Force.syncObjectWithServer
     // * if cacheMode is "cache-only" then it simply calls Force.syncObjectWithCache
     // * if cacheMode is "cache-first" then during a read, the cache is queried first, and the server is only queried if the cache misses
-    // * otherwise, the server is queried first and the cache is updated afterwards
+    // * if cacheMode is "server-first", then the server is queried first and the cache is updated afterwards
     //
     Force.syncSObject = function(method, sobjectType, id, attributes, fieldlist, refetch, cache, cacheMode) {
         console.log("--> In Force.syncSObject:method=" + method + " id=" + id + " cacheMode=" + cacheMode);
@@ -437,7 +440,12 @@
         var promise = null;
         var wasReadFromCache = false;
 
-        if (method =="read" && cacheMode == "cache-first") {
+        if (cacheMode == "cache-first") {
+            if (method != "read") {
+                msg = "cache-first only applies to read";
+                console.err(msg);
+                throw msg;
+            }
             // Go to cache first
             promise = cacheSync(method, id, attributes)
                 .then(function(data) {
@@ -449,7 +457,8 @@
                     return data;
                 });
         }
-        else {
+
+        if (cacheMode == "server-first" || cacheMode == null) {
             // Go to server first
             promise = serverSync();
         }
@@ -461,6 +470,17 @@
             }
             return data;
         });
+
+        // For locally created record, delete local record now that it has been saved on server
+        // The cacheSync("update",...) above will upsert a new record because the server provided id is different from the locally generated if
+        if (method == "create" && attributes.__locally_created__) {
+            promise = promise.then(function(data) {
+                return cacheSync("delete", id)
+                    .then(function() {
+                        return data;
+                    });
+            });
+        }
 
 
         // Done
@@ -477,7 +497,6 @@
     // 
     Force.fetchSObjectsFromCache = function(cache, cacheQuery) {
         console.log("---> In Force.fetchSObjectsFromCache");
-
         return cache.find(cacheQuery);
     };
 
@@ -669,4 +688,4 @@
 
     } // if (!_.isUndefined(Backbone)) {
 })
-.call(this, $, _, Backbone); 
+.call(this, $, _, window.Backbone); 
