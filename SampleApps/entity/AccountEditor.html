@@ -73,11 +73,12 @@
     <a href="#" class="header-button header-button-left header-back-button">
         <button>Back</button>
     </a>
-    <h1>Account<span id="offlineStatus"/></h1>
+    <h1>Sync<span id="offlineStatus"/></h1>
 </div>
 
 <div class="search">
-    <button>Sync</button>
+    <%= countLocallyModified %> locally modified records to sync.
+    <button class="sync">Start</button>
 </div>
 
 <div class="scroll striped" style="top:84px;">
@@ -288,6 +289,10 @@ app.views.OfflineToggler = Backbone.View.extend({
 
     template: _.template($("#offline-toggler").html()),
 
+    initialize: function() {
+        this.model.on("change:offlineStatus", this.render, this);
+    },
+
     render: function(eventName) {
         $(this.el).html(this.template(this.model.toJSON()));
         return this;
@@ -301,7 +306,6 @@ app.views.OfflineToggler = Backbone.View.extend({
     goOffline: function(event) {
         event.preventDefault();
         this.model.set("offlineStatus", "offline");
-        this.render(); // TODO bind view to model changes
     },
 
     goOnline: function(event) {
@@ -311,20 +315,28 @@ app.views.OfflineToggler = Backbone.View.extend({
     }
 });
 
-app.views.SyncPage = app.views.SearchPage.extend({
+app.views.SyncPage = Backbone.View.extend({
 
     template: _.template($("#sync-page").html()),
+
+    render: function(eventName) {
+        $(this.el).html(this.template(_.extend({countLocallyModified: this.model.length}, this.model.toJSON())));
+        this.listView = new app.views.AccountListView({el: $("ul", this.el), model: this.model});
+        this.listView.render();
+        return this;
+    },
 
     events: {
         "click .sync": "sync"
     },
 
-    sync: function(evt) {
+    sync: function(event) {
         var that = this;
-        if(this.model,length > 0) {
+        if (this.model.length > 0) {
             var record = this.model.shift();
-            record.save({
+            record[record.get("__locally_deleted__") ? "destroy" : "save"]({
                 success: function() {
+                    that.render(); // TODO bind change to render instead
                     that.sync();
                 }
             });
@@ -486,6 +498,7 @@ app.Router = Backbone.StackRouter.extend({
     },
 
     sync: function() {
+        var that = this;
         var localAccounts = new app.models.AccountCollection();
         localAccounts.fetch({
             config: {type:"cache", cacheQuery: {queryType:"exact", indexPath:"__local__", matchKey:true}},

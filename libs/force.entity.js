@@ -198,6 +198,16 @@
                 .then(function() { 
                     return null;
                 });
+        },
+
+        // Return uuid for locally created entry
+        makeLocalId: function() {
+            return _.uniqueId("local_" + (new Date()).getTime());
+        },
+
+        // Return true if id was a locally made id
+        isLocalId: function(id) {
+            return id != null && id.indexOf("local_") == 0;
         }
     });
 
@@ -277,29 +287,15 @@
         console.log("---> In Force.syncSObjectWithCache:method=" + method + " id=" + id);
 
         localAction = localAction || false;
-
-        var uuid = function() {
-            return _.uniqueId("local_" + (new Date()).getTime());
-        };
-
-        var locallyCreated = function() {
-            // Cheaper than retrieving the soup entry and checking the __locally_created__ field
-            return id.indexOf("local_") == 0;
-        };
+        var isLocalId = cache.isLocalId(id);
 
         // Cache actions helper
         var cacheCreate = function() {
-            if (localAction) {
-                var data = _.extend(attributes, {Id: uuid(), __locally_created__:true, __locally_updated__:false, __locally_deleted__:false});
-                return cache.save(data)
-                    .then(function() { 
-                        return data; 
-                    });
-            }
-            else {
-                console.error("Force.syncSObjectWithCache called with localAction=false and method=create");
-                return null;
-            }
+            var data = _.extend(attributes, {Id: (localAction ? cache.makeLocalId() : id), __locally_created__:localAction, __locally_updated__:false, __locally_deleted__:false});
+            return cache.save(data)
+                .then(function() { 
+                    return data; 
+                });
         };
 
         var cacheRead = function() { 
@@ -310,7 +306,7 @@
         };
         
         var cacheUpdate = function() { 
-            var data = _.extend(attributes, {Id: id, __locally_created__: locallyCreated(), __locally_updated__: localAction, __locally_deleted__: false});
+            var data = _.extend(attributes, {Id: id, __locally_created__: isLocalId, __locally_updated__: localAction, __locally_deleted__: false});
             return cache.save(data)
                 .then(function() {
                     return data;
@@ -319,7 +315,7 @@
                              
 
         var cacheDelete = function() {
-            if (!localAction || locallyCreated()) {
+            if (!localAction || isLocalId) {
                 return cache.remove(id);
             }
             else {
@@ -389,7 +385,7 @@
                 }) 
         };
 
-        // Chaining promises that return either a promise or created/upated/reda model attributes or null in the case of delete
+        // Chaining promises that return either a promise or created/upated/read model attributes or null in the case of delete
         var promise = null;
         switch(method) {
         case "create": promise = serverCreate(); break;
@@ -421,7 +417,7 @@
     Force.syncSObject = function(method, sobjectType, id, attributes, fieldlist, refetch, cache, cacheMode) {
         console.log("--> In Force.syncSObject:method=" + method + " id=" + id + " cacheMode=" + cacheMode);
 
-        var serverSync = function() {
+        var serverSync = function(method, id) {
             return Force.syncSObjectWithServer(method, sobjectType, id, attributes, fieldlist, refetch);
         };
 
@@ -429,9 +425,12 @@
             return Force.syncSObjectWithCache(method, sobjectType, id, attributes, fieldlist, cache, localAction);
         }            
 
+        // Server only
         if (cache == null || cacheMode == "server-only") {
-            return serverSync();
+            return serverSync(method, id);
         }
+
+        // Cache only
         if (cache != null && cacheMode == "cache-only") {
             return cacheSync(method, id, attributes, true);
         }
@@ -440,48 +439,51 @@
         var promise = null;
         var wasReadFromCache = false;
 
+        // Go to cache first
         if (cacheMode == "cache-first") {
-            if (method != "read") {
-                msg = "cache-first only applies to read";
-                console.err(msg);
-                throw msg;
-            }
-            // Go to cache first
             promise = cacheSync(method, id, attributes)
                 .then(function(data) {
                     wasReadFromCache = (data != null);
                     if (!wasReadFromCache) {
                         // Not found in cache, go to server
-                        return serverSync();
+                        return serverSync(method, id);
                     }
                     return data;
                 });
         }
+        // Go to server first
+        else if (cacheMode == "server-first" || cacheMode == null /* no cachMode specified means server-first */) {
+            if (cache.isLocalId(id)) {
+                if (method == "read" || method == "delete") {
+                    throw "Can't " + method + " on server a locally created record";
+                }
 
-        if (cacheMode == "server-first" || cacheMode == null) {
-            // Go to server first
-            promise = serverSync();
+                // For locally created record, we need to do a create on the server
+                var createdData;
+                promise = serverSync("create", null)
+                .then(function(data) {
+                    createdData = data;
+                    // Then we need to get rid of the local record with locally created id
+                    return cacheSync("delete", id);
+                })
+                .then(function() {
+                    return createdData;
+                });
+            }
+            else {
+                promise = serverSync(method, id);
+            }
         }
 
         // Write back to cache if not read from cache
         promise = promise.then(function(data) {
             if (!wasReadFromCache) {
-                return method == "delete" ? cacheSync("delete", id) : cacheSync("update", data.Id, data);
+                var targetId = (method == "delete" ? id : data.Id);
+                var targetMethod = (method == "read" ? "update" /* we want to write to the cache what was read from the server */: method);
+                return cacheSync(targetMethod, targetId, data);
             }
             return data;
         });
-
-        // For locally created record, delete local record now that it has been saved on server
-        // The cacheSync("update",...) above will upsert a new record because the server provided id is different from the locally generated if
-        if (method == "create" && attributes.__locally_created__) {
-            promise = promise.then(function(data) {
-                return cacheSync("delete", id)
-                    .then(function() {
-                        return data;
-                    });
-            });
-        }
-
 
         // Done
         return promise;

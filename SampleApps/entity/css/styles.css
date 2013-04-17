@@ -410,6 +410,16 @@ div.search {
     padding-right:6px;
 }
 
+label,
+input,
+button,
+select,
+textarea {
+  font-size: 14px;
+  font-weight: normal;
+  line-height: 20px;
+}
+
 .control-group.error .control-label,
 .control-group.error .help-block,
 .control-group.error .help-inline {
@@ -517,3 +527,4 @@ button.offline {
 .dirty {
     background: red;
 }
+

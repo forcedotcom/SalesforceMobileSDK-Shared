@@ -86,7 +86,12 @@
             for (var key in interceptors) {
                 if (key === req) {
                     setTimeout(function() {
-                        try { interceptors[key](successCB, errorCB, args); } catch (err) { errorCB(err); }
+                        try { 
+                            interceptors[key](successCB, errorCB, args); 
+                        } catch (err) { 
+                            console.error("Error caught when calling " + service + ":" + action + " " + err);
+                            errorCB(err); 
+                        }
                     }, 0);
                     found = true;
                     break;
