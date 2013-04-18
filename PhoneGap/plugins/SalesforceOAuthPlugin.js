@@ -26,7 +26,7 @@
 
 cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
     // Version this js was shipped with
-    var SDK_VERSION = "2.0";
+    var SDK_VERSION = "2.0unstable";
 
     var SERVICE = "com.salesforce.oauth";
 
@@ -38,18 +38,6 @@ cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
      */
     var logoutInitiated = false;
  
-    /**
-     * OAuthProperties data structure, for plugin arguments.
-     *   remoteAccessConsumerKey - String containing the remote access object ID (client ID).
-     *   oauthRedirectURI        - String containing the redirect URI configured for the remote access object.
-     *   oauthScopes             - Array of strings specifying the authorization scope of the app (e.g ["api", "visualforce"]).
-     */
-    var OAuthProperties = function (remoteAccessConsumerKey, oauthRedirectURI, oauthScopes) {
-        this.remoteAccessConsumerKey = remoteAccessConsumerKey;
-        this.oauthRedirectURI = oauthRedirectURI;
-        this.oauthScopes = oauthScopes;
-    };
-
 	/**
 	 * Obtain authentication credentials, calling 'authenticate' only if necessary.
 	 * Most index.html authors can simply use this method to obtain auth credentials
@@ -74,8 +62,6 @@ cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
      * Initiates the authentication process, with the given app configuration.
      *   success         - The success callback function to use.
      *   fail            - The failure/error callback function to use.
-     *   oauthProperties - The configuration properties for the authentication process.
-     *                     See OAuthProperties() below.
      * cordova returns a dictionary with:
      *   accessToken
      *   refreshToken
@@ -86,8 +72,8 @@ cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
      *   instanceUrl
      *   userAgent
      */
-    var authenticate = function (success, fail, oauthProperties) {
-        exec(SDK_VERSION, success, fail, SERVICE, "authenticate", [ {"oauthProperties": oauthProperties} ]);
+    var authenticate = function (success, fail) {
+        exec(SDK_VERSION, success, fail, SERVICE, "authenticate");
     };
 
     /**
@@ -126,10 +112,7 @@ cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
         getAuthCredentials: getAuthCredentials,
         authenticate: authenticate,
         logout: logout,
-        getAppHomeUrl: getAppHomeUrl,
-
-        // Constructor
-        OAuthProperties: OAuthProperties
+        getAppHomeUrl: getAppHomeUrl
     };
 });
 
