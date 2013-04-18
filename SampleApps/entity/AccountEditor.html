@@ -334,10 +334,14 @@ app.views.SyncPage = Backbone.View.extend({
         var that = this;
         if (this.model.length > 0) {
             var record = this.model.shift();
-            record[record.get("__locally_deleted__") ? "destroy" : "save"]({
+            var method = record.get("__locally_deleted__") ? "destroy" : "save";
+            record[method]({
                 success: function() {
                     that.render(); // TODO bind change to render instead
                     that.sync();
+                },
+                error: function() {
+                    alert("Failed to " + method + " " + record.id);
                 }
             });
         }
@@ -380,7 +384,7 @@ app.views.EditAccountPage = Backbone.View.extend({
     render: function(eventName) {
         var action = (null == this.model.get("Id")) ? "Add" : "Edit";
         var backAction = (action == "Add") ? "#" : "#accounts/" + this.model.get("Id");
-        if (action == "Add") { this.model.set({Name:"", Industry:"", Phone:""}); }
+        if (action == "Add") { this.model.set({Name:"", Industry:"", Phone:"", attributes : { type: "Account"}}); }
         $(this.el).html(this.template(_.extend({action: action, backAction: backAction}, this.model.toJSON())));
         (new app.views.OfflineToggler({el: $("#offlineStatus", this.el), model: app.offlineTracker})).render();
         return this;

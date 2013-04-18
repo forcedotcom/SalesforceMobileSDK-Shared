@@ -185,15 +185,19 @@
             console.log("----> In StoreCache:remove " + key);
             var that = this;
             var querySpec = navigator.smartstore.buildExactQuerySpec(this.keyField, key);
+            var soupEntryId = null;
             return smartstoreClient.querySoup(this.soupName, querySpec)
                 .then(function(cursor) {
-                    return cursor.currentPageOrderedEntries.length == 1 
-                        ? smartstoreClient.removeFromSoup(that.soupName, [cursor.currentPageOrderedEntries[0]._soupEntryId])
-                        : null;
-                    
-                })
-                .then(function(cursor) {
+                    if (cursor.currentPageOrderedEntries.length == 1) {
+                        soupEntryId = cursor.currentPageOrderedEntries[0]._soupEntryId;
+                    }
                     return smartstoreClient.closeCursor(cursor);
+                })
+                .then(function() {
+                    if (soupEntryId != null) {
+                        return smartstoreClient.removeFromSoup(that.soupName, [ soupEntryId ])
+                    }
+                    return null;
                 })
                 .then(function() { 
                     return null;
