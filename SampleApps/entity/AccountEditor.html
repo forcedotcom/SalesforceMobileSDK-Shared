@@ -186,14 +186,13 @@ app.models.Account = Force.SObject.extend({
     sobjectType: "Account",
     fieldlist: ["Id", "Name", "Industry", "Phone"],
 
-    fetch: function(options) {
-        var cacheMode = (app.offlineTracker.get("offlineStatus") == "online" ? "cache-first" : "cache-only");
-        Force.SObject.prototype.fetch.call(this, _.extend({cacheMode: cacheMode, fieldlist:this.fieldlist}, options));
-    },
-
-    save: function(attributes, options) {
-        var cacheMode = (app.offlineTracker.get("offlineStatus") == "online" ? "server-first" : "cache-only");
-        Force.SObject.prototype.save.call(this, attributes, _.extend({cacheMode: cacheMode, fieldlist:this.fieldlist}, options));
+    cacheMode: function(method) {
+        if (app.offlineTracker.get("offlineStatus") == "offline") {
+            return "cache-only";
+        }
+        else {
+            return (method == "read" ? "cache-first" : "server-first");
+        }
     }
 });
 
@@ -206,25 +205,25 @@ app.models.AccountCollection = Force.SObjectCollection.extend({
         this.key = key;
     },
 
-    fetch: function(options) {
-        options = options || {};
-        if (options.config == null) {
-            if (app.offlineTracker.get("offlineStatus") == "offline") {
-                options.config =  {type:"cache", cacheQuery:{queryType:"like", indexPath:"Name", likeKey: this.key+"%"}};
+    config: function() {
+        // Offline: do a cache query
+        if (app.offlineTracker.get("offlineStatus") == "offline") {
+            return {type:"cache", cacheQuery:{queryType:"like", indexPath:"Name", likeKey: this.key+"%", order:"ascending"}};
+        }
+        // Online
+        else {
+            // First time: do a MRU query
+            if (this.key == null) {
+                return {type:"mru", sobjectType:"Account", fieldlist: this.fieldlist};
             }
+            // Other times: do a SOQL query
             else {
-                if (this.key == null) {
-                    options.config = {type:"mru", sobjectType:"Account", fieldlist: this.fieldlist};
-                }
-                else {
-                    var soql = "SELECT " + this.fieldlist.join(",")  
-                        + " FROM Account"
-                        + " WHERE Name like '" + this.key + "%'";
-                    options.config =  {type:"soql", query:soql, fieldlist: this.fieldlist};
-                }
+                var soql = "SELECT " + this.fieldlist.join(",")  
+                    + " FROM Account"
+                    + " WHERE Name like '" + this.key + "%'";
+                return {type:"soql", query:soql};
             }
         }
-        Force.SObjectCollection.prototype.fetch.call(this, options);
     }
 });
 
@@ -371,7 +370,6 @@ app.views.AccountPage = Backbone.View.extend({
     delete: function(evt) {
         evt.preventDefault();
         this.model.destroy({
-            cacheMode: (app.offlineTracker.get("offlineStatus") == "online" ? "server-first" : "cache-only"),
             success: function(data) {
                 app.router.navigate("#", {trigger:true});
             },

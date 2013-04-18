@@ -598,6 +598,9 @@
         // Subclass of Backbone.Model to represent a SObject on the client (fetch/save/delete update server through the REST API and or cache)
         // 
         Force.SObject = Backbone.Model.extend({
+            // Used if none is passed during sync call - can be a string or a function taking the method and returning a string
+            cacheMode:null, 
+
             // sobjectType is expected on every instance
             sobjectType:null,
 
@@ -615,11 +618,13 @@
             // * fieldlist:<array of fields> during read if you don't want to fetch the whole record, during save fields to save
             // * refetch:true during create/update to do a fetch following the create/update
             // * cacheMode: "server-only" | "cache-only" | "cache-first" | null (see Force.syncSObject for details)
+            // Instead of passing the cacheMode in the options, you can also alternatively define the cacheMode property
             //
             sync: function(method, model, options) {
                 console.log("-> In Force.SObject:sync method=" + method + " model.id=" + model.id);
 
-                Force.syncSObject(method, this.sobjectType, model.id, model.attributes, options.fieldlist, options.refetch, this.getClass().cache, options.cacheMode)
+                var cacheMode = options.cacheMode || (_.isFunction(this.cacheMode) ? this.cacheMode(method) : this.cacheMode);
+                Force.syncSObject(method, this.sobjectType, model.id, model.attributes, options.fieldlist, options.refetch, this.getClass().cache, cacheMode)
                     .done(options.success)
                     .fail(options.error);
             }
@@ -639,7 +644,7 @@
         // -----------------------
         // Subclass of Backbone.Collection to represent a collection of SObject's on the client.
         // Only fetch is supported (no create/update or delete).
-        // To define the set of SObject's to fetch pass an options.config
+        // To define the set of SObject's to fetch pass an options.config or set the config property on this collection object.
         // Where the config is 
         // config: {type:"soql", query:"<soql query>"} 
         //   or {type:"sosl", query:"<sosl query>"} 
@@ -649,6 +654,9 @@
         // TODO: query-more support
         // 
         Force.SObjectCollection = Backbone.Collection.extend({
+            // Used if none is passed during sync call - can be a string or a function returning a string
+            config:null, 
+
             // Return class object
             getClass: function() {
                 return this.__proto__.constructor;
@@ -661,13 +669,15 @@
                 if (method != "read") {
                     throw "Method " + method  + " not supported";
                 }
-                if (options.config == null) {
+                
+                var config = options.config || (_.isFunction(this.config) ? this.config() : this.config);
+                if (config == null) {
                     options.success([]);
                     return;
                 }
 
                 options.reset = true;
-                Force.fetchSObjects(options.config, this.getClass().cache)
+                Force.fetchSObjects(config, this.getClass().cache)
                     .done(options.success)
                     .fail(options.error);
             },
