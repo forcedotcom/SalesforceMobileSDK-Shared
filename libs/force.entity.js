@@ -599,6 +599,9 @@
         // 
         Force.SObject = Backbone.Model.extend({
             // Used if none is passed during sync call - can be a string or a function taking the method and returning a string
+            fieldlist:null,
+            
+            // Used if none is passed during sync call - can be a string or a function taking the method and returning a string
             cacheMode:null, 
 
             // sobjectType is expected on every instance
@@ -618,13 +621,15 @@
             // * fieldlist:<array of fields> during read if you don't want to fetch the whole record, during save fields to save
             // * refetch:true during create/update to do a fetch following the create/update
             // * cacheMode: "server-only" | "cache-only" | "cache-first" | null (see Force.syncSObject for details)
-            // Instead of passing the cacheMode in the options, you can also alternatively define the cacheMode property
+            //
+            // Instead of passing fieldlist or cacheMode in the options, you can also define the fieldlist or cacheMode properties on this object
             //
             sync: function(method, model, options) {
                 console.log("-> In Force.SObject:sync method=" + method + " model.id=" + model.id);
 
+                var fieldlist = options.fieldlist || (_.isFunction(this.fieldlist) ? this.fieldlist(method) : this.fieldlist);
                 var cacheMode = options.cacheMode || (_.isFunction(this.cacheMode) ? this.cacheMode(method) : this.cacheMode);
-                Force.syncSObject(method, this.sobjectType, model.id, model.attributes, options.fieldlist, options.refetch, this.getClass().cache, cacheMode)
+                Force.syncSObject(method, this.sobjectType, model.id, model.attributes, fieldlist, options.refetch, this.getClass().cache, cacheMode)
                     .done(options.success)
                     .fail(options.error);
             }
