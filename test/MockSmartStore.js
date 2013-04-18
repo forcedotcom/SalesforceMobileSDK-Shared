@@ -229,7 +229,7 @@ var MockSmartStore = (function(window) {
                 }
             }
 
-            results.sort(function(soupElt1,soupElt2) {
+            results = results.sort(function(soupElt1,soupElt2) {
                 var p1 = soupElt1[querySpec.indexPath];
                 var p2 = soupElt2[querySpec.indexPath];
                 var compare = ( p1 > p2 ? 1 : (p1 == p2 ? 0 : -1));
