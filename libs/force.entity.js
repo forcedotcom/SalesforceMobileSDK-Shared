@@ -223,55 +223,106 @@
         this.cache = cache;
     };
 
-    _.extend(Force.SObjectType.prototype, {
-        fetch: function(options) {
-            var options = options || {};
-            var wasReadFromCache = false;
-            var that = this;
+    _.extend(Force.SObjectType.prototype, (function() {
+        //TBD: Should we support cache modes here too.
+        var that;
+        var wasReadFromCache = false;
 
-            // Cache actions helper
-            var cacheRetrieve = function() { 
+        /*----- INTERNAL METHODS ------*/
+        // Cache actions helper
+        /* Check first if cache exists and if data exists in cache.
+        Then update the current instance with data from cache. */
+        var cacheRetrieve = function() { 
+            if (that.cache) {
                 return that.cache.retrieve(that.sobjectType)
-                    .then(function(data) { 
-                        wasReadFromCache = (data != null); 
-                        return data.describeData;
-                    })
-            };
+                        .then(function(data) {
+                            if (data) {
+                                wasReadFromCache = (data != null); 
+                                that._describeResult = data.describeResult;
+                                that._metadataResult = data.metadataResult;
+                            }
+                        });
+            }
+        };
 
-            var cacheSave = function(describeData) {
-                var record = {describeData: describeData};
+        /* Check first if cache exists.
+        Then save the current instance data to cache. */
+        var cacheSave = function() {
+            if (that.cache) {
+                var record = {
+                    describeResult: that._describeResult, 
+                    metadataResult: that._metadataResult
+                };
+
                 record[that.cache.keyField] = that.sobjectType;
-                return that.cache.save(record)
-                    .then(function() { 
-                        return describeData;
-                    })
-            };
-            
-            // Server action helper
-            var serverDescribeUnlessCached = function(describeData) { 
-                return describeData == null ? forcetkClient.describe(that.sobjectType) : describeData; 
-            };
-
-            var promise = null;
-            // No cache is setup
-            if (this.cache == null) {
-                promise = serverDescribeUnlessCached(null);
+                return that.cache.save(record);
             }
-            // Cache is setup
-            else {
-                promise = cacheRetrieve()
-                    .then(serverDescribeUnlessCached)
-                    .then(cacheSave);
-            }
+        };
 
-            promise = promise
-                .done(function(describeData) {
-                    that.attributes = describeData;
-                    if (options.success) options.success(data);
-                })
-                .fail(options.error);
+        /* Check first if cache exists. If yes, then 
+        clear any data from the cache for this sobject type. */
+        var cacheClear = function() {
+            if (that.cache) {
+                return that.cache.remove(that.sobjectType);
+            }
+        };
+        
+        // Server action helper
+        /* If no describe data exists on the instance, get it from server.*/
+        var serverDescribeUnlessCached = function() { 
+            if(!that._describeResult) {
+                return forcetkClient.describe(that.sobjectType)
+                        .then(function(describeResult) {
+                            that._describeResult = describeResult;
+                        });
+            }
+        };
+
+        /* If no metadata data exists on the instance, get it from server.*/
+        var serverMetadataUnlessCached = function() { 
+            if(!that._metadataResult) {
+                return forcetkClient.metadata(that.sobjectType)
+                        .then(function(metadataResult) {
+                            that._metadataResult = metadataResult;
+                        });
+            }
+        };
+
+        /*----- EXTERNAL METHODS ------*/
+        return {
+            /* Returns a promise, which once resolved 
+            returns describe data of the sobject. */
+            describe: function() {
+                that = this;
+                if (that._describeResult) return $.when(that._describeResult);
+                else return $.when(cacheRetrieve())
+                        .then(serverDescribeUnlessCached)
+                        .then(cacheSave)
+                        .then(function() {
+                            return that._describeResult;
+                        });
+            },
+            /* Returns a promise, which once resolved 
+            returns metadata of the sobject. */
+            getMetadata: function() {
+                that = this;
+                if (that._metadataResult) return $.when(that._metadataResult);
+                else return $.when(cacheRetrieve())
+                        .then(serverMetadataUnlessCached)
+                        .then(cacheSave)
+                        .then(function() {
+                            return that._metadataResult;
+                        });
+            },
+            /* Returns a promise, which once resolved clears 
+            the cached data for the current sobjec type. */
+            reset: function() {
+                that = this;
+                that._metadataResult = that._describeResult = undefined;
+                return $.when(clearCache());
+            }
         }
-    });
+    })());
 
 
     // Force.syncSObjectWithCache
@@ -534,10 +585,17 @@
         var serverMru = function(sobjectType, fieldlist) {
             return forcetkClient.metadata(sobjectType)
                 .then(function(resp) {
-                    var soql = "SELECT " + fieldlist.join(",") 
-                        + " FROM " + sobjectType
-                        + " WHERE Id IN ('" + _.pluck(resp.recentItems, "Id").join("','") + "')";
-                    return serverSoql(soql);
+                    //Only do query if the fieldList is provided.
+                    if (fieldlist) {
+                        var soql = "SELECT " + fieldlist.join(",") 
+                            + " FROM " + sobjectType
+                            + " WHERE Id IN ('" + _.pluck(resp.recentItems, "Id").join("','") + "')";
+                        return serverSoql(soql);
+                    } else return {
+                        done: true,
+                        records: resp.recentItems, 
+                        size: resp.recentItems.length
+                    };
                 });
         };
 
