@@ -15,7 +15,7 @@
 <!-- Local Testing -->
 <script src="../../external/jquery/jquery-1.8.3.min.js"></script>
 <script src="../../external/backbone/underscore-1.4.4.min.js"></script>
-<script src="../../external/backbone/backbone-1.0.0.min.js"></script>
+<script src="../../external/backbone/backbone-1.0.0.js"></script>
 <script src="../../test/MockCordova.js"></script>
 <script src="../../libs/forcetk.js"></script>
 <script src="../../libs/cordova.force.js"></script>
@@ -334,16 +334,22 @@ app.views.SyncPage = Backbone.View.extend({
         var that = this;
         if (this.model.length > 0) {
             var record = this.model.shift();
-            var method = record.get("__locally_deleted__") ? "destroy" : "save";
-            record[method]({
+            var options = {
                 success: function() {
                     that.render(); // TODO bind change to render instead
                     that.sync();
                 },
                 error: function() {
-                    alert("Failed to " + method + " " + record.id);
+                    alert("Failed to sync " + record.id);
                 }
-            });
+            };
+
+            if (record.get("__locally_deleted__")) {
+                record.destroy(options);
+            }
+            else {
+                record.save(null, options);
+            }
         }
     }
 });
