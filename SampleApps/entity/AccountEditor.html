@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Accounts</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
+<link rel="stylesheet" href="css/styles.css"/>
+</head>
+
+<body>
+
+<div id="content"></div>
+
+<!-- Scripts -->
+
+<!-- Local Testing -->
+<!--
+<script src="../../external/jquery/jquery-1.8.3.min.js"></script>
+<script src="../../external/backbone/underscore-1.4.4.min.js"></script>
+<script src="../../external/backbone/backbone-1.0.0.js"></script>
+<script src="../../test/MockCordova.js"></script>
+<script src="../../libs/forcetk.js"></script>
+<script src="../../libs/cordova.force.js"></script>
+<script src="../../test/MockSmartStore.js"></script>
+<script src="../../libs/force.entity.js"></script>
+<script src="stackrouter.js"></script>
+<script src="auth_local.js"></script>
+-->
+<!-- End Local Testing -->
+
+<!-- Container -->
+<script src="jquery/jquery-1.8.3.min.js"></script>
+<script src="backbone/underscore-1.4.4.min.js"></script>
+<script src="backbone/backbone-1.0.0.min.js"></script>
+<script src="cordova-2.3.0.js"></script>
+<script src="forcetk.js"></script>
+<script src="cordova.force.js"></script>
+<script src="force.entity.js"></script>
+<script src="stackrouter.js"></script>
+<script src="auth.js"></script>
+<!-- End Container -->
+
+
+<!-- --------------------------------------- Search page template ------------------------------------------------- -->
+<script id="search-page" type="text/template">
+<div class="header">
+    <h1>Accounts<span id="offlineStatus"/></h1>
+    <a href="#add" class="header-button header-button-icon header-button-right">
+      <button>+</button>
+    </a>
+</div>
+
+<div class="search">
+    <input type="search" class="search-key" placeholder="Search"/>
+</div>
+
+<div class="scroll striped" style="top:84px;">
+    <ul class="tableview tableview-links"></ul>
+</div>
+</script>
+
+<!-- --------------------------------------- Online/Offline Toggler Template -------------------------------------- -->
+
+<script id="offline-toggler" type="text/template">
+<a href="#" class="header-button <%= offlineStatus %>">
+  <button class="online">Online</button>
+  <button class="offline">Offline</button>
+</a>
+</script>
+
+<!-- --------------------------------------- Sync Page Template --------------------------------------------------- -->
+
+<script id="sync-page" type="text/template">
+<div class="header">
+    <a href="#" class="header-button header-button-left header-back-button">
+        <button>Back</button>
+    </a>
+    <h1>Sync<span id="offlineStatus"/></h1>
+</div>
+
+<div class="search">
+    <%= countLocallyModified %> locally modified records to sync.
+    <button class="sync">Start</button>
+</div>
+
+<div class="scroll striped" style="top:84px;">
+    <ul class="tableview tableview-links"></ul>
+</div>
+</script>
+
+<!-- --------------------------------------- Account list item Template ------------------------------------------ -->
+<script id="account-list-item" type="text/template">
+<a href="#accounts/<%= Id %>" class="pad-right">
+    <div class="story">
+    	<b><%= Name %></b>
+    	<span class="metadata">
+            <span class="link-text"><%= Id %></span><br/>
+            <span class="link-text"><%= Industry %></span><br/>
+            <% if (__locally_created__) { %><span class="dirty">Locally Created</span><% } %>
+            <% if (__locally_updated__) { %><span class="dirty">Locally Updated</span><% } %>
+            <% if (__locally_deleted__) { %><span class="dirty">Locally Deleted</span><% } %>
+        </span>
+    </div>
+</a>
+</script>
+
+<!-- --------------------------------------- View account page template ------------------------------------------ -->
+<script id="account-page" type="text/template">
+<div class="header">
+    <a href="#" class="header-button header-button-left header-back-button">
+        <button>Back</button>
+    </a>
+    <a href="#edit/accounts/<%= Id %>" class="header-button header-button-icon header-button-right search">
+        <button>&#9998;</button>
+    </a>
+    <a href="#" class="header-button header-button-icon header-button-second-from-right delete">
+        <button>&#10007;</button>
+    </a>
+    <h1>Account<span id="offlineStatus"/></h1>
+</div>
+
+<div class="scroll striped" style="top:44px;">
+    <div class="sobject-summary">
+        <header>
+            <h1><%= Name %> </h1>
+            <span class="link-text"><%= Id %></span><br/>
+            <span class="link-text"><%= Industry %></span><br/>
+            <% if (__locally_created__) { %><span class="dirty">Locally Created</span><% } %>
+            <% if (__locally_updated__) { %><span class="dirty">Locally Updated</span><% } %>
+            <% if (__locally_deleted__) { %><span class="dirty">Locally Deleted</span><% } %>
+        </header>
+    </div>
+
+    <ul class="tableview tableview-links">
+        <% if (Phone) { %>
+        <li>
+            <a href="tel:<%= Phone %>">
+                <div class="story">
+                    <b>Call</b><br/>
+                    <span class="metadata"><%= Phone %></span>
+                </div>
+                <img src="css/images/call.png" class="action-icon"/>
+            </a>
+        </li>
+        <% } %>
+    </ul>
+</div>
+</script>
+
+<!-- --------------------------------------- Add/edit account page template -------------------------------------- -->
+<script id="edit-account-page" type="text/template">
+<div class="header">
+    <a href="<%= backAction %>" class="header-button header-button-left header-back-button">
+        <button>Back</button>
+    </a>
+    <h1><%= action %> Account <span id="offlineStatus"/></h1>
+</div>
+<div class="scroll striped" style="top:44px;">
+  <form style="margin:20px" class="form-horizontal">
+    <div class="control-group" id="accountName">
+      <label class="control-label" for="accountName">Name</label>
+      <input class="controls" type="text" name="Name" value="<%= Name %>" />
+      <span class="help-inline" id="accountNameHelp" />
+    </div>
+    <div class="control-group" id="accountIndustry">
+      <label class="control-label" for="accountIndustry">Industry</label>
+      <input class="controls" type="text" name="Industry" value="<%= Industry %>" />
+      <span class="help-inline" id="accountIndustryHelp" />
+    </div>
+    <div class="control-group" id="accountPhone">
+      <label class="control-label" for="accountPhone">Phone</label>
+      <input class="controls" type="text" name="Phone" value="<%= Phone %>" />
+      <span class="help-inline" id="accountPhoneHelp" />
+    </div>
+    <div class="control-group" id="saveGroup">
+      <label class="control-label"/>
+      <button type="submit" class="controls btn save">Save</button>
+      <span class="help-inline" id="saveHelp" />
+    </div>
+  </form>
+</div>
+</script>
+
+<script>
+// -------------------------------------------------- The Models --------------------------------------------------- //
+// The Account Model
+app.models.Account = Force.SObject.extend({
+    sobjectType: "Account",
+    fieldlist: ["Id", "Name", "Industry", "Phone"],
+
+    cacheMode: function(method) {
+        if (app.offlineTracker.get("offlineStatus") == "offline") {
+            return "cache-only";
+        }
+        else {
+            return (method == "read" ? "cache-first" : "server-first");
+        }
+    }
+});
+
+// The AccountCollection Model
+app.models.AccountCollection = Force.SObjectCollection.extend({
+    model: app.models.Account,
+    fieldlist: ["Id", "Name", "Industry", "Phone"],
+
+    setCriteria: function(key) {
+        this.key = key;
+    },
+
+    config: function() {
+        // Offline: do a cache query
+        if (app.offlineTracker.get("offlineStatus") == "offline") {
+            return {type:"cache", cacheQuery:{queryType:"like", indexPath:"Name", likeKey: this.key+"%", order:"ascending", pageSize:25}};
+        }
+        // Online
+        else {
+            // First time: do a MRU query
+            if (this.key == null) {
+                return {type:"mru", sobjectType:"Account", fieldlist: this.fieldlist};
+            }
+            // Other times: do a SOQL query
+            else {
+                var soql = "SELECT " + this.fieldlist.join(",")  
+                    + " FROM Account"
+                    + " WHERE Name like '" + this.key + "%'";
+                return {type:"soql", query:soql};
+            }
+        }
+    }
+});
+
+// Online/Offline Tracker
+app.models.OfflineTracker = Backbone.Model.extend({
+    // TODO track actual online/offline state as reported by Cordova
+});
+
+// -------------------------------------------------- The Views ---------------------------------------------------- //
+
+app.views.SearchPage = Backbone.View.extend({
+
+    template: _.template($("#search-page").html()),
+
+    render: function(eventName) {
+        $(this.el).html(this.template());
+        (new app.views.OfflineToggler({el: $("#offlineStatus", this.el), model: app.offlineTracker})).render();
+        this.listView = new app.views.AccountListView({el: $("ul", this.el), model: this.model});
+        this.listView.render();
+        return this;
+    },
+
+    events: {
+        "keyup .search-key": "search"
+    },
+
+    search: function(event) {
+        var key = $(".search-key").val();
+        this.model.setCriteria(key);
+        this.model.fetch();
+    }
+});
+
+app.views.AccountListView = Backbone.View.extend({
+
+    initialize: function() {
+        this.model.bind("reset", this.render, this);
+    },
+
+    render: function(eventName) {
+        $(this.el).empty();
+        _.each(this.model.models, function(account) {
+            $(this.el).append(new app.views.AccountListItemView({model: account}).render().el);
+        }, this);
+        return this;
+    }
+
+});
+
+app.views.AccountListItemView = Backbone.View.extend({
+
+    tagName: "li",
+    template: _.template($("#account-list-item").html()),
+
+    render: function(eventName) {
+        $(this.el).html(this.template(this.model.toJSON()));
+        return this;
+    }
+});
+
+app.views.OfflineToggler = Backbone.View.extend({
+
+    template: _.template($("#offline-toggler").html()),
+
+    initialize: function() {
+        this.model.on("change:offlineStatus", this.render, this);
+    },
+
+    render: function(eventName) {
+        $(this.el).html(this.template(this.model.toJSON()));
+        return this;
+    },
+
+    events: {
+        "click .offline": "goOnline",
+        "click .online": "goOffline"
+    },
+
+    goOffline: function(event) {
+        event.preventDefault();
+        this.model.set("offlineStatus", "offline");
+    },
+
+    goOnline: function(event) {
+        event.preventDefault();
+        this.model.set("offlineStatus", "online");
+        app.router.navigate("#sync", {trigger:true});        
+    }
+});
+
+app.views.SyncPage = Backbone.View.extend({
+
+    template: _.template($("#sync-page").html()),
+
+    render: function(eventName) {
+        $(this.el).html(this.template(_.extend({countLocallyModified: this.model.length}, this.model.toJSON())));
+        this.listView = new app.views.AccountListView({el: $("ul", this.el), model: this.model});
+        this.listView.render();
+        return this;
+    },
+
+    events: {
+        "click .sync": "sync"
+    },
+
+    sync: function(event) {
+        var that = this;
+        if (this.model.length > 0) {
+            var record = this.model.shift();
+            var options = {
+                success: function() {
+                    that.render(); // TODO bind change to render instead
+                    that.sync();
+                },
+                error: function() {
+                    alert("Failed to sync " + record.id);
+                }
+            };
+
+            if (record.get("__locally_deleted__")) {
+                record.destroy(options);
+            }
+            else {
+                record.save(null, options);
+            }
+        }
+    }
+});
+
+app.views.AccountPage = Backbone.View.extend({
+
+    template: _.template($("#account-page").html()),
+
+    render: function(eventName) {
+        $(this.el).html(this.template(this.model.toJSON()));
+        (new app.views.OfflineToggler({el: $("#offlineStatus", this.el), model: app.offlineTracker})).render();
+        return this;
+    },
+
+    events: {
+        "click .delete": "delete"
+    },
+
+    delete: function(evt) {
+        evt.preventDefault();
+        this.model.destroy({
+            success: function(data) {
+                app.router.navigate("#", {trigger:true});
+            },
+            error: function(data, xhr, options) {
+                var error = new Force.RestError(xhr);
+                alert("Failed to delete account: " + error.details[0].message);
+            }
+        });
+    }
+});
+
+app.views.EditAccountPage = Backbone.View.extend({
+
+    template: _.template($("#edit-account-page").html()),
+
+    render: function(eventName) {
+        var action = (null == this.model.get("Id")) ? "Add" : "Edit";
+        var backAction = (action == "Add") ? "#" : "#accounts/" + this.model.get("Id");
+        if (action == "Add") { this.model.set({Name:"", Industry:"", Phone:"", attributes : { type: "Account"}}); }
+        $(this.el).html(this.template(_.extend({action: action, backAction: backAction}, this.model.toJSON())));
+        (new app.views.OfflineToggler({el: $("#offlineStatus", this.el), model: app.offlineTracker})).render();
+        return this;
+    },
+
+    events: {
+        "change": "change",
+        "click .save": "save",
+    },
+
+    change: function(evt) {
+        // apply change to model
+        var target = event.target;
+        this.model.set(target.name, target.value);
+        // Remove error if any
+        $("#account" + target.name).removeClass("error");
+        $("#account" + target.name + "Help").html("");
+    },
+
+    save: function(evt) {
+        evt.preventDefault();
+        this.model.save(null, {
+            success: function(data) {
+                app.router.navigate("#accounts/" + data.get("Id"), {trigger:true});
+            },
+            error: function(data, xhr, options) {
+                var error = new Force.RestError(xhr);
+                _.each(error.details, function(detail) {
+                    if (detail.fields == null || detail.fields.length == 0) {
+                        alert(detail.message);
+                    }
+                    else {
+                        _.each(detail.fields, function(field) {
+                            $("#account" + field).addClass("error");
+                            $("#account" + field + "Help").html(detail.message);
+                        });
+                    }
+                });
+            }
+        });
+    }
+});
+
+
+// ----------------------------------------------- The Application Router ------------------------------------------ //
+
+app.Router = Backbone.StackRouter.extend({
+
+    routes: {
+        "": "list",
+        "list": "list",
+        "add": "addAccount",
+        "accounts/:id": "viewAccount",
+        "edit/accounts/:id": "editAccount",
+        "sync":"sync"
+    },
+
+    initialize: function() {
+        Backbone.Router.prototype.initialize.call(this);
+
+        // Initializing offline tracker and cache 
+        app.offlineTracker = new app.models.OfflineTracker({offlineStatus: "online"});
+        app.cache = new Force.StoreCache("accounts", [ {path:"Name", type:"string"} ]);
+        app.cache.init().fail(function(error) { console.log(error);} );
+        app.models.Account.setupCache(app.cache);
+        app.models.AccountCollection.setupCache(app.cache);
+
+        this.searchResults = new app.models.AccountCollection();
+        // We keep a single instance of the SearchPage and its associated Account collection throughout the app
+        this.startPage = new app.views.SearchPage({model: this.searchResults});
+        $(this.startPage.el).attr("id", "startPage");
+    },
+
+    list: function() {
+        var that = this;
+        this.searchResults.fetch({
+            success: function() {
+                that.slidePage(that.startPage.render());
+            },
+            error: function() {
+                alert("Failed to get records for list");
+            }
+        });
+    },
+
+    addAccount: function() {
+        var account = new app.models.Account({Id: null});
+        this.slidePage(new app.views.EditAccountPage({model: account}).render());
+    },
+
+    viewAccount: function(id) {
+        var that = this;
+        var account = new app.models.Account({Id: id});
+        account.fetch({
+            success: function(data) {
+                that.slidePage(new app.views.AccountPage({model: data}).render());
+            },
+            error: function() {
+                alert("Failed to get record for view");
+            }
+        });
+    },
+
+    editAccount: function(id) {
+        var that = this;
+        var account = new app.models.Account({Id: id});
+        account.fetch({
+            success: function(data) {
+                that.slidePage(new app.views.EditAccountPage({model: data}).render());
+            },
+            error: function() {
+                alert("Failed to get record for edit");
+            }
+        });
+    },
+
+    sync: function() {
+        var that = this;
+        var localAccounts = new app.models.AccountCollection();
+        localAccounts.fetch({
+            config: {type:"cache", cacheQuery: {queryType:"exact", indexPath:"__local__", matchKey:true, order:"ascending", pageSize:25}},
+            success: function(data) {
+                that.slidePage(new app.views.SyncPage({model: data}).render());
+            }
+        });
+    }
+});
+</script>
+</body>
+</html>
