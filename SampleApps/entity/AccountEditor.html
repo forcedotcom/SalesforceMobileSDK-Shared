@@ -3,7 +3,35 @@
 <head>
 <title>Accounts</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
-<link rel="stylesheet" href="css/styles.css"/>
+<link rel="stylesheet" href="css/ratchet.css"/>
+<style>
+.page {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: #ddd;
+    -webkit-transform:translate3d(0,0,0);
+}
+
+.stage-center {
+    top: 0;
+    left: 0;
+}
+
+.stage-left {
+    left: -100%;
+}
+
+.stage-right {
+    left: 100%;
+}
+
+.transition {
+    -moz-transition-duration: .375s;
+    -webkit-transition-duration: .375s;
+    -o-transition-duration: .375s;
+}
+</style>
 </head>
 
 <body>
@@ -42,62 +70,60 @@
 
 <!-- --------------------------------------- Search page template ------------------------------------------------- -->
 <script id="search-page" type="text/template">
-<div class="header">
-    <h1>Accounts<span id="offlineStatus"/></h1>
-    <a href="#add" class="header-button header-button-icon header-button-right">
-      <button>+</button>
-    </a>
-</div>
+  <header class="bar-title">
+    <h1 class="title">Accounts</h1>
+    <a class="button" href="#add">+</a>
+  </header>
+  <footer class="bar-footer">
+    <span id="offlineStatus"></span>
+  </footer>
 
-<div class="search">
+  <div class="bar-standard bar-header-secondary">
     <input type="search" class="search-key" placeholder="Search"/>
-</div>
+  </div>
 
-<div class="scroll striped" style="top:84px;">
-    <ul class="tableview tableview-links"></ul>
-</div>
+  <div class="content">
+    <ul class="list"></ul>
+  </div>
 </script>
 
 <!-- --------------------------------------- Online/Offline Toggler Template -------------------------------------- -->
 
 <script id="offline-toggler" type="text/template">
-<a href="#" class="header-button <%= offlineStatus %>">
-  <button class="online">Online</button>
-  <button class="offline">Offline</button>
-</a>
+  <a class="<%= isOnline ? 'button-positive' : 'button-negative' %>"><%= (isOnline ? "Online" : "Offline") %></a>
 </script>
 
 <!-- --------------------------------------- Sync Page Template --------------------------------------------------- -->
 
 <script id="sync-page" type="text/template">
-<div class="header">
-    <a href="#" class="header-button header-button-left header-back-button">
-        <button>Back</button>
-    </a>
-    <h1>Sync<span id="offlineStatus"/></h1>
-</div>
+  <header class="bar-title">
+    <a href="#" class="button-prev">Back</a>
+    <h1 class="title">Sync</h1>
+  </header>
 
-<div class="search">
-    <%= countLocallyModified %> locally modified records to sync.
-    <button class="sync">Start</button>
-</div>
+  <footer class="bar-footer">
+    <span id="offlineStatus"></span>
+  </footer>
 
-<div class="scroll striped" style="top:84px;">
-    <ul class="tableview tableview-links"></ul>
-</div>
+  <div class="bar-standard bar-header-secondary">
+    <a class="button button-block sync">Process <%= countLocallyModified %> records</a>
+  </div>
+
+  <div class="content">
+    <ul class="list"></ul>
+  </div>
 </script>
 
 <!-- --------------------------------------- Account list item Template ------------------------------------------ -->
 <script id="account-list-item" type="text/template">
-<a href="#accounts/<%= Id %>" class="pad-right">
-    <div class="story">
-    	<b><%= Name %></b>
-    	<span class="metadata">
-            <span class="link-text"><%= Id %></span><br/>
-            <span class="link-text"><%= Industry %></span><br/>
-            <% if (__locally_created__) { %><span class="dirty">Locally Created</span><% } %>
-            <% if (__locally_updated__) { %><span class="dirty">Locally Updated</span><% } %>
-            <% if (__locally_deleted__) { %><span class="dirty">Locally Deleted</span><% } %>
+<a href="#accounts/<%= Id %>">
+    <div>
+    	<b><%= Name %></b><br/>
+        <%= Id %><br/>
+        <%= Industry %><br/>
+        <% if (__locally_created__) { %><span class="count-negative">Locally Created</span><% } %>
+        <% if (__locally_updated__) { %><span class="count-negative">Locally Updated</span><% } %>
+        <% if (__locally_deleted__) { %><span class="count-negative">Locally Deleted</span><% } %>
         </span>
     </div>
 </a>
@@ -105,78 +131,62 @@
 
 <!-- --------------------------------------- View account page template ------------------------------------------ -->
 <script id="account-page" type="text/template">
-<div class="header">
-    <a href="#" class="header-button header-button-left header-back-button">
-        <button>Back</button>
-    </a>
-    <a href="#edit/accounts/<%= Id %>" class="header-button header-button-icon header-button-right search">
-        <button>&#9998;</button>
-    </a>
-    <a href="#" class="header-button header-button-icon header-button-second-from-right delete">
-        <button>&#10007;</button>
-    </a>
-    <h1>Account<span id="offlineStatus"/></h1>
-</div>
+<header class="bar-title">
+    <a href="#" class="button-prev">Back</a>
+    <h1 class="title">Account</h1>
+    <a href="#edit/accounts/<%= Id %>" class="button">Edit</a>
+    <a class="button delete">Delete</a>
+</header>
 
-<div class="scroll striped" style="top:44px;">
-    <div class="sobject-summary">
-        <header>
-            <h1><%= Name %> </h1>
-            <span class="link-text"><%= Id %></span><br/>
-            <span class="link-text"><%= Industry %></span><br/>
-            <% if (__locally_created__) { %><span class="dirty">Locally Created</span><% } %>
-            <% if (__locally_updated__) { %><span class="dirty">Locally Updated</span><% } %>
-            <% if (__locally_deleted__) { %><span class="dirty">Locally Deleted</span><% } %>
-        </header>
-    </div>
+  <footer class="bar-footer">
+    <span id="offlineStatus"></span>
+  </footer>
 
-    <ul class="tableview tableview-links">
-        <% if (Phone) { %>
-        <li>
-            <a href="tel:<%= Phone %>">
-                <div class="story">
-                    <b>Call</b><br/>
-                    <span class="metadata"><%= Phone %></span>
-                </div>
-                <img src="css/images/call.png" class="action-icon"/>
-            </a>
-        </li>
-        <% } %>
-    </ul>
+<div class="content">
+  <div class="content-padded">
+    <b><%= Name %></b><br/>
+    <%= Id %><br/>
+    <%= Industry %><br/>
+    <% if (Phone) { %> <a href="tel:<%= Phone %>"><%= Phone %></a><br/><% } %>
+    <% if (__locally_created__) { %><span class="count-negative">Locally Created</span><% } %>
+    <% if (__locally_updated__) { %><span class="count-negative">Locally Updated</span><% } %>
+    <% if (__locally_deleted__) { %><span class="count-negative">Locally Deleted</span><% } %>
+  </div>
 </div>
 </script>
 
 <!-- --------------------------------------- Add/edit account page template -------------------------------------- -->
 <script id="edit-account-page" type="text/template">
-<div class="header">
-    <a href="<%= backAction %>" class="header-button header-button-left header-back-button">
-        <button>Back</button>
-    </a>
-    <h1><%= action %> Account <span id="offlineStatus"/></h1>
-</div>
-<div class="scroll striped" style="top:44px;">
-  <form style="margin:20px" class="form-horizontal">
-    <div class="control-group" id="accountName">
-      <label class="control-label" for="accountName">Name</label>
-      <input class="controls" type="text" name="Name" value="<%= Name %>" />
-      <span class="help-inline" id="accountNameHelp" />
+<header class="bar-title">
+    <a href="<%= backAction %>" class="button-prev">Back</a>
+    <h1 class="title"><%= action %> Account</h1>
+</header>
+
+<footer class="bar-footer">
+    <span id="offlineStatus"</h1>
+</footer>
+
+<div class="content">
+  <div class="content-padded">
+    <div class="input-group">
+      <div class="input-row" id="accountName">
+        <label>Name</label>
+        <input type="text" name="Name" value="<%= Name %>" />
+        <span class="help-inline" id="accountNameHelp" />
+      </div>
+      <div class="input-row" id="accountIndustry">
+        <label>Industry</label>
+        <input type="text" name="Industry" value="<%= Industry %>" />
+        <span class="help-inline" id="accountIndustryHelp" />
+      </div>
+      <div class="input-row" id="accountPhone">
+        <label>Phone</label>
+        <input type="text" name="Phone" value="<%= Phone %>" />
+        <span class="help-inline" id="accountPhoneHelp" />
+      </div>
     </div>
-    <div class="control-group" id="accountIndustry">
-      <label class="control-label" for="accountIndustry">Industry</label>
-      <input class="controls" type="text" name="Industry" value="<%= Industry %>" />
-      <span class="help-inline" id="accountIndustryHelp" />
-    </div>
-    <div class="control-group" id="accountPhone">
-      <label class="control-label" for="accountPhone">Phone</label>
-      <input class="controls" type="text" name="Phone" value="<%= Phone %>" />
-      <span class="help-inline" id="accountPhoneHelp" />
-    </div>
-    <div class="control-group" id="saveGroup">
-      <label class="control-label"/>
-      <button type="submit" class="controls btn save">Save</button>
-      <span class="help-inline" id="saveHelp" />
-    </div>
-  </form>
+    <a class="button button-block save">Save</a>
+  </div>
 </div>
 </script>
 
@@ -188,7 +198,7 @@ app.models.Account = Force.SObject.extend({
     fieldlist: ["Id", "Name", "Industry", "Phone"],
 
     cacheMode: function(method) {
-        if (app.offlineTracker.get("offlineStatus") == "offline") {
+        if (!app.offlineTracker.get("isOnline")) {
             return "cache-only";
         }
         else {
@@ -208,7 +218,7 @@ app.models.AccountCollection = Force.SObjectCollection.extend({
 
     config: function() {
         // Offline: do a cache query
-        if (app.offlineTracker.get("offlineStatus") == "offline") {
+        if (!app.offlineTracker.get("isOnline")) {
             return {type:"cache", cacheQuery:{queryType:"like", indexPath:"Name", likeKey: this.key+"%", order:"ascending", pageSize:25}};
         }
         // Online
@@ -290,7 +300,7 @@ app.views.OfflineToggler = Backbone.View.extend({
     template: _.template($("#offline-toggler").html()),
 
     initialize: function() {
-        this.model.on("change:offlineStatus", this.render, this);
+        this.model.on("change:isOnline", this.render, this);
     },
 
     render: function(eventName) {
@@ -299,19 +309,15 @@ app.views.OfflineToggler = Backbone.View.extend({
     },
 
     events: {
-        "click .offline": "goOnline",
-        "click .online": "goOffline"
+        "click": "toggle"
     },
 
-    goOffline: function(event) {
+    toggle: function(event) {
         event.preventDefault();
-        this.model.set("offlineStatus", "offline");
-    },
-
-    goOnline: function(event) {
-        event.preventDefault();
-        this.model.set("offlineStatus", "online");
-        app.router.navigate("#sync", {trigger:true});        
+        this.model.set("isOnline", !this.model.get("isOnline"))
+        if (this.model.get("isOnline")) {
+            app.router.navigate("#sync", {trigger:true});        
+        }
     }
 });
 
@@ -451,7 +457,7 @@ app.Router = Backbone.StackRouter.extend({
         Backbone.Router.prototype.initialize.call(this);
 
         // Initializing offline tracker and cache 
-        app.offlineTracker = new app.models.OfflineTracker({offlineStatus: "online"});
+        app.offlineTracker = new app.models.OfflineTracker({isOnline: true});
         app.cache = new Force.StoreCache("accounts", [ {path:"Name", type:"string"} ]);
         app.cache.init().fail(function(error) { console.log(error);} );
         app.models.Account.setupCache(app.cache);
