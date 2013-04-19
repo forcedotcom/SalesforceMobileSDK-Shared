@@ -116,7 +116,7 @@
         // Return promise which initializes backing soup
         init: function() {
             if (smartstoreClient == null) return;
-            var indexSpecs = _.union([{path:this.keyField, type:"string"}, {path:"__local__", type:"boolean"}], 
+            var indexSpecs = _.union([{path:this.keyField, type:"string"}, {path:"__local__", type:"string"}], 
                                      this.additionalIndexSpecs);
             return smartstoreClient.registerSoup(this.soupName, indexSpecs);
         },

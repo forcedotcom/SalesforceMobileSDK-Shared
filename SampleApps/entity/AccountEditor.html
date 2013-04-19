@@ -209,7 +209,7 @@ app.models.AccountCollection = Force.SObjectCollection.extend({
     config: function() {
         // Offline: do a cache query
         if (app.offlineTracker.get("offlineStatus") == "offline") {
-            return {type:"cache", cacheQuery:{queryType:"like", indexPath:"Name", likeKey: this.key+"%", order:"ascending"}};
+            return {type:"cache", cacheQuery:{queryType:"like", indexPath:"Name", likeKey: this.key+"%", order:"ascending", pageSize:25}};
         }
         // Online
         else {
@@ -510,7 +510,7 @@ app.Router = Backbone.StackRouter.extend({
         var that = this;
         var localAccounts = new app.models.AccountCollection();
         localAccounts.fetch({
-            config: {type:"cache", cacheQuery: {queryType:"exact", indexPath:"__local__", matchKey:true}},
+            config: {type:"cache", cacheQuery: {queryType:"exact", indexPath:"__local__", matchKey:true, order:"ascending", pageSize:25}},
             success: function(data) {
                 that.slidePage(new app.views.SyncPage({model: data}).render());
             }

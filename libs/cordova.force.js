@@ -184,7 +184,7 @@ cordova.define("salesforce/util/exec", function(require, exports, module) {
             console.log(service + ":" + action + " succeeded");
         };
         var defaultErrorCB = function() {
-            console.log(service + ":" + action + " failed");
+            console.error(service + ":" + action + " failed");
         };
         successCB = typeof successCB !== "function" ? defaultSuccessCB : successCB;
         error = typeof errorCB !== "function" ? defaultErrorCB : errorCB;
@@ -467,7 +467,7 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
     
     // ====== Soup manipulation ======
     var registerSoup = function (soupName, indexSpecs, successCB, errorCB) {
-        console.log("SmartStore.registerSoup: '" + soupName + "' indexSpecs: " + indexSpecs);
+        console.log("SmartStore.registerSoup: '" + soupName + "' indexSpecs: " + JSON.stringify(indexSpecs));
         exec(SDK_VERSION, successCB, errorCB, SERVICE,
              "pgRegisterSoup",
              [{"soupName": soupName, "indexes": indexSpecs}]
