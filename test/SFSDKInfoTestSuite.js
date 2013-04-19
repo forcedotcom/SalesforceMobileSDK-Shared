@@ -58,7 +58,7 @@ SDKInfoTestSuite.prototype.testGetInfo = function()  {
     self.getInfo()
         .done(function(sdkInfo) {
         	QUnit.ok(sdkInfo.sdkVersion.indexOf("2.0") == 0, "expected different sdk version");
-            QUnit.ok(sdkInfo.appName == "DebugPlugins" || sdkInfo.appName == "TestPlugins" || sdkInfo.appName == "ForcePluginsTest", "expected different app name");
+            QUnit.ok(sdkInfo.appName == "HybridPluginTestApp" || sdkInfo.appName == "ForcePluginsTest", "expected different app name");
             QUnit.equal(sdkInfo.appVersion, "1.0", "expected different app version");
             QUnit.equal(sdkInfo.forcePluginsAvailable.length, 4, "wrong force plugins");
             sdkInfo.forcePluginsAvailable.sort();
