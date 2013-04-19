@@ -3,35 +3,8 @@
 <head>
 <title>Accounts</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
+<link rel="stylesheet" href="css/styles.css"/>
 <link rel="stylesheet" href="css/ratchet.css"/>
-<style>
-.page {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background-color: #ddd;
-    -webkit-transform:translate3d(0,0,0);
-}
-
-.stage-center {
-    top: 0;
-    left: 0;
-}
-
-.stage-left {
-    left: -100%;
-}
-
-.stage-right {
-    left: 100%;
-}
-
-.transition {
-    -moz-transition-duration: .375s;
-    -webkit-transition-duration: .375s;
-    -o-transition-duration: .375s;
-}
-</style>
 </head>
 
 <body>
@@ -41,7 +14,6 @@
 <!-- Scripts -->
 
 <!-- Local Testing -->
-<!--
 <script src="../../external/jquery/jquery-1.8.3.min.js"></script>
 <script src="../../external/backbone/underscore-1.4.4.min.js"></script>
 <script src="../../external/backbone/backbone-1.0.0.js"></script>
@@ -52,10 +24,10 @@
 <script src="../../libs/force.entity.js"></script>
 <script src="stackrouter.js"></script>
 <script src="auth_local.js"></script>
--->
 <!-- End Local Testing -->
 
 <!-- Container -->
+<!--
 <script src="jquery/jquery-1.8.3.min.js"></script>
 <script src="backbone/underscore-1.4.4.min.js"></script>
 <script src="backbone/backbone-1.0.0.min.js"></script>
@@ -65,6 +37,7 @@
 <script src="force.entity.js"></script>
 <script src="stackrouter.js"></script>
 <script src="auth.js"></script>
+-->
 <!-- End Container -->
 
 
@@ -116,78 +89,77 @@
 
 <!-- --------------------------------------- Account list item Template ------------------------------------------ -->
 <script id="account-list-item" type="text/template">
-<a href="#accounts/<%= Id %>">
+  <a href="#accounts/<%= Id %>">
     <div>
-    	<b><%= Name %></b><br/>
-        <%= Id %><br/>
-        <%= Industry %><br/>
-        <% if (__locally_created__) { %><span class="count-negative">Locally Created</span><% } %>
-        <% if (__locally_updated__) { %><span class="count-negative">Locally Updated</span><% } %>
-        <% if (__locally_deleted__) { %><span class="count-negative">Locally Deleted</span><% } %>
-        </span>
+      <b><%= Name %></b><br/>
+      <%= Id %><br/>
+      <%= Industry %><br/>
+      <% if (__locally_created__) { %><span class="count-negative">Locally Created</span><% } %>
+      <% if (__locally_updated__) { %><span class="count-negative">Locally Updated</span><% } %>
+      <% if (__locally_deleted__) { %><span class="count-negative">Locally Deleted</span><% } %>
     </div>
-</a>
+  </a>
 </script>
 
 <!-- --------------------------------------- View account page template ------------------------------------------ -->
 <script id="account-page" type="text/template">
-<header class="bar-title">
+  <header class="bar-title">
     <a href="#" class="button-prev">Back</a>
     <h1 class="title">Account</h1>
     <a href="#edit/accounts/<%= Id %>" class="button">Edit</a>
     <a class="button delete">Delete</a>
-</header>
+  </header>
 
   <footer class="bar-footer">
     <span id="offlineStatus"></span>
   </footer>
 
-<div class="content">
-  <div class="content-padded">
-    <b><%= Name %></b><br/>
-    <%= Id %><br/>
-    <%= Industry %><br/>
-    <% if (Phone) { %> <a href="tel:<%= Phone %>"><%= Phone %></a><br/><% } %>
-    <% if (__locally_created__) { %><span class="count-negative">Locally Created</span><% } %>
-    <% if (__locally_updated__) { %><span class="count-negative">Locally Updated</span><% } %>
-    <% if (__locally_deleted__) { %><span class="count-negative">Locally Deleted</span><% } %>
+  <div class="content">
+    <div class="content-padded">
+      <b><%= Name %></b><br/>
+      <%= Id %><br/>
+      <%= Industry %><br/>
+      <% if (Phone) { %> <a href="tel:<%= Phone %>"><%= Phone %></a><br/><% } %>
+      <% if (__locally_created__) { %><span class="count-negative">Locally Created</span><% } %>
+      <% if (__locally_updated__) { %><span class="count-negative">Locally Updated</span><% } %>
+      <% if (__locally_deleted__) { %><span class="count-negative">Locally Deleted</span><% } %>
+    </div>
   </div>
-</div>
 </script>
 
 <!-- --------------------------------------- Add/edit account page template -------------------------------------- -->
 <script id="edit-account-page" type="text/template">
-<header class="bar-title">
+  <header class="bar-title">
     <a href="<%= backAction %>" class="button-prev">Back</a>
     <h1 class="title"><%= action %> Account</h1>
-</header>
+  </header>
 
-<footer class="bar-footer">
-    <span id="offlineStatus"</h1>
-</footer>
+  <footer class="bar-footer">
+    <span id="offlineStatus"></span>
+  </footer>
 
-<div class="content">
-  <div class="content-padded">
-    <div class="input-group">
-      <div class="input-row" id="accountName">
-        <label>Name</label>
-        <input type="text" name="Name" value="<%= Name %>" />
-        <span class="help-inline" id="accountNameHelp" />
+  <div class="content">
+    <div class="content-padded">
+      <div class="input-group">
+        <div class="input-row" id="accountName">
+          <label>Name</label>
+          <input type="text" name="Name" value="<%= Name %>" />
+          <span class="help-inline" id="accountNameHelp" />
+        </div>
+        <div class="input-row" id="accountIndustry">
+          <label>Industry</label>
+          <input type="text" name="Industry" value="<%= Industry %>" />
+          <span class="help-inline" id="accountIndustryHelp" />
+        </div>
+        <div class="input-row" id="accountPhone">
+          <label>Phone</label>
+          <input type="text" name="Phone" value="<%= Phone %>" />
+          <span class="help-inline" id="accountPhoneHelp" />
+        </div>
       </div>
-      <div class="input-row" id="accountIndustry">
-        <label>Industry</label>
-        <input type="text" name="Industry" value="<%= Industry %>" />
-        <span class="help-inline" id="accountIndustryHelp" />
-      </div>
-      <div class="input-row" id="accountPhone">
-        <label>Phone</label>
-        <input type="text" name="Phone" value="<%= Phone %>" />
-        <span class="help-inline" id="accountPhoneHelp" />
-      </div>
+      <a class="button button-block save">Save</a>
     </div>
-    <a class="button button-block save">Save</a>
   </div>
-</div>
 </script>
 
 <script>

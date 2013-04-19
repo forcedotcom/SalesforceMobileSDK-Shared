@@ -4,6 +4,7 @@
 <title>Users</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
 <link rel="stylesheet" href="css/styles.css"/>
+<link rel="stylesheet" href="css/ratchet.css"/>
 </head>
 
 <body>
@@ -40,90 +41,50 @@
 
 <!-- --------------------------------------- Search page template ------------------------------------------------- -->
 <script id="search-page" type="text/template">
-<div class="header">
-    <h1>Users</h1>
-</div>
+  <header class="bar-title">
+    <h1 class="title">Users</h1>
+  </header>
 
-<div class="search">
+  <div class="bar-standard bar-header-secondary">
     <input type="search" class="search-key" placeholder="Search"/>
-</div>
+  </div>
 
-<div class="scroll striped" style="top:84px;">
-    <ul id="myList" class="tableview tableview-links"></ul>
-</div>
+  <div class="content">
+    <ul class="list"></ul>
+  </div>
 </script>
 
 <!-- --------------------------------------- User list item template ---------------------------------------------- -->
 <script id="user-list-item" type="text/template">
-<a href="#users/<%= Id %>" class="pad-right">
-    <img src="<%= SmallPhotoUrl %>" width="50" class="list-icon" />
-    <div class="story">
-    	<b><%= FirstName %> <%= LastName %></b>
-    	<span class="metadata">
-            <span class="link-text"><%= Title %></span><br/>
-        </span>
-    </div>
-</a>
+  <a href="#users/<%= Id %>" class="pad-right">
+    <img src="<%= SmallPhotoUrl %>" width="50" /><br/>
+    <b><%= FirstName %> <%= LastName %></b><br/>
+    <%= Title %>
+  </a>
 </script>
 
 <!-- --------------------------------------- User page template -------------------------------------------------- -->
 <script id="user-page" type="text/template">
-<div class="header">
-    <a href="#" class="header-button header-button-left header-back-button">
-        <button>Back</button>
-    </a>
-    <a href="#" class="header-button header-button-icon header-button-right search">
-        <button><img src="css/images/search-icon.png" alt="Refresh" width="16" height="16"></button>
-    </a>
+  <header class="bar-title">
+    <a href="#" class="button-prev">Back</a>
+    <h1 class="title">User</h1>
+  </header>
 
-    <h1>User</h1>
-</div>
+  <footer class="bar-footer">
+    <span id="offlineStatus"></span>
+  </footer>
 
-<div class="scroll striped" style="top:44px;">
-    <div class="sobject-summary">
-        <header>
-            <img id="employeePic" src="<%= SmallPhotoUrl %>" width="100"/>
-
-            <h1><%= FirstName %> <%= LastName %></h1>
-            <span class="link-text"><%= Title %></span><br/>
-            <span class="metadata"><%= City %></span>
-        </header>
+  <div class="content">
+    <div class="content-padded">
+      <img id="employeePic" src="<%= SmallPhotoUrl %>" width="100"/><br/>
+      <b><%= FirstName %> <%= LastName %></b><br/>
+      <%= Id %><br/>
+      <% if (Title) { %><%= Title %><br/><% } %>
+      <% if (City) { %><%= City %><br/><% } %>
+      <% if (MobilePhone) { %> <a href="tel:<%= MobilePhone %>"><%= MobilePhone %></a><br/><% } %>
+      <% if (Email) { %><a href="mailto:<%= Email %>"><%= Email %></a><% } %>
     </div>
-
-    <ul class="tableview tableview-links">
-      <% if (MobilePhone) { %>
-        <li>
-            <a href="tel:<%= MobilePhone %>">
-                <div class="story">
-                    <b>Call Cell</b><br/>
-                    <span class="metadata"><%= MobilePhone %></span>
-                </div>
-                <img src="css/images/call.png" class="action-icon"/>
-            </a>
-        </li>
-        <li>
-            <a href="sms:<%= MobilePhone %>">
-                <div class="story">
-                    <b>SMS</b><br/>
-                    <span class="metadata"><%= MobilePhone %></span>
-                </div>
-                <img src="css/images/message.png" class="action-icon"/>
-            </a>
-        </li>
-        <% } %>
-        <% if (MobilePhone) { %>
-        <li>
-            <a href="mailto:<%= Email %>">
-                <div class="story">
-                    <b>Email</b><br/>
-                    <span class="metadata"><%= Email %></span>
-                </div>
-                <img src="css/images/mail.png" class="action-icon"/>
-            </a>
-        </li>
-        <% } %>
-    </ul>
-</div>
+  </div>
 </script>
 
 <script>
