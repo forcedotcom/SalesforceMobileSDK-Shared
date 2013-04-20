@@ -14,10 +14,10 @@ jQuery(document).ready(function() {
     // See http://joshuamcginnis.com/2011/02/28/how-to-disable-same-origin-policy-in-chrome/
     var creds = {
         accessToken: "--will-be-obtained-by-refresh--",
-        refreshToken: "--insert-a-valid-refresh-token-here--",
-        clientId: "3MVG92.uWdyphVj4bnolD7yuIpCQsNgddWtqRND3faxrv9uKnbj47H4RkwheHA2lKY4cBusvDVp0M6gdGE8hp",
+        refreshToken: "5Aep861KIwKdekr90KsESmRP6soKuBrQlSV5iTuNdX6UHGbZnbEUug1hvYnrlDYmYFX.g2AaD7vtQ==",
+        clientId: "3MVG9Iu66FKeHhINkB1l7xt7kR8czFcCTUhgoA8Ol2Ltf1eYHOU4SqQRSEitYFDUpqRWcoQ2.dBv_a1Dyu5xa",
         loginUrl: "https://test.salesforce.com",
-        instanceUrl: "https://tapp0.salesforce.com",
+        instanceUrl: "https://cs1.salesforce.com",
         accountAgent: "sobject-proto"
     };
     appStart(creds);
