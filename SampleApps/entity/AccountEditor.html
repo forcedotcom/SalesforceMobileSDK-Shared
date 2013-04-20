@@ -144,17 +144,14 @@
         <div class="input-row" id="accountName">
           <label>Name</label>
           <input type="text" name="Name" value="<%= Name %>" />
-          <span class="help-inline" id="accountNameHelp" />
         </div>
         <div class="input-row" id="accountIndustry">
           <label>Industry</label>
           <input type="text" name="Industry" value="<%= Industry %>" />
-          <span class="help-inline" id="accountIndustryHelp" />
         </div>
         <div class="input-row" id="accountPhone">
           <label>Phone</label>
           <input type="text" name="Phone" value="<%= Phone %>" />
-          <span class="help-inline" id="accountPhoneHelp" />
         </div>
       </div>
       <a class="button button-block save">Save</a>
@@ -203,7 +200,9 @@ app.models.AccountCollection = Force.SObjectCollection.extend({
             else {
                 var soql = "SELECT " + this.fieldlist.join(",")  
                     + " FROM Account"
-                    + " WHERE Name like '" + this.key + "%'";
+                    + " WHERE Name like '" + this.key + "%'"
+                    + " ORDER BY Name "
+                    + " LIMIT 25";
                 return {type:"soql", query:soql};
             }
         }
@@ -383,8 +382,9 @@ app.views.EditAccountPage = Backbone.View.extend({
         var target = event.target;
         this.model.set(target.name, target.value);
         // Remove error if any
-        $("#account" + target.name).removeClass("error");
-        $("#account" + target.name + "Help").html("");
+        // TODO fix highlighting
+        // $("#account" + target.name).removeClass("error");
+        // $("#account" + target.name + "Help").html("");
     },
 
     save: function(evt) {
@@ -400,9 +400,11 @@ app.views.EditAccountPage = Backbone.View.extend({
                         alert(detail.message);
                     }
                     else {
-                        _.each(detail.fields, function(field) {
-                            $("#account" + field).addClass("error");
-                            $("#account" + field + "Help").html(detail.message);
+                         _.each(detail.fields, function(field) {
+                             alert(detail.message);
+                             // TODO fix highlighting
+                             // $("#account" + field).addClass("error");
+                             // $("#account" + field + "Help").html(detail.message);
                         });
                     }
                 });

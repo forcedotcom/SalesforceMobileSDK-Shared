@@ -76,7 +76,7 @@
 
   <div class="content">
     <div class="content-padded">
-      <img id="employeePic" src="<%= SmallPhotoUrl %>" width="100"/><br/>
+      <img id="employeePic" src="<%= SmallPhotoUrl %>" width="100"/></br>
       <b><%= FirstName %> <%= LastName %></b><br/>
       <%= Id %><br/>
       <% if (Title) { %><%= Title %><br/><% } %>
@@ -103,7 +103,10 @@ app.models.UserCollection = Force.SObjectCollection.extend({
     setCriteria: function(key) {
         this.config = {type:"soql", query:"SELECT " + this.fieldlist.join(",")  
                         + " FROM User"
-                        + " WHERE Name like '" + key + "%'"};
+                        + " WHERE Name like '" + key + "%'"
+                        + " ORDER BY Name "
+                        + " LIMIT 25 "
+                      };
     }
 });
 

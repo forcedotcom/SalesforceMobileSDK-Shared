@@ -76,7 +76,9 @@ app.models.SearchCollection = Force.SObjectCollection.extend({
     setCriteria: function(key) {
         this.config = {type:"sosl", query:"FIND {" + key + "*} IN ALL FIELDS RETURNING "
                        + "CollaborationGroup (Id, Name, SmallPhotoUrl, MemberCount), "
-                       + "User (Id, FirstName, LastName, SmallPhotoUrl, Title) "};
+                       + "User (Id, FirstName, LastName, SmallPhotoUrl, Title ORDER BY Name) "
+                       + "LIMIT 25"
+                      };
     }
 });
 
