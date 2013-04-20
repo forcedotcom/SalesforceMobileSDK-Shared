@@ -4,6 +4,7 @@
 <title>Global Search</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
 <link rel="stylesheet" href="css/styles.css"/>
+<link rel="stylesheet" href="css/ratchet.css"/>
 </head>
 
 <body>
@@ -11,6 +12,7 @@
 <div id="content"></div>
 
 <!-- Local Testing -->
+<!--
 <script src="../../external/jquery/jquery-1.8.3.min.js"></script>
 <script src="../../external/backbone/underscore-1.4.4.min.js"></script>
 <script src="../../external/backbone/backbone-1.0.0.js"></script>
@@ -21,10 +23,10 @@
 <script src="../../libs/force.entity.js"></script>
 <script src="stackrouter.js"></script>
 <script src="auth_local.js"></script>
+-->
 <!-- End Local Testing -->
 
 <!-- Container -->
-<!--
 <script src="jquery/jquery-1.8.3.min.js"></script>
 <script src="backbone/underscore-1.4.4.min.js"></script>
 <script src="backbone/backbone-1.0.0.min.js"></script>
@@ -34,45 +36,37 @@
 <script src="force.entity.js"></script>
 <script src="stackrouter.js"></script>
 <script src="auth.js"></script>
--->
 <!-- End Container -->
 
 <!-- --------------------------------------- Search page template ------------------------------------------------- -->
 <script id="search-page" type="text/template">
-<div class="header">
-    <h1>User and Group Search</h1>
-</div>
+  <header class="bar-title">
+    <h1 class="title">User and Group Search</h1>
+  </header>
 
-<div class="search">
+  <div class="bar-standard bar-header-secondary">
     <input type="search" class="search-key" placeholder="Search"/>
-</div>
+  </div>
 
-<div class="scroll striped" style="top:84px;">
-    <ul id="myList" class="tableview tableview-links"></ul>
-</div>
+  <div class="content">
+    <ul class="list"></ul>
+  </div>
 </script>
 
 <!-- --------------------------------------- CollaborationGroup list item Template --------------------------------- -->
 <script id="group-list-item" type="text/template">
-  <img src="<%= SmallPhotoUrl %>" width="50" class="list-icon" />
-  <div class="story">
-    <b><%= Name %></b><br/>
-    <span class="metadata">
-      <span class="link-text"><%= MemberCount %> members</span>
-    </span>
-  </div>
+  <img src="<%= SmallPhotoUrl %>" width="50" /><br/>
+  <b><%= Name %></b><br/>
+  <%= MemberCount %> members
 </script>
 
 <!-- --------------------------------------- User list item template ---------------------------------------------- -->
 <script id="user-list-item" type="text/template">
-  <img src="<%= SmallPhotoUrl %>" width="50" class="list-icon" />
-  <div class="story">
-    <b><%= FirstName %> <%= LastName %></b><br/>
-    <span class="metadata">
-      <span class="link-text"><%= Title %></span>
-    </span>
-  </div>
+  <img src="<%= SmallPhotoUrl %>" width="50" /><br/>
+  <b><%= FirstName %> <%= LastName %></b><br/>
+  <%= Title %>
 </script>
+
 <script>
 // -------------------------------------------------- The Models ---------------------------------------------------- //
 
@@ -82,7 +76,9 @@ app.models.SearchCollection = Force.SObjectCollection.extend({
     setCriteria: function(key) {
         this.config = {type:"sosl", query:"FIND {" + key + "*} IN ALL FIELDS RETURNING "
                        + "CollaborationGroup (Id, Name, SmallPhotoUrl, MemberCount), "
-                       + "User (Id, FirstName, LastName, SmallPhotoUrl, Title) "};
+                       + "User (Id, FirstName, LastName, SmallPhotoUrl, Title ORDER BY Name) "
+                       + "LIMIT 25"
+                      };
     }
 });
 
