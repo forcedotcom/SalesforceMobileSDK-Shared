@@ -203,7 +203,7 @@ cordova.define("salesforce/util/exec", function(require, exports, module) {
 
 cordova.define("salesforce/plugin/sdkinfo", function(require, exports, module) {
     // Version this js was shipped with
-    var SDK_VERSION = "2.0unstable";
+    var SDK_VERSION = "2.0.0unstable";
 
     var SERVICE = "com.salesforce.sdkinfo";
 
@@ -246,7 +246,7 @@ var SFHybridApp = {
 
 cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
     // Version this js was shipped with
-    var SDK_VERSION = "2.0unstable";
+    var SDK_VERSION = "2.0.0unstable";
 
     var SERVICE = "com.salesforce.oauth";
 
@@ -341,7 +341,7 @@ var SalesforceOAuthPlugin = cordova.require("salesforce/plugin/oauth");
 
 cordova.define("salesforce/plugin/smartstore", function (require, exports, module) {
     // Version this js was shipped with
-    var SDK_VERSION = "2.0unstable";
+    var SDK_VERSION = "2.0.0unstable";
 
     var SERVICE = "com.salesforce.smartstore";
 
