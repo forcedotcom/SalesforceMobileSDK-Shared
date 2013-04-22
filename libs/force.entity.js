@@ -173,26 +173,46 @@
         //      getMore: "function to fetch more records",
         //      closeCursor: "function to close the open cursor and disable further fetch" }
         find: function(querySpec) {
-            return smartstoreClient.querySoup(this.soupName, querySpec)
-                .then(function(cursor) {
-                    return {
-                        records: cursor.currentPageOrderedEntries,
-                        hasMore: function() {
-                            return (cursor.currentPageIndex + 1) < cursor.totalPages;
-                        },
-                        getMore: function() {
-                            var that = this;
+
+            var closeCursorIfNeeded = function(cursor) {
+                var promise = $.when(cursor);
+                if ((cursor.currentPageIndex + 1) == cursor.totalPages) 
+                    return smartstoreClient.closeCursor(cursor).then(promise);
+                else promise;
+            }
+
+            var buildQueryResponse = function(cursor) {
+                return {
+                    records: cursor.currentPageOrderedEntries,
+                    hasMore: function() {
+                        return cursor != null &&
+                            (cursor.currentPageIndex + 1) < cursor.totalPages;
+                    },
+
+                    getMore: function() {
+                        var that = this;
+                        if (that.hasMore()) {
                             // Move cursor to the next page and update records property
-                            return smartstoreClient.moveCursorToNextPage(cursor).then(function() {
+                            return smartstoreClient.moveCursorToNextPage(cursor)
+                            .then(closeCursorIfNeeded)
+                            .then(function(c) {
+                                cursor = c;
                                 that.records.pushObjects(cursor.currentPageOrderedEntries);
                                 return cursor.currentPageOrderedEntries;
                             });
-                        }, 
-                        closeCursor: function() {
-                            return smartstoreClient.closeCursor(cursor);
                         }
-                    };
-                });
+                    },
+
+                    closeCursor: function() {
+                        return smartstoreClient.closeCursor(cursor)
+                            .then(function() { cursor = null; });
+                    }
+                }
+            };
+
+            return smartstoreClient.querySoup(this.soupName, querySpec)
+                .then(closeCursorIfNeeded)
+                .then(buildQueryResponse);
         },
 
         // Return promise which deletes record from cache
@@ -785,9 +805,8 @@
         // config: {type:"soql", query:"<soql query>"} 
         //   or {type:"sosl", query:"<sosl query>"} 
         //   or {type:"mru", sobjectType:"<sobject type>", fieldlist:"<fields to fetch>"}
-        //   or {type:"cache", cacheQuery:<cache query>}
+        //   or {type:"cache", cacheQuery:<cache query>, closeCursorImmediate:(Optional, Default: false)<true/false>}
         //
-        // TODO: query-more support
         // 
         Force.SObjectCollection = Backbone.Collection.extend({
             // Used if none is passed during sync call - can be a string or a function returning a string
@@ -840,6 +859,8 @@
                     .then(function(resp) {
                         that._fetchResponse = resp;
                         that.set(resp.records);
+                        if (config.closeCursorImmediate) that.closeCursor();
+
                         return resp.records;
                     })
                     .done(options.success)
