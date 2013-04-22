@@ -60,6 +60,7 @@
         forcetkClient.update = promiser(innerForcetkClient, "update", "forcetkClient");
         forcetkClient.del = promiser(innerForcetkClient, "del", "forcetkClient");
         forcetkClient.query = promiser(innerForcetkClient, "query", "forcetkClient");
+        forcetkClient.queryMore = promiser(innerForcetkClient, "queryMore", "forcetkClient");
         forcetkClient.search = promiser(innerForcetkClient, "search", "forcetkClient");
         forcetkClient.metadata = promiser(innerForcetkClient, "metadata", "forcetkClient");
         forcetkClient.describe = promiser(innerForcetkClient, "describe", "forcetkClient");
