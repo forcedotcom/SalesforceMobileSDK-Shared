@@ -49,10 +49,11 @@
     // apiVersion: apiVersion to use, when null, v27.0 (Spring' 13) is used
     Force.init = function(creds, apiVersion) {
         apiVersion = apiVersion || "v27.0";
+        var userAgent = creds.userAgent.replace("Hybrid", "Hybrid EntityFramework");
         var innerForcetkClient = new forcetk.Client(creds.clientId, creds.loginUrl);
         innerForcetkClient.setSessionToken(creds.accessToken, apiVersion, creds.instanceUrl);
         innerForcetkClient.setRefreshToken(creds.refreshToken);
-        innerForcetkClient.setUserAgentString(creds.userAgent);
+        innerForcetkClient.setUserAgentString(userAgent);
 
         forcetkClient = new Object();
         forcetkClient.create = promiser(innerForcetkClient, "create", "forcetkClient");
