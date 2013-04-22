@@ -178,7 +178,7 @@
                 var promise = $.when(cursor);
                 if ((cursor.currentPageIndex + 1) == cursor.totalPages) 
                     return smartstoreClient.closeCursor(cursor).then(promise);
-                else promise;
+                else return promise;
             }
 
             var buildQueryResponse = function(cursor) {
