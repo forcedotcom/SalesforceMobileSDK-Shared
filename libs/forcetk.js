@@ -190,9 +190,13 @@ if (forcetk.Client === undefined) {
                     xhr.setRequestHeader('SalesforceProxy-Endpoint', url);
                 }
                 xhr.setRequestHeader(that.authzHeader, "Bearer " + that.sessionId);
-                xhr.setRequestHeader('X-User-Agent', 'salesforce-toolkit-rest-javascript/' + that.apiVersion);
+                var forceTkAgent = 'salesforce-toolkit-rest-javascript/' + that.apiVersion;
                 if (that.userAgentString !== null) {
-                    xhr.setRequestHeader('User-Agent', that.userAgentString);
+                    xhr.setRequestHeader('X-User-Agent', that.userAgentString + " " + forceTkAgent);
+                    xhr.setRequestHeader('User-Agent', that.userAgentString); // XXX this line might be useless
+                }
+                else {
+                    xhr.setRequestHeader('X-User-Agent', forceTkAgent);
                 }
             }
         });
