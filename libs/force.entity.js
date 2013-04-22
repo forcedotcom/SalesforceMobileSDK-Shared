@@ -46,8 +46,11 @@
 
     // Helper function to patch user agent
     var patchUserAgent = function(userAgent) {
-        var hybridIndex = userAgent.indexOf("Hybrid", userAgent.indexOf("SalesforceMobileSDK"));
-        return userAgent.substring(0, hybridIndex) + "Hybrid EntityFramework" + userAgent.substring(hybridIndex + "Hybrid".length);
+        var sdkIndex = userAgent.indexOf("SalesforceMobileSDK");
+        var hybridIndex = userAgent.indexOf("Hybrid", sdkIndex);
+        return hybridIndex < 0 
+            ? userAgent + " EntityFramework"
+            : userAgent.substring(0, hybridIndex) + "Hybrid EntityFramework" + userAgent.substring(hybridIndex + "Hybrid".length);
     };
 
     // Init function

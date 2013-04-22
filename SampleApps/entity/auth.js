@@ -17,7 +17,7 @@ function onDeviceReady() {
 	//Call getAuthCredentials to get the initial session credentials
     cordova.require("salesforce/plugin/oauth").getAuthCredentials(
         function(creds) {
-            appStart(creds);
+            appStart(_.extend(creds, {userAgent: navigator.userAgent});
         }, 
         function(error) { 
             console.log("Auth failed: " + error); 
