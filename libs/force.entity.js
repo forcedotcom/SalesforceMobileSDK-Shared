@@ -46,6 +46,7 @@
 
     // Helper function to patch user agent
     var patchUserAgent = function(userAgent) {
+        userAgent = userAgent || "";
         var sdkIndex = userAgent.indexOf("SalesforceMobileSDK");
         var hybridIndex = userAgent.indexOf("Hybrid", sdkIndex);
         return hybridIndex < 0 
