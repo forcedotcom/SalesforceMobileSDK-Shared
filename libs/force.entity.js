@@ -578,7 +578,7 @@
                 .then(function(resp) { 
                     return {
                         _nextRecordsUrl: resp.nextRecordsUrl,
-                        size: resp.size,
+                        totalSize: resp.totalSize,
                         records: resp.records,
                         hasMore: function() { return this._nextRecordsUrl != null; },
                         getMore: function() {
@@ -610,7 +610,7 @@
                     } else return {
                         done: true,
                         records: resp.recentItems, 
-                        size: resp.recentItems.length,
+                        totalSize: resp.recentItems.length,
                         hasMore: function() { return false; },
                         getMore: function() { return null; }
                     };
