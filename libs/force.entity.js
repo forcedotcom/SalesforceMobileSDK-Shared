@@ -44,17 +44,21 @@
     // Private smartstore client with promise-wrapped methods
     var smartstoreClient = null; 
 
+    // Helper function to patch user agent
+    var patchUserAgent = function(userAgent) {
+        var hybridIndex = userAgent.indexOf("Hybrid", userAgent.indexOf("SalesforceMobileSDK"));
+        return userAgent.substring(0, hybridIndex) + "Hybrid EntityFramework" + userAgent.substring(hybridIndex + "Hybrid".length);
+    };
+
     // Init function
     // creds: credentials returned by authenticate call
     // apiVersion: apiVersion to use, when null, v27.0 (Spring' 13) is used
     Force.init = function(creds, apiVersion) {
         apiVersion = apiVersion || "v27.0";
-        var userAgent = creds.userAgent.replace("Hybrid", "Hybrid EntityFramework");
         var innerForcetkClient = new forcetk.Client(creds.clientId, creds.loginUrl);
         innerForcetkClient.setSessionToken(creds.accessToken, apiVersion, creds.instanceUrl);
         innerForcetkClient.setRefreshToken(creds.refreshToken);
-        innerForcetkClient.setUserAgentString(userAgent);
-
+        innerForcetkClient.setUserAgentString(patchUserAgent(creds.userAgent));
         forcetkClient = new Object();
         forcetkClient.create = promiser(innerForcetkClient, "create", "forcetkClient");
         forcetkClient.retrieve = promiser(innerForcetkClient, "retrieve", "forcetkClient");
