@@ -315,9 +315,10 @@
                         });
             },
             /* Returns a promise, which once resolved clears 
-            the cached data for the current sobjec type. */
+            the cached data for the current sobject type. */
             reset: function() {
                 that = this;
+                wasReadFromCache = false;
                 that._metadataResult = that._describeResult = undefined;
                 return $.when(clearCache());
             }
@@ -574,7 +575,21 @@
         var serverSoql = function(soql) { 
             return forcetkClient.query(soql)
                 .then(function(resp) { 
-                    return resp.records; 
+                    return {
+                        _nextRecordsUrl: resp.nextRecordsUrl,
+                        size: resp.size,
+                        records: resp.records,
+                        hasMore: function() { return this._nextRecordsUrl != null; },
+                        getMore: function() {
+                            var that = this;
+                            if (!that._nextRecordsUrl) return null;
+                            return forcetkClient.queryMore(that._nextRecordsUrl).then(function(resp) {
+                                that._nextRecordsUrl = resp.nextRecordsUrl;
+                                that.records.pushObjects(resp.records);
+                                return resp.records;
+                            });
+                        }
+                    };
                 });
         };
 
@@ -594,7 +609,9 @@
                     } else return {
                         done: true,
                         records: resp.recentItems, 
-                        size: resp.recentItems.length
+                        size: resp.recentItems.length,
+                        hasMore: function() { return false; },
+                        getMore: function() { return null; }
                     };
                 });
         };
@@ -767,4 +784,4 @@
 
     } // if (!_.isUndefined(Backbone)) {
 })
-.call(this, $, _, window.Backbone); 
+.call(this, $, _, window.Backbone);
