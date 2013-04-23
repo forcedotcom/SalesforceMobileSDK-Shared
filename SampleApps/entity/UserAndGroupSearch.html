@@ -55,16 +55,20 @@
 
 <!-- --------------------------------------- CollaborationGroup list item Template --------------------------------- -->
 <script id="group-list-item" type="text/template">
-  <img src="<%= SmallPhotoUrl %>" width="50" /><br/>
-  <b><%= Name %></b><br/>
-  <%= MemberCount %> members
+  <img src="<%= SmallPhotoUrl %>" class="small-img" />
+  <div class="details-short">
+    <b><%= Name %></b><br/>
+    <%= MemberCount %> members
+  </div>
 </script>
 
 <!-- --------------------------------------- User list item template ---------------------------------------------- -->
 <script id="user-list-item" type="text/template">
-  <img src="<%= SmallPhotoUrl %>" width="50" /><br/>
-  <b><%= FirstName %> <%= LastName %></b><br/>
-  <%= Title %>
+  <img src="<%= SmallPhotoUrl %>" class="small-img" />
+  <div class="details-short">
+    <b><%= FirstName %> <%= LastName %></b><br/>
+    Title<%= Title %>
+  </div>
 </script>
 
 <script>
