@@ -56,10 +56,13 @@
 
 <!-- --------------------------------------- User list item template ---------------------------------------------- -->
 <script id="user-list-item" type="text/template">
+
   <a href="#users/<%= Id %>" class="pad-right">
-    <img src="<%= SmallPhotoUrl %>" width="50" /><br/>
-    <b><%= FirstName %> <%= LastName %></b><br/>
-    <%= Title %>
+    <img src="<%= SmallPhotoUrl %>" class="small-img" />
+    <div class="details-short">
+      <b><%= FirstName %> <%= LastName %></b><br/>
+      Title<%= Title %>
+    </div>
   </a>
 </script>
 
@@ -76,13 +79,15 @@
 
   <div class="content">
     <div class="content-padded">
-      <img id="employeePic" src="<%= SmallPhotoUrl %>" width="100"/></br>
-      <b><%= FirstName %> <%= LastName %></b><br/>
-      <%= Id %><br/>
-      <% if (Title) { %><%= Title %><br/><% } %>
-      <% if (City) { %><%= City %><br/><% } %>
-      <% if (MobilePhone) { %> <a href="tel:<%= MobilePhone %>"><%= MobilePhone %></a><br/><% } %>
-      <% if (Email) { %><a href="mailto:<%= Email %>"><%= Email %></a><% } %>
+      <img id="employeePic" src="<%= SmallPhotoUrl %>" class="large-img" />
+      <div class="details">
+        <b><%= FirstName %> <%= LastName %></b><br/>
+        <%= Id %><br/>
+        <% if (Title) { %><%= Title %><br/><% } %>
+        <% if (City) { %><%= City %><br/><% } %>
+        <% if (MobilePhone) { %> <a href="tel:<%= MobilePhone %>"><%= MobilePhone %></a><br/><% } %>
+        <% if (Email) { %><a href="mailto:<%= Email %>"><%= Email %></a><% } %>
+      </div>
     </div>
   </div>
 </script>

@@ -24,3 +24,23 @@
     -webkit-transition-duration: .375s;
     -o-transition-duration: .375s;
 }
+
+.small-img {
+    float: left;
+    margin-right:6px;
+    width: 50px;
+}
+
+.details-short {
+    height: 50px;
+}
+
+.large-img {
+    float: left;
+    margin-right:12px;
+    width: 100px;
+}
+
+.details {
+    height: 100px;
+}
