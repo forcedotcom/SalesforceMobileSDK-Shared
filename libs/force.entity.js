@@ -184,10 +184,14 @@
         find: function(querySpec) {
 
             var closeCursorIfNeeded = function(cursor) {
-                var promise = $.when(cursor);
-                if ((cursor.currentPageIndex + 1) == cursor.totalPages) 
-                    return smartstoreClient.closeCursor(cursor).then(promise);
-                else return promise;
+                if ((cursor.currentPageIndex + 1) == cursor.totalPages) {
+                    return smartstoreClient.closeCursor(cursor).then(function() { 
+                        return cursor; 
+                    });
+                }
+                else { 
+                    return cursor;
+                }
             }
 
             var buildQueryResponse = function(cursor) {
@@ -666,8 +670,8 @@
         var serverSosl = function(sosl) {
             return forcetkClient.search(sosl).then(function(resp) {
                 return {
-                    records: resp.searchRecords.records,
-                    totalSize: resp.searchRecords.records.length,
+                    records: resp,
+                    totalSize: resp.length,
                     hasMore: function() { return false; }
                 }
             })
