@@ -69,6 +69,7 @@
         forcetkClient.update = promiser(innerForcetkClient, "update", "forcetkClient");
         forcetkClient.del = promiser(innerForcetkClient, "del", "forcetkClient");
         forcetkClient.query = promiser(innerForcetkClient, "query", "forcetkClient");
+        forcetkClient.queryMore = promiser(innerForcetkClient, "queryMore", "forcetkClient");
         forcetkClient.search = promiser(innerForcetkClient, "search", "forcetkClient");
         forcetkClient.metadata = promiser(innerForcetkClient, "metadata", "forcetkClient");
         forcetkClient.describe = promiser(innerForcetkClient, "describe", "forcetkClient");
@@ -79,6 +80,7 @@
             smartstoreClient.registerSoup = promiser(navigator.smartstore, "registerSoup", "smartstoreClient");
             smartstoreClient.upsertSoupEntriesWithExternalId = promiser(navigator.smartstore, "upsertSoupEntriesWithExternalId", "smartstoreClient");
             smartstoreClient.querySoup = promiser(navigator.smartstore, "querySoup", "smartstoreClient");
+            smartstoreClient.moveCursorToNextPage = promiser(navigator.smartstore, "moveCursorToNextPage", "smartstoreClient");
             smartstoreClient.removeFromSoup = promiser(navigator.smartstore, "removeFromSoup", "smartstoreClient");
             smartstoreClient.closeCursor = promiser(navigator.smartstore, "closeCursor", "smartstoreClient");
         }
@@ -174,18 +176,52 @@
         },
 
 
-        // Return promise which returns records matching the passed querySpec
-        // TODO: paging support
+        // Return promise On resolve the promise returns the object {
+        //      records: "all the fetched records",
+        //      hasMore: "function to check if more records could be retrieved",
+        //      getMore: "function to fetch more records",
+        //      closeCursor: "function to close the open cursor and disable further fetch" }
         find: function(querySpec) {
-            var records = null;
+
+            var closeCursorIfNeeded = function(cursor) {
+                var promise = $.when(cursor);
+                if ((cursor.currentPageIndex + 1) == cursor.totalPages) 
+                    return smartstoreClient.closeCursor(cursor).then(promise);
+                else return promise;
+            }
+
+            var buildQueryResponse = function(cursor) {
+                return {
+                    records: cursor.currentPageOrderedEntries,
+                    hasMore: function() {
+                        return cursor != null &&
+                            (cursor.currentPageIndex + 1) < cursor.totalPages;
+                    },
+
+                    getMore: function() {
+                        var that = this;
+                        if (that.hasMore()) {
+                            // Move cursor to the next page and update records property
+                            return smartstoreClient.moveCursorToNextPage(cursor)
+                            .then(closeCursorIfNeeded)
+                            .then(function(c) {
+                                cursor = c;
+                                that.records.pushObjects(cursor.currentPageOrderedEntries);
+                                return cursor.currentPageOrderedEntries;
+                            });
+                        }
+                    },
+
+                    closeCursor: function() {
+                        return smartstoreClient.closeCursor(cursor)
+                            .then(function() { cursor = null; });
+                    }
+                }
+            };
+
             return smartstoreClient.querySoup(this.soupName, querySpec)
-                .then(function(cursor) {
-                    records = cursor.currentPageOrderedEntries;
-                    return smartstoreClient.closeCursor(cursor);
-                })
-                .then(function() { 
-                    return records;
-                });
+                .then(closeCursorIfNeeded)
+                .then(buildQueryResponse);
         },
 
         // Return promise which deletes record from cache
@@ -324,9 +360,10 @@
                         });
             },
             /* Returns a promise, which once resolved clears 
-            the cached data for the current sobjec type. */
+            the cached data for the current sobject type. */
             reset: function() {
                 that = this;
+                wasReadFromCache = false;
                 that._metadataResult = that._describeResult = undefined;
                 return $.when(clearCache());
             }
@@ -566,11 +603,33 @@
         return cache.find(cacheQuery);
     };
 
+    // Force.saveSObjectsInCache
+    // ----------------------------
+    // Helper method to save a collection of SObjects in cache
+    // Return promise 
+    //
+    // cache: cache into which records should be saved
+    // records: array of sobject records to be saved
+    // 
+    Force.saveSObjectsInCache = function(cache, records) {
+        console.log("---> In Force.saveSObjectsInCache");
+
+        var keys = _.map(records, function(record) { 
+            return _.extend(record, {__locally_created__: false, __locally_updated__: false, __locally_deleted__: false})
+        });
+        return cache.saveAll(keys);
+    };
+
 
     // Force.fetchSObjectsFromServer
     // -----------------------------
     // Helper method to fetch a collection of SObjects from server, using SOQL, SOSL or MRU
-    // Return promise 
+    // Return promise On resolve the promise returns the object {
+    //      totalSize: "total size of matched records", 
+    //      records: "all the fetched records",
+    //      hasMore: "function to check if more records could be retrieved",
+    //      getMore: "function to fetch more records",
+    //      closeCursor: "function to close the open cursor and disable further fetch" }
     //
     // config: {type:"soql", query:"<soql query>"} 
     //   or {type:"sosl", query:"<sosl query>"} 
@@ -583,12 +642,35 @@
         var serverSoql = function(soql) { 
             return forcetkClient.query(soql)
                 .then(function(resp) { 
-                    return resp.records; 
+                    var nextRecordsUrl = resp.nextRecordsUrl;
+                    return {
+                        totalSize: resp.totalSize,
+                        records: resp.records,
+                        hasMore: function() { return nextRecordsUrl != null; },
+                        getMore: function() {
+                            var that = this;
+                            if (!nextRecordsUrl) return null;
+                            return forcetkClient.queryMore(nextRecordsUrl).then(function(resp) {
+                                nextRecordsUrl = resp.nextRecordsUrl;
+                                that.records.pushObjects(resp.records);
+                                return resp.records;
+                            });
+                        },
+                        closeCursor: function() {
+                            return $.when(function() { nextRecordsUrl = null; });
+                        }
+                    };
                 });
         };
 
         var serverSosl = function(sosl) {
-            return forcetkClient.search(sosl)
+            return forcetkClient.search(sosl).then(function(resp) {
+                return {
+                    records: resp.searchRecords.records,
+                    totalSize: resp.searchRecords.records.length,
+                    hasMore: function() { return false; }
+                }
+            })
         };
 
         var serverMru = function(sobjectType, fieldlist) {
@@ -601,9 +683,9 @@
                             + " WHERE Id IN ('" + _.pluck(resp.recentItems, "Id").join("','") + "')";
                         return serverSoql(soql);
                     } else return {
-                        done: true,
                         records: resp.recentItems, 
-                        size: resp.recentItems.length
+                        totalSize: resp.recentItems.length,
+                        hasMore: function() { return false; }
                     };
                 });
         };
@@ -632,27 +714,38 @@
     Force.fetchSObjects = function(config, cache) {
         console.log("--> In Force.fetchSObjects:config.type=" + config.type);
 
-        if (cache == null) {
-            return Force.fetchSObjectsFromServer(config);
-        }
+        var promise;
+
         if (cache != null && config.type == "cache") {
-            return Force.fetchSObjectsFromCache(cache, config.cacheQuery);
-        }
+            promise = Force.fetchSObjectsFromCache(cache, config.cacheQuery);
 
-        // Cache action helper
-        var cacheSave = function(records) { 
-            var keys = _.map(records, function(record) { 
-                return _.extend(record, {__locally_created__: false, __locally_updated__: false, __locally_deleted__: false})
-            });
-            return cache.saveAll(keys)
-                .then(function() { 
-                    return records; 
-                });
-        };
+        } else {
 
-        var promise = Force.fetchSObjectsFromServer(config);
-        if (cache != null) {
-            promise = promise.then(cacheSave);
+            promise = Force.fetchSObjectsFromServer(config);
+
+            if (cache != null) {
+
+                var fetchResult;
+                var processResult = function(resp) {
+                    fetchResult = resp;
+                    return resp.records;
+                }
+                var cacheSave = function(records) {
+                    return Force.saveSObjectsInCache(cache, records).then(function() {
+                        return records;
+                    });
+                }
+
+                promise = promise.then(processResult).then(cacheSave)
+                            .then(function() { 
+                                return _.extend({}, fetchResult, 
+                                    {
+                                        getMore: function() {
+                                            return fetchResult.getMore().then(cacheSave);
+                                        }
+                                    });
+                            });
+            }
         }
 
         return promise;
@@ -721,9 +814,8 @@
         // config: {type:"soql", query:"<soql query>"} 
         //   or {type:"sosl", query:"<sosl query>"} 
         //   or {type:"mru", sobjectType:"<sobject type>", fieldlist:"<fields to fetch>"}
-        //   or {type:"cache", cacheQuery:<cache query>}
+        //   or {type:"cache", cacheQuery:<cache query>, closeCursorImmediate:(Optional, Default: false)<true/false>}
         //
-        // TODO: query-more support
         // 
         Force.SObjectCollection = Backbone.Collection.extend({
             // Used if none is passed during sync call - can be a string or a function returning a string
@@ -734,10 +826,33 @@
                 return this.__proto__.constructor;
             },
 
+            // Method to check if the current collection has more data to fetch
+            hasMore: function() {
+                return this._fetchResponse ? this._fetchResponse.hasMore() : false;
+            },
+
+            // Method to fetch more records if there's an open cursor
+            getMore: function() {
+                var that = this;
+                if (that.hasMore()) 
+                    return that._fetchResponse.getMore()
+                        .then(function(records) {
+                            that.set(records);
+                            return records;
+                        });
+                else $.when([]);
+            },
+
+            // Close any open cursors to fetch more records.
+            closeCursor: function() {
+                return $.when(!this.hasMore() || that._fetchResponse.closeCursor());
+            },
+
             // Overriding Backbone sync method (responsible for all server interactions)
-            //
             sync: function(method, model, options) {
                 console.log("-> In Force.SObjectCollection:sync method=" + method);
+                var that = this;
+
                 if (method != "read") {
                     throw "Method " + method  + " not supported";
                 }
@@ -750,12 +865,18 @@
 
                 options.reset = true;
                 Force.fetchSObjects(config, this.getClass().cache)
+                    .then(function(resp) {
+                        that._fetchResponse = resp;
+                        that.set(resp.records);
+                        if (config.closeCursorImmediate) that.closeCursor();
+
+                        return resp.records;
+                    })
                     .done(options.success)
                     .fail(options.error);
             },
 
             // Overriding Backbone parse method (responsible for parsing server response)
-            //
             parse: function(resp, options) {
                 var that = this;
                 return _.map(resp, function(result) {
@@ -776,4 +897,4 @@
 
     } // if (!_.isUndefined(Backbone)) {
 })
-.call(this, $, _, window.Backbone); 
+.call(this, $, _, window.Backbone);
