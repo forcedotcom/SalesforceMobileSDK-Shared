@@ -211,7 +211,19 @@ app.models.AccountCollection = Force.SObjectCollection.extend({
 
 // Online/Offline Tracker
 app.models.OfflineTracker = Backbone.Model.extend({
-    // TODO track actual online/offline state as reported by Cordova
+    
+
+    initialize: function() {
+        var that = this;
+        document.addEventListener("offline", function() {
+            console.log("Received OFFLINE event");
+            that.set("isOnline", false);
+        }, false);
+        document.addEventListener("online", function() {
+            console.log("Received ONLINE event");
+            // User decides when to go back online
+        }, false);
+    }
 });
 
 // -------------------------------------------------- The Views ---------------------------------------------------- //
