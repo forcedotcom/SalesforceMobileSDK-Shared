@@ -161,7 +161,10 @@
             if (this.soupName == null) return;
             console.log("----> In StoreCache:save " + record[this.keyField]);
             record.__local__ =  (record.__locally_created__ || record.__locally_updated__ || record.__locally_deleted__);
-            return smartstoreClient.upsertSoupEntriesWithExternalId(this.soupName, [ record ], this.keyField);
+            return smartstoreClient.upsertSoupEntriesWithExternalId(this.soupName, [ record ], this.keyField)
+                .then(function() {
+                    return record;
+                });
         },
 
         // Return promise which stores several records in cache
@@ -172,7 +175,10 @@
                 record.__local__ =  (record.__locally_created__ || record.__locally_updated__ || record.__locally_deleted__);
                 return record;
             });
-            return smartstoreClient.upsertSoupEntriesWithExternalId(this.soupName, records, this.keyField);
+            return smartstoreClient.upsertSoupEntriesWithExternalId(this.soupName, records, this.keyField)
+                .then(function() {
+                    return records;
+                });
         },
 
 
@@ -397,10 +403,7 @@
         // Cache actions helper
         var cacheCreate = function() {
             var data = _.extend(attributes, {Id: (localAction ? cache.makeLocalId() : id), __locally_created__:localAction, __locally_updated__:false, __locally_deleted__:false});
-            return cache.save(data)
-                .then(function() { 
-                    return data; 
-                });
+            return cache.save(data);
         };
 
         var cacheRead = function() { 
@@ -412,12 +415,8 @@
         
         var cacheUpdate = function() { 
             var data = _.extend(attributes, {Id: id, __locally_created__: isLocalId, __locally_updated__: localAction, __locally_deleted__: false});
-            return cache.save(data)
-                .then(function() {
-                    return data;
-                });
+            return cache.save(data);
         };
-                             
 
         var cacheDelete = function() {
             if (!localAction || isLocalId) {
@@ -589,6 +588,57 @@
             }
             return data;
         });
+
+        // Done
+        return promise;
+    };
+
+    // Force.syncSObjectDetectConflict
+    // -------------------------------
+    //
+    Force.syncSObjectDetectConflict = function(method, sobjectType, id, attributes, fieldlist, refetch, cache, cacheMode, originalAttributes, cacheOriginals) {
+        console.log("--> In Force.syncSObjectDetectConflict:method=" + method + " id=" + id + " cacheMode=" + cacheMode);
+
+        var sync = function() {
+            return Force.syncSObject(method, sobjectType, id, attributes, fieldlist, refetch, cache, cacheMode);
+        };
+
+        var serverRetrieve = function() { 
+            return forcetkClient.retrieve(sobjectType, id, fieldlist);
+        };
+
+        var handleConflict = function(data) {
+            conflicting = false;
+            if (originalAttributes != null) {
+                conflicting = _.any(data.keys(), function(key) {
+                    return (data[key] != originalAttributes[key]);
+                });
+            }
+
+            if (conflicting) {
+                // TODO keep retrieved data and fail
+                return null;
+            }
+            else {
+                return sync();
+            }
+        }
+
+        var cacheOriginalsSave = function(data) {
+            return cacheOriginals.save(data);
+        };
+
+        var cacheOriginalsRemove = function() {
+            return cacheOriginals.remove(id);
+        };
+
+        var promise = null;
+        switch(method) {
+        case "create": promise = sync().then(cacheOriginalsSave); break;
+        case "read":   promise = sync().then(cacheOriginalsSave); /* XXX we might have read from the cache */ break;
+        case "update": promise = serverRetrieve().then(detectConflict).then(sync).then(cacheOriginalsSave);
+        case "delete": promise = sync().then(cacheOriginalsRemove);
+        }
 
         // Done
         return promise;
