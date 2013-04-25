@@ -596,33 +596,47 @@
     // Force.syncSObjectDetectConflict
     // -------------------------------
     //
-    Force.syncSObjectDetectConflict = function(method, sobjectType, id, attributes, fieldlist, refetch, cache, cacheMode, originalAttributes, cacheOriginals) {
+    // Helper method that adds conflict detection to Force.syncSObject
+    // Returns a promise
+    // * cacheOriginals: cache where originally fetched SObject are stored
+    // * mergeMode: 
+    //   If we call "theirs" the current server record, "yours" the locally modified record, "base" the server record that was originally fetched:
+    //   - "ignore-remote-changes":  ignore any changes that might have taken place on the server, so behave like Force.syncSObject
+    //   - "fail-on-remote-changes": return reject promises if "theirs" is different from "base", otherwise behave like Force.syncSObject
+    //   - "fail-on-conflicting-remote-changes": return reject promises if the same fields have been changed in "yours" and "theirs", otherwise behave like Force.syncSObject
+    //  
+    //   When a rejected promise is returned, it resolves to:
+    //   {
+    //      conflict:true,
+    //      base: <originally fetched attributes>,
+    //      theirs: <latest server attributes>,
+    //      yours:<locally modified attributes>,
+    //      remoteChanges:<fields changed between base and theirs>,
+    //      localChanges:<fields changed between base and yours>
+    //      conflictingChanges:<fields changed both in theirs and yours>
+    //    }
+    // 
+    // If cacheOriginals is null, it simply calls Force.syncSObject
+    // If cacheOriginals is not null,
+    // * on create, it calls Force.syncSObject then stores a copy of the newly created record in cacheOriginals
+    // * on retrieve, it calls Force.syncSObject then stores a copy of retrieved record in cacheOriginals
+    // * on update, it gets the current server record and compares it with the original cached locally, it then proceeds according to the merge mode
+    // * on delete, it gets the current server record and compares it with the original cached locally, it then proceeds according to the merge mode
+    //
+    Force.syncSObjectDetectConflict = function(method, sobjectType, id, attributes, fieldlist, refetch, cache, cacheMode, cacheOriginals, mergeMode) {
         console.log("--> In Force.syncSObjectDetectConflict:method=" + method + " id=" + id + " cacheMode=" + cacheMode);
 
         var sync = function() {
             return Force.syncSObject(method, sobjectType, id, attributes, fieldlist, refetch, cache, cacheMode);
         };
 
+        if (cacheOriginals == null) {
+            return sync();
+        }
+
         var serverRetrieve = function() { 
             return forcetkClient.retrieve(sobjectType, id, fieldlist);
         };
-
-        var handleConflict = function(data) {
-            conflicting = false;
-            if (originalAttributes != null) {
-                conflicting = _.any(data.keys(), function(key) {
-                    return (data[key] != originalAttributes[key]);
-                });
-            }
-
-            if (conflicting) {
-                // TODO keep retrieved data and fail
-                return null;
-            }
-            else {
-                return sync();
-            }
-        }
 
         var cacheOriginalsSave = function(data) {
             return cacheOriginals.save(data);
@@ -632,12 +646,41 @@
             return cacheOriginals.remove(id);
         };
 
+        // Given two maps, return keys that are different
+        var identifyChanges = function(attrs, otherAttrs) {
+            return _.filter(_.union(_.keys(attrs), _.keys(otherAttrs)),
+                            function(key) {
+                                return attrs[key] != otherAttrs[key];
+                            });
+        };
+
+        // When conflict is detected (according to mergeMode), the promise is failed
+        var checkConflict = function(latestAttributes) {
+            var localChanges = identifyChanges(originalAttributes, attributes);
+            var remoteChanges = identifyChanges(originalAttributes, latestAttributes);
+            var conflictingChanges = _.intersection(remoteChanges, localChanges);
+
+            var shouldFail = false;
+            switch(mergeMode) {
+                case "ignore-remote-changes":   shouldFail = false; break;
+                case "fail-on-remote-changes":  shouldFail = remoteChanges.length > 0; break;
+                case "fail-on-conflicting-remote-changes": shouldFail = conflictingChanges.length > 0; break;
+            }
+            if (shouldFail) {
+                var conflictDetails = {conflict:true, base: originalAttributes, theirs: latestAttributes, yours:attributes, remoteChanges:remoteChanges, localChanges:localChanges, conflictingChanges:conflictingChanges};
+                return $.Deferred().reject(conflictDetails);
+            }
+            else {
+                return;
+            }
+        }
+
         var promise = null;
         switch(method) {
         case "create": promise = sync().then(cacheOriginalsSave); break;
         case "read":   promise = sync().then(cacheOriginalsSave); /* XXX we might have read from the cache */ break;
-        case "update": promise = serverRetrieve().then(detectConflict).then(sync).then(cacheOriginalsSave);
-        case "delete": promise = sync().then(cacheOriginalsRemove);
+        case "update": promise = serverRetrieve().then(checkConflict).then(sync).then(cacheOriginalsSave); break;
+        case "delete": promise = serverRetrieve().then(checkConflict).then(sync).then(cacheOriginalsRemove); break; 
         }
 
         // Done
@@ -834,7 +877,7 @@
             // Extra options:
             // * fieldlist:<array of fields> during read if you don't want to fetch the whole record, during save fields to save
             // * refetch:true during create/update to do a fetch following the create/update
-            // * cacheMode: "server-only" | "cache-only" | "cache-first" | null (see Force.syncSObject for details)
+            // * cacheMode: "server-only" | "cache-only" | "cache-first" | "server-first" (see Force.syncSObject for details)
             //
             // Instead of passing fieldlist or cacheMode in the options, you can also define the fieldlist or cacheMode properties on this object
             //
