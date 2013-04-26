@@ -167,13 +167,13 @@ app.models.Account = Force.SObject.extend({
     fieldlist: ["Id", "Name", "Industry", "Phone"],
     cache: function() { return app.cache;},
     cacheForOriginals: function() { return app.cacheForOriginals;},
-    mergeMode: "fail-on-conflicting-remote-changes",
+    mergeMode: Force.MERGE_MODE.FAIL_IF_CONFLICTING,
     cacheMode: function(method) {
         if (!app.offlineTracker.get("isOnline")) {
-            return "cache-only";
+            return Force.CACHE_MODE.CACHE_ONLY;
         }
         else {
-            return (method == "read" ? "cache-first" : "server-first");
+            return (method == "read" ? Force.CACHE_MODE.CACHE_FIRST : Force.CACHE_MODE.SERVER_FIRST);
         }
     }
 });
