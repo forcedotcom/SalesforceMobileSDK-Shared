@@ -165,7 +165,9 @@
 app.models.Account = Force.SObject.extend({
     sobjectType: "Account",
     fieldlist: ["Id", "Name", "Industry", "Phone"],
-
+    cache: function() { return app.cache;},
+    cacheForOriginals: function() { return app.cacheForOriginals;},
+    mergeMode: "fail-on-conflicting-remote-changes",
     cacheMode: function(method) {
         if (!app.offlineTracker.get("isOnline")) {
             return "cache-only";
@@ -180,6 +182,7 @@ app.models.Account = Force.SObject.extend({
 app.models.AccountCollection = Force.SObjectCollection.extend({
     model: app.models.Account,
     fieldlist: ["Id", "Name", "Industry", "Phone"],
+    cache: function() { return app.cache},
 
     setCriteria: function(key) {
         this.key = key;
@@ -444,27 +447,28 @@ app.Router = Backbone.StackRouter.extend({
         "sync":"sync"
     },
 
+    setupCaches: function() {
+        // Cache for offline support
+        app.cache = new Force.StoreCache("accounts", [ {path:"Name", type:"string"} ]);
+
+        // Cache for conflict detection 
+        app.cacheForOriginals = new Force.StoreCache("original-accounts");
+
+        return $.when(app.cache.init(), app.cacheForOriginals.init());
+    },
+
     initialize: function() {
         Backbone.Router.prototype.initialize.call(this);
 
         // Initializing offline tracker 
         app.offlineTracker = new app.models.OfflineTracker({isOnline: true});
 
-        // Cache for offline support
-        app.cache = new Force.StoreCache("accounts", [ {path:"Name", type:"string"} ]);
-        app.cache.init().fail(function(error) { console.log(error);} );
-        // Setting up cache for model/collection classes
-        app.models.Account.setupCache(app.cache);
-        app.models.AccountCollection.setupCache(app.cache);
+        // Setup caches
+        this.setupCaches();
 
-        // Cache for conflict detection // XXX a bit tedious to setup (should that come for free with the first cache?
-        app.cacheOriginals = new Force.StoreCache("original-accounts", [ {path:"Name", type:"string"} ]);
-        app.cacheOriginals.init().fail(function(error) { console.log(error);} );
-        // Setting up cacheOriginals for model/collection classes
-        app.models.Account.setupCacheForOriginals(app.cacheOriginals);
-        // TBD app.models.AccountCollection.setupCacheForOriginals(app.cacheOriginals);
-
+        // Collection behind search screen
         this.searchResults = new app.models.AccountCollection();
+
         // We keep a single instance of the SearchPage and its associated Account collection throughout the app
         this.startPage = new app.views.SearchPage({model: this.searchResults});
         $(this.startPage.el).attr("id", "startPage");
