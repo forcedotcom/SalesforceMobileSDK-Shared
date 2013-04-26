@@ -86,27 +86,40 @@
         }
     };
 
-    // Force.RestError
-    // ---------------
-    Force.RestError = function(xhr) {
-        // 200	“OK” success code, for GET or HEAD request.
-        // 201	“Created” success code, for POST request.
-        // 204	“No Content” success code, for DELETE request.
-        // 300	The value returned when an external ID exists in more than one record. The response body contains the list of matching records.
-        // 400	The request couldn’t be understood, usually because the JSON or XML body contains an error.
-        // 401	The session ID or OAuth token used has expired or is invalid. The response body contains the message and errorCode.
-        // 403	The request has been refused. Verify that the logged-in user has appropriate permissions.
-        // 404	The requested resource couldn’t be found. Check the URI for errors, and verify that there are no sharing issues.
-        // 405	The method specified in the Request-Line isn’t allowed for the resource specified in the URI.
-        // 415	The entity in the request is in a format that’s not supported by the specified method.
-        // 500	An error has occurred within Force.com, so the request couldn’t be completed. Contact salesforce.com Customer Support.
-        this.xhr = xhr;
-        this.status = xhr.status;
-        try {
-            this.details = JSON.parse(xhr.responseText);
+    // Force.Error
+    // -----------
+    //
+    // XXX revisit error handling
+    //
+    Force.Error = function(rawError) {
+        // Rest error
+        if (_.has(rawError, "responseText")) {
+            // 200	“OK” success code, for GET or HEAD request.
+            // 201	“Created” success code, for POST request.
+            // 204	“No Content” success code, for DELETE request.
+            // 300	The value returned when an external ID exists in more than one record. The response body contains the list of matching records.
+            // 400	The request couldn’t be understood, usually because the JSON or XML body contains an error.
+            // 401	The session ID or OAuth token used has expired or is invalid. The response body contains the message and errorCode.
+            // 403	The request has been refused. Verify that the logged-in user has appropriate permissions.
+            // 404	The requested resource couldn’t be found. Check the URI for errors, and verify that there are no sharing issues.
+            // 405	The method specified in the Request-Line isn’t allowed for the resource specified in the URI.
+            // 415	The entity in the request is in a format that’s not supported by the specified method.
+            // 500	An error has occurred within Force.com, so the request couldn’t be completed. Contact salesforce.com Customer Support.
+            this.type = "RestError";
+            this.xhr = rawError;
+            this.status = rawError.status;
+            try {
+                this.details = JSON.parse(rawError.responseText);
+            }
+            catch (e) { 
+                console.log("Could not parse responseText:" + e);
+            }
+
         }
-        catch (e) { 
-            console.log("Could not parse responseText:" + e);
+        // Conflict error
+        else if (_.has(rawError, "conflict")) {
+            this.type = "ConflictError";
+            _.extend(this, rawError);
         }
     };
 
@@ -495,7 +508,7 @@
         case "create": promise = serverCreate(); break;
         case "read":   promise = serverRetrieve(); break;
         case "update": promise = serverUpdate(); break;
-        case "delete": promise = serverDelete(); break;
+        case "delete": promise = serverDelete(); break; /* XXX on 404 (record already deleted) we should not fail otherwise cache won't get cleaned up */
         }
 
         if (refetch) {
@@ -626,61 +639,88 @@
     Force.syncSObjectDetectConflict = function(method, sobjectType, id, attributes, fieldlist, refetch, cache, cacheMode, cacheOriginals, mergeMode) {
         console.log("--> In Force.syncSObjectDetectConflict:method=" + method + " id=" + id + " cacheMode=" + cacheMode);
 
-        var sync = function() {
+        var sync = function(fieldlist, refetch) {
             return Force.syncSObject(method, sobjectType, id, attributes, fieldlist, refetch, cache, cacheMode);
         };
 
+        // Original cache required for conflict detection
         if (cacheOriginals == null) {
-            return sync();
+            return sync(fieldlist, refetch);
         }
 
+        // Server retrieve action
         var serverRetrieve = function() { 
             return forcetkClient.retrieve(sobjectType, id, fieldlist);
         };
 
+        // Original cache actions -- does nothing for local actions
+        var cacheOriginalsRetrieve = function(data) {
+            return cacheOriginals.retrieve(id);
+        };
+
         var cacheOriginalsSave = function(data) {
-            return cacheOriginals.save(data);
+            return (cacheMode == "cache-only" ? data : cacheOriginals.save(data));
         };
 
         var cacheOriginalsRemove = function() {
-            return cacheOriginals.remove(id);
+            return (cacheMode == "cache-only" ? null : cacheOriginals.remove(id));
         };
 
         // Given two maps, return keys that are different
         var identifyChanges = function(attrs, otherAttrs) {
-            return _.filter(_.union(_.keys(attrs), _.keys(otherAttrs)),
+            return _.filter(_.intersection(fieldlist, _.union(_.keys(attrs), _.keys(otherAttrs))),
                             function(key) {
                                 return attrs[key] != otherAttrs[key];
                             });
         };
 
-        // When conflict is detected (according to mergeMode), the promise is failed
-        var checkConflict = function(latestAttributes) {
-            var localChanges = identifyChanges(originalAttributes, attributes);
-            var remoteChanges = identifyChanges(originalAttributes, latestAttributes);
-            var conflictingChanges = _.intersection(remoteChanges, localChanges);
+        // When conflict is detected (according to mergeMode), the promise is failed, otherwise sync() is invoked
+        var checkConflictAndSync = function() {
+            var originalAttributes;
+            var latestAttributes;
 
-            var shouldFail = false;
-            switch(mergeMode) {
-                case "ignore-remote-changes":   shouldFail = false; break;
-                case "fail-on-remote-changes":  shouldFail = remoteChanges.length > 0; break;
-                case "fail-on-conflicting-remote-changes": shouldFail = conflictingChanges.length > 0; break;
+            // Local action or locally created record -- no conflict check needed
+            if (cacheMode == "cache-only" || (cache != null && cache.isLocalId(id))) {
+                return sync(fieldlist, refetch);
             }
-            if (shouldFail) {
-                var conflictDetails = {conflict:true, base: originalAttributes, theirs: latestAttributes, yours:attributes, remoteChanges:remoteChanges, localChanges:localChanges, conflictingChanges:conflictingChanges};
-                return $.Deferred().reject(conflictDetails);
-            }
-            else {
-                return;
-            }
-        }
+            
+            // Otherwise get original copy, get latest server and compare
+            return cacheOriginalsRetrieve()
+                .then(function(data) {
+                    originalAttributes = data;
+                    return (originalAttributes == null ? null /* don't waste going to server */: serverRetrieve());
+                })
+                .then(function(data) {
+                    latestAttributes = data;
+
+                    var localChanges = identifyChanges(originalAttributes, attributes); 
+                    var remoteChanges = identifyChanges(originalAttributes, latestAttributes);
+                    var conflictingChanges = _.intersection(remoteChanges, localChanges);
+
+                    /* XXX if local and remote changed the same fields the same way, no conflict should be reported */
+
+                    var shouldFail = false;
+                    switch(mergeMode) {
+                    case "ignore-remote-changes":   shouldFail = false; break;
+                    case "fail-on-remote-changes":  shouldFail = remoteChanges.length > 0; break;
+                    case "fail-on-conflicting-remote-changes": shouldFail = conflictingChanges.length > 0; break;
+                    }
+                    if (shouldFail) {
+                        var conflictDetails = {conflict:true, base: originalAttributes, theirs: latestAttributes, yours:attributes, remoteChanges:remoteChanges, localChanges:localChanges, conflictingChanges:conflictingChanges};
+                        return $.Deferred().reject(conflictDetails);
+                    }
+                    else {
+                        return sync(localChanges, refetch || remoteChanges.length > 0 /* refetch if remote changes detected */);
+                    }
+                });
+        };
 
         var promise = null;
         switch(method) {
-        case "create": promise = sync().then(cacheOriginalsSave); break;
-        case "read":   promise = sync().then(cacheOriginalsSave); /* XXX we might have read from the cache */ break;
-        case "update": promise = serverRetrieve().then(checkConflict).then(sync).then(cacheOriginalsSave); break;
-        case "delete": promise = serverRetrieve().then(checkConflict).then(sync).then(cacheOriginalsRemove); break; 
+        case "create": promise = sync(fieldlist, refetch).then(cacheOriginalsSave); break;
+        case "read":   promise = sync(fieldlist, refetch).then(cacheOriginalsSave); /* XXX we might have read from the cache */ break;
+        case "update": promise = checkConflictAndSync().then(cacheOriginalsSave); break;
+        case "delete": promise = checkConflictAndSync().then(cacheOriginalsRemove); break; 
         }
 
         // Done
@@ -886,7 +926,10 @@
 
                 var fieldlist = options.fieldlist || (_.isFunction(this.fieldlist) ? this.fieldlist(method) : this.fieldlist);
                 var cacheMode = options.cacheMode || (_.isFunction(this.cacheMode) ? this.cacheMode(method) : this.cacheMode);
-                Force.syncSObject(method, this.sobjectType, model.id, model.attributes, fieldlist, options.refetch, this.getClass().cache, cacheMode)
+                var mergeMode = "fail-on-conflicting-remote-changes";
+                var cache = this.getClass().cache;
+                var cacheOriginals = this.getClass().cacheOriginals;
+                Force.syncSObjectDetectConflict(method, this.sobjectType, model.id, model.attributes, fieldlist, options.refetch, cache, cacheMode, cacheOriginals, mergeMode)
                     .done(options.success)
                     .fail(options.error);
             }
@@ -895,9 +938,17 @@
             // Read go to cache first when cache:true is passed as option
             cache: null,
 
+            // Cache used to store original copies of any record fetched or saved
+            cacheOriginals: null,
+
             // Method to setup cache for all models of this class
             setupCache: function(cache) {
                 this.cache = cache;
+            },
+
+            // Method to setup cache for originals of all models of this class
+            setupCacheForOriginals: function(cacheOriginals) {
+                this.cacheOriginals = cacheOriginals;
             }
         });
 

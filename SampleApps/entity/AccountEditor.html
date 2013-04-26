@@ -363,9 +363,9 @@ app.views.AccountPage = Backbone.View.extend({
             success: function(data) {
                 app.router.navigate("#", {trigger:true});
             },
-            error: function(data, xhr, options) {
-                var error = new Force.RestError(xhr);
-                alert("Failed to delete account: " + error.details[0].message);
+            error: function(data, err, options) {
+                var error = new Force.Error(err);
+                alert("Failed to delete account: " + (error.type === "RestError" ? error.details[0].message : "Remote change detected - delete aborted"));
             }
         });
     }
@@ -405,21 +405,26 @@ app.views.EditAccountPage = Backbone.View.extend({
             success: function(data) {
                 app.router.navigate("#accounts/" + data.get("Id"), {trigger:true});
             },
-            error: function(data, xhr, options) {
-                var error = new Force.RestError(xhr);
-                _.each(error.details, function(detail) {
-                    if (detail.fields == null || detail.fields.length == 0) {
-                        alert(detail.message);
-                    }
-                    else {
-                         _.each(detail.fields, function(field) {
-                             alert(detail.message);
-                             // TODO fix highlighting
-                             // $("#account" + field).addClass("error");
-                             // $("#account" + field + "Help").html(detail.message);
-                        });
-                    }
-                });
+            error: function(data, err, options) {
+                var error = new Force.Error(err);
+                if (error.type === "RestError") {
+                    _.each(error.details, function(detail) {
+                        if (detail.fields == null || detail.fields.length == 0) {
+                            alert(detail.message);
+                        }
+                        else {
+                            _.each(detail.fields, function(field) {
+                                alert(detail.message);
+                                // TODO fix highlighting
+                                // $("#account" + field).addClass("error");
+                                // $("#account" + field + "Help").html(detail.message);
+                            });
+                        }
+                    });
+                }
+                else if (error.type == "ConflictError") {
+                    alert("Conflict detected: " + error.remoteChanges.join(",") + " changed on remote record"); 
+                }
             }
         });
     }
@@ -442,12 +447,22 @@ app.Router = Backbone.StackRouter.extend({
     initialize: function() {
         Backbone.Router.prototype.initialize.call(this);
 
-        // Initializing offline tracker and cache 
+        // Initializing offline tracker 
         app.offlineTracker = new app.models.OfflineTracker({isOnline: true});
+
+        // Cache for offline support
         app.cache = new Force.StoreCache("accounts", [ {path:"Name", type:"string"} ]);
         app.cache.init().fail(function(error) { console.log(error);} );
+        // Setting up cache for model/collection classes
         app.models.Account.setupCache(app.cache);
         app.models.AccountCollection.setupCache(app.cache);
+
+        // Cache for conflict detection // XXX a bit tedious to setup (should that come for free with the first cache?
+        app.cacheOriginals = new Force.StoreCache("original-accounts", [ {path:"Name", type:"string"} ]);
+        app.cacheOriginals.init().fail(function(error) { console.log(error);} );
+        // Setting up cacheOriginals for model/collection classes
+        app.models.Account.setupCacheForOriginals(app.cacheOriginals);
+        // TBD app.models.AccountCollection.setupCacheForOriginals(app.cacheOriginals);
 
         this.searchResults = new app.models.AccountCollection();
         // We keep a single instance of the SearchPage and its associated Account collection throughout the app
