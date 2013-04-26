@@ -144,14 +144,17 @@
         <div class="input-row" id="accountName">
           <label>Name</label>
           <input type="text" name="Name" value="<%= Name %>" />
+          <span class="count-negative error" id="accountNameError" />
         </div>
         <div class="input-row" id="accountIndustry">
           <label>Industry</label>
           <input type="text" name="Industry" value="<%= Industry %>" />
+          <span class="count-negative error" id="accountIndustryError" />
         </div>
         <div class="input-row" id="accountPhone">
           <label>Phone</label>
           <input type="text" name="Phone" value="<%= Phone %>" />
+          <span class="count-negative error" id="accountPhoneError" />
         </div>
       </div>
       <a class="button button-block save">Save</a>
@@ -396,10 +399,7 @@ app.views.EditAccountPage = Backbone.View.extend({
         // apply change to model
         var target = event.target;
         this.model.set(target.name, target.value);
-        // Remove error if any
-        // TODO fix highlighting
-        // $("#account" + target.name).removeClass("error");
-        // $("#account" + target.name + "Help").html("");
+        $("#account" + target.name + "Error").hide();
     },
 
     save: function(evt) {
@@ -417,16 +417,17 @@ app.views.EditAccountPage = Backbone.View.extend({
                         }
                         else {
                             _.each(detail.fields, function(field) {
-                                alert(detail.message);
-                                // TODO fix highlighting
-                                // $("#account" + field).addClass("error");
-                                // $("#account" + field + "Help").html(detail.message);
+                                $("#account" + field + "Error").html(detail.message);
+                                $("#account" + field + "Error").show();
                             });
                         }
                     });
                 }
                 else if (error.type == "ConflictError") {
-                    alert("Conflict detected: " + error.remoteChanges.join(",") + " changed on remote record"); 
+                    _.each(error.conflictingChanges, function(field) {
+                        $("#account" + field + "Error").html("Field changed on server");
+                        $("#account" + field + "Error").show();
+                    });
                 }
             }
         });
