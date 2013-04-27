@@ -144,14 +144,17 @@
         <div class="input-row" id="accountName">
           <label>Name</label>
           <input type="text" name="Name" value="<%= Name %>" />
+          <span class="count-negative error" id="accountNameError" />
         </div>
         <div class="input-row" id="accountIndustry">
           <label>Industry</label>
           <input type="text" name="Industry" value="<%= Industry %>" />
+          <span class="count-negative error" id="accountIndustryError" />
         </div>
         <div class="input-row" id="accountPhone">
           <label>Phone</label>
           <input type="text" name="Phone" value="<%= Phone %>" />
+          <span class="count-negative error" id="accountPhoneError" />
         </div>
       </div>
       <a class="button button-block save">Save</a>
@@ -165,13 +168,15 @@
 app.models.Account = Force.SObject.extend({
     sobjectType: "Account",
     fieldlist: ["Id", "Name", "Industry", "Phone"],
-
+    cache: function() { return app.cache;},
+    cacheForOriginals: function() { return app.cacheForOriginals;},
+    mergeMode: Force.MERGE_MODE.FAIL_IF_CONFLICTING,
     cacheMode: function(method) {
         if (!app.offlineTracker.get("isOnline")) {
-            return "cache-only";
+            return Force.CACHE_MODE.CACHE_ONLY;
         }
         else {
-            return (method == "read" ? "cache-first" : "server-first");
+            return (method == "read" ? Force.CACHE_MODE.CACHE_FIRST : Force.CACHE_MODE.SERVER_FIRST);
         }
     }
 });
@@ -180,6 +185,7 @@ app.models.Account = Force.SObject.extend({
 app.models.AccountCollection = Force.SObjectCollection.extend({
     model: app.models.Account,
     fieldlist: ["Id", "Name", "Industry", "Phone"],
+    cache: function() { return app.cache},
 
     setCriteria: function(key) {
         this.key = key;
@@ -363,9 +369,9 @@ app.views.AccountPage = Backbone.View.extend({
             success: function(data) {
                 app.router.navigate("#", {trigger:true});
             },
-            error: function(data, xhr, options) {
-                var error = new Force.RestError(xhr);
-                alert("Failed to delete account: " + error.details[0].message);
+            error: function(data, err, options) {
+                var error = new Force.Error(err);
+                alert("Failed to delete account: " + (error.type === "RestError" ? error.details[0].message : "Remote change detected - delete aborted"));
             }
         });
     }
@@ -393,10 +399,7 @@ app.views.EditAccountPage = Backbone.View.extend({
         // apply change to model
         var target = event.target;
         this.model.set(target.name, target.value);
-        // Remove error if any
-        // TODO fix highlighting
-        // $("#account" + target.name).removeClass("error");
-        // $("#account" + target.name + "Help").html("");
+        $("#account" + target.name + "Error").hide();
     },
 
     save: function(evt) {
@@ -405,21 +408,27 @@ app.views.EditAccountPage = Backbone.View.extend({
             success: function(data) {
                 app.router.navigate("#accounts/" + data.get("Id"), {trigger:true});
             },
-            error: function(data, xhr, options) {
-                var error = new Force.RestError(xhr);
-                _.each(error.details, function(detail) {
-                    if (detail.fields == null || detail.fields.length == 0) {
-                        alert(detail.message);
-                    }
-                    else {
-                         _.each(detail.fields, function(field) {
-                             alert(detail.message);
-                             // TODO fix highlighting
-                             // $("#account" + field).addClass("error");
-                             // $("#account" + field + "Help").html(detail.message);
-                        });
-                    }
-                });
+            error: function(data, err, options) {
+                var error = new Force.Error(err);
+                if (error.type === "RestError") {
+                    _.each(error.details, function(detail) {
+                        if (detail.fields == null || detail.fields.length == 0) {
+                            alert(detail.message);
+                        }
+                        else {
+                            _.each(detail.fields, function(field) {
+                                $("#account" + field + "Error").html(detail.message);
+                                $("#account" + field + "Error").show();
+                            });
+                        }
+                    });
+                }
+                else if (error.type == "ConflictError") {
+                    _.each(error.conflictingChanges, function(field) {
+                        $("#account" + field + "Error").html("Field changed on server");
+                        $("#account" + field + "Error").show();
+                    });
+                }
             }
         });
     }
@@ -439,17 +448,28 @@ app.Router = Backbone.StackRouter.extend({
         "sync":"sync"
     },
 
+    setupCaches: function() {
+        // Cache for offline support
+        app.cache = new Force.StoreCache("accounts", [ {path:"Name", type:"string"} ]);
+
+        // Cache for conflict detection 
+        app.cacheForOriginals = new Force.StoreCache("original-accounts");
+
+        return $.when(app.cache.init(), app.cacheForOriginals.init());
+    },
+
     initialize: function() {
         Backbone.Router.prototype.initialize.call(this);
 
-        // Initializing offline tracker and cache 
+        // Initializing offline tracker 
         app.offlineTracker = new app.models.OfflineTracker({isOnline: true});
-        app.cache = new Force.StoreCache("accounts", [ {path:"Name", type:"string"} ]);
-        app.cache.init().fail(function(error) { console.log(error);} );
-        app.models.Account.setupCache(app.cache);
-        app.models.AccountCollection.setupCache(app.cache);
 
+        // Setup caches
+        this.setupCaches();
+
+        // Collection behind search screen
         this.searchResults = new app.models.AccountCollection();
+
         // We keep a single instance of the SearchPage and its associated Account collection throughout the app
         this.startPage = new app.views.SearchPage({model: this.searchResults});
         $(this.startPage.el).attr("id", "startPage");

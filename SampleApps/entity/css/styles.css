@@ -44,3 +44,9 @@
 .details {
     height: 100px;
 }
+
+.input-row .error {
+    position: absolute;
+    right: 11px;
+    display: none;
+}

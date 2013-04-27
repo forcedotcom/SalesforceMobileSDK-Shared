@@ -13,12 +13,6 @@
             // Keep track of the history of pages (we only store the page URL). Used to identify the direction
             // (left or right) of the sliding transition between pages.
             this.pageHistory = [];
-
-            // Register event listener for back button troughout the app
-            $('#content').on('click', '.header-back-button', function(event) {
-                window.history.back();
-                return false;
-            });
         },
 
         slidePage: function(page) {
