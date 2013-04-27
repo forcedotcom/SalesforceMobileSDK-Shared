@@ -80,6 +80,7 @@
             smartstoreClient.registerSoup = promiser(navigator.smartstore, "registerSoup", "smartstoreClient");
             smartstoreClient.upsertSoupEntriesWithExternalId = promiser(navigator.smartstore, "upsertSoupEntriesWithExternalId", "smartstoreClient");
             smartstoreClient.querySoup = promiser(navigator.smartstore, "querySoup", "smartstoreClient");
+            smartstoreClient.runSmartQuery = promiser(navigator.smartstore, "runSmartQuery", "smartstoreClient");
             smartstoreClient.moveCursorToNextPage = promiser(navigator.smartstore, "moveCursorToNextPage", "smartstoreClient");
             smartstoreClient.removeFromSoup = promiser(navigator.smartstore, "removeFromSoup", "smartstoreClient");
             smartstoreClient.closeCursor = promiser(navigator.smartstore, "closeCursor", "smartstoreClient");
@@ -170,25 +171,51 @@
                 });
         },
 
-        // Return promise which stores a record in cache
+        // Return promise which stores a record in cache (NB: record is merged with existing record if any)
         save: function(record) {
             if (this.soupName == null) return;
             console.log("----> In StoreCache:save " + this.soupName + ":" + record[this.keyField]);
+
+            var that = this;
             record = this.addLocalFields(record);
-            return smartstoreClient.upsertSoupEntriesWithExternalId(this.soupName, [ record ], this.keyField)
+            return this.retrieve(record[this.keyField])
+                .then(function(oldRecord) {
+                    record = _.extend(oldRecord || {}, record);
+                    return smartstoreClient.upsertSoupEntriesWithExternalId(that.soupName, [ record ], that.keyField)
+                })
                 .then(function() {
                     return record;
                 });
         },
 
-        // Return promise which stores several records in cache
+        // Return promise which stores several records in cache (NB: records are merged with existing records if any)
         saveAll: function(records) {
             if (this.soupName == null) return;
             console.log("----> In StoreCache:saveAll records.length=" + records.length);
-            records = _.map(records, this.addLocalFields);
-            return smartstoreClient.upsertSoupEntriesWithExternalId(this.soupName, records, this.keyField)
+
+            var that = this;
+            var oldRecords = {};
+            var smartSql = "SELECT {" + this.soupName + ":_soup} " 
+                + "FROM {" + this.soupName + "} " 
+                + "WHERE {" + this.soupName + ":" + this.keyField + "} "
+                + "IN ('" + _.pluck(records, this.keyField).join("','") + "')";
+
+            var querySpec = navigator.smartstore.buildSmartQuerySpec(smartSql, records.length);
+
+            return smartstoreClient.runSmartQuery(querySpec)
+                .then(function(cursor) {
+                    _.each(cursor.currentPageOrderedEntries, function(oldRecord) {
+                        oldRecords[oldRecord[that.keyField]] = oldRecord;
+                    });
+                    return smartstoreClient.closeCursor(cursor);
+                })
                 .then(function() {
-                    return records;
+                    records = _.map(records, function(record) {
+                        var oldRecord = oldRecords[record[that.keyField]];
+                        return that.addLocalFields(_.extend(oldRecord || {}, record));
+                    });
+
+                    return smartstoreClient.upsertSoupEntriesWithExternalId(that.soupName, records, that.keyField);
                 });
         },
 
@@ -560,7 +587,7 @@
             return Force.syncSObjectWithServer(method, sobjectType, id, attributes, fieldlist, refetch);
         };
 
-        var cacheSync = function(method, id, attributes, localAction) {
+        var cacheSync = function(method, id, attributes, fieldlist, localAction) {
             return Force.syncSObjectWithCache(method, sobjectType, id, attributes, fieldlist, cache, localAction);
         }            
 
@@ -571,7 +598,7 @@
 
         // Cache only
         if (cache != null && cacheMode == Force.CACHE_MODE.CACHE_ONLY) {
-            return cacheSync(method, id, attributes, true);
+            return cacheSync(method, id, attributes, null /* we don't want to have a cache miss even if not all fields are there */, true);
         }
         
         // Chaining promises that return either a promise or created/upated/reda model attributes or null in the case of delete
@@ -580,7 +607,7 @@
 
         // Go to cache first
         if (cacheMode == Force.CACHE_MODE.CACHE_FIRST) {
-            promise = cacheSync(method, id, attributes)
+            promise = cacheSync(method, id, attributes, fieldlist)
                 .then(function(data) {
                     wasReadFromCache = (data != null);
                     if (!wasReadFromCache) {
@@ -681,7 +708,7 @@
 
         // Server retrieve action
         var serverRetrieve = function() { 
-            return forcetkClient.retrieve(sobjectType, id, fieldlist);
+            return forcetkClient.retrieve(sobjectType, id, fieldlist || ['Id']);
         };
 
         // Original cache actions -- does nothing for local actions
@@ -695,7 +722,7 @@
         };
 
         var cacheForOriginalsRemove = function() {
-            return (cacheMode == Force.CACHE_MODE.CACHE_ONLY || data.__local__ /* locally changed: don't write to cacheForOriginals */ 
+            return (cacheMode == Force.CACHE_MODE.CACHE_ONLY
                     ? null : cacheForOriginals.remove(id));
         };
 
@@ -703,7 +730,11 @@
         var identifyChanges = function(attrs, otherAttrs) {
             return _.filter(_.intersection(fieldlist, _.union(_.keys(attrs), _.keys(otherAttrs))),
                             function(key) {
-                                return attrs[key] != otherAttrs[key];
+                                var value1 = attrs[key];
+                                var value2 = otherAttrs[key];
+                                value1 = value1 == null ? "" : value1; // treat "", undefined and null the same way
+                                value2 = value2 == null ? "" : value2; // treat "", undefined and null the same way
+                                return value1 != value2;
                             });
         };
 
