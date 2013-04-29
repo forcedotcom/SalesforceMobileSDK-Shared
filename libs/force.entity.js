@@ -25,11 +25,23 @@
             var d = $.Deferred();
             args.push(function() {
                 console.log("------> Calling successCB for " + objectName + ":" + methodName);
-                d.resolve.apply(d, arguments);
+                try {
+                    d.resolve.apply(d, arguments);
+                }
+                catch (err) { 
+                    console.error("------> Error when calling successCB for " + objectName + ":" + methodName);
+                    console.error(err.stack);
+                }
             });
             args.push(function() {
                 console.log("------> Calling errorCB for " + objectName + ":" + methodName);
-                d.reject.apply(d, arguments);
+                try {
+                    d.reject.apply(d, arguments);
+                }
+                catch (err) { 
+                    console.error("------> Error when calling errorCB for " + objectName + ":" + methodName);
+                    console.error(err.stack);
+                }
             });
             console.log("-----> Calling " + objectName + ":" + methodName);
             object[methodName].apply(object, args);
