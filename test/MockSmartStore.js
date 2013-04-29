@@ -201,7 +201,49 @@ var MockSmartStore = (function(window) {
             return o;
         },
 
+        smartQuerySoupFull: function(querySpec) {
+            // NB we don't have full support evidently
+
+            var smartSql = querySpec.smartSql;
+            
+
+            // SELECT {soupName:selectField} FROM {soupName} WHERE {soupName:whereField} IN (values)
+            var m = smartSql.match(/SELECT {(.*):(.*)} FROM {(.*)} WHERE {(.*):(.*)} IN \((.*)\)/);
+            if (m != null && m[1] == m[3] && m[1] == m[4]) {
+                var soupName = m[1];
+                var selectField = m[2]
+                var whereField = m[5];
+
+                var values = m[6].split(",");
+                for (var i=0; i<values.length; i++) {
+                    values[i] = values[i].split("'")[1]; // getting rid of surrounding '
+                }
+
+                this.checkSoup(soupName); 
+                var soup = _soups[soupName];
+
+                var results = [];
+                for (var soupEntryId in soup) {
+                    var soupElt = soup[soupEntryId];
+                    var value = (whereField == "_soupEntryId" ? soupEntryId : this.project(soupElt, whereField));
+                    if (values.indexOf(value) >= 0) {
+                        results.push(selectField == "_soup" ? soupElt : (selectField == "_soupEntryId" ? soupEntryId : this.project(soupElt, selectField)));
+                    }
+                }
+
+                return results;
+            }
+            else {
+                throw "SmartQuery not supported by MockSmartStore:" + smartSql;
+            }
+        },
+
         querySoupFull: function(soupName, querySpec) {
+            if (querySpec.queryType == "smart") {
+                return this.smartQuerySoupFull(querySpec);
+            }
+
+            // other query type
             this.checkSoup(soupName); 
             if (!this.indexExists(soupName, querySpec.indexPath)) throw soupName + " does not have an index on " + querySpec.indexPath; 
 
@@ -302,7 +344,8 @@ var MockSmartStore = (function(window) {
             });
 
             cordova.interceptExec(SMARTSTORE_SERVICE, "pgRunSmartQuery", function (successCB, errorCB, args) {
-                errorCB("pgRunSmartQuery not implemented in MockSmartStore");
+                var querySpec = args[0].querySpec;
+                successCB(self.querySoup(null, querySpec));
             });
 
             cordova.interceptExec(SMARTSTORE_SERVICE, "pgRetrieveSoupEntries", function (successCB, errorCB, args) {
