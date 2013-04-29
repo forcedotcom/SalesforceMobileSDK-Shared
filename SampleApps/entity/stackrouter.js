@@ -15,6 +15,10 @@
             this.pageHistory = [];
         },
 
+        getLastPage: function() {
+            return (this.pageHistory != null && this.pageHistory.length > 0 ? this.pageHistory[this.pageHistory.length - 1] : "#");
+        },
+
         slidePage: function(page) {
             var slideFrom,
             that = this;

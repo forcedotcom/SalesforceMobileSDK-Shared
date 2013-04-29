@@ -14,7 +14,6 @@
 <!-- Scripts -->
 
 <!-- Local Testing -->
-<!--
 <script src="../../external/jquery/jquery-2.0.0.min.js"></script>
 <script src="../../external/backbone/underscore-1.4.4.min.js"></script>
 <script src="../../external/backbone/backbone-1.0.0.js"></script>
@@ -25,10 +24,10 @@
 <script src="../../libs/force.entity.js"></script>
 <script src="stackrouter.js"></script>
 <script src="auth_local.js"></script>
--->
 <!-- End Local Testing -->
 
 <!-- Container -->
+<!--
 <script src="jquery/jquery-2.0.0.min.js"></script>
 <script src="backbone/underscore-1.4.4.min.js"></script>
 <script src="backbone/backbone-1.0.0.min.js"></script>
@@ -38,6 +37,7 @@
 <script src="force.entity.js"></script>
 <script src="stackrouter.js"></script>
 <script src="auth.js"></script>
+-->
 <!-- End Container -->
 
 
@@ -70,7 +70,6 @@
 
 <script id="sync-page" type="text/template">
   <header class="bar-title">
-    <a href="#" class="button-prev">Back</a>
     <h1 class="title">Sync</h1>
   </header>
 
@@ -89,14 +88,17 @@
 
 <!-- --------------------------------------- Account list item Template ------------------------------------------ -->
 <script id="account-list-item" type="text/template">
-  <a href="#accounts/<%= Id %>">
+  <a href="<%= clickAction %>">
     <div>
       <b><%= Name %></b><br/>
       <%= Id %><br/>
       <%= Industry %><br/>
-      <% if (__locally_created__) { %><span class="count-negative">Locally Created</span><% } %>
-      <% if (__locally_updated__) { %><span class="count-negative">Locally Updated</span><% } %>
-      <% if (__locally_deleted__) { %><span class="count-negative">Locally Deleted</span><% } %>
+      <% if (__sync_failed__) { %><span class="count-negative">Failed to sync</span>
+      <% } else { %>
+        <% if (__locally_created__) { %><span class="count-main">Locally Created</span><% } %>
+        <% if (__locally_updated__) { %><span class="count-main">Locally Updated</span><% } %>
+        <% if (__locally_deleted__) { %><span class="count-main">Locally Deleted</span><% } %>
+      <% } %>
     </div>
   </a>
 </script>
@@ -144,20 +146,22 @@
         <div class="input-row" id="accountName">
           <label>Name</label>
           <input type="text" name="Name" value="<%= Name %>" />
-          <span class="count-negative error" id="accountNameError" />
+          <span class="error" id="accountNameError" />
         </div>
         <div class="input-row" id="accountIndustry">
           <label>Industry</label>
           <input type="text" name="Industry" value="<%= Industry %>" />
-          <span class="count-negative error" id="accountIndustryError" />
+          <span class="error" id="accountIndustryError" />
         </div>
         <div class="input-row" id="accountPhone">
           <label>Phone</label>
           <input type="text" name="Phone" value="<%= Phone %>" />
-          <span class="count-negative error" id="accountPhoneError" />
+          <span class="error" id="accountPhoneError" />
         </div>
       </div>
-      <a class="button button-block save">Save</a>
+      <a class="button save">Save</a>
+      <a class="button save-if-not-changed">Save (if no remote changes)</a>
+      <a class="button save-if-not-conflicting">Save (if no conflicts)</a>
     </div>
   </div>
 </script>
@@ -170,7 +174,6 @@ app.models.Account = Force.SObject.extend({
     fieldlist: ["Id", "Name", "Industry", "Phone"],
     cache: function() { return app.cache;},
     cacheForOriginals: function() { return app.cacheForOriginals;},
-    mergeMode: Force.MERGE_MODE.FAIL_IF_CONFLICTING,
     cacheMode: function(method) {
         if (!app.offlineTracker.get("isOnline")) {
             return Force.CACHE_MODE.CACHE_ONLY;
@@ -194,7 +197,7 @@ app.models.AccountCollection = Force.SObjectCollection.extend({
     config: function() {
         // Offline: do a cache query
         if (!app.offlineTracker.get("isOnline")) {
-            return {type:"cache", cacheQuery:{queryType:"like", indexPath:"Name", likeKey: this.key+"%", order:"ascending", pageSize:25}};
+            return {type:"cache", cacheQuery:{queryType:_.isEmpty(this.key) ? "range" : "like", indexPath:"Name", likeKey: this.key+"%", order:"ascending", pageSize:25}};
         }
         // Online
         else {
@@ -217,8 +220,6 @@ app.models.AccountCollection = Force.SObjectCollection.extend({
 
 // Online/Offline Tracker
 app.models.OfflineTracker = Backbone.Model.extend({
-    
-
     initialize: function() {
         var that = this;
         document.addEventListener("offline", function() {
@@ -241,7 +242,7 @@ app.views.SearchPage = Backbone.View.extend({
     render: function(eventName) {
         $(this.el).html(this.template());
         (new app.views.OfflineToggler({el: $("#offlineStatus", this.el), model: app.offlineTracker})).render();
-        this.listView = new app.views.AccountListView({el: $("ul", this.el), model: this.model});
+        this.listView = new app.views.AccountListView({el: $("ul", this.el), model: this.model, clickActionPrefix: "#accounts/"});
         this.listView.render();
         return this;
     },
@@ -266,7 +267,8 @@ app.views.AccountListView = Backbone.View.extend({
     render: function(eventName) {
         $(this.el).empty();
         _.each(this.model.models, function(account) {
-            $(this.el).append(new app.views.AccountListItemView({model: account}).render().el);
+            var templateData = {model: account, clickActionPrefix: this.options.clickActionPrefix, backAction: this.options.backAction};
+            $(this.el).append(new app.views.AccountListItemView(templateData).render().el);
         }, this);
         return this;
     }
@@ -279,7 +281,8 @@ app.views.AccountListItemView = Backbone.View.extend({
     template: _.template($("#account-list-item").html()),
 
     render: function(eventName) {
-        $(this.el).html(this.template(this.model.toJSON()));
+        var templateData = _.extend({clickAction: this.options.clickActionPrefix + this.model.id, backAction: this.options.backAction, __sync_failed__:false}, this.model.toJSON());
+        $(this.el).html(this.template(templateData));
         return this;
     }
 });
@@ -316,7 +319,7 @@ app.views.SyncPage = Backbone.View.extend({
 
     render: function(eventName) {
         $(this.el).html(this.template(_.extend({countLocallyModified: this.model.length}, this.model.toJSON())));
-        this.listView = new app.views.AccountListView({el: $("ul", this.el), model: this.model});
+        this.listView = new app.views.AccountListView({el: $("ul", this.el), model: this.model, clickActionPrefix: "#edit/accounts/", backAction: "#sync"});
         this.listView.render();
         return this;
     },
@@ -327,24 +330,33 @@ app.views.SyncPage = Backbone.View.extend({
 
     sync: function(event) {
         var that = this;
-        if (this.model.length > 0) {
+        if (this.model.length == 0) {
+            // Done
+            app.router.navigate("#", {trigger: true});
+        }
+        else if (this.model.at(0).get("__sync_failed__")) {
+            // we push sync failures back to the end of the list - if we encounter one, it means we are done
+            return;
+        }
+        else {
             var record = this.model.shift();
+
             var options = {
                 success: function() {
-                    that.render(); // TODO bind change to render instead
+                    that.render();
                     that.sync();
                 },
                 error: function() {
-                    alert("Failed to sync " + record.id);
+                    that.model.push(record.set("__sync_failed__", true));
+                    that.render();
+                    that.sync();
                 }
             };
 
-            if (record.get("__locally_deleted__")) {
-                record.destroy(options);
-            }
-            else {
-                record.save(null, options);
-            }
+            return record.get("__locally_deleted__") 
+                ? record.destroy(options)
+                : record.save(null, options);
+
         }
     }
 });
@@ -381,18 +393,27 @@ app.views.EditAccountPage = Backbone.View.extend({
 
     template: _.template($("#edit-account-page").html()),
 
+    initialize: function() {
+        app.offlineTracker.on("change:isOnline", this.render, this);
+    },
+
     render: function(eventName) {
-        var action = (null == this.model.get("Id")) ? "Add" : "Edit";
-        var backAction = (action == "Add") ? "#" : "#accounts/" + this.model.get("Id");
+        var action = (null == this.model.id) ? "Add" : "Edit";
         if (action == "Add") { this.model.set({Name:"", Industry:"", Phone:"", attributes : { type: "Account"}}); }
-        $(this.el).html(this.template(_.extend({action: action, backAction: backAction}, this.model.toJSON())));
+        $(this.el).html(this.template(_.extend({action: action, backAction: app.router.getLastPage()}, this.model.toJSON())));
         (new app.views.OfflineToggler({el: $("#offlineStatus", this.el), model: app.offlineTracker})).render();
+        if (!app.offlineTracker.get("isOnline")) { 
+            $(".save-if-not-changed", this.el).hide();  
+            $(".save-if-not-conflicting", this.el).hide();  
+        }
         return this;
     },
 
     events: {
         "change": "change",
         "click .save": "save",
+        "click .save-if-not-changed": "save",
+        "click .save-if-not-conflicting": "save",
     },
 
     change: function(evt) {
@@ -403,10 +424,17 @@ app.views.EditAccountPage = Backbone.View.extend({
     },
 
     save: function(evt) {
+        var that = this;
+        var mergeMode = ($(evt.target).hasClass("save-if-not-changed") 
+                         ? Force.MERGE_MODE.FAIL_IF_CHANGED
+                         : ($(evt.target).hasClass("save-if-not-conflicting")
+                            ? Force.MERGE_MODE.FAIL_IF_CONFLICTING
+                            : Force.MERGE_MODE.IGNORE_REMOTE));
         evt.preventDefault();
         this.model.save(null, {
+            mergeMode: mergeMode,
             success: function(data) {
-                app.router.navigate("#accounts/" + data.get("Id"), {trigger:true});
+                app.router.navigate(that.options.backAction, {trigger:true});
             },
             error: function(data, err, options) {
                 var error = new Force.Error(err);
@@ -424,8 +452,10 @@ app.views.EditAccountPage = Backbone.View.extend({
                     });
                 }
                 else if (error.type == "ConflictError") {
-                    _.each(error.conflictingChanges, function(field) {
-                        $("#account" + field + "Error").html("Field changed on server");
+                    _.each(error.remoteChanges, function(field) {
+                        var conflict = error.conflictingChanges.indexOf(field) >=0;
+                        $("#account" + field + "Error").addClass(conflict ? "count-negative" : "count-main");
+                        $("#account" + field + "Error").html((conflict ? "[Conflict] " : "") + "Changed on server to: " +  error.theirs[field]);
                         $("#account" + field + "Error").show();
                     });
                 }
@@ -524,7 +554,9 @@ app.Router = Backbone.StackRouter.extend({
         localAccounts.fetch({
             config: {type:"cache", cacheQuery: {queryType:"exact", indexPath:"__local__", matchKey:true, order:"ascending", pageSize:25}},
             success: function(data) {
-                that.slidePage(new app.views.SyncPage({model: data}).render());
+                if (data.length > 0) {
+                    that.slidePage(new app.views.SyncPage({model: data}).render());
+                }
             }
         });
     }
