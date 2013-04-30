@@ -393,19 +393,20 @@ app.views.AccountPage = Backbone.View.extend({
 
 app.views.EditAccountPage = Backbone.View.extend({
 
+    action: null,
     backAction: null,
 
     template: _.template($("#edit-account-page").html()),
 
     initialize: function() {
+        this.action = (null == this.model.id) ? "Add" : "Edit";
+        if (this.action == "Add") { this.model.set({Name:"", Industry:"", Phone:"", attributes : { type: "Account"}}); }
+        this.backAction = app.router.getLastPage();
         app.offlineTracker.on("change:isOnline", this.render, this);
     },
 
     render: function(eventName) {
-        var action = (null == this.model.id) ? "Add" : "Edit";
-        if (action == "Add") { this.model.set({Name:"", Industry:"", Phone:"", attributes : { type: "Account"}}); }
-        this.backAction = app.router.getLastPage();
-        $(this.el).html(this.template(_.extend({action: action, backAction: this.backAction}, this.model.toJSON())));
+        $(this.el).html(this.template(_.extend({action: this.action, backAction: this.backAction}, this.model.toJSON())));
         (new app.views.OfflineToggler({el: $("#offlineStatus", this.el), model: app.offlineTracker})).render();
         if (!app.offlineTracker.get("isOnline")) { 
             $(".save-if-not-changed", this.el).hide();  
@@ -565,6 +566,7 @@ app.Router = Backbone.StackRouter.extend({
                 if (data.length > 0) {
                     that.slidePage(new app.views.SyncPage({model: data}).render());
                 }
+                // XXX if you edit the last record that failed to sync - you end up being stuck in the edit page
             }
         });
     }
