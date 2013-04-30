@@ -20,6 +20,7 @@
         },
 
         slidePage: function(page) {
+            console.log("+ Navigating to [" + window.location.hash + "]");
             var slideFrom,
             that = this;
 

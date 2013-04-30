@@ -342,12 +342,14 @@ app.views.SyncPage = Backbone.View.extend({
             var record = this.model.shift();
 
             var options = {
+                mergeMode: Force.MERGE_MODE.FAIL_IF_CHANGED,
                 success: function() {
                     that.render();
                     that.sync();
                 },
                 error: function() {
-                    that.model.push(record.set("__sync_failed__", true));
+                    record = record.set("__sync_failed__", true);
+                    that.model.push(record);
                     that.render();
                     that.sync();
                 }
@@ -391,6 +393,8 @@ app.views.AccountPage = Backbone.View.extend({
 
 app.views.EditAccountPage = Backbone.View.extend({
 
+    backAction: null,
+
     template: _.template($("#edit-account-page").html()),
 
     initialize: function() {
@@ -400,7 +404,8 @@ app.views.EditAccountPage = Backbone.View.extend({
     render: function(eventName) {
         var action = (null == this.model.id) ? "Add" : "Edit";
         if (action == "Add") { this.model.set({Name:"", Industry:"", Phone:"", attributes : { type: "Account"}}); }
-        $(this.el).html(this.template(_.extend({action: action, backAction: app.router.getLastPage()}, this.model.toJSON())));
+        this.backAction = app.router.getLastPage();
+        $(this.el).html(this.template(_.extend({action: action, backAction: this.backAction}, this.model.toJSON())));
         (new app.views.OfflineToggler({el: $("#offlineStatus", this.el), model: app.offlineTracker})).render();
         if (!app.offlineTracker.get("isOnline")) { 
             $(".save-if-not-changed", this.el).hide();  
@@ -423,6 +428,12 @@ app.views.EditAccountPage = Backbone.View.extend({
         $("#account" + target.name + "Error").hide();
     },
 
+    showFieldError: function(field, message) {
+        $("#account" + field + "Error").addClass("count-negative");
+        $("#account" + field + "Error").html(message);
+        $("#account" + field + "Error").show();
+    },
+
     save: function(evt) {
         var that = this;
         var mergeMode = ($(evt.target).hasClass("save-if-not-changed") 
@@ -434,7 +445,7 @@ app.views.EditAccountPage = Backbone.View.extend({
         this.model.save(null, {
             mergeMode: mergeMode,
             success: function(data) {
-                app.router.navigate(that.options.backAction, {trigger:true});
+                app.router.navigate(that.backAction, {trigger:true});
             },
             error: function(data, err, options) {
                 var error = new Force.Error(err);
@@ -445,8 +456,7 @@ app.views.EditAccountPage = Backbone.View.extend({
                         }
                         else {
                             _.each(detail.fields, function(field) {
-                                $("#account" + field + "Error").html(detail.message);
-                                $("#account" + field + "Error").show();
+                                that.showFieldError(field, detail.message);
                             });
                         }
                     });
@@ -454,9 +464,7 @@ app.views.EditAccountPage = Backbone.View.extend({
                 else if (error.type == "ConflictError") {
                     _.each(error.remoteChanges, function(field) {
                         var conflict = error.conflictingChanges.indexOf(field) >=0;
-                        $("#account" + field + "Error").addClass(conflict ? "count-negative" : "count-main");
-                        $("#account" + field + "Error").html((conflict ? "[Conflict] " : "") + "Changed on server to: " +  error.theirs[field]);
-                        $("#account" + field + "Error").show();
+                        that.showFieldError(field, (conflict ? "[Conflict] " : "") + "Changed on server to: " +  error.theirs[field]);
                     });
                 }
             }
