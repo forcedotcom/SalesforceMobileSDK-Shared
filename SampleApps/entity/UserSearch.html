@@ -105,7 +105,12 @@ app.models.UserCollection = Force.SObjectCollection.extend({
     model: app.models.User,
     fieldlist: ["Id", "FirstName", "LastName", "SmallPhotoUrl", "Title"],
 
+    getCriteria: function() {
+        return this.key;
+    },
+
     setCriteria: function(key) {
+        this.key = key;
         this.config = {type:"soql", query:"SELECT " + this.fieldlist.join(",")  
                         + " FROM User"
                         + " WHERE Name like '" + key + "%'"
@@ -132,16 +137,13 @@ app.views.SearchPage = Backbone.View.extend({
 
     render: function(eventName) {
         $(this.el).html(this.template());
-        $(".search-key", this.el).val(this.key);
+        $(".search-key", this.el).val(this.model.getCriteria());
         this.listView.setElement($("ul", this.el)).render();
-        this.delegateEvents(); // otherwise events are no longer hooked after second render
         return this;
     },
 
     search: function(event) {
-        event.preventDefault();
-        this.key = $(".search-key", this.el).val();
-        this.model.setCriteria(this.key);
+        this.model.setCriteria($(".search-key", this.el).val());
         this.model.fetch();
     }
 });
@@ -202,13 +204,10 @@ app.Router = Backbone.StackRouter.extend({
 
         // Collection behind search screen
         this.searchResults = new app.models.UserCollection();
-
-        // We keep a single instance of the SearchPage
-        this.startPage = new app.views.SearchPage({model: this.searchResults});
     },
 
     list: function() {
-        this.slidePage(this.startPage);
+        this.slidePage(new app.views.SearchPage({model: this.searchResults}));
     },
 
     viewUser: function(id) {

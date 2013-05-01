@@ -103,16 +103,14 @@ app.views.SearchPage = Backbone.View.extend({
 
     render: function(eventName) {
         $(this.el).html(this.template());
-        $(".search-key", this.el).val(this.key);
         this.listView.setElement($("ul", this.el)).render();
         return this;
     },
 
     search: function(event) {
-        event.preventDefault();
-        this.key = $(".search-key", this.el).val();
-        if (this.key.length >= 2) {
-            this.model.setCriteria(this.key);
+        var key = $(".search-key", this.el).val();
+        if (key.length >= 2) {
+            this.model.setCriteria(key);
             this.model.fetch();
         }
     }
@@ -153,8 +151,7 @@ app.views.ListItemView = Backbone.View.extend({
 app.Router = Backbone.StackRouter.extend({
 
     routes: {
-        "": "list",
-        "list": "list",
+        "": "list"
     },
 
     initialize: function() {
@@ -162,13 +159,10 @@ app.Router = Backbone.StackRouter.extend({
 
         // Collection behind search screen
         this.searchResults = new app.models.SearchCollection();
-
-        // We keep a single instance of the SearchPage throughout the app
-        this.startPage = new app.views.SearchPage({model: this.searchResults});
     },
 
     list: function() {
-        this.slidePage(this.startPage);
+        this.slidePage(new app.views.SearchPage({model: this.searchResults}));
     }
 });
 </script>

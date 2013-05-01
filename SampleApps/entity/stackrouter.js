@@ -3,9 +3,6 @@
 (function(Backbone, _, $) {
 
     Backbone.StackRouter = Backbone.Router.extend({
-        // to be defined in subclass
-        startPage: null,
-
         initialize: function() {
             // Keep track of the history of pages (we only store the page URL). Used to identify the direction
             // (left or right) of the sliding transition between pages.
@@ -34,8 +31,8 @@
             // Cleaning up: remove old pages that were moved out of the viewport
             $('.stage-right, .stage-left').remove();
 
-            if (page === this.startPage) {
-                // Always apply a Back (slide from left) transition when we go back to the search page
+            if (window.location.hash === "") {
+                // Always apply a Back (slide from left) transition when we go back 
                 slideFrom = "left";
                 $(page.el).attr('class', 'page stage-left');
                 // Reinitialize page history
