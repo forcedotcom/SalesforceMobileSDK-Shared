@@ -105,7 +105,12 @@ app.models.UserCollection = Force.SObjectCollection.extend({
     model: app.models.User,
     fieldlist: ["Id", "FirstName", "LastName", "SmallPhotoUrl", "Title"],
 
+    getCriteria: function() {
+        return this.key;
+    },
+
     setCriteria: function(key) {
+        this.key = key;
         this.config = {type:"soql", query:"SELECT " + this.fieldlist.join(",")  
                         + " FROM User"
                         + " WHERE Name like '" + key + "%'"
@@ -123,20 +128,22 @@ app.views.SearchPage = Backbone.View.extend({
     template: _.template($("#search-page").html()),
 
     events: {
-        "keyup .search-key": "search",
-        "click .search": "search"
+        "keyup .search-key": "search"
+    },
+
+    initialize: function() {
+        this.listView = new app.views.UserListView({model: this.model});
     },
 
     render: function(eventName) {
         $(this.el).html(this.template());
-        this.listView = new app.views.UserListView({el: $("ul", this.el), model: this.model});
-        this.listView.render();
+        $(".search-key", this.el).val(this.model.getCriteria());
+        this.listView.setElement($("ul", this.el)).render();
         return this;
     },
 
     search: function(event) {
-        event.preventDefault();
-        this.model.setCriteria($(".search-key").val());
+        this.model.setCriteria($(".search-key", this.el).val());
         this.model.fetch();
     }
 });
@@ -193,28 +200,26 @@ app.Router = Backbone.StackRouter.extend({
     },
 
     initialize: function() {
-
         Backbone.Router.prototype.initialize.call(this);
 
-        // We keep a single instance of the SearchPage and its associated User collection throughout the app
+        // Collection behind search screen
         this.searchResults = new app.models.UserCollection();
-        this.startPage = new app.views.SearchPage({model: this.searchResults}).render();
-        $(this.startPage.el).attr("id", "startPage");
     },
 
     list: function() {
-        this.slidePage(this.startPage);
+        this.slidePage(new app.views.SearchPage({model: this.searchResults}));
     },
 
     viewUser: function(id) {
         var that = this;
         var user = new app.models.User({Id: id});
-        user.fetch({
-            fieldlist: user.fieldlist,
-            success: function(data) {
-                that.slidePage(new app.views.UserPage({model: data}).render());
+        user.fetch(
+            {
+                success: function() {
+                    that.slidePage(new app.views.UserPage({model: user}))
+                }
             }
-        });
+        );
     }
 });
 </script>

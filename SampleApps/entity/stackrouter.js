@@ -3,19 +3,19 @@
 (function(Backbone, _, $) {
 
     Backbone.StackRouter = Backbone.Router.extend({
-        // to be defined in subclass
-        startPage: null,
-
         initialize: function() {
-
-            var that = this;
-
             // Keep track of the history of pages (we only store the page URL). Used to identify the direction
             // (left or right) of the sliding transition between pages.
             this.pageHistory = [];
         },
 
-        slidePage: function(page) {
+        getLastPage: function() {
+            return (this.pageHistory != null && this.pageHistory.length > 0 ? this.pageHistory[this.pageHistory.length - 1] : "#");
+        },
+
+        slidePage: function(view) {
+            var page = view.render();
+            console.log("+ Navigating to [" + window.location.hash + "]");
             var slideFrom,
             that = this;
 
@@ -29,10 +29,10 @@
             }
 
             // Cleaning up: remove old pages that were moved out of the viewport
-            $('.stage-right, .stage-left').not('#startPage').remove();
+            $('.stage-right, .stage-left').remove();
 
-            if (page === this.startPage) {
-                // Always apply a Back (slide from left) transition when we go back to the search page
+            if (window.location.hash === "") {
+                // Always apply a Back (slide from left) transition when we go back 
                 slideFrom = "left";
                 $(page.el).attr('class', 'page stage-left');
                 // Reinitialize page history

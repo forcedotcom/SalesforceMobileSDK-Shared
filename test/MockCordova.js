@@ -90,6 +90,7 @@
                             interceptors[key](successCB, errorCB, args); 
                         } catch (err) { 
                             console.error("Error caught when calling " + service + ":" + action + " " + err);
+                            console.error(err.stack);
                             errorCB(err); 
                         }
                     }, 0);
