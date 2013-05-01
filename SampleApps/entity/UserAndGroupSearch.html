@@ -93,21 +93,22 @@ app.views.SearchPage = Backbone.View.extend({
 
     template: _.template($("#search-page").html()),
 
+    events: {
+        "keyup .search-key": "search"
+    },
+
+    initialize: function() {
+        this.listView = new app.views.ListView({model: this.model});
+    },
+
     render: function(eventName) {
         $(this.el).html(this.template());
-        this.listView = new app.views.ListView({el: $("ul", this.el), model: this.model});
-        this.listView.render();
+        this.listView.setElement($("ul", this.el)).render();
         return this;
     },
 
-    events: {
-        "keyup .search-key": "search",
-        "click .search": "search"
-    },
-
     search: function(event) {
-        event.preventDefault();
-        var key = $(".search-key").val();
+        var key = $(".search-key", this.el).val();
         if (key.length >= 2) {
             this.model.setCriteria(key);
             this.model.fetch();
@@ -150,23 +151,18 @@ app.views.ListItemView = Backbone.View.extend({
 app.Router = Backbone.StackRouter.extend({
 
     routes: {
-        "": "list",
-        "list": "list",
+        "": "list"
     },
 
     initialize: function() {
-
         Backbone.Router.prototype.initialize.call(this);
 
-        // We keep a single instance of the SearchPage and its associated Searchcollection throughout the app
+        // Collection behind search screen
         this.searchResults = new app.models.SearchCollection();
-        this.startPage = new app.views.SearchPage({model: this.searchResults});
-        this.startPage.render();
-        $(this.startPage.el).attr("id", "startPage");
     },
 
     list: function() {
-        this.slidePage(this.startPage);
+        this.slidePage(new app.views.SearchPage({model: this.searchResults}));
     }
 });
 </script>

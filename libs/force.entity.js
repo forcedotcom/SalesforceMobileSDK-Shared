@@ -25,11 +25,23 @@
             var d = $.Deferred();
             args.push(function() {
                 console.log("------> Calling successCB for " + objectName + ":" + methodName);
-                d.resolve.apply(d, arguments);
+                try {
+                    d.resolve.apply(d, arguments);
+                }
+                catch (err) { 
+                    console.error("------> Error when calling successCB for " + objectName + ":" + methodName);
+                    console.error(err.stack);
+                }
             });
             args.push(function() {
                 console.log("------> Calling errorCB for " + objectName + ":" + methodName);
-                d.reject.apply(d, arguments);
+                try {
+                    d.reject.apply(d, arguments);
+                }
+                catch (err) { 
+                    console.error("------> Error when calling errorCB for " + objectName + ":" + methodName);
+                    console.error(err.stack);
+                }
             });
             console.log("-----> Calling " + objectName + ":" + methodName);
             object[methodName].apply(object, args);
@@ -501,12 +513,13 @@
     // * sobjectType:<record type>
     // * id:<record id or null during create>
     // * attributes:<map field name to value>  record attributes given by a map of field name to value
-    // * fieldlist:<fields>                    fields to fetch for read  otherwise full record is fetched, fields to save for update or create (required)
+    // * fieldlist:<fields>                    fields to fetch for read, fields to save for update or create (required)
     // * refetch:<true|false>                  for create or update to refetch the record following the save (useful in case of calculated fields)
+    // * refetchFieldList:<fields>             when refetch is true, fields to refetch
     //
     // Returns a promise
     //
-    Force.syncSObjectWithServer = function(method, sobjectType, id, attributes, fieldlist, refetch) {
+    Force.syncSObjectWithServer = function(method, sobjectType, id, attributes, fieldlist, refetch, refetchFieldList) {
         console.log("---> In Force.syncSObjectWithServer:method=" + method + " id=" + id);
 
         // Server actions helper
@@ -520,6 +533,10 @@
 
         var serverRetrieve = function() { 
             return forcetkClient.retrieve(sobjectType, id, fieldlist);
+        };
+
+        var serverRefetch = function(data) { 
+            return forcetkClient.retrieve(sobjectType, data.Id, refetchFieldList);
         };
 
         var serverUpdate   = function() { 
@@ -547,7 +564,7 @@
         }
 
         if (refetch) {
-            promise = promise.then(serverRetrieve);
+            promise = promise.then(serverRefetch);
         }
 
         return promise;
@@ -580,11 +597,11 @@
     // Returns a promise
     //
     //
-    Force.syncSObject = function(method, sobjectType, id, attributes, fieldlist, refetch, cache, cacheMode) {
+    Force.syncSObject = function(method, sobjectType, id, attributes, fieldlist, refetch, refetchFieldList, cache, cacheMode) {
         console.log("--> In Force.syncSObject:method=" + method + " id=" + id + " cacheMode=" + cacheMode);
 
         var serverSync = function(method, id) {
-            return Force.syncSObjectWithServer(method, sobjectType, id, attributes, fieldlist, refetch);
+            return Force.syncSObjectWithServer(method, sobjectType, id, attributes, fieldlist, refetch, refetchFieldList);
         };
 
         var cacheSync = function(method, id, attributes, fieldlist, localAction) {
@@ -618,7 +635,7 @@
                 });
         }
         // Go to server first
-        else if (cacheMode == Force.CACHE_MODE.SERVER_FIRST || cacheMode == null /* no cachMode specified means server-first */) {
+        else if (cacheMode == Force.CACHE_MODE.SERVER_FIRST || cacheMode == null /* no cacheMode specified means server-first */) {
             if (cache.isLocalId(id)) {
                 if (method == "read" || method == "delete") {
                     throw "Can't " + method + " on server a locally created record";
@@ -694,11 +711,11 @@
     //   conflictingChanges:<fields changed both in theirs and yours with different values>
     // }
     // 
-    Force.syncSObjectDetectConflict = function(method, sobjectType, id, attributes, fieldlist, refetch, cache, cacheMode, cacheForOriginals, mergeMode) {
-        console.log("--> In Force.syncSObjectDetectConflict:method=" + method + " id=" + id + " cacheMode=" + cacheMode);
+    Force.syncSObjectDetectConflict = function(method, sobjectType, id, attributes, fieldlist, refetch, refetchFieldList, cache, cacheMode, cacheForOriginals, mergeMode) {
+        console.log("--> In Force.syncSObjectDetectConflict:method=" + method + " id=" + id + " cacheMode=" + cacheMode + " mergeMode=" + mergeMode);
 
-        var sync = function(fieldlist, refetch) {
-            return Force.syncSObject(method, sobjectType, id, attributes, fieldlist, refetch, cache, cacheMode);
+        var sync = function(fieldlist, refetch, refetchFieldList) {
+            return Force.syncSObject(method, sobjectType, id, attributes, fieldlist, refetch, refetchFieldList, cache, cacheMode);
         };
 
         // Original cache required for conflict detection
@@ -730,11 +747,7 @@
         var identifyChanges = function(attrs, otherAttrs) {
             return _.filter(_.intersection(fieldlist, _.union(_.keys(attrs), _.keys(otherAttrs))),
                             function(key) {
-                                var value1 = attrs[key];
-                                var value2 = otherAttrs[key];
-                                value1 = value1 == null ? "" : value1; // treat "", undefined and null the same way
-                                value2 = value2 == null ? "" : value2; // treat "", undefined and null the same way
-                                return value1 != value2;
+                                return (attrs[key] || "") != (otherAttrs[key] || ""); // treat "", undefined and null the same way
                             });
         };
 
@@ -743,8 +756,9 @@
             var originalAttributes;
             var latestAttributes;
 
-            // Local action or locally created record -- no conflict check needed
-            if (cacheMode == Force.CACHE_MODE.CACHE_ONLY || (cache != null && cache.isLocalId(id))) {
+            // Merge mode is ignore remote changes or local action or locally created record -- no conflict check needed
+            if (mergeMode == Force.MERGE_MODE.IGNORE_REMOTE || mergeMode == null /* no mergeMode specified means IGNORE_REMOTE */ 
+                || cacheMode == Force.CACHE_MODE.CACHE_ONLY || (cache != null && cache.isLocalId(id))) {
                 return sync(fieldlist, refetch);
             }
             
@@ -756,24 +770,29 @@
                 })
                 .then(function(data) {
                     latestAttributes = data;
-
-                    var localChanges = identifyChanges(originalAttributes, attributes); 
-                    var remoteChanges = identifyChanges(originalAttributes, latestAttributes);
-                    var localVsRemoteChanges = identifyChanges(attributes, latestAttributes);
-                    var conflictingChanges = _.intersection(remoteChanges, localChanges, localVsRemoteChanges);
-
                     var shouldFail = false;
-                    switch(mergeMode) {
-                    case Force.MERGE_MODE.IGNORE_REMOTE:       shouldFail = false; break;
-                    case Force.MERGE_MODE.FAIL_IF_CHANGED:     shouldFail = remoteChanges.length > 0; break;
-                    case Force.MERGE_MODE.FAIL_IF_CONFLICTING: shouldFail = conflictingChanges.length > 0; break;
-                    }
-                    if (shouldFail) {
-                        var conflictDetails = {conflict:true, base: originalAttributes, theirs: latestAttributes, yours:attributes, remoteChanges:remoteChanges, localChanges:localChanges, conflictingChanges:conflictingChanges};
-                        return $.Deferred().reject(conflictDetails);
+
+                    if (latestAttributes == null || originalAttributes == null) {
+                        return sync(fieldlist, refetch);
                     }
                     else {
-                        return sync(localChanges, refetch || remoteChanges.length > 0 /* refetch if remote changes detected */);
+                        var localChanges = identifyChanges(originalAttributes, attributes); 
+                        var remoteChanges = identifyChanges(originalAttributes, latestAttributes);
+                        var localVsRemoteChanges = identifyChanges(attributes, latestAttributes);
+                        var conflictingChanges = _.intersection(remoteChanges, localChanges, localVsRemoteChanges);
+
+                        switch(mergeMode) {
+                        case Force.MERGE_MODE.IGNORE_REMOTE:       shouldFail = false; break;
+                        case Force.MERGE_MODE.FAIL_IF_CHANGED:     shouldFail = remoteChanges.length > 0; break;
+                        case Force.MERGE_MODE.FAIL_IF_CONFLICTING: shouldFail = conflictingChanges.length > 0; break;
+                        }
+                        if (shouldFail) {
+                            var conflictDetails = {conflict:true, base: originalAttributes, theirs: latestAttributes, yours:attributes, remoteChanges:remoteChanges, localChanges:localChanges, conflictingChanges:conflictingChanges};
+                            return $.Deferred().reject(conflictDetails);
+                        }
+                        else {
+                            return sync(localChanges, refetch || remoteChanges.length > 0 /* refetch if remote changes detected */, refetchFieldList || fieldlist);
+                        }
                     }
                 });
         };
@@ -896,7 +915,7 @@
     //
     // Returns a promise
     //
-    Force.fetchSObjects = function(config, cache) {
+    Force.fetchSObjects = function(config, cache, cacheForOriginals) {
         console.log("--> In Force.fetchSObjects:config.type=" + config.type);
 
         var promise;
@@ -920,12 +939,16 @@
                     return cache.saveAll(records);
                 };
 
+                var cacheForOriginalsSaveAll = function(records) {
+                    return cacheForOriginals != null ? cacheForOriginal.saveAll(records) : records;
+                };
+
                 var setupGetMore = function(records) {
                     return _.extend(fetchResult, 
                                     {
                                         records: records,
                                         getMore: function() {
-                                            return fetchResult.getMore().then(cache.saveAll);
+                                            return fetchResult.getMore().then(cacheSaveAll).then(cacheForOriginalsSaveAll);
                                         }
                                     });
                 };
@@ -933,6 +956,7 @@
                 promise = promise
                     .then(processResult)
                     .then(cacheSaveAll)
+                    .then(cacheForOriginalsSaveAll)
                     .then(setupGetMore);
             }
         }
@@ -961,6 +985,12 @@
 
             // Used if none is passed during sync call - can be a cache object or a function returning a cache object
             cacheForOriginals: null,
+
+            // Used if none is passed during sync call - can be boolean or a function returning a boolean
+            refetch: null,
+
+            // Used if none is passed during sync call - can be a string array or a function returning a string array
+            refetchFieldList: null,
 
             // sobjectType is expected on every instance
             sobjectType:null,
@@ -992,8 +1022,9 @@
                 var cache             = resolveOption("cache");
                 var cacheForOriginals = resolveOption("cacheForOriginals");
                 var refetch           = resolveOption("refetch");
+                var refetchFieldList  = resolveOption("refetchFieldList");
 
-                Force.syncSObjectDetectConflict(method, this.sobjectType, model.id, model.attributes, fieldlist, options.refetch, cache, cacheMode, cacheForOriginals, mergeMode)
+                Force.syncSObjectDetectConflict(method, this.sobjectType, model.id, model.attributes, fieldlist, options.refetch, options.refetchFieldList, cache, cacheMode, cacheForOriginals, mergeMode)
                     .done(options.success)
                     .fail(options.error);
             }
@@ -1014,6 +1045,9 @@
         Force.SObjectCollection = Backbone.Collection.extend({
             // Used if none is passed during sync call - can be a cache object or a function returning a cache object
             cache: null,
+
+            // Used if none is passed during sync call - can be a cache object or a function returning a cache object
+            cacheForOriginals: null,
 
             // Used if none is passed during sync call - can be a string or a function returning a string
             config:null, 
@@ -1054,13 +1088,15 @@
                 
                 var config = options.config || (_.isFunction(this.config) ? this.config() : this.config);
                 var cache = options.cache || (_.isFunction(this.cache) ? this.cache() : this.cache);
+                var cacheForOriginals = options.cacheForOriginals || (_.isFunction(this.cacheForOriginals) ? this.cacheForOriginals() : this.cacheForOriginals);
+
                 if (config == null) {
                     options.success([]);
                     return;
                 }
 
                 options.reset = true;
-                Force.fetchSObjects(config, cache)
+                Force.fetchSObjects(config, cache, cacheForOriginals)
                     .then(function(resp) {
                         that._fetchResponse = resp;
                         that.set(resp.records);
