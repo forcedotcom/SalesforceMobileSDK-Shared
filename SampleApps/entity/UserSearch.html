@@ -123,20 +123,25 @@ app.views.SearchPage = Backbone.View.extend({
     template: _.template($("#search-page").html()),
 
     events: {
-        "keyup .search-key": "search",
-        "click .search": "search"
+        "keyup .search-key": "search"
+    },
+
+    initialize: function() {
+        this.listView = new app.views.UserListView({model: this.model});
     },
 
     render: function(eventName) {
         $(this.el).html(this.template());
-        this.listView = new app.views.UserListView({el: $("ul", this.el), model: this.model});
-        this.listView.render();
+        $(".search-key", this.el).val(this.key);
+        this.listView.setElement($("ul", this.el)).render();
+        this.delegateEvents(); // otherwise events are no longer hooked after second render
         return this;
     },
 
     search: function(event) {
         event.preventDefault();
-        this.model.setCriteria($(".search-key").val());
+        this.key = $(".search-key", this.el).val();
+        this.model.setCriteria(this.key);
         this.model.fetch();
     }
 });
@@ -193,13 +198,13 @@ app.Router = Backbone.StackRouter.extend({
     },
 
     initialize: function() {
-
         Backbone.Router.prototype.initialize.call(this);
 
-        // We keep a single instance of the SearchPage and its associated User collection throughout the app
+        // Collection behind search screen
         this.searchResults = new app.models.UserCollection();
-        this.startPage = new app.views.SearchPage({model: this.searchResults}).render();
-        $(this.startPage.el).attr("id", "startPage");
+
+        // We keep a single instance of the SearchPage
+        this.startPage = new app.views.SearchPage({model: this.searchResults});
     },
 
     list: function() {
@@ -209,12 +214,13 @@ app.Router = Backbone.StackRouter.extend({
     viewUser: function(id) {
         var that = this;
         var user = new app.models.User({Id: id});
-        user.fetch({
-            fieldlist: user.fieldlist,
-            success: function(data) {
-                that.slidePage(new app.views.UserPage({model: data}).render());
+        user.fetch(
+            {
+                success: function() {
+                    that.slidePage(new app.views.UserPage({model: user}))
+                }
             }
-        });
+        );
     }
 });
 </script>

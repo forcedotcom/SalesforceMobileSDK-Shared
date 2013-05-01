@@ -635,7 +635,7 @@
                 });
         }
         // Go to server first
-        else if (cacheMode == Force.CACHE_MODE.SERVER_FIRST || cacheMode == null /* no cachMode specified means server-first */) {
+        else if (cacheMode == Force.CACHE_MODE.SERVER_FIRST || cacheMode == null /* no cacheMode specified means server-first */) {
             if (cache.isLocalId(id)) {
                 if (method == "read" || method == "delete") {
                     throw "Can't " + method + " on server a locally created record";
@@ -747,11 +747,7 @@
         var identifyChanges = function(attrs, otherAttrs) {
             return _.filter(_.intersection(fieldlist, _.union(_.keys(attrs), _.keys(otherAttrs))),
                             function(key) {
-                                var value1 = attrs[key];
-                                var value2 = otherAttrs[key];
-                                value1 = value1 == null ? "" : value1; // treat "", undefined and null the same way
-                                value2 = value2 == null ? "" : value2; // treat "", undefined and null the same way
-                                return value1 != value2;
+                                return (attrs[key] || "") != (otherAttrs[key] || ""); // treat "", undefined and null the same way
                             });
         };
 
@@ -761,7 +757,8 @@
             var latestAttributes;
 
             // Merge mode is ignore remote changes or local action or locally created record -- no conflict check needed
-            if (mergeMode == Force.MERGE_MODE.IGNORE_REMOTE || cacheMode == Force.CACHE_MODE.CACHE_ONLY || (cache != null && cache.isLocalId(id))) {
+            if (mergeMode == Force.MERGE_MODE.IGNORE_REMOTE || mergeMode == null /* no mergeMode specified means IGNORE_REMOTE */ 
+                || cacheMode == Force.CACHE_MODE.CACHE_ONLY || (cache != null && cache.isLocalId(id))) {
                 return sync(fieldlist, refetch);
             }
             
