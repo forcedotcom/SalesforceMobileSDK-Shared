@@ -3,17 +3,22 @@
   <head>
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
 
-    <!-- jquery -->
+    <!-- external libs -->
     <script src="../external/jquery/jquery-2.0.0.min.js"></script>
+    <script src="../external/backbone/underscore-1.4.4.min.js"></script>
+    <script src="../external/backbone/backbone-1.0.0.min.js"></script>
 
     <!-- mock cordova -->
     <script src="MockCordova.js"></script>
-    <!-- Include cordova plugins -->
-    <script src="../libs/cordova.force.js"></script>
 
-    <!-- mocks for native implementations -->
-    <script src="MockSDKInfo.js"></script>
+    <!-- sfdc libs -->
+    <script src="../libs/forcetk.js"></script>
+    <script src="../libs/cordova.force.js"></script>
+    <script src="../libs/force.entity.js"></script>
+
+    <!-- mock for native implementations -->
     <script src="MockSmartStore.js"></script>
+    <script src="MockSDKInfo.js"></script>
 
 	<!-- load qunit -->
     <link rel="stylesheet" type="text/css" href="../external/qunit/qunit.css" />
@@ -25,6 +30,7 @@
     <script src="SFSmartStoreTestSuite.js"></script>
     <script src="SFSmartStoreLoadTestSuite.js"></script>
     <script src="SFSDKInfoTestSuite.js"></script>
+    <script src="ForceEntityTestSuite.js"></script>
 
     <style>
       .logWindow {display:none; width:700px;}
@@ -33,6 +39,17 @@
 
     <script charset="utf-8">
     var debugMode = true;
+
+    var creds = {
+        accessToken: "--will-be-obtained-by-refresh--",
+        refreshToken: "5Aep861KIwKdekr90KsESmRP6soKuBrQlSV5iTuNdX6UHGbZnbEUug1hvYnrlDYmYFX.g2AaD7vtQ==",
+        clientId: "3MVG9Iu66FKeHhINkB1l7xt7kR8czFcCTUhgoA8Ol2Ltf1eYHOU4SqQRSEitYFDUpqRWcoQ2.dBv_a1Dyu5xa",
+        loginUrl: "https://test.salesforce.com",
+        instanceUrl: "https://cs1.salesforce.com",
+    };
+
+    Force.init(creds);
+
     window.addEventListener("load", function() {
         document.getElementById("link_smartstore_test_suite")
             .addEventListener("click", function() {new SmartStoreTestSuite().startTests();});
@@ -40,6 +57,8 @@
             .addEventListener("click", function() {new SmartStoreLoadTestSuite().startTests();});
         document.getElementById("link_sdkinfo_test_suite")
             .addEventListener("click", function() {new SDKInfoTestSuite().startTests();});
+        document.getElementById("link_force_entity_test_suite")
+            .addEventListener("click", function() {new ForceEntityTestSuite().startTests();});
     });
     </script>
   </head>
@@ -52,6 +71,7 @@
           <p><a href="#" id="link_smartstore_test_suite" data-role="button" data-inline="true">Run SmartStore Tests</a></p>
           <p><a href="#" id="link_smartstore_load_test_suite" data-role="button" data-inline="true">Run SmartStore Load Tests</a></p>
           <p><a href="#" id="link_sdkinfo_test_suite" data-role="button" data-inline="true">Run SDK Info Tests</a></p>
+          <p><a href="#" id="link_force_entity_test_suite" data-role="button" data-inline="true">Run Entity Framework Tests</a></p>
 
 		  <div id="qunit-testrunner-toolbar"></div>
 		  <h2 id="qunit-userAgent"></h2>
