@@ -676,13 +676,13 @@
     // -----------------
     //   If we call "theirs" the current server record, "yours" the locally modified record, "base" the server record that was originally fetched:
     //   - IGNORE_REMOTE:       ignore any changes that might have taken place on the server
-    //   - FAIL_IF_CHANGED:     fail if "theirs" is different from "base"
     //   - FAIL_IF_CONFLICTING: fail if the same fields have been changed in "yours" and "theirs" with different values
+    //   - FAIL_IF_CHANGED:     fail if "theirs" is different from "base"
     //
     Force.MERGE_MODE = {
         IGNORE_REMOTE:       "ignore-remote",
-        FAIL_IF_CHANGED:     "fail-if-changed",
-        FAIL_IF_CONFLICTING: "fail-if-conflicting"
+        FAIL_IF_CONFLICTING: "fail-if-conflicting",
+        FAIL_IF_CHANGED:     "fail-if-changed"
     };
 
     // Force.syncSObjectDetectConflict
@@ -714,13 +714,13 @@
     Force.syncSObjectDetectConflict = function(method, sobjectType, id, attributes, fieldlist, refetch, refetchFieldList, cache, cacheMode, cacheForOriginals, mergeMode) {
         console.log("--> In Force.syncSObjectDetectConflict:method=" + method + " id=" + id + " cacheMode=" + cacheMode + " mergeMode=" + mergeMode);
 
-        var sync = function(fieldlist, refetch, refetchFieldList) {
+        var sync = function(attributes) {
             return Force.syncSObject(method, sobjectType, id, attributes, fieldlist, refetch, refetchFieldList, cache, cacheMode);
         };
 
         // Original cache required for conflict detection
         if (cacheForOriginals == null) {
-            return sync(fieldlist, refetch);
+            return sync(attributes);
         }
 
         // Server retrieve action
@@ -754,44 +754,44 @@
         // When conflict is detected (according to mergeMode), the promise is failed, otherwise sync() is invoked
         var checkConflictAndSync = function() {
             var originalAttributes;
-            var latestAttributes;
 
             // Merge mode is ignore remote changes or local action or locally created record -- no conflict check needed
             if (mergeMode == Force.MERGE_MODE.IGNORE_REMOTE || mergeMode == null /* no mergeMode specified means IGNORE_REMOTE */ 
                 || cacheMode == Force.CACHE_MODE.CACHE_ONLY || (cache != null && cache.isLocalId(id))) {
-                return sync(fieldlist, refetch);
+                return sync(attributes);
             }
             
             // Otherwise get original copy, get latest server and compare
             return cacheForOriginalsRetrieve()
                 .then(function(data) {
                     originalAttributes = data;
-                    return (originalAttributes == null ? null /* don't waste going to server */: serverRetrieve());
+                    return (originalAttributes == null ? null /* don't waste time going to server */: serverRetrieve());
                 })
-                .then(function(data) {
-                    latestAttributes = data;
+                .then(function(remoteAttributes) {
                     var shouldFail = false;
 
-                    if (latestAttributes == null || originalAttributes == null) {
-                        return sync(fieldlist, refetch);
+                    if (remoteAttributes == null || originalAttributes == null) {
+                        return sync(attributes);
                     }
                     else {
                         var localChanges = identifyChanges(originalAttributes, attributes); 
-                        var remoteChanges = identifyChanges(originalAttributes, latestAttributes);
-                        var localVsRemoteChanges = identifyChanges(attributes, latestAttributes);
+                        var localVsRemoteChanges = identifyChanges(attributes, remoteAttributes);
+                        var remoteChanges = identifyChanges(originalAttributes, remoteAttributes);
+                        var nonConflictingRemoteChanges = _.without(remoteChanges, localVsRemoteChanges);
                         var conflictingChanges = _.intersection(remoteChanges, localChanges, localVsRemoteChanges);
 
                         switch(mergeMode) {
                         case Force.MERGE_MODE.IGNORE_REMOTE:       shouldFail = false; break;
-                        case Force.MERGE_MODE.FAIL_IF_CHANGED:     shouldFail = remoteChanges.length > 0; break;
                         case Force.MERGE_MODE.FAIL_IF_CONFLICTING: shouldFail = conflictingChanges.length > 0; break;
+                        case Force.MERGE_MODE.FAIL_IF_CHANGED:     shouldFail = remoteChanges.length > 0; break;
                         }
                         if (shouldFail) {
-                            var conflictDetails = {conflict:true, base: originalAttributes, theirs: latestAttributes, yours:attributes, remoteChanges:remoteChanges, localChanges:localChanges, conflictingChanges:conflictingChanges};
+                            var conflictDetails = {conflict:true, base: originalAttributes, theirs: remoteAttributes, yours:attributes, remoteChanges:remoteChanges, localChanges:localChanges, conflictingChanges:conflictingChanges};
                             return $.Deferred().reject(conflictDetails);
                         }
                         else {
-                            return sync(localChanges, refetch || remoteChanges.length > 0 /* refetch if remote changes detected */, refetchFieldList || fieldlist);
+                            var mergedAttributes = _.extend(attributes, _.pick(remoteAttributes, nonConflictingRemoteChanges));
+                            return sync(mergedAttributes);
                         }
                     }
                 });
@@ -799,8 +799,8 @@
 
         var promise = null;
         switch(method) {
-        case "create": promise = sync(fieldlist, refetch).then(cacheForOriginalsSave); break;
-        case "read":   promise = sync(fieldlist, refetch).then(cacheForOriginalsSave); /* XXX we might have read from the cache */ break;
+        case "create": promise = sync(attributes).then(cacheForOriginalsSave); break;
+        case "read":   promise = sync(attributes).then(cacheForOriginalsSave); break;
         case "update": promise = checkConflictAndSync().then(cacheForOriginalsSave); break;
         case "delete": promise = checkConflictAndSync().then(cacheForOriginalsRemove); break; 
         }

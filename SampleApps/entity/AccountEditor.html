@@ -166,7 +166,8 @@
         </div>
       </div>
       <a class="button save">Save</a>
-      <a class="button save-if-not-changed">Safe Save</a>
+      <a class="button save-if-not-conflicting">Save if no conflicts</a>
+      <a class="button save-if-not-changed">Save if no remote changes</a>
       <a class="button undelete">Undelete</a>
     </div>
   </div>
@@ -416,7 +417,8 @@ app.views.EditAccountPage = Backbone.View.extend({
     events: {
         "change": "change",
         "click .save": "save",
-        "click .save-if-not-changed": "safeSave",
+        "click .save-if-not-conflicting": "saveIfNotConflicting",
+        "click .save-if-not-changed": "saveIfNotChanged",
         "click .undelete": "undelete"
     },
 
@@ -431,6 +433,7 @@ app.views.EditAccountPage = Backbone.View.extend({
         $(this.el).html(this.template(_.extend({action: this.action, backAction: this.backAction}, this.model.toJSON())));
         app.OFflineToggerView.setElement($("#offlineStatus", this.el)).render();
         if (!app.offlineTracker.get("isOnline")) { 
+            $(".save-if-not-conflicting", this.el).hide();  
             $(".save-if-not-changed", this.el).hide();  
         }
         if (!this.model.get("__locally_deleted__")) {
@@ -483,7 +486,11 @@ app.views.EditAccountPage = Backbone.View.extend({
         this.model.save(null, this.getSaveOptions(Force.MERGE_MODE.IGNORE_REMOTE));
     },
 
-    safeSave: function() {
+    saveIfNotConflicting: function() {
+        this.model.save(null, this.getSaveOptions(Force.MERGE_MODE.FAIL_IF_CONFLICTING));
+    },
+
+    saveIfNotChanged: function() {
         this.model.save(null, this.getSaveOptions(Force.MERGE_MODE.FAIL_IF_CHANGED));
     },
 
