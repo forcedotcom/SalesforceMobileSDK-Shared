@@ -86,6 +86,9 @@
         forcetkClient.metadata = promiser(innerForcetkClient, "metadata", "forcetkClient");
         forcetkClient.describe = promiser(innerForcetkClient, "describe", "forcetkClient");
 
+        // Exposing outside
+        Force.forcetkClient = forcetkClient;
+
         if (navigator.smartstore) 
         {
             smartstoreClient = new Object();
@@ -96,6 +99,12 @@
             smartstoreClient.moveCursorToNextPage = promiser(navigator.smartstore, "moveCursorToNextPage", "smartstoreClient");
             smartstoreClient.removeFromSoup = promiser(navigator.smartstore, "removeFromSoup", "smartstoreClient");
             smartstoreClient.closeCursor = promiser(navigator.smartstore, "closeCursor", "smartstoreClient");
+            smartstoreClient.soupExists = promiser(navigator.smartstore, "soupExists", "smartstoreClient");
+            smartstoreClient.removeSoup = promiser(navigator.smartstore, "removeSoup", "smartstoreClient");
+            smartstoreClient.retrieveSoupEntries = promiser(navigator.smartstore, "retrieveSoupEntries", "smartstoreClient");
+
+            // Exposing outside
+            Force.smartstoreClient = smartstoreClient;
         }
     };
 
@@ -195,8 +204,8 @@
                     record = _.extend(oldRecord || {}, record);
                     return smartstoreClient.upsertSoupEntriesWithExternalId(that.soupName, [ record ], that.keyField)
                 })
-                .then(function() {
-                    return record;
+                .then(function(records) {
+                    return records[0];
                 });
         },
 
