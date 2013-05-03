@@ -208,7 +208,7 @@ var MockSmartStore = (function(window) {
             
 
             // SELECT {soupName:selectField} FROM {soupName} WHERE {soupName:whereField} IN (values)
-            var m = smartSql.match(/SELECT {(.*):(.*)} FROM {(.*)} WHERE {(.*):(.*)} IN \((.*)\)/);
+            var m = smartSql.match(/SELECT {(.*):(.*)} FROM {(.*)} WHERE {(.*):(.*)} IN \((.*)\)/i);
             if (m != null && m[1] == m[3] && m[1] == m[4]) {
                 var soupName = m[1];
                 var selectField = m[2]
@@ -233,9 +233,22 @@ var MockSmartStore = (function(window) {
 
                 return results;
             }
-            else {
-                throw "SmartQuery not supported by MockSmartStore:" + smartSql;
+
+            // SELECT count(*) FROM {soupName}
+            var m = smartSql.match(/SELECT count\(\*\) FROM {(.*)}/i);
+            if (m != null) {
+                var soupName = m[1];
+                this.checkSoup(soupName); 
+                var soup = _soups[soupName];
+                var count = 0;
+                for (var soupEntryId in soup) {
+                    count++;
+                }
+                return [[count]];
             }
+
+            // If we get here, it means we don't support that query in the mock smartstore
+            throw "SmartQuery not supported by MockSmartStore:" + smartSql;
         },
 
         querySoupFull: function(soupName, querySpec) {

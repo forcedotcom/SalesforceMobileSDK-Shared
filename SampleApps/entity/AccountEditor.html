@@ -166,8 +166,9 @@
         </div>
       </div>
       <a class="button save">Save</a>
-      <a class="button save-if-not-conflicting">Save if no conflicts</a>
-      <a class="button save-if-not-changed">Save if no remote changes</a>
+      <a class="button overwrite">Save (overwrite)</a>
+      <a class="button merge">Save (merge changes)</a>
+      <a class="button check">Save (fail if changed)</a>
       <a class="button undelete">Undelete</a>
     </div>
   </div>
@@ -363,7 +364,7 @@ app.views.SyncPage = Backbone.View.extend({
             var record = this.model.shift();
 
             var options = {
-                mergeMode: Force.MERGE_MODE.FAIL_IF_CHANGED,
+                mergeMode: Force.MERGE_MODE.MERGE_FAIL_IF_CHANGED,
                 success: function() {
                     that.sync();
                 },
@@ -417,8 +418,9 @@ app.views.EditAccountPage = Backbone.View.extend({
     events: {
         "change": "change",
         "click .save": "save",
-        "click .save-if-not-conflicting": "saveIfNotConflicting",
-        "click .save-if-not-changed": "saveIfNotChanged",
+        "click .overwrite": "save",
+        "click .merge": "saveMerge",
+        "click .check": "saveCheck",
         "click .undelete": "undelete"
     },
 
@@ -433,10 +435,15 @@ app.views.EditAccountPage = Backbone.View.extend({
         $(this.el).html(this.template(_.extend({action: this.action, backAction: this.backAction}, this.model.toJSON())));
         app.OFflineToggerView.setElement($("#offlineStatus", this.el)).render();
         if (!app.offlineTracker.get("isOnline")) { 
-            $(".save-if-not-conflicting", this.el).hide();  
-            $(".save-if-not-changed", this.el).hide();  
+            $(".overwrite", this.el).hide();  
+            $(".merge", this.el).hide();  
+            $(".check", this.el).hide();  
+        }
+        else {
+            $(".save", this.el).hide();
         }
         if (!this.model.get("__locally_deleted__")) {
+
             $(".undelete", this.el).hide();
         }
         return this;
@@ -483,15 +490,15 @@ app.views.EditAccountPage = Backbone.View.extend({
     },
 
     save: function() {
-        this.model.save(null, this.getSaveOptions(Force.MERGE_MODE.IGNORE_REMOTE));
+        this.model.save(null, this.getSaveOptions(Force.MERGE_MODE.OVERWRITE));
     },
 
-    saveIfNotConflicting: function() {
-        this.model.save(null, this.getSaveOptions(Force.MERGE_MODE.FAIL_IF_CONFLICTING));
+    saveMerge: function() {
+        this.model.save(null, this.getSaveOptions(Force.MERGE_MODE.MERGE_ACCEPT_YOURS));
     },
 
-    saveIfNotChanged: function() {
-        this.model.save(null, this.getSaveOptions(Force.MERGE_MODE.FAIL_IF_CHANGED));
+    saveCheck: function() {
+        this.model.save(null, this.getSaveOptions(Force.MERGE_MODE.MERGE_FAIL_IF_CHANGED));
     },
 
     undelete: function() {
