@@ -61,6 +61,7 @@ ForceEntityTestSuite.prototype.testStoreCacheInit = function() {
     })
     .then(function(exists) {
         QUnit.equals(exists, true, "soup should now exist");
+        console.log("## Cleaning up");
         return Force.smartstoreClient.removeSoup(soupName);        
     })
     .then(function() {
@@ -112,6 +113,7 @@ ForceEntityTestSuite.prototype.testStoreCacheRetrieve = function() {
     })
     .then(function(record) {
         QUnit.equals(record, null, "null should have been returned");
+        console.log("## Cleaning up");
         return Force.smartstoreClient.removeSoup(soupName);        
     })
     .then(function() {
@@ -160,6 +162,7 @@ ForceEntityTestSuite.prototype.testStoreCacheSave = function() {
         QUnit.equals(records[0].Name, "JamesBond", "wrong record returned");
         QUnit.equals(records[0].Mission, "TopSecret2", "wrong record returned");
         QUnit.equals(records[0].Organization, "MI6", "wrong record returned");
+        console.log("## Cleaning up");
         return Force.smartstoreClient.removeSoup(soupName);        
     })
     .then(function() {
@@ -184,10 +187,47 @@ ForceEntityTestSuite.prototype.testStoreCacheSaveAll = function() {
  */
 ForceEntityTestSuite.prototype.testStoreCacheRemove = function() {
     console.log("# In ForceEntityTestSuite.testStoreCacheRemove");
-    //
-    // TBD
-    //
-    this.finalizeTest();
+    var self = this;
+    var cache;
+    var soupName = "testSoupForStoreCache";
+    var recordEntryId;
+    Force.smartstoreClient.removeSoup(soupName)
+    .then(function() {
+        console.log("## Initialization of StoreCache");
+        cache = new Force.StoreCache(soupName);
+        return cache.init();
+    })
+    .then(function() {
+        console.log("## Direct upsert in underlying soup");
+        return Force.smartstoreClient.upsertSoupEntriesWithExternalId(soupName, [{Id:"007", Name:"JamesBond"}], "Id");
+    })
+    .then(function(records) {
+        recordEntryId = records[0]._soupEntryId;
+        console.log("## Removing non-existent record");
+        return cache.remove("008");
+    })
+    .then(function() {
+        console.log("## Checking record is still there");
+        return Force.smartstoreClient.retrieveSoupEntries(soupName, [recordEntryId]);
+    })
+    .then(function(records) {
+        console.log("## Checking returned record");
+        QUnit.equals(records[0].Id, "007", "wrong record returned");
+        console.log("## Removing record");
+        return cache.remove("007");
+    })
+    .then(function() {
+        console.log("## Checking record is no longer there");
+        return Force.smartstoreClient.retrieveSoupEntries(soupName, [recordEntryId]);
+    })
+    .then(function(records) {
+        QUnit.equals(records[0], undefined, "wrong record returned");
+        console.log("## Cleaning up");
+        return Force.smartstoreClient.removeSoup(soupName);        
+    })
+    .then(function() {
+        self.finalizeTest();
+    });
 }
 
 /** 
