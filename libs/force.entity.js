@@ -277,7 +277,7 @@
                             .then(closeCursorIfNeeded)
                             .then(function(c) {
                                 cursor = c;
-                                that.records.pushObjects(cursor.currentPageOrderedEntries);
+                                that.records = _.union(that.records, cursor.currentPageOrderedEntries);
                                 return cursor.currentPageOrderedEntries;
                             });
                         }

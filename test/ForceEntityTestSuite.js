@@ -145,7 +145,7 @@ ForceEntityTestSuite.prototype.testStoreCacheSave = function() {
     })
     .then(function(records) {
         console.log("## Checking returned record");
-        QUnit.equals(records.length, 1, "wrong record returned");
+        QUnit.equals(records.length, 1, "one record should have been returned");
         QUnit.equals(records[0].Id, "007", "wrong record returned");
         QUnit.equals(records[0].Name, "JamesBond", "wrong record returned");
         console.log("## Saving partial record to cache");
@@ -157,7 +157,7 @@ ForceEntityTestSuite.prototype.testStoreCacheSave = function() {
     })
     .then(function(records) {
         console.log("## Checking returned record is the merge of original fields and newly provided fields");
-        QUnit.equals(records.length, 1, "wrong record returned");
+        QUnit.equals(records.length, 1, "one record should have been returned");
         QUnit.equals(records[0].Id, "007", "wrong record returned");
         QUnit.equals(records[0].Name, "JamesBond", "wrong record returned");
         QUnit.equals(records[0].Mission, "TopSecret2", "wrong record returned");
@@ -235,10 +235,67 @@ ForceEntityTestSuite.prototype.testStoreCacheRemove = function() {
  */
 ForceEntityTestSuite.prototype.testStoreCacheFind = function() {
     console.log("# In ForceEntityTestSuite.testStoreCacheFind");
-    //
-    // TBD
-    //
-    this.finalizeTest();
+    var self = this;
+    var cache;
+    var soupName = "testSoupForStoreCache";
+    var resultSet;
+    Force.smartstoreClient.removeSoup(soupName)
+    .then(function() {
+        console.log("## Initialization of StoreCache");
+        cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
+        return cache.init();
+    })
+    .then(function() {
+        console.log("## Direct upsert in underlying soup");
+        var records = [{Id:"007", Name:"JamesBond"},{Id:"008", Name:"Agent008"}, {Id:"009", Name:"JamesOther"}];
+        return Force.smartstoreClient.upsertSoupEntriesWithExternalId(soupName, records, "Id");
+    })
+    .then(function() {
+        console.log("## Doing a find with an exact query spec");
+        return cache.find({queryType:"exact", indexPath:"Name", matchKey:"Agent008", order:"ascending", pageSize:1});
+    })
+    .then(function(result) {
+        console.log("## Checking returned result");
+        QUnit.equals(result.records.length, 1, "one record should have been returned");
+        QUnit.equals(result.records[0].Id, "008", "wrong record returned");
+        QUnit.equals(result.hasMore(), false, "there should not be more records");
+        console.log("## Doing a find with like query spec");
+        return cache.find({queryType:"like", indexPath:"Name", likeKey:"James%", order:"ascending", pageSize:2});
+    })
+    .then(function(result) {
+        console.log("## Checking returned result");
+        QUnit.equals(result.records.length, 2, "two records should have been returned");
+        QUnit.equals(result.records[0].Id, "007", "wrong record returned");
+        QUnit.equals(result.records[1].Id, "009", "wrong record returned");
+        QUnit.equals(result.hasMore(), false, "there should not be more records");
+        console.log("## Doing a find with all query spec and a pageSize smaller than result set");
+        return cache.find({queryType:"range", indexPath:"Id", order:"ascending", pageSize:2});
+    })
+    .then(function(result) {
+        resultSet = result;
+        console.log("## Checking returned result");
+        QUnit.equals(resultSet.records.length, 2, "two records should have been returned");
+        QUnit.equals(resultSet.records[0].Id, "007", "wrong record returned");
+        QUnit.equals(resultSet.records[1].Id, "008", "wrong record returned");
+        QUnit.equals(resultSet.hasMore(), true, "there should be more records");
+        console.log("## Getting the next page of records");
+        return resultSet.getMore();
+    })
+    .then(function(records) {
+        console.log("## Checking returned result");
+        QUnit.equals(records.length, 1, "one record should have been returned");
+        QUnit.equals(records[0].Id, "009", "wrong record returned");
+        QUnit.equals(resultSet.hasMore(), false, "there should not be more records");
+        QUnit.equals(resultSet.records.length, 3, "three records should be in result set");
+        QUnit.equals(resultSet.records[0].Id, "007", "wrong record returned");
+        QUnit.equals(resultSet.records[1].Id, "008", "wrong record returned");
+        QUnit.equals(resultSet.records[2].Id, "009", "wrong record returned");
+        console.log("## Cleaning up");
+        return Force.smartstoreClient.removeSoup(soupName);
+    })
+    .then(function() {
+        self.finalizeTest();
+    });
 }
 
 /** 
