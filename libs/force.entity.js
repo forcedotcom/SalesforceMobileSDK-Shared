@@ -684,14 +684,16 @@
     // Force.MERGE_MODE
     // -----------------
     //   If we call "theirs" the current server record, "yours" the locally modified record, "base" the server record that was originally fetched:
-    //   - IGNORE_REMOTE:       ignore any changes that might have taken place on the server
-    //   - FAIL_IF_CONFLICTING: fail if the same fields have been changed in "yours" and "theirs" with different values
-    //   - FAIL_IF_CHANGED:     fail if "theirs" is different from "base"
+    //   - OVERWRITE               write "yours" back to server -- not checking "theirs" or "base"
+    //   - MERGE_ACCEPT_YOURS      merge "theirs" and "yours" -- if the same field were changed locally and remotely, the local value is kept
+    //   - MERGE_FAIL_IF_CONFLICT  merge "theirs" and "yours" -- if the same field were changed locally and remotely, the operation fails
+    //   - MERGE_FAIL_IF_CHANGED   merge "theirs" and "yours" -- if any field were changed remotely, the operation fails
     //
     Force.MERGE_MODE = {
-        IGNORE_REMOTE:       "ignore-remote",
-        FAIL_IF_CONFLICTING: "fail-if-conflicting",
-        FAIL_IF_CHANGED:     "fail-if-changed"
+        OVERWRITE: "overwrite",
+        MERGE_ACCEPT_YOURS: "merge-accept-yours",
+        MERGE_FAIL_IF_CONFLICT: "merge-fail-if-conflict",
+        MERGE_FAIL_IF_CHANGED: "merge-fail-if-changed"
     };
 
     // Force.syncSObjectDetectConflict
@@ -764,9 +766,11 @@
         var checkConflictAndSync = function() {
             var originalAttributes;
 
-            // Merge mode is ignore remote changes or local action or locally created record -- no conflict check needed
-            if (mergeMode == Force.MERGE_MODE.IGNORE_REMOTE || mergeMode == null /* no mergeMode specified means IGNORE_REMOTE */ 
-                || cacheMode == Force.CACHE_MODE.CACHE_ONLY || (cache != null && cache.isLocalId(id))) {
+            // Merge mode is overwrite or local action or locally created -- no conflict check needed
+            if (mergeMode == Force.MERGE_MODE.OVERWRITE || mergeMode == null /* no mergeMode specified means overwrite */ 
+                || cacheMode == Force.CACHE_MODE.CACHE_ONLY 
+                || (cache != null && cache.isLocalId(id))) 
+            {
                 return sync(attributes);
             }
             
@@ -786,13 +790,13 @@
                         var localChanges = identifyChanges(originalAttributes, attributes); 
                         var localVsRemoteChanges = identifyChanges(attributes, remoteAttributes);
                         var remoteChanges = identifyChanges(originalAttributes, remoteAttributes);
-                        var nonConflictingRemoteChanges = _.without(remoteChanges, localVsRemoteChanges);
                         var conflictingChanges = _.intersection(remoteChanges, localChanges, localVsRemoteChanges);
+                        var nonConflictingRemoteChanges = _.difference(remoteChanges, conflictingChanges);
 
                         switch(mergeMode) {
-                        case Force.MERGE_MODE.IGNORE_REMOTE:       shouldFail = false; break;
-                        case Force.MERGE_MODE.FAIL_IF_CONFLICTING: shouldFail = conflictingChanges.length > 0; break;
-                        case Force.MERGE_MODE.FAIL_IF_CHANGED:     shouldFail = remoteChanges.length > 0; break;
+                        case Force.MERGE_MODE.MERGE_ACCEPT_YOURS:     shouldFail = false; break;
+                        case Force.MERGE_MODE.MERGE_FAIL_IF_CONFLICT: shouldFail = conflictingChanges.length > 0; break;
+                        case Force.MERGE_MODE.MERGE_FAIL_IF_CHANGED:  shouldFail = remoteChanges.length > 0; break;
                         }
                         if (shouldFail) {
                             var conflictDetails = {conflict:true, base: originalAttributes, theirs: remoteAttributes, yours:attributes, remoteChanges:remoteChanges, localChanges:localChanges, conflictingChanges:conflictingChanges};
