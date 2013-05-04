@@ -176,10 +176,59 @@ ForceEntityTestSuite.prototype.testStoreCacheSave = function() {
  */
 ForceEntityTestSuite.prototype.testStoreCacheSaveAll = function() {
     console.log("# In ForceEntityTestSuite.testStoreCacheSaveAll");
-    //
-    // TBD
-    //
-    this.finalizeTest();
+    var self = this;
+    var cache;
+    var soupName = "testSoupForStoreCache";
+    var soupEntryIds;
+    Force.smartstoreClient.removeSoup(soupName)
+    .then(function() {
+        console.log("## Initialization of StoreCache");
+        cache = new Force.StoreCache(soupName);
+        return cache.init();
+    })
+    .then(function() {
+        console.log("## Saving records to cache");
+        var records = [{Id:"007", Name:"JamesBond", Mission:"TopSecret"},{Id:"008", Name:"Agent008"}, {Id:"009", Name:"JamesOther"}];
+        return cache.saveAll(records);
+    })
+    .then(function(records) {
+        soupEntryIds = _.pluck(records, "_soupEntryId");
+        console.log("## Direct retrieve from underlying cache");
+        return Force.smartstoreClient.retrieveSoupEntries(soupName, soupEntryIds);
+    })
+    .then(function(records) {
+        console.log("## Checking returned record");
+        QUnit.equals(records.length, 3, "three records should have been returned");
+        QUnit.equals(records[0].Id, "007", "wrong record returned");
+        QUnit.equals(records[1].Id, "008", "wrong record returned");
+        QUnit.equals(records[2].Id, "009", "wrong record returned");
+        console.log("## Saving partial records to cache");
+        var partialRecords = [{Id:"007", Mission:"TopSecret-007"},{Id:"008", Team:"Team-008"}, {Id:"009", Organization:"MI6"}];        
+        return cache.saveAll(partialRecords);
+    })
+    .then(function(record) {
+        console.log("## Direct retrieve from underlying cache");
+        return Force.smartstoreClient.retrieveSoupEntries(soupName, soupEntryIds);
+    })
+    .then(function(records) {
+        console.log("## Checking returned records are the merge of original fields and newly provided fields");
+        QUnit.equals(records.length, 3, "three records should have been returned");
+        QUnit.equals(records[0].Id, "007", "wrong record returned");
+        QUnit.equals(records[0].Name, "JamesBond", "wrong record returned");
+        QUnit.equals(records[0].Mission, "TopSecret-007", "wrong record returned");
+        QUnit.equals(records[1].Id, "008", "wrong record returned");
+        QUnit.equals(records[1].Name, "Agent008", "wrong record returned");
+        QUnit.equals(records[1].Team, "Team-008", "wrong record returned");
+        QUnit.equals(records[2].Id, "009", "wrong record returned");
+        QUnit.equals(records[2].Name, "JamesOther", "wrong record returned");
+        QUnit.equals(records[2].Organization, "MI6", "wrong record returned");
+
+        console.log("## Cleaning up");
+        return Force.smartstoreClient.removeSoup(soupName);        
+    })
+    .then(function() {
+        self.finalizeTest();
+    });
 }
 
 /** 
