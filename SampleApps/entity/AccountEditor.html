@@ -545,10 +545,7 @@ app.Router = Backbone.StackRouter.extend({
         var account = new app.models.Account({Id: id});
         account.fetch({
             success: function(data) {
-                      try {
                 that.slidePage(new app.views.EditAccountPage({model: account}));
-                      catch(err) { /*console.log(err.stack);*/
-                      }
             },
             error: function() {
                 alert("Failed to get record for edit");
