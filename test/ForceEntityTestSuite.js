@@ -61,6 +61,7 @@ ForceEntityTestSuite.prototype.testStoreCacheInit = function() {
     })
     .then(function(exists) {
         QUnit.equals(exists, true, "soup should now exist");
+        console.log("## Cleaning up");
         return Force.smartstoreClient.removeSoup(soupName);        
     })
     .then(function() {
@@ -112,6 +113,7 @@ ForceEntityTestSuite.prototype.testStoreCacheRetrieve = function() {
     })
     .then(function(record) {
         QUnit.equals(record, null, "null should have been returned");
+        console.log("## Cleaning up");
         return Force.smartstoreClient.removeSoup(soupName);        
     })
     .then(function() {
@@ -143,7 +145,7 @@ ForceEntityTestSuite.prototype.testStoreCacheSave = function() {
     })
     .then(function(records) {
         console.log("## Checking returned record");
-        QUnit.equals(records.length, 1, "wrong record returned");
+        QUnit.equals(records.length, 1, "one record should have been returned");
         QUnit.equals(records[0].Id, "007", "wrong record returned");
         QUnit.equals(records[0].Name, "JamesBond", "wrong record returned");
         console.log("## Saving partial record to cache");
@@ -155,11 +157,12 @@ ForceEntityTestSuite.prototype.testStoreCacheSave = function() {
     })
     .then(function(records) {
         console.log("## Checking returned record is the merge of original fields and newly provided fields");
-        QUnit.equals(records.length, 1, "wrong record returned");
+        QUnit.equals(records.length, 1, "one record should have been returned");
         QUnit.equals(records[0].Id, "007", "wrong record returned");
         QUnit.equals(records[0].Name, "JamesBond", "wrong record returned");
         QUnit.equals(records[0].Mission, "TopSecret2", "wrong record returned");
         QUnit.equals(records[0].Organization, "MI6", "wrong record returned");
+        console.log("## Cleaning up");
         return Force.smartstoreClient.removeSoup(soupName);        
     })
     .then(function() {
@@ -173,10 +176,59 @@ ForceEntityTestSuite.prototype.testStoreCacheSave = function() {
  */
 ForceEntityTestSuite.prototype.testStoreCacheSaveAll = function() {
     console.log("# In ForceEntityTestSuite.testStoreCacheSaveAll");
-    //
-    // TBD
-    //
-    this.finalizeTest();
+    var self = this;
+    var cache;
+    var soupName = "testSoupForStoreCache";
+    var soupEntryIds;
+    Force.smartstoreClient.removeSoup(soupName)
+    .then(function() {
+        console.log("## Initialization of StoreCache");
+        cache = new Force.StoreCache(soupName);
+        return cache.init();
+    })
+    .then(function() {
+        console.log("## Saving records to cache");
+        var records = [{Id:"007", Name:"JamesBond", Mission:"TopSecret"},{Id:"008", Name:"Agent008"}, {Id:"009", Name:"JamesOther"}];
+        return cache.saveAll(records);
+    })
+    .then(function(records) {
+        soupEntryIds = _.pluck(records, "_soupEntryId");
+        console.log("## Direct retrieve from underlying cache");
+        return Force.smartstoreClient.retrieveSoupEntries(soupName, soupEntryIds);
+    })
+    .then(function(records) {
+        console.log("## Checking returned record");
+        QUnit.equals(records.length, 3, "three records should have been returned");
+        QUnit.equals(records[0].Id, "007", "wrong record returned");
+        QUnit.equals(records[1].Id, "008", "wrong record returned");
+        QUnit.equals(records[2].Id, "009", "wrong record returned");
+        console.log("## Saving partial records to cache");
+        var partialRecords = [{Id:"007", Mission:"TopSecret-007"},{Id:"008", Team:"Team-008"}, {Id:"009", Organization:"MI6"}];        
+        return cache.saveAll(partialRecords);
+    })
+    .then(function(record) {
+        console.log("## Direct retrieve from underlying cache");
+        return Force.smartstoreClient.retrieveSoupEntries(soupName, soupEntryIds);
+    })
+    .then(function(records) {
+        console.log("## Checking returned records are the merge of original fields and newly provided fields");
+        QUnit.equals(records.length, 3, "three records should have been returned");
+        QUnit.equals(records[0].Id, "007", "wrong record returned");
+        QUnit.equals(records[0].Name, "JamesBond", "wrong record returned");
+        QUnit.equals(records[0].Mission, "TopSecret-007", "wrong record returned");
+        QUnit.equals(records[1].Id, "008", "wrong record returned");
+        QUnit.equals(records[1].Name, "Agent008", "wrong record returned");
+        QUnit.equals(records[1].Team, "Team-008", "wrong record returned");
+        QUnit.equals(records[2].Id, "009", "wrong record returned");
+        QUnit.equals(records[2].Name, "JamesOther", "wrong record returned");
+        QUnit.equals(records[2].Organization, "MI6", "wrong record returned");
+
+        console.log("## Cleaning up");
+        return Force.smartstoreClient.removeSoup(soupName);        
+    })
+    .then(function() {
+        self.finalizeTest();
+    });
 }
 
 /** 
@@ -184,10 +236,47 @@ ForceEntityTestSuite.prototype.testStoreCacheSaveAll = function() {
  */
 ForceEntityTestSuite.prototype.testStoreCacheRemove = function() {
     console.log("# In ForceEntityTestSuite.testStoreCacheRemove");
-    //
-    // TBD
-    //
-    this.finalizeTest();
+    var self = this;
+    var cache;
+    var soupName = "testSoupForStoreCache";
+    var recordEntryId;
+    Force.smartstoreClient.removeSoup(soupName)
+    .then(function() {
+        console.log("## Initialization of StoreCache");
+        cache = new Force.StoreCache(soupName);
+        return cache.init();
+    })
+    .then(function() {
+        console.log("## Direct upsert in underlying soup");
+        return Force.smartstoreClient.upsertSoupEntriesWithExternalId(soupName, [{Id:"007", Name:"JamesBond"}], "Id");
+    })
+    .then(function(records) {
+        recordEntryId = records[0]._soupEntryId;
+        console.log("## Removing non-existent record");
+        return cache.remove("008");
+    })
+    .then(function() {
+        console.log("## Checking record is still there");
+        return Force.smartstoreClient.retrieveSoupEntries(soupName, [recordEntryId]);
+    })
+    .then(function(records) {
+        console.log("## Checking returned record");
+        QUnit.equals(records[0].Id, "007", "wrong record returned");
+        console.log("## Removing record");
+        return cache.remove("007");
+    })
+    .then(function() {
+        console.log("## Checking record is no longer there");
+        return Force.smartstoreClient.retrieveSoupEntries(soupName, [recordEntryId]);
+    })
+    .then(function(records) {
+        QUnit.equals(records[0], undefined, "wrong record returned");
+        console.log("## Cleaning up");
+        return Force.smartstoreClient.removeSoup(soupName);        
+    })
+    .then(function() {
+        self.finalizeTest();
+    });
 }
 
 /** 
@@ -195,10 +284,67 @@ ForceEntityTestSuite.prototype.testStoreCacheRemove = function() {
  */
 ForceEntityTestSuite.prototype.testStoreCacheFind = function() {
     console.log("# In ForceEntityTestSuite.testStoreCacheFind");
-    //
-    // TBD
-    //
-    this.finalizeTest();
+    var self = this;
+    var cache;
+    var soupName = "testSoupForStoreCache";
+    var resultSet;
+    Force.smartstoreClient.removeSoup(soupName)
+    .then(function() {
+        console.log("## Initialization of StoreCache");
+        cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
+        return cache.init();
+    })
+    .then(function() {
+        console.log("## Direct upsert in underlying soup");
+        var records = [{Id:"007", Name:"JamesBond"},{Id:"008", Name:"Agent008"}, {Id:"009", Name:"JamesOther"}];
+        return Force.smartstoreClient.upsertSoupEntriesWithExternalId(soupName, records, "Id");
+    })
+    .then(function() {
+        console.log("## Doing a find with an exact query spec");
+        return cache.find({queryType:"exact", indexPath:"Name", matchKey:"Agent008", order:"ascending", pageSize:1});
+    })
+    .then(function(result) {
+        console.log("## Checking returned result");
+        QUnit.equals(result.records.length, 1, "one record should have been returned");
+        QUnit.equals(result.records[0].Id, "008", "wrong record returned");
+        QUnit.equals(result.hasMore(), false, "there should not be more records");
+        console.log("## Doing a find with like query spec");
+        return cache.find({queryType:"like", indexPath:"Name", likeKey:"James%", order:"ascending", pageSize:2});
+    })
+    .then(function(result) {
+        console.log("## Checking returned result");
+        QUnit.equals(result.records.length, 2, "two records should have been returned");
+        QUnit.equals(result.records[0].Id, "007", "wrong record returned");
+        QUnit.equals(result.records[1].Id, "009", "wrong record returned");
+        QUnit.equals(result.hasMore(), false, "there should not be more records");
+        console.log("## Doing a find with all query spec and a pageSize smaller than result set");
+        return cache.find({queryType:"range", indexPath:"Id", order:"ascending", pageSize:2});
+    })
+    .then(function(result) {
+        resultSet = result;
+        console.log("## Checking returned result");
+        QUnit.equals(resultSet.records.length, 2, "two records should have been returned");
+        QUnit.equals(resultSet.records[0].Id, "007", "wrong record returned");
+        QUnit.equals(resultSet.records[1].Id, "008", "wrong record returned");
+        QUnit.equals(resultSet.hasMore(), true, "there should be more records");
+        console.log("## Getting the next page of records");
+        return resultSet.getMore();
+    })
+    .then(function(records) {
+        console.log("## Checking returned result");
+        QUnit.equals(records.length, 1, "one record should have been returned");
+        QUnit.equals(records[0].Id, "009", "wrong record returned");
+        QUnit.equals(resultSet.hasMore(), false, "there should not be more records");
+        QUnit.equals(resultSet.records.length, 3, "three records should be in result set");
+        QUnit.equals(resultSet.records[0].Id, "007", "wrong record returned");
+        QUnit.equals(resultSet.records[1].Id, "008", "wrong record returned");
+        QUnit.equals(resultSet.records[2].Id, "009", "wrong record returned");
+        console.log("## Cleaning up");
+        return Force.smartstoreClient.removeSoup(soupName);
+    })
+    .then(function() {
+        self.finalizeTest();
+    });
 }
 
 /** 
