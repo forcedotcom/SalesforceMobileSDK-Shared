@@ -91,18 +91,20 @@
 
 <!-- --------------------------------------- Account list item Template ------------------------------------------ -->
 <script id="account-list-item" type="text/template">
-  <div>
-    <span class="important"><%= Name %></span><br/>
-    <%= Industry %><br/>
-    <span class="not-important"><%= Id %></span><br/>
-    <% if (__sync_failed__) { %>
-    <span class="count-negative">Failed to sync</span>
-    <% } else if (__local__) { %>
-    <span class="count-main">Locally<%= (__locally_created__ ? " created" : "") + (__locally_updated__ ? " updated" : "") + (__locally_deleted__ ? " deleted" : "") %></span>
-    <% } else { %>
-    <span class="count-positive">Cached</span>
-    <% } %>
-  </div>
+  <a class="row">
+    <div>
+      <span class="important"><%= Name %></span><br/>
+      <%= Industry %><br/>
+      <span class="not-important"><%= Id %></span><br/>
+      <% if (__sync_failed__) { %>
+      <span class="count-negative">Failed to sync</span>
+      <% } else if (__local__) { %>
+      <span class="count-main">Locally<%= (__locally_created__ ? " created" : "") + (__locally_updated__ ? " updated" : "") + (__locally_deleted__ ? " deleted" : "") %></span>
+      <% } else { %>
+      <span class="count-positive">Cached</span>
+      <% } %>
+    </div>
+  </a>
 </script>
 
 <!-- --------------------------------------- Add/edit account page template -------------------------------------- -->
@@ -146,12 +148,8 @@
           <input type="text" value="<%= Owner.Name %>" readonly />
         </div>
         <div class="input-row">
-          <label>Last Modified By</label>
-          <input type="text" value="<%= LastModifiedBy.Name %>" readonly />
-        </div>
-        <div class="input-row">
-          <label>Last Modified On</label>
-          <input type="text" value="<%= LastModifiedDate %>" readonly />
+          <label>Last Modified</label>
+          <input type="text" value="<%= LastModifiedBy.Name + ' on ' + LastModifiedDate %>" readonly />
         </div>
         <% } %>
       </div>
@@ -288,7 +286,7 @@ app.views.AccountListItemView = Backbone.View.extend({
     template: _.template($("#account-list-item").html()),
 
     events: {
-        "click": "goEdit"
+        "click .row": "goEdit"
     },
 
     render: function(eventName) {
