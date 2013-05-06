@@ -50,3 +50,13 @@
     right: 11px;
     display: none;
 }
+
+.important {
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+.not-important {
+    color: #C0C0C0;
+    font-size: 0.8em;
+}

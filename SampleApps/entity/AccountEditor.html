@@ -91,43 +91,18 @@
 <script id="account-list-item" type="text/template">
   <a href="<%= clickAction %>">
     <div>
-      <b><%= Name %></b><br/>
-      <%= Id %><br/>
+      <span class="important"><%= Name %></span><br/>
       <%= Industry %><br/>
+      <span class="not-important"><%= Id %></span><br/>
       <% if (__sync_failed__) { %>
       <span class="count-negative">Failed to sync</span>
       <% } else if (__local__) { %>
       <span class="count-main">Locally<%= (__locally_created__ ? " created" : "") + (__locally_updated__ ? " updated" : "") + (__locally_deleted__ ? " deleted" : "") %></span>
+      <% } else { %>
+      <span class="count-positive">Cached</span>
       <% } %>
     </div>
   </a>
-</script>
-
-<!-- --------------------------------------- View account page template ------------------------------------------ -->
-<script id="account-page" type="text/template">
-  <header class="bar-title">
-    <a href="#" class="button-prev">Back</a>
-    <h1 class="title">Account</h1>
-    <a href="#edit/accounts/<%= Id %>" class="button">Edit</a>
-    <a class="button delete">Delete</a>
-  </header>
-
-  <footer class="bar-footer">
-    <span id="offlineStatus"></span>
-  </footer>
-
-  <div class="content">
-    <div class="content-padded">
-      <% if (__local__) { %>
-      <span class="count-main">Locally<%= (__locally_created__ ? " created" : "") + (__locally_updated__ ? " updated" : "") + (__locally_deleted__ ? " deleted" : "") %></span><br/><br/>
-      <% } %>
-
-      <b><%= Name %></b><br/>
-      <%= Id %><br/>
-      <%= Industry %><br/>
-      <% if (Phone) { %> <a href="tel:<%= Phone %>"><%= Phone %></a><br/><% } %>
-    </div>
-  </div>
 </script>
 
 <!-- --------------------------------------- Add/edit account page template -------------------------------------- -->
@@ -164,12 +139,27 @@
           <input type="text" name="Phone" value="<%= Phone %>" />
           <span class="error" id="accountPhoneError" />
         </div>
+        <% if (LastModifiedDate) { %>
+        <div class="input-row">
+          <label>Owner</label>
+          <input type="text" value="<%= Owner.Name %>" readonly />
+        </div>
+        <div class="input-row">
+          <label>Last Modified By</label>
+          <input type="text" value="<%= LastModifiedBy.Name %>" readonly />
+        </div>
+        <div class="input-row">
+          <label>Last Modified On</label>
+          <input type="text" value="<%= LastModifiedDate %>" readonly />
+        </div>
+        <% } %>
       </div>
       <a class="button save">Save</a>
       <a class="button overwrite">Save (overwrite)</a>
       <a class="button merge">Save (merge changes)</a>
       <a class="button check">Save (fail if changed)</a>
       <a class="button undelete">Undelete</a>
+      <a class="button delete">Delete</a>
     </div>
   </div>
 </script>
@@ -179,7 +169,11 @@
 // The Account Model
 app.models.Account = Force.SObject.extend({
     sobjectType: "Account",
-    fieldlist: ["Id", "Name", "Industry", "Phone"],
+    fieldlist: function(method) { 
+        return method == "read" 
+            ? ["Id", "Name", "Industry", "Phone", "Owner.Name", "LastModifiedBy.Name", "LastModifiedDate"]
+            : ["Id", "Name", "Industry", "Phone"];
+    },
     cache: function() { return app.cache;},
     cacheForOriginals: function() { return app.cacheForOriginals;},
     cacheMode: function(method) {
@@ -195,7 +189,7 @@ app.models.Account = Force.SObject.extend({
 // The AccountCollection Model
 app.models.AccountCollection = Force.SObjectCollection.extend({
     model: app.models.Account,
-    fieldlist: ["Id", "Name", "Industry", "Phone"],
+    fieldlist: ["Id", "Name", "Industry", "Phone", "Owner.Name", "LastModifiedBy.Name", "LastModifiedDate"],
     cache: function() { return app.cache},
 
     getCriteria: function() {
@@ -251,7 +245,7 @@ app.views.SearchPage = Backbone.View.extend({
     },
 
     initialize: function() {
-        this.listView = new app.views.AccountListView({model: this.model, clickActionPrefix: "#accounts/"});
+        this.listView = new app.views.AccountListView({model: this.model, clickActionPrefix: "#edit/accounts/"});
     },
 
     render: function(eventName) {
@@ -380,34 +374,6 @@ app.views.SyncPage = Backbone.View.extend({
     }
 });
 
-app.views.AccountPage = Backbone.View.extend({
-
-    template: _.template($("#account-page").html()),
-
-    events: {
-        "click .delete": "delete"
-    },
-
-    render: function(eventName) {
-        $(this.el).html(this.template(this.model.toJSON()));
-        app.OFflineToggerView.setElement($("#offlineStatus", this.el)).render();
-        return this;
-    },
-
-    delete: function(evt) {
-        evt.preventDefault();
-        this.model.destroy({
-            success: function(data) {
-                app.router.navigate("#", {trigger:true});
-            },
-            error: function(data, err, options) {
-                var error = new Force.Error(err);
-                alert("Failed to delete account: " + (error.type === "RestError" ? error.details[0].message : "Remote change detected - delete aborted"));
-            }
-        });
-    }
-});
-
 app.views.EditAccountPage = Backbone.View.extend({
 
     action: null,
@@ -421,12 +387,13 @@ app.views.EditAccountPage = Backbone.View.extend({
         "click .overwrite": "save",
         "click .merge": "saveMerge",
         "click .check": "saveCheck",
-        "click .undelete": "undelete"
+        "click .undelete": "undelete",
+        "click .delete": "delete"
     },
 
     initialize: function() {
         this.action = (null == this.model.id) ? "Add" : "Edit";
-        if (this.action == "Add") { this.model.set({__local__: false, Name:"", Industry:"", Phone:"", attributes : { type: "Account"}}); }
+        if (this.action == "Add") { this.model.set({__local__: false, Name:"", Industry:"", Phone:"", LastModifiedDate:"", attributes : { type: "Account"}}); }
         this.backAction = app.router.getLastPage() || "#";
         app.offlineTracker.on("change:isOnline", this.render, this);
     },
@@ -434,18 +401,14 @@ app.views.EditAccountPage = Backbone.View.extend({
     render: function(eventName) {
         $(this.el).html(this.template(_.extend({action: this.action, backAction: this.backAction}, this.model.toJSON())));
         app.OFflineToggerView.setElement($("#offlineStatus", this.el)).render();
-        if (!app.offlineTracker.get("isOnline")) { 
-            $(".overwrite", this.el).hide();  
-            $(".merge", this.el).hide();  
-            $(".check", this.el).hide();  
-        }
-        else {
-            $(".save", this.el).hide();
-        }
-        if (!this.model.get("__locally_deleted__")) {
-
-            $(".undelete", this.el).hide();
-        }
+        var online = app.offlineTracker.get("isOnline");
+        var deleted = this.model.get("__locally_deleted__");
+        $(".overwrite", this.el)[online?'show':'hide']();
+        $(".merge", this.el)[online?'show':'hide']();  
+        $(".check", this.el)[online?'show':'hide']();  
+        $(".save", this.el)[!online?'show':'hide']();
+        $(".undelete", this.el)[deleted?'show':'hide']();
+        $(".delete", this.el)[!deleted?'show':'hide']();
         return this;
     },
 
@@ -506,6 +469,18 @@ app.views.EditAccountPage = Backbone.View.extend({
         this.model.save(null, this.getSaveOptions(null, Force.CACHE_MODE.CACHE_ONLY));
     },
 
+    delete: function(evt) {
+        this.model.destroy({
+            success: function(data) {
+                app.router.navigate("#", {trigger:true});
+            },
+            error: function(data, err, options) {
+                var error = new Force.Error(err);
+                alert("Failed to delete account: " + (error.type === "RestError" ? error.details[0].message : "Remote change detected - delete aborted"));
+            }
+        });
+    }
+
 });
 
 
@@ -517,7 +492,6 @@ app.Router = Backbone.StackRouter.extend({
         "": "list",
         "list": "list",
         "add": "addAccount",
-        "accounts/:id": "viewAccount",
         "edit/accounts/:id": "editAccount",
         "sync":"sync"
     },
@@ -561,19 +535,6 @@ app.Router = Backbone.StackRouter.extend({
     addAccount: function() {
         var account = new app.models.Account({Id: null});
         this.slidePage(new app.views.EditAccountPage({model: account}));
-    },
-
-    viewAccount: function(id) {
-        var that = this;
-        var account = new app.models.Account({Id: id});
-        account.fetch({
-            success: function(data) {
-                that.slidePage(new app.views.AccountPage({model: account}));
-            },
-            error: function() {
-                alert("Failed to get record for view");
-            }
-        });
     },
 
     editAccount: function(id) {
