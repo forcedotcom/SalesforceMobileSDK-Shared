@@ -14,7 +14,6 @@
 <!-- Scripts -->
 
 <!-- Local Testing -->
-<!--
 <script src="../../external/jquery/jquery-2.0.0.min.js"></script>
 <script src="../../external/backbone/underscore-1.4.4.min.js"></script>
 <script src="../../external/backbone/backbone-1.0.0.js"></script>
@@ -25,10 +24,10 @@
 <script src="../../libs/force.entity.js"></script>
 <script src="stackrouter.js"></script>
 <script src="auth_local.js"></script>
--->
 <!-- End Local Testing -->
 
 <!-- Container -->
+<!--
 <script src="jquery/jquery-2.0.0.min.js"></script>
 <script src="backbone/underscore-1.4.4.min.js"></script>
 <script src="backbone/backbone-1.0.0.min.js"></script>
@@ -38,6 +37,7 @@
 <script src="force.entity.js"></script>
 <script src="stackrouter.js"></script>
 <script src="auth.js"></script>
+-->
 <!-- End Container -->
 
 
@@ -92,42 +92,17 @@
   <a href="<%= clickAction %>">
     <div>
       <b><%= Name %></b><br/>
-      <%= Id %><br/>
       <%= Industry %><br/>
+      <span class="greyed"><%= Id %></span><br/>
       <% if (__sync_failed__) { %>
       <span class="count-negative">Failed to sync</span>
       <% } else if (__local__) { %>
       <span class="count-main">Locally<%= (__locally_created__ ? " created" : "") + (__locally_updated__ ? " updated" : "") + (__locally_deleted__ ? " deleted" : "") %></span>
+      <% } else { %>
+      <span class="count-positive">Cached</span>
       <% } %>
     </div>
   </a>
-</script>
-
-<!-- --------------------------------------- View account page template ------------------------------------------ -->
-<script id="account-page" type="text/template">
-  <header class="bar-title">
-    <a href="#" class="button-prev">Back</a>
-    <h1 class="title">Account</h1>
-    <a href="#edit/accounts/<%= Id %>" class="button">Edit</a>
-    <a class="button delete">Delete</a>
-  </header>
-
-  <footer class="bar-footer">
-    <span id="offlineStatus"></span>
-  </footer>
-
-  <div class="content">
-    <div class="content-padded">
-      <% if (__local__) { %>
-      <span class="count-main">Locally<%= (__locally_created__ ? " created" : "") + (__locally_updated__ ? " updated" : "") + (__locally_deleted__ ? " deleted" : "") %></span><br/><br/>
-      <% } %>
-
-      <b><%= Name %></b><br/>
-      <%= Id %><br/>
-      <%= Industry %><br/>
-      <% if (Phone) { %> <a href="tel:<%= Phone %>"><%= Phone %></a><br/><% } %>
-    </div>
-  </div>
 </script>
 
 <!-- --------------------------------------- Add/edit account page template -------------------------------------- -->
@@ -170,6 +145,7 @@
       <a class="button merge">Save (merge changes)</a>
       <a class="button check">Save (fail if changed)</a>
       <a class="button undelete">Undelete</a>
+      <a class="button delete">Delete</a>
     </div>
   </div>
 </script>
@@ -251,7 +227,7 @@ app.views.SearchPage = Backbone.View.extend({
     },
 
     initialize: function() {
-        this.listView = new app.views.AccountListView({model: this.model, clickActionPrefix: "#accounts/"});
+        this.listView = new app.views.AccountListView({model: this.model, clickActionPrefix: "#edit/accounts/"});
     },
 
     render: function(eventName) {
@@ -380,34 +356,6 @@ app.views.SyncPage = Backbone.View.extend({
     }
 });
 
-app.views.AccountPage = Backbone.View.extend({
-
-    template: _.template($("#account-page").html()),
-
-    events: {
-        "click .delete": "delete"
-    },
-
-    render: function(eventName) {
-        $(this.el).html(this.template(this.model.toJSON()));
-        app.OFflineToggerView.setElement($("#offlineStatus", this.el)).render();
-        return this;
-    },
-
-    delete: function(evt) {
-        evt.preventDefault();
-        this.model.destroy({
-            success: function(data) {
-                app.router.navigate("#", {trigger:true});
-            },
-            error: function(data, err, options) {
-                var error = new Force.Error(err);
-                alert("Failed to delete account: " + (error.type === "RestError" ? error.details[0].message : "Remote change detected - delete aborted"));
-            }
-        });
-    }
-});
-
 app.views.EditAccountPage = Backbone.View.extend({
 
     action: null,
@@ -421,7 +369,8 @@ app.views.EditAccountPage = Backbone.View.extend({
         "click .overwrite": "save",
         "click .merge": "saveMerge",
         "click .check": "saveCheck",
-        "click .undelete": "undelete"
+        "click .undelete": "undelete",
+        "click .delete": "delete"
     },
 
     initialize: function() {
@@ -434,18 +383,14 @@ app.views.EditAccountPage = Backbone.View.extend({
     render: function(eventName) {
         $(this.el).html(this.template(_.extend({action: this.action, backAction: this.backAction}, this.model.toJSON())));
         app.OFflineToggerView.setElement($("#offlineStatus", this.el)).render();
-        if (!app.offlineTracker.get("isOnline")) { 
-            $(".overwrite", this.el).hide();  
-            $(".merge", this.el).hide();  
-            $(".check", this.el).hide();  
-        }
-        else {
-            $(".save", this.el).hide();
-        }
-        if (!this.model.get("__locally_deleted__")) {
-
-            $(".undelete", this.el).hide();
-        }
+        var online = app.offlineTracker.get("isOnline");
+        var deleted = this.model.get("__locally_deleted__");
+        $(".overwrite", this.el)[online?'show':'hide']();
+        $(".merge", this.el)[online?'show':'hide']();  
+        $(".check", this.el)[online?'show':'hide']();  
+        $(".save", this.el)[!online?'show':'hide']();
+        $(".undelete", this.el)[deleted?'show':'hide']();
+        $(".delete", this.el)[!deleted?'show':'hide']();
         return this;
     },
 
@@ -506,6 +451,18 @@ app.views.EditAccountPage = Backbone.View.extend({
         this.model.save(null, this.getSaveOptions(null, Force.CACHE_MODE.CACHE_ONLY));
     },
 
+    delete: function(evt) {
+        this.model.destroy({
+            success: function(data) {
+                app.router.navigate("#", {trigger:true});
+            },
+            error: function(data, err, options) {
+                var error = new Force.Error(err);
+                alert("Failed to delete account: " + (error.type === "RestError" ? error.details[0].message : "Remote change detected - delete aborted"));
+            }
+        });
+    }
+
 });
 
 
@@ -517,7 +474,6 @@ app.Router = Backbone.StackRouter.extend({
         "": "list",
         "list": "list",
         "add": "addAccount",
-        "accounts/:id": "viewAccount",
         "edit/accounts/:id": "editAccount",
         "sync":"sync"
     },
@@ -561,19 +517,6 @@ app.Router = Backbone.StackRouter.extend({
     addAccount: function() {
         var account = new app.models.Account({Id: null});
         this.slidePage(new app.views.EditAccountPage({model: account}));
-    },
-
-    viewAccount: function(id) {
-        var that = this;
-        var account = new app.models.Account({Id: id});
-        account.fetch({
-            success: function(data) {
-                that.slidePage(new app.views.AccountPage({model: account}));
-            },
-            error: function() {
-                alert("Failed to get record for view");
-            }
-        });
     },
 
     editAccount: function(id) {

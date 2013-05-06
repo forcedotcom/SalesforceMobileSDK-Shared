@@ -50,3 +50,8 @@
     right: 11px;
     display: none;
 }
+
+.greyed {
+    color: #C0C0C0;
+    font-size: 0.8em;
+}
