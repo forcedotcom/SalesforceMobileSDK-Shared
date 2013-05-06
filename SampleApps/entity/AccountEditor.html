@@ -139,6 +139,7 @@
           <input type="text" name="Phone" value="<%= Phone %>" />
           <span class="error" id="accountPhoneError" />
         </div>
+        <% if (LastModifiedDate) { %>
         <div class="input-row">
           <label>Owner</label>
           <input type="text" value="<%= Owner.Name %>" readonly />
@@ -151,6 +152,7 @@
           <label>Last Modified On</label>
           <input type="text" value="<%= LastModifiedDate %>" readonly />
         </div>
+        <% } %>
       </div>
       <a class="button save">Save</a>
       <a class="button overwrite">Save (overwrite)</a>
@@ -167,7 +169,11 @@
 // The Account Model
 app.models.Account = Force.SObject.extend({
     sobjectType: "Account",
-    fieldlist: ["Id", "Name", "Industry", "Phone", "Owner.Name", "LastModifiedBy.Name", "LastModifiedDate"],
+    fieldlist: function(method) { 
+        return method == "read" 
+            ? ["Id", "Name", "Industry", "Phone", "Owner.Name", "LastModifiedBy.Name", "LastModifiedDate"]
+            : ["Id", "Name", "Industry", "Phone"];
+    },
     cache: function() { return app.cache;},
     cacheForOriginals: function() { return app.cacheForOriginals;},
     cacheMode: function(method) {
@@ -387,7 +393,7 @@ app.views.EditAccountPage = Backbone.View.extend({
 
     initialize: function() {
         this.action = (null == this.model.id) ? "Add" : "Edit";
-        if (this.action == "Add") { this.model.set({__local__: false, Name:"", Industry:"", Phone:"", attributes : { type: "Account"}}); }
+        if (this.action == "Add") { this.model.set({__local__: false, Name:"", Industry:"", Phone:"", LastModifiedDate:"", attributes : { type: "Account"}}); }
         this.backAction = app.router.getLastPage() || "#";
         app.offlineTracker.on("change:isOnline", this.render, this);
     },
