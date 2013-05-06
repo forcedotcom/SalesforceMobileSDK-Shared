@@ -14,6 +14,7 @@
 <!-- Scripts -->
 
 <!-- Local Testing -->
+<!--
 <script src="../../external/jquery/jquery-2.0.0.min.js"></script>
 <script src="../../external/backbone/underscore-1.4.4.min.js"></script>
 <script src="../../external/backbone/backbone-1.0.0.js"></script>
@@ -24,10 +25,10 @@
 <script src="../../libs/force.entity.js"></script>
 <script src="stackrouter.js"></script>
 <script src="auth_local.js"></script>
+-->
 <!-- End Local Testing -->
 
 <!-- Container -->
-<!--
 <script src="jquery/jquery-2.0.0.min.js"></script>
 <script src="backbone/underscore-1.4.4.min.js"></script>
 <script src="backbone/backbone-1.0.0.min.js"></script>
@@ -37,7 +38,6 @@
 <script src="force.entity.js"></script>
 <script src="stackrouter.js"></script>
 <script src="auth.js"></script>
--->
 <!-- End Container -->
 
 
@@ -91,9 +91,9 @@
 <script id="account-list-item" type="text/template">
   <a href="<%= clickAction %>">
     <div>
-      <b><%= Name %></b><br/>
+      <span class="important"><%= Name %></span><br/>
       <%= Industry %><br/>
-      <span class="greyed"><%= Id %></span><br/>
+      <span class="not-important"><%= Id %></span><br/>
       <% if (__sync_failed__) { %>
       <span class="count-negative">Failed to sync</span>
       <% } else if (__local__) { %>
@@ -139,6 +139,18 @@
           <input type="text" name="Phone" value="<%= Phone %>" />
           <span class="error" id="accountPhoneError" />
         </div>
+        <div class="input-row">
+          <label>Owner</label>
+          <input type="text" value="<%= Owner.Name %>" readonly />
+        </div>
+        <div class="input-row">
+          <label>Last Modified By</label>
+          <input type="text" value="<%= LastModifiedBy.Name %>" readonly />
+        </div>
+        <div class="input-row">
+          <label>Last Modified On</label>
+          <input type="text" value="<%= LastModifiedDate %>" readonly />
+        </div>
       </div>
       <a class="button save">Save</a>
       <a class="button overwrite">Save (overwrite)</a>
@@ -155,7 +167,7 @@
 // The Account Model
 app.models.Account = Force.SObject.extend({
     sobjectType: "Account",
-    fieldlist: ["Id", "Name", "Industry", "Phone"],
+    fieldlist: ["Id", "Name", "Industry", "Phone", "Owner.Name", "LastModifiedBy.Name", "LastModifiedDate"],
     cache: function() { return app.cache;},
     cacheForOriginals: function() { return app.cacheForOriginals;},
     cacheMode: function(method) {
@@ -171,7 +183,7 @@ app.models.Account = Force.SObject.extend({
 // The AccountCollection Model
 app.models.AccountCollection = Force.SObjectCollection.extend({
     model: app.models.Account,
-    fieldlist: ["Id", "Name", "Industry", "Phone"],
+    fieldlist: ["Id", "Name", "Industry", "Phone", "Owner.Name", "LastModifiedBy.Name", "LastModifiedDate"],
     cache: function() { return app.cache},
 
     getCriteria: function() {
