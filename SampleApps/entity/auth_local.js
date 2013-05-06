@@ -9,6 +9,10 @@ jQuery(document).ready(function() {
     //Add event listeners and so forth here
     console.log("onLoad: jquery ready");
 
+    // FastClick
+    new FastClick(document.body);
+
+    // Creds
     var partialNavigatorUserAgent = navigator.userAgent.substring(0, navigator.userAgent.indexOf(")") + 1);
     var sdkLikeUserAgent = "SalesforceMobileSDK/2.0 " + partialNavigatorUserAgent + " AccountEditor/1.0 Hybrid"
 

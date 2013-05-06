@@ -23,6 +23,7 @@
 <script src="../../libs/cordova.force.js"></script>
 <script src="../../test/MockSmartStore.js"></script>
 <script src="../../libs/force.entity.js"></script>
+<script src="fastclick.js"></script>
 <script src="stackrouter.js"></script>
 <script src="auth_local.js"></script>
 -->
@@ -36,6 +37,7 @@
 <script src="forcetk.js"></script>
 <script src="cordova.force.js"></script>
 <script src="force.entity.js"></script>
+<script src="fastclick.js"></script>
 <script src="stackrouter.js"></script>
 <script src="auth.js"></script>
 <!-- End Container -->
@@ -45,7 +47,7 @@
 <script id="search-page" type="text/template">
   <header class="bar-title">
     <h1 class="title">Accounts</h1>
-    <a class="button" href="#add">Create</a>
+    <a class="button create">Create</a>
   </header>
   <footer class="bar-footer">
     <span id="offlineStatus"></span>
@@ -89,26 +91,24 @@
 
 <!-- --------------------------------------- Account list item Template ------------------------------------------ -->
 <script id="account-list-item" type="text/template">
-  <a href="<%= clickAction %>">
-    <div>
-      <span class="important"><%= Name %></span><br/>
-      <%= Industry %><br/>
-      <span class="not-important"><%= Id %></span><br/>
-      <% if (__sync_failed__) { %>
-      <span class="count-negative">Failed to sync</span>
-      <% } else if (__local__) { %>
-      <span class="count-main">Locally<%= (__locally_created__ ? " created" : "") + (__locally_updated__ ? " updated" : "") + (__locally_deleted__ ? " deleted" : "") %></span>
-      <% } else { %>
-      <span class="count-positive">Cached</span>
-      <% } %>
-    </div>
-  </a>
+  <div>
+    <span class="important"><%= Name %></span><br/>
+    <%= Industry %><br/>
+    <span class="not-important"><%= Id %></span><br/>
+    <% if (__sync_failed__) { %>
+    <span class="count-negative">Failed to sync</span>
+    <% } else if (__local__) { %>
+    <span class="count-main">Locally<%= (__locally_created__ ? " created" : "") + (__locally_updated__ ? " updated" : "") + (__locally_deleted__ ? " deleted" : "") %></span>
+    <% } else { %>
+    <span class="count-positive">Cached</span>
+    <% } %>
+  </div>
 </script>
 
 <!-- --------------------------------------- Add/edit account page template -------------------------------------- -->
 <script id="edit-account-page" type="text/template">
   <header class="bar-title">
-    <a href="<%= backAction %>" class="button-prev">Back</a>
+    <a class="button-prev">Back</a>
     <h1 class="title"><%= action %> Account</h1>
     <a class="button toggleDelete">Delete</a>
   </header>
@@ -239,11 +239,12 @@ app.views.SearchPage = Backbone.View.extend({
     template: _.template($("#search-page").html()),
 
     events: {
-        "keyup .search-key": "search"
+        "keyup .search-key": "search",
+        "click .create": "goCreate"
     },
 
     initialize: function() {
-        this.listView = new app.views.AccountListView({model: this.model, clickActionPrefix: "#edit/accounts/"});
+        this.listView = new app.views.AccountListView({model: this.model});
     },
 
     render: function(eventName) {
@@ -257,6 +258,10 @@ app.views.SearchPage = Backbone.View.extend({
     search: function(event) {
         this.model.setCriteria($(".search-key", this.el).val());
         this.model.fetch();
+    },
+
+    goCreate: function() {
+        app.router.navigate("#add", {trigger:true});        
     }
 });
 
@@ -269,7 +274,7 @@ app.views.AccountListView = Backbone.View.extend({
     render: function(eventName) {
         $(this.el).empty();
         _.each(this.model.models, function(account) {
-            var templateData = {model: account, clickActionPrefix: this.options.clickActionPrefix, backAction: this.options.backAction};
+            var templateData = {model: account};
             $(this.el).append(new app.views.AccountListItemView(templateData).render().el);
         }, this);
         return this;
@@ -282,10 +287,18 @@ app.views.AccountListItemView = Backbone.View.extend({
     tagName: "li",
     template: _.template($("#account-list-item").html()),
 
+    events: {
+        "click": "goEdit"
+    },
+
     render: function(eventName) {
-        var templateData = _.extend({clickAction: this.options.clickActionPrefix + this.model.id, backAction: this.options.backAction, __sync_failed__:false}, this.model.toJSON());
+        var templateData = _.extend({__sync_failed__:false}, this.model.toJSON());
         $(this.el).html(this.template(templateData));
         return this;
+    },
+
+    goEdit: function() {
+        app.router.navigate("#edit/accounts/" + this.model.id, {trigger:true});
     }
 });
 
@@ -322,14 +335,14 @@ app.views.SyncPage = Backbone.View.extend({
     template: _.template($("#sync-page").html()),
 
     events: {
-        "click .button-prev": "back",
+        "click .button-prev": "goBack",
         "click .sync": "sync"
     },
 
     initialize: function() {
         var that = this;
         _.each(["reset","add","remove"], function(eventName) { that.model.bind(eventName, that.render, that); });
-        this.listView = new app.views.AccountListView({model: this.model, clickActionPrefix: "#edit/accounts/", backAction: "#sync"});
+        this.listView = new app.views.AccountListView({model: this.model});
     },
 
     render: function(eventName) {
@@ -338,7 +351,7 @@ app.views.SyncPage = Backbone.View.extend({
         return this;
     },
 
-    back: function(event) {
+    goBack: function(event) {
         if (this.model.length > 0) {
             // We are not done - going back offline before leaving screen
             app.offlineTracker.set("isOnline", false);
@@ -380,6 +393,7 @@ app.views.EditAccountPage = Backbone.View.extend({
     template: _.template($("#edit-account-page").html()),
 
     events: {
+        "click .button-prev": "goBack",
         "change": "change",
         "click .save": "save",
         "click .merge": "saveMerge",
@@ -395,7 +409,7 @@ app.views.EditAccountPage = Backbone.View.extend({
     },
 
     render: function(eventName) {
-        $(this.el).html(this.template(_.extend({action: this.action, backAction: this.backAction}, this.model.toJSON())));
+        $(this.el).html(this.template(_.extend({action: this.action}, this.model.toJSON())));
         app.OFflineToggerView.setElement($("#offlineStatus", this.el)).render();
         var online = app.offlineTracker.get("isOnline");
         if (!online) {
@@ -417,6 +431,10 @@ app.views.EditAccountPage = Backbone.View.extend({
         var target = event.target;
         this.model.set(target.name, target.value);
         $("#account" + target.name + "Error", this.el).hide();
+    },
+
+    goBack: function(event) {
+        app.router.navigate(this.backAction, {trigger:true});
     },
 
     showFieldError: function(field, message) {
