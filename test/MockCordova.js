@@ -45,14 +45,14 @@
 
         require = function (id) {
             if (!modules[id]) {
-                throw "module " + id + " not found";
+                throw new Error("module " + id + " not found");
             }
             return modules[id].factory ? build(modules[id]) : modules[id].exports;
         };
 
         define = function (id, factory) {
             if (modules[id]) {
-                throw "module " + id + " already defined";
+                throw new Error("module " + id + " already defined");
             }
 
             modules[id] = {

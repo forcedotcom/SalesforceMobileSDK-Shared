@@ -94,7 +94,7 @@ var MockSmartStore = (function(window) {
         },
 
         checkSoup: function(soupName) {
-            if (!this.soupExists(soupName))  throw "Soup: " + soupName + " does not exist";
+            if (!this.soupExists(soupName))  throw new Error("Soup: " + soupName + " does not exist");
         },
 
         soupExists: function(soupName) {
@@ -131,7 +131,7 @@ var MockSmartStore = (function(window) {
         upsertSoupEntries: function(soupName, entries, externalIdPath) {
             this.checkSoup(soupName); 
             if (externalIdPath != "_soupEntryId" && !this.indexExists(soupName, externalIdPath)) 
-                throw soupName + " does not have an index on " + externalIdPath; 
+                throw new Error(soupName + " does not have an index on " + externalIdPath); 
 
             var soup = _soups[soupName];
             var upsertedEntries = [];
@@ -150,7 +150,7 @@ var MockSmartStore = (function(window) {
                             if (!isNew) {
                                 msg = "There are more than one soup elements where " + externalIdPath + " is " + externalId;
                                 console.error(msg);
-                                throw msg;
+                                throw new Error(msg);
                             }
                             entry._soupEntryId = soupEltId;
                             isNew = false;
@@ -248,7 +248,7 @@ var MockSmartStore = (function(window) {
             }
 
             // If we get here, it means we don't support that query in the mock smartstore
-            throw "SmartQuery not supported by MockSmartStore:" + smartSql;
+            throw new Error("SmartQuery not supported by MockSmartStore:" + smartSql);
         },
 
         querySoupFull: function(soupName, querySpec) {
@@ -258,7 +258,7 @@ var MockSmartStore = (function(window) {
 
             // other query type
             this.checkSoup(soupName); 
-            if (!this.indexExists(soupName, querySpec.indexPath)) throw soupName + " does not have an index on " + querySpec.indexPath; 
+            if (!this.indexExists(soupName, querySpec.indexPath)) throw new Error(soupName + " does not have an index on " + querySpec.indexPath); 
 
             var soup = _soups[soupName];
             var results = [];

@@ -389,5 +389,131 @@ ForceEntityTestSuite.prototype.testStoreCacheAddLocalFields = function() {
     this.finalizeTest();
 }
 
+/** 
+ * TEST Force.SObjectType.describe
+ */
+ForceEntityTestSuite.prototype.testSObjectTypeDescribe = function() {
+    console.log("# In ForceEntityTestSuite.testSObjectTypeDescribe");
+    var self = this;
+    var soupName = "testSoupForSObjectType";
+    var cache;
+    var describeResult;
+
+    Force.smartstoreClient.removeSoup(soupName)
+    .then(function() {
+        console.log("## Initialization of StoreCache");
+        cache = new Force.StoreCache(soupName);
+        return cache.init();
+    })
+    .then(function() { 
+        console.log("## Calling describe");
+        var sobjectType = new Force.SObjectType("Account", cache);
+        return sobjectType.describe();
+    })
+    .then(function(data) {
+        describeResult = data;
+        QUnit.equals(describeResult.name, "Account", "Wrong name");
+        QUnit.equals(describeResult.keyPrefix, "001", "Wrong key prefix");
+        QUnit.equals(_.has(describeResult, "childRelationships"), true, "Child relationships expected");
+        console.log("## Checking underlying cache");
+        return cache.retrieve("Account");
+    })
+    .then(function(cacheRow) {    
+        QUnit.equals(JSON.stringify(describeResult) === JSON.stringify(cacheRow.describeResult), true, "Describe data should have been found in the cache");
+        console.log("## Cleaning up");
+        return Force.smartstoreClient.removeSoup(soupName);
+    })
+    .then(function() {
+        self.finalizeTest();
+    });
+
+}
+
+/** 
+ * TEST Force.SObjectType.getMetadata
+ */
+ForceEntityTestSuite.prototype.testSObjectTypeGetMetadata = function() {
+    console.log("# In ForceEntityTestSuite.testSObjectTypeGetMetadata");
+    var self = this;
+    var soupName = "testSoupForSObjectType";
+    var cache;
+    var metadataResult;
+
+    Force.smartstoreClient.removeSoup(soupName)
+    .then(function() {
+        console.log("## Initialization of StoreCache");
+        cache = new Force.StoreCache(soupName);
+        return cache.init();
+    })
+    .then(function() { 
+        console.log("## Calling getMetadata");
+        var sobjectType = new Force.SObjectType("Account", cache);
+        return sobjectType.getMetadata();
+    })
+    .then(function(data) {
+        metadataResult = data;
+        QUnit.equals(metadataResult.objectDescribe.name, "Account", "Wrong name");
+        QUnit.equals(metadataResult.objectDescribe.keyPrefix, "001", "Wrong key prefix");
+        QUnit.equals(_.has(metadataResult, "recentItems"), true, "Recent items expected");
+        console.log("## Checking underlying cache");
+        return cache.retrieve("Account");
+    })
+    .then(function(cacheRow) {    
+        QUnit.equals(JSON.stringify(metadataResult) === JSON.stringify(cacheRow.metadataResult), true, "Metadata data should have been found in the cache");
+        console.log("## Cleaning up");
+        return Force.smartstoreClient.removeSoup(soupName);
+    })
+    .then(function() {
+        self.finalizeTest();
+    });
+
+}
+
+/** 
+ * TEST Force.SObjectType.reset
+ */
+ForceEntityTestSuite.prototype.testSObjectTypeRest = function() {
+    console.log("# In ForceEntityTestSuite.testSObjectTypeRest");
+    var self = this;
+    var soupName = "testSoupForSObjectType";
+    var cache;
+    var sobjectType;
+
+    Force.smartstoreClient.removeSoup(soupName)
+    .then(function() {
+        console.log("## Initialization of StoreCache");
+        cache = new Force.StoreCache(soupName);
+        return cache.init();
+    })
+    .then(function() { 
+        console.log("## Calling getMetadata and describe");
+        sobjectType = new Force.SObjectType("Account", cache);
+        return $.when(sobjectType.getMetadata(), sobjectType.describe());
+    })
+    .then(function() {
+        console.log("## Checking underlying cache");
+        return cache.retrieve("Account");
+    })
+    .then(function(cacheRow) {    
+        QUnit.equals(_.has(cacheRow, "describeResult"), true, "Cache entry should have describe data");
+        QUnit.equals(_.has(cacheRow, "metadataResult"), true, "Cache entry should have metadata");
+        console.log("## Calling reset");
+        return sobjectType.reset();
+    })
+    .then(function() {
+        console.log("## Checking underlying cache");
+        return cache.retrieve("Account");
+    })
+    .then(function(cacheRow) {    
+        QUnit.equals(cacheRow, null, "No cache entry should have been found");
+        console.log("## Cleaning up");
+        return Force.smartstoreClient.removeSoup(soupName);
+    })
+    .then(function() {
+        self.finalizeTest();
+    });
+
+}
+
 
 }

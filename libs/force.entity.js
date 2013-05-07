@@ -458,7 +458,7 @@
                 that = this;
                 wasReadFromCache = false;
                 that._metadataResult = that._describeResult = undefined;
-                return $.when(clearCache());
+                return $.when(cacheClear());
             }
         }
     })());
@@ -661,7 +661,7 @@
         else if (cacheMode == Force.CACHE_MODE.SERVER_FIRST || cacheMode == null /* no cacheMode specified means server-first */) {
             if (cache.isLocalId(id)) {
                 if (method == "read" || method == "delete") {
-                    throw "Can't " + method + " on server a locally created record";
+                    throw new Error("Can't " + method + " on server a locally created record");
                 }
 
                 // For locally created record, we need to do a create on the server
@@ -1110,7 +1110,7 @@
                 var that = this;
 
                 if (method != "read") {
-                    throw "Method " + method  + " not supported";
+                    throw new Error("Method " + method  + " not supported");
                 }
                 
                 var config = options.config || (_.isFunction(this.config) ? this.config() : this.config);
