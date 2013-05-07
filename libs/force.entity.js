@@ -174,6 +174,20 @@
             var that = this;
             var querySpec = navigator.smartstore.buildExactQuerySpec(this.keyField, key);
             var record = null;
+
+            var hasFieldPath = function(soupElt, path) {
+                var pathElements = path.split(".");
+                var o = soupElt;
+                for (var i = 0; i<pathElements.length; i++) {
+                    var pathElement = pathElements[i];
+                    if (!_.has(o, pathElement)) {
+                        return false;
+                    }
+                    o = o[pathElement];
+                }
+                return true;
+            };
+
             return smartstoreClient.querySoup(this.soupName, querySpec)
                 .then(function(cursor) {
                     if (cursor.currentPageOrderedEntries.length == 1) record = cursor.currentPageOrderedEntries[0];
@@ -182,7 +196,7 @@
                 .then(function() { 
                     // if the cached record doesn't have all the field we are interested in the return null
                     if (record != null && fieldlist != null && _.any(fieldlist, function(field) { 
-                        return !_.has(record, field); 
+                        return !hasFieldPath(record, field);
                     })) {
                         console.log("----> In StoreCache:retrieve " + that.soupName + ":" + key + ":in cache but missing some fields");
                         record = null;

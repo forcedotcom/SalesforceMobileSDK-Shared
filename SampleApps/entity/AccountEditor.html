@@ -23,6 +23,7 @@
 <script src="../../libs/cordova.force.js"></script>
 <script src="../../test/MockSmartStore.js"></script>
 <script src="../../libs/force.entity.js"></script>
+<script src="fastclick.js"></script>
 <script src="stackrouter.js"></script>
 <script src="auth_local.js"></script>
 -->
@@ -36,6 +37,7 @@
 <script src="forcetk.js"></script>
 <script src="cordova.force.js"></script>
 <script src="force.entity.js"></script>
+<script src="fastclick.js"></script>
 <script src="stackrouter.js"></script>
 <script src="auth.js"></script>
 <!-- End Container -->
@@ -89,7 +91,7 @@
 
 <!-- --------------------------------------- Account list item Template ------------------------------------------ -->
 <script id="account-list-item" type="text/template">
-  <a href="<%= clickAction %>">
+  <a href="#edit/accounts/<%= Id %>">
     <div>
       <span class="important"><%= Name %></span><br/>
       <%= Industry %><br/>
@@ -108,8 +110,9 @@
 <!-- --------------------------------------- Add/edit account page template -------------------------------------- -->
 <script id="edit-account-page" type="text/template">
   <header class="bar-title">
-    <a href="<%= backAction %>" class="button-prev">Back</a>
+    <a class="button-prev">Back</a>
     <h1 class="title"><%= action %> Account</h1>
+    <a class="button toggleDelete">Delete</a>
   </header>
 
   <footer class="bar-footer">
@@ -145,21 +148,14 @@
           <input type="text" value="<%= Owner.Name %>" readonly />
         </div>
         <div class="input-row">
-          <label>Last Modified By</label>
-          <input type="text" value="<%= LastModifiedBy.Name %>" readonly />
-        </div>
-        <div class="input-row">
-          <label>Last Modified On</label>
-          <input type="text" value="<%= LastModifiedDate %>" readonly />
+          <label>Last Modified</label>
+          <input type="text" value="<%= LastModifiedBy.Name + ' on ' + LastModifiedDate %>" readonly />
         </div>
         <% } %>
       </div>
       <a class="button save">Save</a>
-      <a class="button overwrite">Save (overwrite)</a>
-      <a class="button merge">Save (merge changes)</a>
-      <a class="button check">Save (fail if changed)</a>
-      <a class="button undelete">Undelete</a>
-      <a class="button delete">Delete</a>
+      <a class="button merge">Merge</a>
+      <a class="button overwrite">Overwrite</a>
     </div>
   </div>
 </script>
@@ -245,7 +241,7 @@ app.views.SearchPage = Backbone.View.extend({
     },
 
     initialize: function() {
-        this.listView = new app.views.AccountListView({model: this.model, clickActionPrefix: "#edit/accounts/"});
+        this.listView = new app.views.AccountListView({model: this.model});
     },
 
     render: function(eventName) {
@@ -271,7 +267,7 @@ app.views.AccountListView = Backbone.View.extend({
     render: function(eventName) {
         $(this.el).empty();
         _.each(this.model.models, function(account) {
-            var templateData = {model: account, clickActionPrefix: this.options.clickActionPrefix, backAction: this.options.backAction};
+            var templateData = {model: account};
             $(this.el).append(new app.views.AccountListItemView(templateData).render().el);
         }, this);
         return this;
@@ -285,7 +281,7 @@ app.views.AccountListItemView = Backbone.View.extend({
     template: _.template($("#account-list-item").html()),
 
     render: function(eventName) {
-        var templateData = _.extend({clickAction: this.options.clickActionPrefix + this.model.id, backAction: this.options.backAction, __sync_failed__:false}, this.model.toJSON());
+        var templateData = _.extend({__sync_failed__:false}, this.model.toJSON());
         $(this.el).html(this.template(templateData));
         return this;
     }
@@ -324,14 +320,14 @@ app.views.SyncPage = Backbone.View.extend({
     template: _.template($("#sync-page").html()),
 
     events: {
-        "click .button-prev": "back",
+        "click .button-prev": "goBack",
         "click .sync": "sync"
     },
 
     initialize: function() {
         var that = this;
         _.each(["reset","add","remove"], function(eventName) { that.model.bind(eventName, that.render, that); });
-        this.listView = new app.views.AccountListView({model: this.model, clickActionPrefix: "#edit/accounts/", backAction: "#sync"});
+        this.listView = new app.views.AccountListView({model: this.model});
     },
 
     render: function(eventName) {
@@ -340,7 +336,7 @@ app.views.SyncPage = Backbone.View.extend({
         return this;
     },
 
-    back: function(event) {
+    goBack: function(event) {
         if (this.model.length > 0) {
             // We are not done - going back offline before leaving screen
             app.offlineTracker.set("isOnline", false);
@@ -382,13 +378,12 @@ app.views.EditAccountPage = Backbone.View.extend({
     template: _.template($("#edit-account-page").html()),
 
     events: {
+        "click .button-prev": "goBack",
         "change": "change",
         "click .save": "save",
-        "click .overwrite": "save",
         "click .merge": "saveMerge",
-        "click .check": "saveCheck",
-        "click .undelete": "undelete",
-        "click .delete": "delete"
+        "click .overwrite": "saveOverwrite",
+        "click .toggleDelete": "toggleDelete"
     },
 
     initialize: function() {
@@ -399,16 +394,20 @@ app.views.EditAccountPage = Backbone.View.extend({
     },
 
     render: function(eventName) {
-        $(this.el).html(this.template(_.extend({action: this.action, backAction: this.backAction}, this.model.toJSON())));
+        $(this.el).html(this.template(_.extend({action: this.action}, this.model.toJSON())));
         app.OFflineToggerView.setElement($("#offlineStatus", this.el)).render();
         var online = app.offlineTracker.get("isOnline");
-        var deleted = this.model.get("__locally_deleted__");
-        $(".overwrite", this.el)[online?'show':'hide']();
-        $(".merge", this.el)[online?'show':'hide']();  
-        $(".check", this.el)[online?'show':'hide']();  
-        $(".save", this.el)[!online?'show':'hide']();
-        $(".undelete", this.el)[deleted?'show':'hide']();
-        $(".delete", this.el)[!deleted?'show':'hide']();
+        if (!online) {
+            $(".merge", this.el).hide();
+            $(".overwrite", this.el).hide();
+        }
+        if (this.action == "Add") {
+            $(".toggleDelete", this.el).hide();
+        }
+        else {
+            var deleted = this.model.get("__locally_deleted__");
+            $(".toggleDelete", this.el).html(deleted?"Undelete":"Delete");
+        }
         return this;
     },
 
@@ -417,6 +416,10 @@ app.views.EditAccountPage = Backbone.View.extend({
         var target = event.target;
         this.model.set(target.name, target.value);
         $("#account" + target.name + "Error", this.el).hide();
+    },
+
+    goBack: function(event) {
+        app.router.navigate(this.backAction, {trigger:true});
     },
 
     showFieldError: function(field, message) {
@@ -453,34 +456,34 @@ app.views.EditAccountPage = Backbone.View.extend({
     },
 
     save: function() {
-        this.model.save(null, this.getSaveOptions(Force.MERGE_MODE.OVERWRITE));
+        this.model.save(null, this.getSaveOptions(Force.MERGE_MODE.MERGE_FAIL_IF_CHANGED));
     },
 
     saveMerge: function() {
         this.model.save(null, this.getSaveOptions(Force.MERGE_MODE.MERGE_ACCEPT_YOURS));
     },
 
-    saveCheck: function() {
-        this.model.save(null, this.getSaveOptions(Force.MERGE_MODE.MERGE_FAIL_IF_CHANGED));
+    saveOverwrite: function() {
+        this.model.save(null, this.getSaveOptions(Force.MERGE_MODE.OVERWRITE));
     },
 
-    undelete: function() {
-        this.model.set("__locally_deleted__", false);
-        this.model.save(null, this.getSaveOptions(null, Force.CACHE_MODE.CACHE_ONLY));
-    },
-
-    delete: function(evt) {
-        this.model.destroy({
-            success: function(data) {
-                app.router.navigate("#", {trigger:true});
-            },
-            error: function(data, err, options) {
-                var error = new Force.Error(err);
-                alert("Failed to delete account: " + (error.type === "RestError" ? error.details[0].message : "Remote change detected - delete aborted"));
-            }
-        });
+    toggleDelete: function() {
+        if (this.model.get("__locally_deleted__")) {
+            this.model.set("__locally_deleted__", false);
+            this.model.save(null, this.getSaveOptions(null, Force.CACHE_MODE.CACHE_ONLY));
+        }
+        else {
+            this.model.destroy({
+                success: function(data) {
+                    app.router.navigate("#", {trigger:true});
+                },
+                error: function(data, err, options) {
+                    var error = new Force.Error(err);
+                    alert("Failed to delete account: " + (error.type === "RestError" ? error.details[0].message : "Remote change detected - delete aborted"));
+                }
+            });
+        }
     }
-
 });
 
 

@@ -86,7 +86,7 @@ ForceEntityTestSuite.prototype.testStoreCacheRetrieve = function() {
     })
     .then(function() {
         console.log("## Direct upsert in underlying soup");
-        return Force.smartstoreClient.upsertSoupEntriesWithExternalId(soupName, [{Id:"007", Name:"JamesBond"}], "Id");
+        return Force.smartstoreClient.upsertSoupEntriesWithExternalId(soupName, [{Id:"007", Name:"JamesBond", Address:{City:"London"}}], "Id");
     })
     .then(function() {
         console.log("## Trying an existing record with no fields specified");
@@ -96,15 +96,26 @@ ForceEntityTestSuite.prototype.testStoreCacheRetrieve = function() {
         console.log("## Checking returned record");
         QUnit.equals(record.Id, "007", "wrong record returned");
         QUnit.equals(record.Name, "JamesBond", "wrong record returned");
-        console.log("## Trying an existing record but asking fields that are in the cache");
+        QUnit.equals(record.Address.City, "London", "wrong record returned");
+        console.log("## Trying an existing record but asking for a field that is in the cache");
         return cache.retrieve("007", ["Name"]);
     })
     .then(function(record) {
         console.log("## Checking returned record");
         QUnit.equals(record.Id, "007", "wrong record returned");
-        QUnit.equals(record.Name, "JamesBond", "wrong record returned");
-        console.log("## Trying an existing record but asking for more fields than there are in the cache");
+        console.log("## Trying an existing record but asking a non-top level field that is in the cache");
+        return cache.retrieve("007", ["Address.City"]);
+    })
+    .then(function(record) {
+        console.log("## Checking returned record");
+        QUnit.equals(record.Id, "007", "wrong record returned");
+        console.log("## Trying an existing record but asking for field that is in the cache");
         return cache.retrieve("007", ["Name", "Mission"]);
+    })
+    .then(function(record) {
+        QUnit.equals(record, null, "null should have been returned");
+        console.log("## Trying an existing record but asking for non-top level field that is not in the cache");
+        return cache.retrieve("007", ["Name", "Address.Street"]);
     })
     .then(function(record) {
         QUnit.equals(record, null, "null should have been returned");
