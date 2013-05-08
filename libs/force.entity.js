@@ -116,17 +116,17 @@
     Force.Error = function(rawError) {
         // Rest error
         if (_.has(rawError, "responseText")) {
-            // 200	“OK” success code, for GET or HEAD request.
-            // 201	“Created” success code, for POST request.
-            // 204	“No Content” success code, for DELETE request.
-            // 300	The value returned when an external ID exists in more than one record. The response body contains the list of matching records.
-            // 400	The request couldn’t be understood, usually because the JSON or XML body contains an error.
-            // 401	The session ID or OAuth token used has expired or is invalid. The response body contains the message and errorCode.
-            // 403	The request has been refused. Verify that the logged-in user has appropriate permissions.
-            // 404	The requested resource couldn’t be found. Check the URI for errors, and verify that there are no sharing issues.
-            // 405	The method specified in the Request-Line isn’t allowed for the resource specified in the URI.
-            // 415	The entity in the request is in a format that’s not supported by the specified method.
-            // 500	An error has occurred within Force.com, so the request couldn’t be completed. Contact salesforce.com Customer Support.
+            // 200  “OK” success code, for GET or HEAD request.
+            // 201  “Created” success code, for POST request.
+            // 204  “No Content” success code, for DELETE request.
+            // 300  The value returned when an external ID exists in more than one record. The response body contains the list of matching records.
+            // 400  The request couldn’t be understood, usually because the JSON or XML body contains an error.
+            // 401  The session ID or OAuth token used has expired or is invalid. The response body contains the message and errorCode.
+            // 403  The request has been refused. Verify that the logged-in user has appropriate permissions.
+            // 404  The requested resource couldn’t be found. Check the URI for errors, and verify that there are no sharing issues.
+            // 405  The method specified in the Request-Line isn’t allowed for the resource specified in the URI.
+            // 415  The entity in the request is in a format that’s not supported by the specified method.
+            // 500  An error has occurred within Force.com, so the request couldn’t be completed. Contact salesforce.com Customer Support.
             this.type = "RestError";
             this.xhr = rawError;
             this.status = rawError.status;
@@ -386,7 +386,7 @@
         // Check first if cache exists.
         // Then save the current instance data to cache.
         var cacheSave = function() {
-            if (that.cache) {
+            if (!wasReadFromCache && that.cache) {
                 var record = {
                     describeResult: that._describeResult, 
                     metadataResult: that._metadataResult
@@ -409,6 +409,7 @@
         // If no describe data exists on the instance, get it from server.
         var serverDescribeUnlessCached = function() { 
             if(!that._describeResult) {
+                wasReadFromCache = false;
                 return forcetkClient.describe(that.sobjectType)
                         .then(function(describeResult) {
                             that._describeResult = describeResult;
@@ -419,6 +420,7 @@
         // If no metadata data exists on the instance, get it from server.
         var serverMetadataUnlessCached = function() { 
             if(!that._metadataResult) {
+                wasReadFromCache = false;
                 return forcetkClient.metadata(that.sobjectType)
                         .then(function(metadataResult) {
                             that._metadataResult = metadataResult;
