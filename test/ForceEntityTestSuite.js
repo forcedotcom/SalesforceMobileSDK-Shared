@@ -23,6 +23,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+"use strict";
 
 /**
  * An abstract super class for SmartStore test suites
@@ -793,6 +794,130 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithCacheDelete = function() {
     });
 }
 
+/** 
+ * TEST Force.syncSObjectWithServer for create method
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectWithServerCreate = function() {
+    console.log("# In ForceEntityTestSuite.testSyncSObjectWithServerCreate");
+    var self = this;
+    var id;
+
+    console.log("## Trying create");
+    Force.syncSObjectWithServer("create", "Account", null, {Name:"TestAccount"}, ["Name"])
+    .then(function(data) {
+        console.log("## Checking data returned by sync call");
+        assertContains(data, {Name:"TestAccount"});
+
+        console.log("## Direct retrieve from server");
+        id = data.Id;
+        return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned from server");
+        assertContains(data, {Id:id, Name:"TestAccount"});
+
+        console.log("## Cleaning up");
+        return Force.forcetkClient.del("account", id);
+    })
+    .then(function() {
+        self.finalizeTest();
+    });
+
+}
+
+/** 
+ * TEST Force.syncSObjectWithServer for read method
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectWithServerRead = function() {
+    console.log("# In ForceEntityTestSuite.testSyncSObjectWithServerRead");
+    var self = this;
+    var id;
+
+    console.log("## Direct creation against server");    
+    Force.forcetkClient.create("Account", {Name:"TestAccount"})
+        .then(function(resp) {
+            id = resp.id;
+
+            console.log("## Trying read call");
+            return Force.syncSObjectWithServer("read", "Account", id, null, ["Id", "Name"]);
+        })
+        .then(function(data) {
+            console.log("## Checking data returned from sync call");
+            assertContains(data, {Id:id, Name:"TestAccount"});
+
+            console.log("## Cleaning up");
+            return Force.forcetkClient.del("account", id);
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
+/** 
+ * TEST Force.syncSObjectWithServer for update method
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectWithServerUpdate = function() {
+    console.log("# In ForceEntityTestSuite.testSyncSObjectWithServerUpdate");
+    var self = this;
+    var id;
+
+    console.log("## Direct creation against server");    
+    Force.forcetkClient.create("Account", {Name:"TestAccount"})
+        .then(function(resp) {
+            id = resp.id;
+
+            console.log("## Trying update call");
+            return Force.syncSObjectWithServer("update", "Account", id, {Name:"TestAccount2"}, ["Name"]);
+        })
+        .then(function(data) {
+            console.log("## Checking data returned from sync call");
+            assertContains(data, {Name:"TestAccount2"});
+
+            console.log("## Direct retrieve from server");
+            return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
+        })
+        .then(function(data) {
+            console.log("## Checking data returned from server");
+            assertContains(data, {Id:id, Name:"TestAccount2"});
+
+            console.log("## Cleaning up");
+            return Force.forcetkClient.del("account", id);
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
+/** 
+ * TEST Force.syncSObjectWithServer for delete method
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectWithServerDelete = function() {
+    console.log("# In ForceEntityTestSuite.testSyncSObjectWithServerDelete");
+    var self = this;
+    var id;
+
+    console.log("## Direct creation against server");    
+    Force.forcetkClient.create("Account", {Name:"TestAccount"})
+        .then(function(resp) {
+            id = resp.id;
+
+            console.log("## Trying delete call");
+            return Force.syncSObjectWithServer("delete", "Account", id);
+        })
+        .then(function(data) {
+            QUnit.equals(data, null, "wrong data returned");
+
+            console.log("## Direct retrieve from server");
+            return Force.forcetkClient.retrieve("Account", id, ["Id"]);
+        })
+        .fail(function(error) {
+            console.log("## Checking error returned from server");
+            QUnit.equals(error.status, 404, "404 expected");
+            self.finalizeTest();
+        });
+};
+
+
 
 /**
  * Helper method to check local flags
@@ -802,7 +927,7 @@ var checkLocalFlags = function (data, local, locallyCreated, locallyUpdated, loc
     QUnit.equals(data.__locally_created__, locallyCreated, "__locally_created__ wrong at " + getCaller());
     QUnit.equals(data.__locally_updated__, locallyUpdated, "__locally_created__ wrong at " + getCaller());
     QUnit.equals(data.__locally_deleted__, locallyDeleted, "__locally_created__ wrong at " + getCaller());
-}
+};
 
 /**
  * Helper method that checks that <data> contains <map> and fires QUnit failures otherwise
