@@ -116,17 +116,17 @@
     Force.Error = function(rawError) {
         // Rest error
         if (_.has(rawError, "responseText")) {
-            // 200	“OK” success code, for GET or HEAD request.
-            // 201	“Created” success code, for POST request.
-            // 204	“No Content” success code, for DELETE request.
-            // 300	The value returned when an external ID exists in more than one record. The response body contains the list of matching records.
-            // 400	The request couldn’t be understood, usually because the JSON or XML body contains an error.
-            // 401	The session ID or OAuth token used has expired or is invalid. The response body contains the message and errorCode.
-            // 403	The request has been refused. Verify that the logged-in user has appropriate permissions.
-            // 404	The requested resource couldn’t be found. Check the URI for errors, and verify that there are no sharing issues.
-            // 405	The method specified in the Request-Line isn’t allowed for the resource specified in the URI.
-            // 415	The entity in the request is in a format that’s not supported by the specified method.
-            // 500	An error has occurred within Force.com, so the request couldn’t be completed. Contact salesforce.com Customer Support.
+            // 200  “OK” success code, for GET or HEAD request.
+            // 201  “Created” success code, for POST request.
+            // 204  “No Content” success code, for DELETE request.
+            // 300  The value returned when an external ID exists in more than one record. The response body contains the list of matching records.
+            // 400  The request couldn’t be understood, usually because the JSON or XML body contains an error.
+            // 401  The session ID or OAuth token used has expired or is invalid. The response body contains the message and errorCode.
+            // 403  The request has been refused. Verify that the logged-in user has appropriate permissions.
+            // 404  The requested resource couldn’t be found. Check the URI for errors, and verify that there are no sharing issues.
+            // 405  The method specified in the Request-Line isn’t allowed for the resource specified in the URI.
+            // 415  The entity in the request is in a format that’s not supported by the specified method.
+            // 500  An error has occurred within Force.com, so the request couldn’t be completed. Contact salesforce.com Customer Support.
             this.type = "RestError";
             this.xhr = rawError;
             this.status = rawError.status;
@@ -386,7 +386,7 @@
         // Check first if cache exists.
         // Then save the current instance data to cache.
         var cacheSave = function() {
-            if (that.cache) {
+            if (!wasReadFromCache && that.cache) {
                 var record = {
                     describeResult: that._describeResult, 
                     metadataResult: that._metadataResult
@@ -409,6 +409,7 @@
         // If no describe data exists on the instance, get it from server.
         var serverDescribeUnlessCached = function() { 
             if(!that._describeResult) {
+                wasReadFromCache = false;
                 return forcetkClient.describe(that.sobjectType)
                         .then(function(describeResult) {
                             that._describeResult = describeResult;
@@ -419,6 +420,7 @@
         // If no metadata data exists on the instance, get it from server.
         var serverMetadataUnlessCached = function() { 
             if(!that._metadataResult) {
+                wasReadFromCache = false;
                 return forcetkClient.metadata(that.sobjectType)
                         .then(function(metadataResult) {
                             that._metadataResult = metadataResult;
@@ -458,7 +460,7 @@
                 that = this;
                 wasReadFromCache = false;
                 that._metadataResult = that._describeResult = undefined;
-                return $.when(clearCache());
+                return $.when(cacheClear());
             }
         }
     })());
@@ -468,16 +470,15 @@
     // ---------------------------
     // Helper method to do any single record CRUD operation against cache
     // * method:<create, read, delete or update>
-    // * sobjectType:<record type>
     // * id:<record id or null during create>
     // * attributes:<map field name to value>  record attributes given by a map of field name to value
     // * fieldlist:<fields>                    fields to fetch for read  otherwise full record is fetched, fields to save for update or create (required)
     // * cache:<cache object>                  cache into which  created/read/updated/deleted record are cached    
-    // * localChange:true|false                pass true if the change is done against the cache only (and has not been done against the server)
+    // * localAction:true|false                pass true if the change is done against the cache only (and has not been done against the server)
     //
     // Returns a promise
     //
-    Force.syncSObjectWithCache = function(method, sobjectType, id, attributes, fieldlist, cache, localAction) {
+    Force.syncSObjectWithCache = function(method, id, attributes, fieldlist, cache, localAction) {
         console.log("---> In Force.syncSObjectWithCache:method=" + method + " id=" + id);
 
         localAction = localAction || false;
@@ -485,7 +486,11 @@
 
         // Cache actions helper
         var cacheCreate = function() {
-            var data = _.extend(attributes, {Id: (localAction ? cache.makeLocalId() : id), __locally_created__:localAction, __locally_updated__:false, __locally_deleted__:false});
+            var data = _.extend(_.pick(attributes, fieldlist), 
+                                {Id: (localAction ? cache.makeLocalId() : id), 
+                                 __locally_created__:localAction, 
+                                 __locally_updated__:false, 
+                                 __locally_deleted__:false});
             return cache.save(data);
         };
 
@@ -497,7 +502,11 @@
         };
         
         var cacheUpdate = function() { 
-            var data = _.extend(attributes, {Id: id, __locally_created__: isLocalId, __locally_updated__: localAction, __locally_deleted__: false});
+            var data = _.extend(_.pick(attributes, fieldlist), 
+                                {Id: id, 
+                                 __locally_created__: isLocalId, 
+                                 __locally_updated__: localAction, 
+                                 __locally_deleted__: false});
             return cache.save(data);
         };
 
@@ -506,10 +515,7 @@
                 return cache.remove(id);
             }
             else {
-                return cache.retrieve(id).
-                    then(function(data) {
-                        return cache.save(_.extend(data, {__locally_deleted__: true}));
-                    })
+                return cache.save({Id:id, __locally_deleted__:true})
                     .then(function() {
                         return null;
                     });
@@ -628,7 +634,7 @@
         };
 
         var cacheSync = function(method, id, attributes, fieldlist, localAction) {
-            return Force.syncSObjectWithCache(method, sobjectType, id, attributes, fieldlist, cache, localAction);
+            return Force.syncSObjectWithCache(method, id, attributes, fieldlist, cache, localAction);
         }            
 
         // Server only
@@ -661,7 +667,7 @@
         else if (cacheMode == Force.CACHE_MODE.SERVER_FIRST || cacheMode == null /* no cacheMode specified means server-first */) {
             if (cache.isLocalId(id)) {
                 if (method == "read" || method == "delete") {
-                    throw "Can't " + method + " on server a locally created record";
+                    throw new Error("Can't " + method + " on server a locally created record");
                 }
 
                 // For locally created record, we need to do a create on the server
@@ -1110,7 +1116,7 @@
                 var that = this;
 
                 if (method != "read") {
-                    throw "Method " + method  + " not supported";
+                    throw new Error("Method " + method  + " not supported");
                 }
                 
                 var config = options.config || (_.isFunction(this.config) ? this.config() : this.config);
