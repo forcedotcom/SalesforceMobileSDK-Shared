@@ -468,16 +468,15 @@
     // ---------------------------
     // Helper method to do any single record CRUD operation against cache
     // * method:<create, read, delete or update>
-    // * sobjectType:<record type>
     // * id:<record id or null during create>
     // * attributes:<map field name to value>  record attributes given by a map of field name to value
     // * fieldlist:<fields>                    fields to fetch for read  otherwise full record is fetched, fields to save for update or create (required)
     // * cache:<cache object>                  cache into which  created/read/updated/deleted record are cached    
-    // * localChange:true|false                pass true if the change is done against the cache only (and has not been done against the server)
+    // * localAction:true|false                pass true if the change is done against the cache only (and has not been done against the server)
     //
     // Returns a promise
     //
-    Force.syncSObjectWithCache = function(method, sobjectType, id, attributes, fieldlist, cache, localAction) {
+    Force.syncSObjectWithCache = function(method, id, attributes, fieldlist, cache, localAction) {
         console.log("---> In Force.syncSObjectWithCache:method=" + method + " id=" + id);
 
         localAction = localAction || false;
@@ -485,7 +484,11 @@
 
         // Cache actions helper
         var cacheCreate = function() {
-            var data = _.extend(attributes, {Id: (localAction ? cache.makeLocalId() : id), __locally_created__:localAction, __locally_updated__:false, __locally_deleted__:false});
+            var data = _.extend(_.pick(attributes, fieldlist), 
+                                {Id: (localAction ? cache.makeLocalId() : id), 
+                                 __locally_created__:localAction, 
+                                 __locally_updated__:false, 
+                                 __locally_deleted__:false});
             return cache.save(data);
         };
 
@@ -497,7 +500,11 @@
         };
         
         var cacheUpdate = function() { 
-            var data = _.extend(attributes, {Id: id, __locally_created__: isLocalId, __locally_updated__: localAction, __locally_deleted__: false});
+            var data = _.extend(_.pick(attributes, fieldlist), 
+                                {Id: id, 
+                                 __locally_created__: isLocalId, 
+                                 __locally_updated__: localAction, 
+                                 __locally_deleted__: false});
             return cache.save(data);
         };
 
@@ -506,10 +513,7 @@
                 return cache.remove(id);
             }
             else {
-                return cache.retrieve(id).
-                    then(function(data) {
-                        return cache.save(_.extend(data, {__locally_deleted__: true}));
-                    })
+                return cache.save({Id:id, __locally_deleted__:true})
                     .then(function() {
                         return null;
                     });
@@ -628,7 +632,7 @@
         };
 
         var cacheSync = function(method, id, attributes, fieldlist, localAction) {
-            return Force.syncSObjectWithCache(method, sobjectType, id, attributes, fieldlist, cache, localAction);
+            return Force.syncSObjectWithCache(method, id, attributes, fieldlist, cache, localAction);
         }            
 
         // Server only
