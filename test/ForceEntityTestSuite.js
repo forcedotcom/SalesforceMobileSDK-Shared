@@ -169,6 +169,20 @@ ForceEntityTestSuite.prototype.testStoreCacheSave = function() {
         console.log("## Checking returned record is the merge of original fields and newly provided fields");
         QUnit.equals(records.length, 1, "one record should have been returned");
         assertContains(records[0], {Id:"007", Name:"JamesBond", Mission:"TopSecret2", Organization:"MI6"});
+
+        console.log("## Saving partial record to cache with noMerge flag");
+        return cache.save({Id:"007", Mission:"TopSecret3"}, true);
+    })
+    .then(function(record) {
+        console.log("## Direct retrieve from underlying cache");
+        return Force.smartstoreClient.retrieveSoupEntries(soupName, [record._soupEntryId]);
+    })
+    .then(function(records) {
+        console.log("## Checking returned record just has newly provided fields");
+        QUnit.equals(records.length, 1, "one record should have been returned");
+        assertContains(records[0], {Id:"007", Mission:"TopSecret3"});
+        QUnit.equals(_.has(records[0], "Name"), false, "Should not have a name field");
+        QUnit.equals(_.has(records[0], "Organization"), false, "Should not have an organization field");
         console.log("## Cleaning up");
         return Force.smartstoreClient.removeSoup(soupName);        
     })
@@ -224,6 +238,23 @@ ForceEntityTestSuite.prototype.testStoreCacheSaveAll = function() {
         assertContains(records[1], {Id:"008", Name:"Agent-008", Team:"Team-008"});
         assertContains(records[2], {Id:"009", Name:"JamesOther", Organization:"MI6"});
 
+        console.log("## Saving partial records to cache with noMerge flag");
+        var partialRecords = [{Id:"007", Mission:"TopSecret"},{Id:"008", Team:"Team"}, {Id:"009", Organization:"Org"}];        
+        return cache.saveAll(partialRecords, true);
+    })
+    .then(function(record) {
+        console.log("## Direct retrieve from underlying cache");
+        return Force.smartstoreClient.retrieveSoupEntries(soupName, soupEntryIds);
+    })
+    .then(function(records) {
+        console.log("## Checking returned records just have newly provided fields");
+        QUnit.equals(records.length, 3, "three records should have been returned");
+        assertContains(records[0], {Id:"007", Mission:"TopSecret"});
+        QUnit.equals(_.has(records[0], "Name"), false, "Should not have a name field");
+        assertContains(records[1], {Id:"008", Team:"Team"});
+        QUnit.equals(_.has(records[1], "Name"), false, "Should not have a name field");
+        assertContains(records[2], {Id:"009", Organization:"Org"});
+        QUnit.equals(_.has(records[2], "Name"), false, "Should not have a name field");
         console.log("## Cleaning up");
         return Force.smartstoreClient.removeSoup(soupName);        
     })
@@ -774,7 +805,7 @@ var checkLocalFlags = function (data, local, locallyCreated, locallyUpdated, loc
 }
 
 /**
- * Helper method that returns true if <data> assertContains <map>
+ * Helper method that checks that <data> contains <map> and fires QUnit failures otherwise
  */
 var assertContains = function (data, map, ctx, caller) {
     if (caller == null) caller = getCaller();
