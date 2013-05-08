@@ -30,6 +30,8 @@
  */
 if (typeof ForceEntityTestSuite === 'undefined') { 
 
+
+
 /**
  * Constructor
  */
@@ -94,21 +96,19 @@ ForceEntityTestSuite.prototype.testStoreCacheRetrieve = function() {
     })
     .then(function(record) {
         console.log("## Checking returned record");
-        QUnit.equals(record.Id, "007", "wrong record returned");
-        QUnit.equals(record.Name, "JamesBond", "wrong record returned");
-        QUnit.equals(record.Address.City, "London", "wrong record returned");
+        assertContains(record, {Id:"007", Name:"JamesBond", Address:{City:"London"}});
         console.log("## Trying an existing record but asking for a field that is in the cache");
         return cache.retrieve("007", ["Name"]);
     })
     .then(function(record) {
         console.log("## Checking returned record");
-        QUnit.equals(record.Id, "007", "wrong record returned");
+        assertContains(record, {Id:"007"});
         console.log("## Trying an existing record but asking a non-top level field that is in the cache");
         return cache.retrieve("007", ["Address.City"]);
     })
     .then(function(record) {
         console.log("## Checking returned record");
-        QUnit.equals(record.Id, "007", "wrong record returned");
+        assertContains(record, {Id:"007"});
         console.log("## Trying an existing record but asking for field that is in the cache");
         return cache.retrieve("007", ["Name", "Mission"]);
     })
@@ -157,8 +157,7 @@ ForceEntityTestSuite.prototype.testStoreCacheSave = function() {
     .then(function(records) {
         console.log("## Checking returned record");
         QUnit.equals(records.length, 1, "one record should have been returned");
-        QUnit.equals(records[0].Id, "007", "wrong record returned");
-        QUnit.equals(records[0].Name, "JamesBond", "wrong record returned");
+        assertContains(records[0], {Id:"007", Name:"JamesBond", Mission:"TopSecret"});
         console.log("## Saving partial record to cache");
         return cache.save({Id:"007", Mission:"TopSecret2", Organization:"MI6"});
     })
@@ -169,10 +168,7 @@ ForceEntityTestSuite.prototype.testStoreCacheSave = function() {
     .then(function(records) {
         console.log("## Checking returned record is the merge of original fields and newly provided fields");
         QUnit.equals(records.length, 1, "one record should have been returned");
-        QUnit.equals(records[0].Id, "007", "wrong record returned");
-        QUnit.equals(records[0].Name, "JamesBond", "wrong record returned");
-        QUnit.equals(records[0].Mission, "TopSecret2", "wrong record returned");
-        QUnit.equals(records[0].Organization, "MI6", "wrong record returned");
+        assertContains(records[0], {Id:"007", Name:"JamesBond", Mission:"TopSecret2", Organization:"MI6"});
         console.log("## Cleaning up");
         return Force.smartstoreClient.removeSoup(soupName);        
     })
@@ -210,9 +206,9 @@ ForceEntityTestSuite.prototype.testStoreCacheSaveAll = function() {
     .then(function(records) {
         console.log("## Checking returned record");
         QUnit.equals(records.length, 3, "three records should have been returned");
-        QUnit.equals(records[0].Id, "007", "wrong record returned");
-        QUnit.equals(records[1].Id, "008", "wrong record returned");
-        QUnit.equals(records[2].Id, "009", "wrong record returned");
+        assertContains(records[0], {Id:"007"});
+        assertContains(records[1], {Id:"008"});
+        assertContains(records[2], {Id:"009"});
         console.log("## Saving partial records to cache");
         var partialRecords = [{Id:"007", Mission:"TopSecret-007"},{Id:"008", Team:"Team-008"}, {Id:"009", Organization:"MI6"}];        
         return cache.saveAll(partialRecords);
@@ -224,15 +220,9 @@ ForceEntityTestSuite.prototype.testStoreCacheSaveAll = function() {
     .then(function(records) {
         console.log("## Checking returned records are the merge of original fields and newly provided fields");
         QUnit.equals(records.length, 3, "three records should have been returned");
-        QUnit.equals(records[0].Id, "007", "wrong record returned");
-        QUnit.equals(records[0].Name, "JamesBond", "wrong record returned");
-        QUnit.equals(records[0].Mission, "TopSecret-007", "wrong record returned");
-        QUnit.equals(records[1].Id, "008", "wrong record returned");
-        QUnit.equals(records[1].Name, "Agent008", "wrong record returned");
-        QUnit.equals(records[1].Team, "Team-008", "wrong record returned");
-        QUnit.equals(records[2].Id, "009", "wrong record returned");
-        QUnit.equals(records[2].Name, "JamesOther", "wrong record returned");
-        QUnit.equals(records[2].Organization, "MI6", "wrong record returned");
+        assertContains(records[0], {Id:"007", Name:"JamesBond", Mission:"TopSecret-007"});
+        assertContains(records[1], {Id:"008", Name:"Agent-008", Team:"Team-008"});
+        assertContains(records[2], {Id:"009", Name:"JamesOther", Organization:"MI6"});
 
         console.log("## Cleaning up");
         return Force.smartstoreClient.removeSoup(soupName);        
@@ -272,7 +262,7 @@ ForceEntityTestSuite.prototype.testStoreCacheRemove = function() {
     })
     .then(function(records) {
         console.log("## Checking returned record");
-        QUnit.equals(records[0].Id, "007", "wrong record returned");
+        assertContains(records[0], {Id:"007"});
         console.log("## Removing record");
         return cache.remove("007");
     })
@@ -317,7 +307,7 @@ ForceEntityTestSuite.prototype.testStoreCacheFind = function() {
     .then(function(result) {
         console.log("## Checking returned result");
         QUnit.equals(result.records.length, 1, "one record should have been returned");
-        QUnit.equals(result.records[0].Id, "008", "wrong record returned");
+        assertContains(result.records[0], {Id:"008"});
         QUnit.equals(result.hasMore(), false, "there should not be more records");
         console.log("## Doing a find with like query spec");
         return cache.find({queryType:"like", indexPath:"Name", likeKey:"James%", order:"ascending", pageSize:2});
@@ -325,8 +315,8 @@ ForceEntityTestSuite.prototype.testStoreCacheFind = function() {
     .then(function(result) {
         console.log("## Checking returned result");
         QUnit.equals(result.records.length, 2, "two records should have been returned");
-        QUnit.equals(result.records[0].Id, "007", "wrong record returned");
-        QUnit.equals(result.records[1].Id, "009", "wrong record returned");
+        assertContains(result.records[0], {Id:"007"});
+        assertContains(result.records[1], {Id:"009"});
         QUnit.equals(result.hasMore(), false, "there should not be more records");
         console.log("## Doing a find with all query spec and a pageSize smaller than result set");
         return cache.find({queryType:"range", indexPath:"Id", order:"ascending", pageSize:2});
@@ -335,8 +325,8 @@ ForceEntityTestSuite.prototype.testStoreCacheFind = function() {
         resultSet = result;
         console.log("## Checking returned result");
         QUnit.equals(resultSet.records.length, 2, "two records should have been returned");
-        QUnit.equals(resultSet.records[0].Id, "007", "wrong record returned");
-        QUnit.equals(resultSet.records[1].Id, "008", "wrong record returned");
+        assertContains(resultSet.records[0], {Id:"007"});
+        assertContains(resultSet.records[1], {Id:"008"});
         QUnit.equals(resultSet.hasMore(), true, "there should be more records");
         console.log("## Getting the next page of records");
         return resultSet.getMore();
@@ -344,12 +334,12 @@ ForceEntityTestSuite.prototype.testStoreCacheFind = function() {
     .then(function(records) {
         console.log("## Checking returned result");
         QUnit.equals(records.length, 1, "one record should have been returned");
-        QUnit.equals(records[0].Id, "009", "wrong record returned");
+        assertContains(records[0], {Id:"009"});
         QUnit.equals(resultSet.hasMore(), false, "there should not be more records");
         QUnit.equals(resultSet.records.length, 3, "three records should be in result set");
-        QUnit.equals(resultSet.records[0].Id, "007", "wrong record returned");
-        QUnit.equals(resultSet.records[1].Id, "008", "wrong record returned");
-        QUnit.equals(resultSet.records[2].Id, "009", "wrong record returned");
+        assertContains(resultSet.records[0], {Id:"007"});
+        assertContains(resultSet.records[1], {Id:"008"});
+        assertContains(resultSet.records[2], {Id:"009"});
         console.log("## Cleaning up");
         return Force.smartstoreClient.removeSoup(soupName);
     })
@@ -369,25 +359,446 @@ ForceEntityTestSuite.prototype.testStoreCacheAddLocalFields = function() {
     console.log("Add local fields when none are present");
     var record = {Id:"007", Name:"JamesBond"};
     record = cache.addLocalFields(record);
-    QUnit.equals(record.Id, "007", "add local fields changed Id field");
-    QUnit.equals(record.Name, "JamesBond", "add local fields changed Name field");
-    QUnit.equals(record.__local__, false, "add local fields didn't add __local__");
-    QUnit.equals(record.__locally_created__, false, "add local fields didn't add __locally_created__");
-    QUnit.equals(record.__locally_updated__, false, "add local fields didn't add __locally_updated__");
-    QUnit.equals(record.__locally_deleted__, false, "add local fields didn't add __locally_deleted__");
+    assertContains(record, {Id:"007", Name:"JamesBond"});
+    checkLocalFlags(record, false, false, false, false);
 
     console.log("Add local fields when some are present");
     record = {Id:"007", Name:"JamesBond", __locally_deleted__:true};
     record = cache.addLocalFields(record);
-    QUnit.equals(record.Id, "007", "add local fields changed Id field");
-    QUnit.equals(record.Name, "JamesBond", "add local fields changed Name field");
-    QUnit.equals(record.__local__, true, "add local fields didn't add __local__");
-    QUnit.equals(record.__locally_created__, false, "add local fields didn't add __locally_created__");
-    QUnit.equals(record.__locally_updated__, false, "add local fields didn't add __locally_updated__");
-    QUnit.equals(record.__locally_deleted__, true, "add local fields changed __locally_deleted__");
+    assertContains(record, {Id:"007", Name:"JamesBond"});
+    checkLocalFlags(record, true, false, false, true);
 
     this.finalizeTest();
 }
 
+/** 
+ * TEST Force.SObjectType.describe
+ */
+ForceEntityTestSuite.prototype.testSObjectTypeDescribe = function() {
+    console.log("# In ForceEntityTestSuite.testSObjectTypeDescribe");
+    var self = this;
+    var soupName = "testSoupForSObjectType";
+    var cache;
+    var describeResult;
+
+    Force.smartstoreClient.removeSoup(soupName)
+    .then(function() {
+        console.log("## Initialization of StoreCache");
+        cache = new Force.StoreCache(soupName);
+        return cache.init();
+    })
+    .then(function() { 
+        console.log("## Calling describe");
+        var sobjectType = new Force.SObjectType("Account", cache);
+        return sobjectType.describe();
+    })
+    .then(function(data) {
+        describeResult = data;
+        assertContains(describeResult, {name:"Account", keyPrefix:"001"});
+        QUnit.equals(_.has(describeResult, "childRelationships"), true, "Child relationships expected");
+        console.log("## Checking underlying cache");
+        return cache.retrieve("Account");
+    })
+    .then(function(cacheRow) {    
+        assertContains(describeResult, cacheRow.describeResult);
+        console.log("## Cleaning up");
+        return Force.smartstoreClient.removeSoup(soupName);
+    })
+    .then(function() {
+        self.finalizeTest();
+    });
+
+}
+
+/** 
+ * TEST Force.SObjectType.getMetadata
+ */
+ForceEntityTestSuite.prototype.testSObjectTypeGetMetadata = function() {
+    console.log("# In ForceEntityTestSuite.testSObjectTypeGetMetadata");
+    var self = this;
+    var soupName = "testSoupForSObjectType";
+    var cache;
+    var metadataResult;
+
+    Force.smartstoreClient.removeSoup(soupName)
+    .then(function() {
+        console.log("## Initialization of StoreCache");
+        cache = new Force.StoreCache(soupName);
+        return cache.init();
+    })
+    .then(function() { 
+        console.log("## Calling getMetadata");
+        var sobjectType = new Force.SObjectType("Account", cache);
+        return sobjectType.getMetadata();
+    })
+    .then(function(data) {
+        metadataResult = data;
+        assertContains(metadataResult, {objectDescribe: {name:"Account", keyPrefix:"001"}});
+        QUnit.equals(_.has(metadataResult, "recentItems"), true, "Recent items expected");
+        console.log("## Checking underlying cache");
+        return cache.retrieve("Account");
+    })
+    .then(function(cacheRow) {    
+        assertContains(metadataResult, cacheRow.metadataResult);
+        console.log("## Cleaning up");
+        return Force.smartstoreClient.removeSoup(soupName);
+    })
+    .then(function() {
+        self.finalizeTest();
+    });
+
+}
+
+/** 
+ * TEST Force.SObjectType.reset
+ */
+ForceEntityTestSuite.prototype.testSObjectTypeRest = function() {
+    console.log("# In ForceEntityTestSuite.testSObjectTypeRest");
+    var self = this;
+    var soupName = "testSoupForSObjectType";
+    var cache;
+    var sobjectType;
+
+    Force.smartstoreClient.removeSoup(soupName)
+    .then(function() {
+        console.log("## Initialization of StoreCache");
+        cache = new Force.StoreCache(soupName);
+        return cache.init();
+    })
+    .then(function() { 
+        console.log("## Calling getMetadata and describe");
+        sobjectType = new Force.SObjectType("Account", cache);
+        return $.when(sobjectType.getMetadata(), sobjectType.describe());
+    })
+    .then(function() {
+        console.log("## Checking underlying cache");
+        return cache.retrieve("Account");
+    })
+    .then(function(cacheRow) {    
+        QUnit.equals(_.has(cacheRow, "describeResult"), true, "Cache entry should have describe data");
+        QUnit.equals(_.has(cacheRow, "metadataResult"), true, "Cache entry should have metadata");
+        console.log("## Calling reset");
+        return sobjectType.reset();
+    })
+    .then(function() {
+        console.log("## Checking underlying cache");
+        return cache.retrieve("Account");
+    })
+    .then(function(cacheRow) {    
+        QUnit.equals(cacheRow, null, "No cache entry should have been found");
+        console.log("## Cleaning up");
+        return Force.smartstoreClient.removeSoup(soupName);
+    })
+    .then(function() {
+        self.finalizeTest();
+    });
+
+}
+
+/** 
+ * TEST Force.syncSObjectWithCache for create method
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectWithCacheCreate = function() {
+    console.log("# In ForceEntityTestSuite.testSyncSObjectWithCacheCreate");
+    var self = this;
+    var soupName = "testSoupForSyncSObjectWithCache";
+    var cache;
+
+    Force.smartstoreClient.removeSoup(soupName)
+    .then(function() {
+        console.log("## Initialization of StoreCache");
+        cache = new Force.StoreCache(soupName);
+        return cache.init();
+    })
+    .then(function() {
+        console.log("## Trying a create with localAction true");
+        return Force.syncSObjectWithCache("create", null, {Name:"JamesBond"}, ["Name"], cache, true);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned by sync call");
+        assertContains(data, {Name:"JamesBond"});
+        checkLocalFlags(data, true, true, false, false);
+
+        console.log("## Checking underlying cache");
+        return cache.retrieve(data.Id);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned from cache");
+        assertContains(data, {Name:"JamesBond"});
+        checkLocalFlags(data, true, true, false, false);
+
+        console.log("## Trying a create with localAction false");
+        return Force.syncSObjectWithCache("create", "008", {Name:"JamesOther"}, ["Name"], cache, false);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned by sync call");
+        assertContains(data, {Id:"008", Name:"JamesOther"});
+        checkLocalFlags(data, false, false, false, false);
+
+        console.log("## Checking underlying cache");
+        return cache.retrieve(data.Id);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned from cache");
+        assertContains(data, {Id:"008", Name:"JamesOther"});
+        checkLocalFlags(data, false, false, false, false);
+
+        console.log("## Trying a create with fieldlist being a subset of attributes");
+        return Force.syncSObjectWithCache("create", "009", {Name:"JamesNine", Mission:"TopSecret", City:"London"}, ["Name", "City"], cache, false);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned by sync call");
+        assertContains(data, {Id:"009", Name:"JamesNine", City:"London"});
+        QUnit.equals(_.has(data, "Mission"), false, "Mission should not have been saved");
+        checkLocalFlags(data, false, false, false, false);
+
+        console.log("## Checking underlying cache");
+        return cache.retrieve(data.Id);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned from cache");
+        assertContains(data, {Id:"009", Name:"JamesNine", City:"London"});
+        QUnit.equals(_.has(data, "Mission"), false, "Mission should not have been saved");
+        checkLocalFlags(data, false, false, false, false);
+
+        console.log("## Cleaning up");
+        return Force.smartstoreClient.removeSoup(soupName);
+    })
+    .then(function() {
+        self.finalizeTest();
+    });
+
+}
+
+/** 
+ * TEST Force.syncSObjectWithCache for read method
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectWithCacheRead = function() {
+    console.log("# In ForceEntityTestSuite.testSyncSObjectWithCacheRead");
+    var self = this;
+    var soupName = "testSoupForSyncSObjectWithCache";
+    var cache;
+
+    Force.smartstoreClient.removeSoup(soupName)
+    .then(function() {
+        console.log("## Initialization of StoreCache");
+        cache = new Force.StoreCache(soupName);
+        return cache.init();
+    })
+    .then(function() {
+        console.log("## Direct upsert in underlying soup");
+        var records = [{Id:"007", Name:"JamesBond"},{Id:"008", Name:"Agent008"}, {Id:"009", Name:"JamesOther"}];
+        return cache.saveAll(records);
+    })
+    .then(function() {
+        console.log("## Trying read for existing record");
+        return Force.syncSObjectWithCache("read", "007", null, ["Name"], cache);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned by sync call");
+        assertContains(data, {Id:"007", Name:"JamesBond"});
+
+        console.log("## Trying read for non-existing record");
+        return Force.syncSObjectWithCache("read", "010", null, ["Name"], cache);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned by sync call");
+        QUnit.equals(data, null, "No data should have been returned");
+
+        console.log("## Trying read for existing record but asking for missing fields");
+        return Force.syncSObjectWithCache("read", "007", null, ["Name", "Mission"], cache);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned by sync call");
+        QUnit.equals(data, null, "No data should have been returned");
+
+        console.log("## Cleaning up");
+        return Force.smartstoreClient.removeSoup(soupName);
+    })
+    .then(function() {
+        self.finalizeTest();
+    });
+}
+
+/** 
+ * TEST Force.syncSObjectWithCache for update method
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectWithCacheUpdate = function() {
+    console.log("# In ForceEntityTestSuite.testSyncSObjectWithUpdate");
+    var self = this;
+    var soupName = "testSoupForSyncSObjectWithCache";
+    var cache;
+
+    Force.smartstoreClient.removeSoup(soupName)
+    .then(function() {
+        console.log("## Initialization of StoreCache");
+        cache = new Force.StoreCache(soupName);
+        return cache.init();
+    })
+    .then(function() {
+        console.log("## Trying a create with localAction true");
+        return Force.syncSObjectWithCache("create", null, {Name:"JamesBond"}, ["Name"], cache, true);
+    })
+    .then(function(data) {
+        console.log("## Trying an update with localAction true");
+        return Force.syncSObjectWithCache("update", data.Id, {Mission:"TopSecret"}, ["Mission"], cache, true);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned by sync call");
+        assertContains(data, {Name:"JamesBond", Mission:"TopSecret"});
+        checkLocalFlags(data, true, true, true, false);
+
+        console.log("## Checking underlying cache");
+        return cache.retrieve(data.Id);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned from cache");
+        assertContains(data, {Name:"JamesBond", Mission:"TopSecret"});
+        checkLocalFlags(data, true, true, true, false);
+
+        console.log("## Trying an update with localAction false");
+        return Force.syncSObjectWithCache("update", "007", {Id:"007", Name:"JamesBond", Mission:"TopSecret2"}, ["Name", "Mission"], cache, false);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned by sync call");
+        assertContains(data, {Id:"007", Name:"JamesBond", Mission:"TopSecret2"});
+        checkLocalFlags(data, false, false, false, false);
+
+        console.log("## Checking underlying cache");
+        return cache.retrieve(data.Id);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned from cache");
+        assertContains(data, {Id:"007", Name:"JamesBond", Mission:"TopSecret2"});
+        checkLocalFlags(data, false, false, false, false);
+
+        console.log("## Trying an update with only a subset of existing attributes provided");
+        return Force.syncSObjectWithCache("update", "007", {Mission:"TopSecret3"}, ["Mission"], cache, false);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned by sync call");
+        assertContains(data, {Id:"007", Name:"JamesBond", Mission:"TopSecret3"});
+        checkLocalFlags(data, false, false, false, false);
+
+        console.log("## Checking underlying cache");
+        return cache.retrieve(data.Id);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned from cache");
+        assertContains(data, {Id:"007", Name:"JamesBond", Mission:"TopSecret3"});
+        checkLocalFlags(data, false, false, false, false);
+
+        console.log("## Cleaning up");
+        return Force.smartstoreClient.removeSoup(soupName);
+    })
+    .then(function() {
+        self.finalizeTest();
+    });
+
+}
+
+/** 
+ * TEST Force.syncSObjectWithCache for delete method
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectWithCacheDelete = function() {
+    console.log("# In ForceEntityTestSuite.testSyncSObjectWithCacheDelete");
+    var self = this;
+    var soupName = "testSoupForSyncSObjectWithCache";
+    var cache;
+
+    Force.smartstoreClient.removeSoup(soupName)
+    .then(function() {
+        console.log("## Initialization of StoreCache");
+        cache = new Force.StoreCache(soupName);
+        return cache.init();
+    })
+    .then(function() {
+        console.log("## Direct upsert in underlying soup");
+        var records = [{Id:"007", Name:"JamesBond"},{Id:"008", Name:"Agent008"}, {Id:"009", Name:"JamesOther"}];
+        return cache.saveAll(records);
+    })
+    .then(function() {
+        console.log("## Trying delete for existing record");
+        return Force.syncSObjectWithCache("delete", "007", null, null, cache);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned by sync call");
+        QUnit.equals(data, null, "No data should have been returned");
+
+        console.log("## Checking underlying cache");
+        return cache.retrieve("007");
+    })
+    .then(function(data) {
+        console.log("## Checking data returned from cache");
+        QUnit.equals(data, null, "No data should have been returned");
+
+        console.log("## Trying local delete");
+        return Force.syncSObjectWithCache("delete", "008", null, null, cache, true);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned by sync call");
+        QUnit.equals(data, null, "No data should have been returned");
+
+        console.log("## Checking underlying cache");
+        return cache.retrieve("008");
+    })
+    .then(function(data) {
+        console.log("## Checking data returned from cache");
+        assertContains(data, {Id:"008", Name:"Agent008"});
+        checkLocalFlags(data, true, false, false, true);
+
+        console.log("## Trying delete for non-existing record");
+        return Force.syncSObjectWithCache("delete", "010", null, null, cache);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned by sync call");
+        QUnit.equals(data, null, "No data should have been returned");
+
+        console.log("## Cleaning up");
+        return Force.smartstoreClient.removeSoup(soupName);
+    })
+    .then(function() {
+        self.finalizeTest();
+    });
+}
+
+
+/**
+ * Helper method to check local flags
+ */
+var checkLocalFlags = function (data, local, locallyCreated, locallyUpdated, locallyDeleted) {
+    QUnit.equals(data.__local__, local, "__local__ wrong at " + getCaller());
+    QUnit.equals(data.__locally_created__, locallyCreated, "__locally_created__ wrong at " + getCaller());
+    QUnit.equals(data.__locally_updated__, locallyUpdated, "__locally_created__ wrong at " + getCaller());
+    QUnit.equals(data.__locally_deleted__, locallyDeleted, "__locally_created__ wrong at " + getCaller());
+}
+
+/**
+ * Helper method that returns true if <data> assertContains <map>
+ */
+var assertContains = function (data, map, ctx, caller) {
+    if (caller == null) caller = getCaller();
+    _.all(_.keys(map), function(key) {
+        var ctxKey = (ctx == null ? "" : ctx + ".") + key;
+        QUnit.equals(_.has(data, key), true, "Should contain field " + ctxKey + " at " + caller);
+        if (!_.isObject(data[key])) {
+            QUnit.equals(data[key], map[key], "Not the expected value for field " + ctxKey + " at " + caller);
+        } else {
+            assertContains(data[key], map[key], ctxKey, caller);
+        }
+    });
+}
+
+/*
+ * Helper method to get the caller + line number of the function calling getCaller()
+ */
+var getCaller = function() {
+	try {
+		throw new Error();
+	} catch ( e ) {
+		var entry = e.stack.split("\n")[3]; // 0->Error, 1-->getCaller, 2-->assertContains or checkLocalFlags, 3-->the caller we are interested in!
+        return entry.match(/\((.*)\)/)[1]; // we only want the source:lineNumber, the function name will be useless with all the promises
+	} 
+}
 
 }
