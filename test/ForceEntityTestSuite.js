@@ -802,14 +802,20 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithServerCreate = function() {
     var self = this;
     var id;
 
+    // To test refetch
+    var retrieveCalls = [];
+    var originalRetrieve = Force.forcetkClient.retrieve;
+    console.log("## Instrumenting Force.forcetkClient.retrieve");
+    Force.forcetkClient.retrieve = function() { var args = $.makeArray(arguments); retrieveCalls.push(args); return originalRetrieve.apply(Force.forcetkClient, args); };
+
     console.log("## Trying create");
     Force.syncSObjectWithServer("create", "Account", null, {Name:"TestAccount"}, ["Name"])
     .then(function(data) {
         console.log("## Checking data returned by sync call");
+        id = data.Id;
         assertContains(data, {Name:"TestAccount"});
 
         console.log("## Direct retrieve from server");
-        id = data.Id;
         return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
     })
     .then(function(data) {
@@ -820,6 +826,32 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithServerCreate = function() {
         return Force.forcetkClient.del("account", id);
     })
     .then(function() {
+        console.log("## Trying create with refetch flag");
+        retrieveCalls = [];
+        return Force.syncSObjectWithServer("create", "Account", null, {Name:"TestAccount2"}, ["Name"], true, ["Id", "Name"]);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned by sync call");
+        id = data.Id;
+        assertContains(data, {Id: id, Name:"TestAccount2"});
+
+        console.log("## Checking that a refetch took place");
+        QUnit.equals(retrieveCalls.length, 1, "a retrieve call should have been recorded");
+        QUnit.deepEqual(retrieveCalls[0], ["Account", id, ["Id", "Name"]], "wrong retrieve call");
+
+        console.log("## Direct retrieve from server");
+        return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned from server");
+        assertContains(data, {Id:id, Name:"TestAccount2"});
+
+        console.log("## Cleaning up");
+        return Force.forcetkClient.del("account", id);
+    })
+    .then(function() {
+        console.log("## Reverting Force.forcetkClient.retrieve to its original definition");
+        Force.forcetkClient.retrieve = originalRetrieve;
         self.finalizeTest();
     });
 
@@ -861,6 +893,12 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithServerUpdate = function() {
     var self = this;
     var id;
 
+    // To test refetch
+    var retrieveCalls = [];
+    var originalRetrieve = Force.forcetkClient.retrieve;
+    console.log("## Instrumenting Force.forcetkClient.retrieve");
+    Force.forcetkClient.retrieve = function() { var args = $.makeArray(arguments); retrieveCalls.push(args); return originalRetrieve.apply(Force.forcetkClient, args); };
+
     console.log("## Direct creation against server");    
     Force.forcetkClient.create("Account", {Name:"TestAccount"})
         .then(function(resp) {
@@ -880,10 +918,31 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithServerUpdate = function() {
             console.log("## Checking data returned from server");
             assertContains(data, {Id:id, Name:"TestAccount2"});
 
+            console.log("## Trying create with refetch flag");
+            retrieveCalls = [];
+            return Force.syncSObjectWithServer("update", "Account", id, {Name:"TestAccount3"}, ["Name"], true, ["Id", "Name"]);
+        })
+        .then(function(data) {
+            console.log("## Checking data returned by sync call");
+            assertContains(data, {Id: id, Name:"TestAccount3"});
+
+            console.log("## Checking that a refetch took place");
+            QUnit.equals(retrieveCalls.length, 1, "a retrieve call should have been recorded");
+            QUnit.deepEqual(retrieveCalls[0], ["Account", id, ["Id", "Name"]], "wrong retrieve call");
+
+            console.log("## Direct retrieve from server");
+            return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
+        })
+        .then(function(data) {
+            console.log("## Checking data returned from server");
+            assertContains(data, {Id:id, Name:"TestAccount3"});
+
             console.log("## Cleaning up");
             return Force.forcetkClient.del("account", id);
         })
         .then(function() {
+            console.log("## Reverting Force.forcetkClient.retrieve to its original definition");
+            Force.forcetkClient.retrieve = originalRetrieve;
             self.finalizeTest();
         });
 };

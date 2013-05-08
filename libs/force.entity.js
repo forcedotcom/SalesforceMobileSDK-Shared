@@ -576,7 +576,7 @@
     // Returns a promise
     //
     Force.syncSObjectWithServer = function(method, sobjectType, id, attributes, fieldlist, refetch, refetchFieldList) {
-        console.log("---> In Force.syncSObjectWithServer:method=" + method + " id=" + id);
+        console.log("---> In Force.syncSObjectWithServer:method=" + method + " id=" + id + " refetch=" + refetch);
 
         // Server actions helper
         var serverCreate   = function() { 
@@ -589,10 +589,6 @@
 
         var serverRetrieve = function() { 
             return forcetkClient.retrieve(sobjectType, id, fieldlist);
-        };
-
-        var serverRefetch = function(data) { 
-            return forcetkClient.retrieve(sobjectType, data.Id, refetchFieldList);
         };
 
         var serverUpdate   = function() { 
@@ -610,17 +606,22 @@
                 }) 
         };
 
+        var refetchIfNeeded = function(data) {
+            if (refetch) {
+                return forcetkClient.retrieve(sobjectType, data.Id || id, refetchFieldList);
+            }
+            else {
+                return data;
+            }
+        };
+
         // Chaining promises that return either a promise or created/upated/read model attributes or null in the case of delete
         var promise = null;
         switch(method) {
-        case "create": promise = serverCreate(); break;
+        case "create": promise = serverCreate().then(refetchIfNeeded); break;
         case "read":   promise = serverRetrieve(); break;
-        case "update": promise = serverUpdate(); break;
+        case "update": promise = serverUpdate().then(refetchIfNeeded); break;
         case "delete": promise = serverDelete(); break; /* XXX on 404 (record already deleted) we should not fail otherwise cache won't get cleaned up */
-        }
-
-        if (refetch) {
-            promise = promise.then(serverRefetch);
         }
 
         return promise;
