@@ -976,7 +976,185 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithServerDelete = function() {
         });
 };
 
+/** 
+ * TEST Force.syncSObject for method create
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectCreate = function() {
+    console.log("# In ForceEntityTestSuite.testSyncSObjectCreate");
+    var self = this;
 
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.syncSObject for method retrieve
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectRetrieve = function() {
+    console.log("# In ForceEntityTestSuite.syncSObjectRetrieve");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.syncSObject for method update
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectUpdate = function() {
+    console.log("# In ForceEntityTestSuite.syncSObjectUpdate");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.syncSObject for method delete
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectDelete = function() {
+    console.log("# In ForceEntityTestSuite.syncSObjectDelete");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.syncSObjectDetectConflict for method create
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictCreate = function() {
+    console.log("# In ForceEntityTestSuite.syncSObjectDetectConflictCreate");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.syncSObjectDetectConflict for method retrieve
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictRetrieve = function() {
+    console.log("# In ForceEntityTestSuite.syncSObjectDetectConflictRetrieve");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.syncSObjectDetectConflict for method update
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() {
+    console.log("# In ForceEntityTestSuite.syncSObjectDetectConflictUpdate");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.syncSObjectDetectConflict for method delete
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() {
+    console.log("# In ForceEntityTestSuite.syncSObjectDetectConflictDelete");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.SObject.fetch
+ */
+ForceEntityTestSuite.prototype.testSObjectFetch = function() {
+    console.log("# In ForceEntityTestSuite.testSObjectFetch");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.SObject.save
+ */
+ForceEntityTestSuite.prototype.testSObjectSave = function() {
+    console.log("# In ForceEntityTestSuite.testSObjectSave");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.SObject.destroy
+ */
+ForceEntityTestSuite.prototype.testSObjectDestroy = function() {
+    console.log("# In ForceEntityTestSuite.testSObjectDestroy");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.fetchSObjectsFromCache
+ */
+ForceEntityTestSuite.prototype.testFetchSObjectsFromCache = function() {
+    console.log("# In ForceEntityTestSuite.fetchSObjectsFromCache");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.fetchSObjectsFromServer
+ */
+ForceEntityTestSuite.prototype.testFetchSObjectsFromServer = function() {
+    console.log("# In ForceEntityTestSuite.fetchSObjectsFromServer");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.fetchSObjects
+ */
+ForceEntityTestSuite.prototype.testFetchSObjects = function() {
+    console.log("# In ForceEntityTestSuite.fetchSObjects");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.Collection.fetch
+ */
+ForceEntityTestSuite.prototype.testCollectionFetch = function() {
+    console.log("# In ForceEntityTestSuite.testCollectionFetch");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
 
 /**
  * Helper method to check local flags
