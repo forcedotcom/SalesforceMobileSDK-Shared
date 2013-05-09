@@ -206,16 +206,28 @@
                 });
         },
 
-        // Return promise which stores a record in cache (NB: record is merged with existing record if any)
-        save: function(record) {
+        // Return promise which stores a record in cache
+        save: function(record, noMerge) {
             if (this.soupName == null) return;
-            console.log("----> In StoreCache:save " + this.soupName + ":" + record[this.keyField]);
+            console.log("----> In StoreCache:save " + this.soupName + ":" + record[this.keyField] + " noMerge:" + (noMerge == true));
 
             var that = this;
-            record = this.addLocalFields(record);
-            return this.retrieve(record[this.keyField])
-                .then(function(oldRecord) {
-                    record = _.extend(oldRecord || {}, record);
+
+            var mergeIfRequested = function() { 
+                if (noMerge) {
+                    return $.when(record);
+                }
+                else {
+                    return that.retrieve(record[that.keyField])
+                        .then(function(oldRecord) {
+                            return _.extend(oldRecord || {}, record);
+                        });
+                }
+            };
+
+            return mergeIfRequested()
+                .then(function(record) {
+                    record = that.addLocalFields(record);
                     return smartstoreClient.upsertSoupEntriesWithExternalId(that.soupName, [ record ], that.keyField)
                 })
                 .then(function(records) {
@@ -224,32 +236,47 @@
         },
 
         // Return promise which stores several records in cache (NB: records are merged with existing records if any)
-        saveAll: function(records) {
+        saveAll: function(records, noMerge) {
             if (this.soupName == null) return;
-            console.log("----> In StoreCache:saveAll records.length=" + records.length);
+            console.log("----> In StoreCache:saveAll records.length=" + records.length + " noMerge:" + (noMerge == true));
 
             var that = this;
-            var oldRecords = {};
-            var smartSql = "SELECT {" + this.soupName + ":_soup} " 
-                + "FROM {" + this.soupName + "} " 
-                + "WHERE {" + this.soupName + ":" + this.keyField + "} "
-                + "IN ('" + _.pluck(records, this.keyField).join("','") + "')";
 
-            var querySpec = navigator.smartstore.buildSmartQuerySpec(smartSql, records.length);
+            var mergeIfRequested = function() {
+                if (noMerge) {
+                    return $.when(records);
+                }
+                else {
+                    var oldRecords = {};
+                    var smartSql = "SELECT {" + that.soupName + ":_soup} " 
+                        + "FROM {" + that.soupName + "} " 
+                        + "WHERE {" + that.soupName + ":" + that.keyField + "} "
+                        + "IN ('" + _.pluck(records, that.keyField).join("','") + "')";
 
-            return smartstoreClient.runSmartQuery(querySpec)
-                .then(function(cursor) {
-                    _.each(cursor.currentPageOrderedEntries, function(oldRecord) {
-                        oldRecords[oldRecord[that.keyField]] = oldRecord;
-                    });
-                    return smartstoreClient.closeCursor(cursor);
-                })
-                .then(function() {
+                    var querySpec = navigator.smartstore.buildSmartQuerySpec(smartSql, records.length);
+
+                    return smartstoreClient.runSmartQuery(querySpec)
+                        .then(function(cursor) {
+                            _.each(cursor.currentPageOrderedEntries, function(oldRecord) {
+                                oldRecords[oldRecord[that.keyField]] = oldRecord;
+                            });
+                            return smartstoreClient.closeCursor(cursor);
+                        })
+                        .then(function() {
+                            return _.map(records, function(record) {
+                                var oldRecord = oldRecords[record[that.keyField]];
+                                return _.extend(oldRecord || {}, record)
+                            });
+                        });
+                }
+            };
+
+            return mergeIfRequested()
+                .then(function(records) {
                     records = _.map(records, function(record) {
-                        var oldRecord = oldRecords[record[that.keyField]];
-                        return that.addLocalFields(_.extend(oldRecord || {}, record));
+                        return that.addLocalFields(record);
                     });
-
+                    
                     return smartstoreClient.upsertSoupEntriesWithExternalId(that.soupName, records, that.keyField);
                 });
         },
@@ -549,7 +576,7 @@
     // Returns a promise
     //
     Force.syncSObjectWithServer = function(method, sobjectType, id, attributes, fieldlist, refetch, refetchFieldList) {
-        console.log("---> In Force.syncSObjectWithServer:method=" + method + " id=" + id);
+        console.log("---> In Force.syncSObjectWithServer:method=" + method + " id=" + id + " refetch=" + refetch);
 
         // Server actions helper
         var serverCreate   = function() { 
@@ -562,10 +589,6 @@
 
         var serverRetrieve = function() { 
             return forcetkClient.retrieve(sobjectType, id, fieldlist);
-        };
-
-        var serverRefetch = function(data) { 
-            return forcetkClient.retrieve(sobjectType, data.Id, refetchFieldList);
         };
 
         var serverUpdate   = function() { 
@@ -583,17 +606,22 @@
                 }) 
         };
 
+        var refetchIfNeeded = function(data) {
+            if (refetch) {
+                return forcetkClient.retrieve(sobjectType, data.Id || id, refetchFieldList);
+            }
+            else {
+                return data;
+            }
+        };
+
         // Chaining promises that return either a promise or created/upated/read model attributes or null in the case of delete
         var promise = null;
         switch(method) {
-        case "create": promise = serverCreate(); break;
+        case "create": promise = serverCreate().then(refetchIfNeeded); break;
         case "read":   promise = serverRetrieve(); break;
-        case "update": promise = serverUpdate(); break;
+        case "update": promise = serverUpdate().then(refetchIfNeeded); break;
         case "delete": promise = serverDelete(); break; /* XXX on 404 (record already deleted) we should not fail otherwise cache won't get cleaned up */
-        }
-
-        if (refetch) {
-            promise = promise.then(serverRefetch);
         }
 
         return promise;

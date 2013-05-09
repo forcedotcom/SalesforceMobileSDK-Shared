@@ -23,6 +23,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+"use strict";
 
 /**
  * An abstract super class for SmartStore test suites
@@ -169,6 +170,20 @@ ForceEntityTestSuite.prototype.testStoreCacheSave = function() {
         console.log("## Checking returned record is the merge of original fields and newly provided fields");
         QUnit.equals(records.length, 1, "one record should have been returned");
         assertContains(records[0], {Id:"007", Name:"JamesBond", Mission:"TopSecret2", Organization:"MI6"});
+
+        console.log("## Saving partial record to cache with noMerge flag");
+        return cache.save({Id:"007", Mission:"TopSecret3"}, true);
+    })
+    .then(function(record) {
+        console.log("## Direct retrieve from underlying cache");
+        return Force.smartstoreClient.retrieveSoupEntries(soupName, [record._soupEntryId]);
+    })
+    .then(function(records) {
+        console.log("## Checking returned record just has newly provided fields");
+        QUnit.equals(records.length, 1, "one record should have been returned");
+        assertContains(records[0], {Id:"007", Mission:"TopSecret3"});
+        QUnit.equals(_.has(records[0], "Name"), false, "Should not have a name field");
+        QUnit.equals(_.has(records[0], "Organization"), false, "Should not have an organization field");
         console.log("## Cleaning up");
         return Force.smartstoreClient.removeSoup(soupName);        
     })
@@ -224,6 +239,23 @@ ForceEntityTestSuite.prototype.testStoreCacheSaveAll = function() {
         assertContains(records[1], {Id:"008", Name:"Agent-008", Team:"Team-008"});
         assertContains(records[2], {Id:"009", Name:"JamesOther", Organization:"MI6"});
 
+        console.log("## Saving partial records to cache with noMerge flag");
+        var partialRecords = [{Id:"007", Mission:"TopSecret"},{Id:"008", Team:"Team"}, {Id:"009", Organization:"Org"}];        
+        return cache.saveAll(partialRecords, true);
+    })
+    .then(function(record) {
+        console.log("## Direct retrieve from underlying cache");
+        return Force.smartstoreClient.retrieveSoupEntries(soupName, soupEntryIds);
+    })
+    .then(function(records) {
+        console.log("## Checking returned records just have newly provided fields");
+        QUnit.equals(records.length, 3, "three records should have been returned");
+        assertContains(records[0], {Id:"007", Mission:"TopSecret"});
+        QUnit.equals(_.has(records[0], "Name"), false, "Should not have a name field");
+        assertContains(records[1], {Id:"008", Team:"Team"});
+        QUnit.equals(_.has(records[1], "Name"), false, "Should not have a name field");
+        assertContains(records[2], {Id:"009", Organization:"Org"});
+        QUnit.equals(_.has(records[2], "Name"), false, "Should not have a name field");
         console.log("## Cleaning up");
         return Force.smartstoreClient.removeSoup(soupName);        
     })
@@ -762,6 +794,367 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithCacheDelete = function() {
     });
 }
 
+/** 
+ * TEST Force.syncSObjectWithServer for create method
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectWithServerCreate = function() {
+    console.log("# In ForceEntityTestSuite.testSyncSObjectWithServerCreate");
+    var self = this;
+    var id;
+
+    // To test refetch
+    var retrieveCalls = [];
+    var originalRetrieve = Force.forcetkClient.retrieve;
+    console.log("## Instrumenting Force.forcetkClient.retrieve");
+    Force.forcetkClient.retrieve = function() { var args = $.makeArray(arguments); retrieveCalls.push(args); return originalRetrieve.apply(Force.forcetkClient, args); };
+
+    console.log("## Trying create");
+    Force.syncSObjectWithServer("create", "Account", null, {Name:"TestAccount"}, ["Name"])
+    .then(function(data) {
+        console.log("## Checking data returned by sync call");
+        id = data.Id;
+        assertContains(data, {Name:"TestAccount"});
+
+        console.log("## Direct retrieve from server");
+        return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned from server");
+        assertContains(data, {Id:id, Name:"TestAccount"});
+
+        console.log("## Cleaning up");
+        return Force.forcetkClient.del("account", id);
+    })
+    .then(function() {
+        console.log("## Trying create with refetch flag");
+        retrieveCalls = [];
+        return Force.syncSObjectWithServer("create", "Account", null, {Name:"TestAccount2"}, ["Name"], true, ["Id", "Name"]);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned by sync call");
+        id = data.Id;
+        assertContains(data, {Id: id, Name:"TestAccount2"});
+
+        console.log("## Checking that a refetch took place");
+        QUnit.equals(retrieveCalls.length, 1, "a retrieve call should have been recorded");
+        QUnit.deepEqual(retrieveCalls[0], ["Account", id, ["Id", "Name"]], "wrong retrieve call");
+
+        console.log("## Direct retrieve from server");
+        return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned from server");
+        assertContains(data, {Id:id, Name:"TestAccount2"});
+
+        console.log("## Cleaning up");
+        return Force.forcetkClient.del("account", id);
+    })
+    .then(function() {
+        console.log("## Reverting Force.forcetkClient.retrieve to its original definition");
+        Force.forcetkClient.retrieve = originalRetrieve;
+        self.finalizeTest();
+    });
+
+}
+
+/** 
+ * TEST Force.syncSObjectWithServer for read method
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectWithServerRead = function() {
+    console.log("# In ForceEntityTestSuite.testSyncSObjectWithServerRead");
+    var self = this;
+    var id;
+
+    console.log("## Direct creation against server");    
+    Force.forcetkClient.create("Account", {Name:"TestAccount"})
+        .then(function(resp) {
+            id = resp.id;
+
+            console.log("## Trying read call");
+            return Force.syncSObjectWithServer("read", "Account", id, null, ["Id", "Name"]);
+        })
+        .then(function(data) {
+            console.log("## Checking data returned from sync call");
+            assertContains(data, {Id:id, Name:"TestAccount"});
+
+            console.log("## Cleaning up");
+            return Force.forcetkClient.del("account", id);
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
+/** 
+ * TEST Force.syncSObjectWithServer for update method
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectWithServerUpdate = function() {
+    console.log("# In ForceEntityTestSuite.testSyncSObjectWithServerUpdate");
+    var self = this;
+    var id;
+
+    // To test refetch
+    var retrieveCalls = [];
+    var originalRetrieve = Force.forcetkClient.retrieve;
+    console.log("## Instrumenting Force.forcetkClient.retrieve");
+    Force.forcetkClient.retrieve = function() { var args = $.makeArray(arguments); retrieveCalls.push(args); return originalRetrieve.apply(Force.forcetkClient, args); };
+
+    console.log("## Direct creation against server");    
+    Force.forcetkClient.create("Account", {Name:"TestAccount"})
+        .then(function(resp) {
+            id = resp.id;
+
+            console.log("## Trying update call");
+            return Force.syncSObjectWithServer("update", "Account", id, {Name:"TestAccount2"}, ["Name"]);
+        })
+        .then(function(data) {
+            console.log("## Checking data returned from sync call");
+            assertContains(data, {Name:"TestAccount2"});
+
+            console.log("## Direct retrieve from server");
+            return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
+        })
+        .then(function(data) {
+            console.log("## Checking data returned from server");
+            assertContains(data, {Id:id, Name:"TestAccount2"});
+
+            console.log("## Trying create with refetch flag");
+            retrieveCalls = [];
+            return Force.syncSObjectWithServer("update", "Account", id, {Name:"TestAccount3"}, ["Name"], true, ["Id", "Name"]);
+        })
+        .then(function(data) {
+            console.log("## Checking data returned by sync call");
+            assertContains(data, {Id: id, Name:"TestAccount3"});
+
+            console.log("## Checking that a refetch took place");
+            QUnit.equals(retrieveCalls.length, 1, "a retrieve call should have been recorded");
+            QUnit.deepEqual(retrieveCalls[0], ["Account", id, ["Id", "Name"]], "wrong retrieve call");
+
+            console.log("## Direct retrieve from server");
+            return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
+        })
+        .then(function(data) {
+            console.log("## Checking data returned from server");
+            assertContains(data, {Id:id, Name:"TestAccount3"});
+
+            console.log("## Cleaning up");
+            return Force.forcetkClient.del("account", id);
+        })
+        .then(function() {
+            console.log("## Reverting Force.forcetkClient.retrieve to its original definition");
+            Force.forcetkClient.retrieve = originalRetrieve;
+            self.finalizeTest();
+        });
+};
+
+/** 
+ * TEST Force.syncSObjectWithServer for delete method
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectWithServerDelete = function() {
+    console.log("# In ForceEntityTestSuite.testSyncSObjectWithServerDelete");
+    var self = this;
+    var id;
+
+    console.log("## Direct creation against server");    
+    Force.forcetkClient.create("Account", {Name:"TestAccount"})
+        .then(function(resp) {
+            id = resp.id;
+
+            console.log("## Trying delete call");
+            return Force.syncSObjectWithServer("delete", "Account", id);
+        })
+        .then(function(data) {
+            QUnit.equals(data, null, "wrong data returned");
+
+            console.log("## Direct retrieve from server");
+            return Force.forcetkClient.retrieve("Account", id, ["Id"]);
+        })
+        .fail(function(error) {
+            console.log("## Checking error returned from server");
+            QUnit.equals(error.status, 404, "404 expected");
+            self.finalizeTest();
+        });
+};
+
+/** 
+ * TEST Force.syncSObject for method create
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectCreate = function() {
+    console.log("# In ForceEntityTestSuite.testSyncSObjectCreate");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.syncSObject for method retrieve
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectRetrieve = function() {
+    console.log("# In ForceEntityTestSuite.syncSObjectRetrieve");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.syncSObject for method update
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectUpdate = function() {
+    console.log("# In ForceEntityTestSuite.syncSObjectUpdate");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.syncSObject for method delete
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectDelete = function() {
+    console.log("# In ForceEntityTestSuite.syncSObjectDelete");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.syncSObjectDetectConflict for method create
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictCreate = function() {
+    console.log("# In ForceEntityTestSuite.syncSObjectDetectConflictCreate");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.syncSObjectDetectConflict for method retrieve
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictRetrieve = function() {
+    console.log("# In ForceEntityTestSuite.syncSObjectDetectConflictRetrieve");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.syncSObjectDetectConflict for method update
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() {
+    console.log("# In ForceEntityTestSuite.syncSObjectDetectConflictUpdate");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.syncSObjectDetectConflict for method delete
+ */
+ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() {
+    console.log("# In ForceEntityTestSuite.syncSObjectDetectConflictDelete");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.SObject.fetch
+ */
+ForceEntityTestSuite.prototype.testSObjectFetch = function() {
+    console.log("# In ForceEntityTestSuite.testSObjectFetch");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.SObject.save
+ */
+ForceEntityTestSuite.prototype.testSObjectSave = function() {
+    console.log("# In ForceEntityTestSuite.testSObjectSave");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.SObject.destroy
+ */
+ForceEntityTestSuite.prototype.testSObjectDestroy = function() {
+    console.log("# In ForceEntityTestSuite.testSObjectDestroy");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.fetchSObjectsFromCache
+ */
+ForceEntityTestSuite.prototype.testFetchSObjectsFromCache = function() {
+    console.log("# In ForceEntityTestSuite.fetchSObjectsFromCache");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.fetchSObjectsFromServer
+ */
+ForceEntityTestSuite.prototype.testFetchSObjectsFromServer = function() {
+    console.log("# In ForceEntityTestSuite.fetchSObjectsFromServer");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.fetchSObjects
+ */
+ForceEntityTestSuite.prototype.testFetchSObjects = function() {
+    console.log("# In ForceEntityTestSuite.fetchSObjects");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
+
+/** 
+ * TEST Force.Collection.fetch
+ */
+ForceEntityTestSuite.prototype.testCollectionFetch = function() {
+    console.log("# In ForceEntityTestSuite.testCollectionFetch");
+    var self = this;
+
+    QUnit.ok(false, "Test not implemented");
+
+    self.finalizeTest();
+};
 
 /**
  * Helper method to check local flags
@@ -771,10 +1164,10 @@ var checkLocalFlags = function (data, local, locallyCreated, locallyUpdated, loc
     QUnit.equals(data.__locally_created__, locallyCreated, "__locally_created__ wrong at " + getCaller());
     QUnit.equals(data.__locally_updated__, locallyUpdated, "__locally_created__ wrong at " + getCaller());
     QUnit.equals(data.__locally_deleted__, locallyDeleted, "__locally_created__ wrong at " + getCaller());
-}
+};
 
 /**
- * Helper method that returns true if <data> assertContains <map>
+ * Helper method that checks that <data> contains <map> and fires QUnit failures otherwise
  */
 var assertContains = function (data, map, ctx, caller) {
     if (caller == null) caller = getCaller();
