@@ -1115,9 +1115,67 @@ ForceEntityTestSuite.prototype.testFetchSObjectsFromCache = function() {
     console.log("# In ForceEntityTestSuite.fetchSObjectsFromCache");
     var self = this;
 
-    QUnit.ok(false, "Test not implemented");
+    var cache;
+    var soupName = "testSoupForFetchSObjectsFromCache";
+    var resultSet;
 
-    self.finalizeTest();
+    Force.smartstoreClient.removeSoup(soupName)
+    .then(function() {
+        console.log("## Initialization of StoreCache");
+        cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
+        return cache.init();
+    })
+    .then(function() {
+        console.log("## Direct save to cache");
+        var records = [{Id:"007", Name:"JamesBond"},{Id:"008", Name:"Agent008"}, {Id:"009", Name:"JamesOther"}];
+        return cache.saveAll(records);
+    })
+    .then(function() {
+        console.log("## Doing a fetchSObjectsFromCache with an exact query spec");
+        return Force.fetchSObjectsFromCache(cache, {queryType:"exact", indexPath:"Name", matchKey:"Agent008", order:"ascending", pageSize:1});
+    })
+    .then(function(result) {
+        console.log("## Checking returned result");
+        QUnit.equals(result.records.length, 1, "one record should have been returned");
+        assertContains(result.records[0], {Id:"008"});
+        QUnit.equals(result.hasMore(), false, "there should not be more records");
+        console.log("## Doing a fetchSObjectsFromCache with like query spec");
+        return Force.fetchSObjectsFromCache(cache, {queryType:"like", indexPath:"Name", likeKey:"James%", order:"ascending", pageSize:2});
+    })
+    .then(function(result) {
+        console.log("## Checking returned result");
+        QUnit.equals(result.records.length, 2, "two records should have been returned");
+        assertContains(result.records[0], {Id:"007"});
+        assertContains(result.records[1], {Id:"009"});
+        QUnit.equals(result.hasMore(), false, "there should not be more records");
+        console.log("## Doing a fetchSObjectsFromCache with all query spec and a pageSize smaller than result set");
+        return Force.fetchSObjectsFromCache(cache, {queryType:"range", indexPath:"Id", order:"ascending", pageSize:2});
+    })
+    .then(function(result) {
+        resultSet = result;
+        console.log("## Checking returned result");
+        QUnit.equals(resultSet.records.length, 2, "two records should have been returned");
+        assertContains(resultSet.records[0], {Id:"007"});
+        assertContains(resultSet.records[1], {Id:"008"});
+        QUnit.equals(resultSet.hasMore(), true, "there should be more records");
+        console.log("## Getting the next page of records");
+        return resultSet.getMore();
+    })
+    .then(function(records) {
+        console.log("## Checking returned result");
+        QUnit.equals(records.length, 1, "one record should have been returned");
+        assertContains(records[0], {Id:"009"});
+        QUnit.equals(resultSet.hasMore(), false, "there should not be more records");
+        QUnit.equals(resultSet.records.length, 3, "three records should be in result set");
+        assertContains(resultSet.records[0], {Id:"007"});
+        assertContains(resultSet.records[1], {Id:"008"});
+        assertContains(resultSet.records[2], {Id:"009"});
+        console.log("## Cleaning up");
+        return Force.smartstoreClient.removeSoup(soupName);
+    })
+    .then(function() {
+        self.finalizeTest();
+    });
 };
 
 /** 
