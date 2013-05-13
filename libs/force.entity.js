@@ -713,7 +713,7 @@
         // Write back to cache if not read from cache
         promise = promise.then(function(data) {
             if (!wasReadFromCache) {
-                var targetId = (method == "delete" ? id : data.Id);
+                var targetId = (method == "create" ? data.Id : id);
                 var targetMethod = (method == "read" ? "update" /* we want to write to the cache what was read from the server */: method);
                 return cacheSync(targetMethod, targetId, data);
             }

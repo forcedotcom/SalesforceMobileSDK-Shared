@@ -1221,6 +1221,24 @@ ForceEntityTestSuite.prototype.testFetchSObjects = function() {
             QUnit.equals(result.totalSize, 3, "Expected 3 results");
             QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
 
+            console.log("## Trying fetch with sosl with no cache parameter");
+            return Force.fetchSObjects({type:"sosl", query:"FIND {testFetchSObjects*} IN ALL FIELDS RETURNING Account(Id, Name) LIMIT 10"});
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from fetch call");
+            QUnit.ok(result.totalSize > 0, "Expected results");
+            var expectedNames = _.values(idToName).sort();
+            QUnit.deepEqual(expectedNames, _.intersection(expectedNames, _.pluck(result.records, "Name")), "Wrong names");
+
+            console.log("## Trying fetch with mru with no cache parameter");
+            return Force.fetchSObjects({type:"mru", sobjectType:"Account", fieldlist:["Name"]});
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from fetch call");
+            QUnit.ok(result.totalSize > 0, "Expected results");
+            var expectedNames = _.values(idToName).sort();
+            QUnit.deepEqual(expectedNames, _.intersection(expectedNames, _.pluck(result.records, "Name")), "Wrong names");
+
             console.log("## Trying fetch with soql with cache parameter");
             return Force.fetchSObjects({type:"soql", query:"SELECT Id, Name FROM Account WHERE Id IN ('" +  _.keys(idToName).join("','") + "') ORDER BY Name"}, cache);
         })
@@ -1306,13 +1324,31 @@ ForceEntityTestSuite.prototype.testCollectionFetch = function() {
             return createRecords(idToName, "testFetchSObjects", 3);
         })
         .then(function() {
-            console.log("## Trying fetch with no cache parameter");
+            console.log("## Trying fetch with soql with no cache parameter");
             return collectionFetch();
         })
         .then(function(result) {
             console.log("## Checking data returned from fetch call");
             QUnit.equals(collection.length, 3, "Expected 3 results");
             QUnit.deepEqual(_.values(idToName).sort(), collection.pluck("Name"), "Wrong names");
+
+            console.log("## Trying fetch with sosl with no cache parameter");
+            return collectionFetch({config: {type:"sosl", query:"FIND {testFetchSObjects*} IN ALL FIELDS RETURNING Account(Id, Name) LIMIT 10"}} );
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from fetch call");
+            QUnit.ok(collection.length > 0, "Expected results");
+            var expectedNames = _.values(idToName).sort();
+            QUnit.deepEqual(expectedNames, _.intersection(expectedNames, collection.pluck("Name")), "Wrong names");
+
+            console.log("## Trying fetch with mru with no cache parameter");
+            return collectionFetch({config: {type:"mru", sobjectType:"Account", fieldlist:["Name"]}} );
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from fetch call");
+            QUnit.ok(collection.length > 0, "Expected results");
+            var expectedNames = _.values(idToName).sort();
+            QUnit.deepEqual(expectedNames, _.intersection(expectedNames, collection.pluck("Name")), "Wrong names");
 
             console.log("## Trying fetch with soql with cache parameter");
             return collectionFetch({cache:cache});
