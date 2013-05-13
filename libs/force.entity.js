@@ -570,13 +570,11 @@
     // * id:<record id or null during create>
     // * attributes:<map field name to value>  record attributes given by a map of field name to value
     // * fieldlist:<fields>                    fields to fetch for read, fields to save for update or create (required)
-    // * refetch:<true|false>                  for create or update to refetch the record following the save (useful in case of calculated fields)
-    // * refetchFieldList:<fields>             when refetch is true, fields to refetch
     //
     // Returns a promise
     //
-    Force.syncSObjectWithServer = function(method, sobjectType, id, attributes, fieldlist, refetch, refetchFieldList) {
-        console.log("---> In Force.syncSObjectWithServer:method=" + method + " id=" + id + " refetch=" + refetch);
+    Force.syncSObjectWithServer = function(method, sobjectType, id, attributes, fieldlist) {
+        console.log("---> In Force.syncSObjectWithServer:method=" + method + " id=" + id);
 
         // Server actions helper
         var serverCreate   = function() { 
@@ -606,21 +604,12 @@
                 }) 
         };
 
-        var refetchIfNeeded = function(data) {
-            if (refetch) {
-                return forcetkClient.retrieve(sobjectType, data.Id || id, refetchFieldList);
-            }
-            else {
-                return data;
-            }
-        };
-
         // Chaining promises that return either a promise or created/upated/read model attributes or null in the case of delete
         var promise = null;
         switch(method) {
-        case "create": promise = serverCreate().then(refetchIfNeeded); break;
+        case "create": promise = serverCreate(); break;
         case "read":   promise = serverRetrieve(); break;
-        case "update": promise = serverUpdate().then(refetchIfNeeded); break;
+        case "update": promise = serverUpdate(); break;
         case "delete": promise = serverDelete(); break; /* XXX on 404 (record already deleted) we should not fail otherwise cache won't get cleaned up */
         }
 
@@ -654,11 +643,11 @@
     // Returns a promise
     //
     //
-    Force.syncSObject = function(method, sobjectType, id, attributes, fieldlist, refetch, refetchFieldList, cache, cacheMode) {
+    Force.syncSObject = function(method, sobjectType, id, attributes, fieldlist, cache, cacheMode) {
         console.log("--> In Force.syncSObject:method=" + method + " id=" + id + " cacheMode=" + cacheMode);
 
         var serverSync = function(method, id) {
-            return Force.syncSObjectWithServer(method, sobjectType, id, attributes, fieldlist, refetch, refetchFieldList);
+            return Force.syncSObjectWithServer(method, sobjectType, id, attributes, fieldlist);
         };
 
         var cacheSync = function(method, id, attributes, fieldlist, localAction) {
@@ -773,11 +762,11 @@
     //   conflictingChanges:<fields changed both in theirs and yours with different values>
     // }
     // 
-    Force.syncSObjectDetectConflict = function(method, sobjectType, id, attributes, fieldlist, refetch, refetchFieldList, cache, cacheMode, cacheForOriginals, mergeMode) {
+    Force.syncSObjectDetectConflict = function(method, sobjectType, id, attributes, fieldlist, cache, cacheMode, cacheForOriginals, mergeMode) {
         console.log("--> In Force.syncSObjectDetectConflict:method=" + method + " id=" + id + " cacheMode=" + cacheMode + " mergeMode=" + mergeMode);
 
         var sync = function(attributes) {
-            return Force.syncSObject(method, sobjectType, id, attributes, fieldlist, refetch, refetchFieldList, cache, cacheMode);
+            return Force.syncSObject(method, sobjectType, id, attributes, fieldlist, cache, cacheMode);
         };
 
         // Original cache required for conflict detection
@@ -1050,12 +1039,6 @@
             // Used if none is passed during sync call - can be a cache object or a function returning a cache object
             cacheForOriginals: null,
 
-            // Used if none is passed during sync call - can be boolean or a function returning a boolean
-            refetch: null,
-
-            // Used if none is passed during sync call - can be a string array or a function returning a string array
-            refetchFieldList: null,
-
             // sobjectType is expected on every instance
             sobjectType:null,
 
@@ -1066,7 +1049,6 @@
             //
             // Extra options (can also be defined as properties of the model object)
             // * fieldlist:<array of fields> during read if you don't want to fetch the whole record, during save fields to save
-            // * refetch:true during create/update to do a fetch following the create/update
             // * cache:<cache object>
             // * cacheMode:<any Force.CACHE_MODE values>
             // * cacheForOriginals:<cache object>
@@ -1085,10 +1067,8 @@
                 var mergeMode         = resolveOption("mergeMode");
                 var cache             = resolveOption("cache");
                 var cacheForOriginals = resolveOption("cacheForOriginals");
-                var refetch           = resolveOption("refetch");
-                var refetchFieldList  = resolveOption("refetchFieldList");
 
-                Force.syncSObjectDetectConflict(method, this.sobjectType, model.id, model.attributes, fieldlist, options.refetch, options.refetchFieldList, cache, cacheMode, cacheForOriginals, mergeMode)
+                Force.syncSObjectDetectConflict(method, this.sobjectType, model.id, model.attributes, fieldlist, cache, cacheMode, cacheForOriginals, mergeMode)
                     .done(options.success)
                     .fail(options.error);
             }
