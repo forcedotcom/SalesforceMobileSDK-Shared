@@ -38,6 +38,9 @@ if (typeof ForceEntityTestSuite === 'undefined') {
  */
 var ForceEntityTestSuite = function () {
     SFTestSuite.call(this, "ForceEntityTestSuite");
+
+    // To run specific tests
+    // this.testsToRun = ["testCollectionFetch"];
 };
 
 // We are sub-classing SFTestSuite
@@ -65,7 +68,7 @@ ForceEntityTestSuite.prototype.testStoreCacheInit = function() {
     .then(function(exists) {
         QUnit.equals(exists, true, "soup should now exist");
         console.log("## Cleaning up");
-        return Force.smartstoreClient.removeSoup(soupName);        
+        return Force.smartstoreClient.removeSoup(soupName);
     })
     .then(function() {
         self.finalizeTest();
@@ -593,6 +596,22 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithCacheCreate = function() {
         QUnit.equals(_.has(data, "Mission"), false, "Mission should not have been saved");
         checkLocalFlags(data, false, false, false, false);
 
+        console.log("## Trying a create with null fieldlist");
+        return Force.syncSObjectWithCache("create", "010", {Name:"JamesTen", Mission:"TopSecret", City:"London"}, null, cache, false);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned by sync call");
+        assertContains(data, {Id:"010", Name:"JamesTen", Mission:"TopSecret", City:"London"});
+        checkLocalFlags(data, false, false, false, false);
+
+        console.log("## Checking underlying cache");
+        return cache.retrieve(data.Id);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned from cache");
+        assertContains(data, {Id:"010", Name:"JamesTen", Mission:"TopSecret", City:"London"});
+        checkLocalFlags(data, false, false, false, false);
+
         console.log("## Cleaning up");
         return Force.smartstoreClient.removeSoup(soupName);
     })
@@ -643,6 +662,13 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithCacheRead = function() {
     .then(function(data) {
         console.log("## Checking data returned by sync call");
         QUnit.equals(data, null, "No data should have been returned");
+
+        console.log("## Trying read for existing record with null fieldlist");
+        return Force.syncSObjectWithCache("read", "007", null, null, cache);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned by sync call");
+        assertContains(data, {Id:"007", Name:"JamesBond"});
 
         console.log("## Cleaning up");
         return Force.smartstoreClient.removeSoup(soupName);
@@ -705,7 +731,7 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithCacheUpdate = function() {
         checkLocalFlags(data, false, false, false, false);
 
         console.log("## Trying an update with only a subset of existing attributes provided");
-        return Force.syncSObjectWithCache("update", "007", {Mission:"TopSecret3"}, ["Mission"], cache, false);
+        return Force.syncSObjectWithCache("update", "007", {Name:"JamesBond3", Mission:"TopSecret3"}, ["Mission"], cache, false);
     })
     .then(function(data) {
         console.log("## Checking data returned by sync call");
@@ -718,6 +744,22 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithCacheUpdate = function() {
     .then(function(data) {
         console.log("## Checking data returned from cache");
         assertContains(data, {Id:"007", Name:"JamesBond", Mission:"TopSecret3"});
+        checkLocalFlags(data, false, false, false, false);
+
+        console.log("## Trying an update with null fieldlist");
+        return Force.syncSObjectWithCache("update", "007", {Name:"JamesBond4", Mission:"TopSecret4"}, null, cache, false);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned by sync call");
+        assertContains(data, {Id:"007", Name:"JamesBond4", Mission:"TopSecret4"});
+        checkLocalFlags(data, false, false, false, false);
+
+        console.log("## Checking underlying cache");
+        return cache.retrieve(data.Id);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned from cache");
+        assertContains(data, {Id:"007", Name:"JamesBond4", Mission:"TopSecret4"});
         checkLocalFlags(data, false, false, false, false);
 
         console.log("## Cleaning up");
@@ -802,12 +844,6 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithServerCreate = function() {
     var self = this;
     var id;
 
-    // To test refetch
-    var retrieveCalls = [];
-    var originalRetrieve = Force.forcetkClient.retrieve;
-    console.log("## Instrumenting Force.forcetkClient.retrieve");
-    Force.forcetkClient.retrieve = function() { var args = $.makeArray(arguments); retrieveCalls.push(args); return originalRetrieve.apply(Force.forcetkClient, args); };
-
     console.log("## Trying create");
     Force.syncSObjectWithServer("create", "Account", null, {Name:"TestAccount"}, ["Name"])
     .then(function(data) {
@@ -826,32 +862,6 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithServerCreate = function() {
         return Force.forcetkClient.del("account", id);
     })
     .then(function() {
-        console.log("## Trying create with refetch flag");
-        retrieveCalls = [];
-        return Force.syncSObjectWithServer("create", "Account", null, {Name:"TestAccount2"}, ["Name"], true, ["Id", "Name"]);
-    })
-    .then(function(data) {
-        console.log("## Checking data returned by sync call");
-        id = data.Id;
-        assertContains(data, {Id: id, Name:"TestAccount2"});
-
-        console.log("## Checking that a refetch took place");
-        QUnit.equals(retrieveCalls.length, 1, "a retrieve call should have been recorded");
-        QUnit.deepEqual(retrieveCalls[0], ["Account", id, ["Id", "Name"]], "wrong retrieve call");
-
-        console.log("## Direct retrieve from server");
-        return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
-    })
-    .then(function(data) {
-        console.log("## Checking data returned from server");
-        assertContains(data, {Id:id, Name:"TestAccount2"});
-
-        console.log("## Cleaning up");
-        return Force.forcetkClient.del("account", id);
-    })
-    .then(function() {
-        console.log("## Reverting Force.forcetkClient.retrieve to its original definition");
-        Force.forcetkClient.retrieve = originalRetrieve;
         self.finalizeTest();
     });
 
@@ -893,12 +903,6 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithServerUpdate = function() {
     var self = this;
     var id;
 
-    // To test refetch
-    var retrieveCalls = [];
-    var originalRetrieve = Force.forcetkClient.retrieve;
-    console.log("## Instrumenting Force.forcetkClient.retrieve");
-    Force.forcetkClient.retrieve = function() { var args = $.makeArray(arguments); retrieveCalls.push(args); return originalRetrieve.apply(Force.forcetkClient, args); };
-
     console.log("## Direct creation against server");    
     Force.forcetkClient.create("Account", {Name:"TestAccount"})
         .then(function(resp) {
@@ -918,31 +922,10 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithServerUpdate = function() {
             console.log("## Checking data returned from server");
             assertContains(data, {Id:id, Name:"TestAccount2"});
 
-            console.log("## Trying create with refetch flag");
-            retrieveCalls = [];
-            return Force.syncSObjectWithServer("update", "Account", id, {Name:"TestAccount3"}, ["Name"], true, ["Id", "Name"]);
-        })
-        .then(function(data) {
-            console.log("## Checking data returned by sync call");
-            assertContains(data, {Id: id, Name:"TestAccount3"});
-
-            console.log("## Checking that a refetch took place");
-            QUnit.equals(retrieveCalls.length, 1, "a retrieve call should have been recorded");
-            QUnit.deepEqual(retrieveCalls[0], ["Account", id, ["Id", "Name"]], "wrong retrieve call");
-
-            console.log("## Direct retrieve from server");
-            return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
-        })
-        .then(function(data) {
-            console.log("## Checking data returned from server");
-            assertContains(data, {Id:id, Name:"TestAccount3"});
-
             console.log("## Cleaning up");
             return Force.forcetkClient.del("account", id);
         })
         .then(function() {
-            console.log("## Reverting Force.forcetkClient.retrieve to its original definition");
-            Force.forcetkClient.retrieve = originalRetrieve;
             self.finalizeTest();
         });
 };
@@ -1115,9 +1098,67 @@ ForceEntityTestSuite.prototype.testFetchSObjectsFromCache = function() {
     console.log("# In ForceEntityTestSuite.fetchSObjectsFromCache");
     var self = this;
 
-    QUnit.ok(false, "Test not implemented");
+    var cache;
+    var soupName = "testSoupForFetchSObjectsFromCache";
+    var resultSet;
 
-    self.finalizeTest();
+    Force.smartstoreClient.removeSoup(soupName)
+    .then(function() {
+        console.log("## Initialization of StoreCache");
+        cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
+        return cache.init();
+    })
+    .then(function() {
+        console.log("## Direct save to cache");
+        var records = [{Id:"007", Name:"JamesBond"},{Id:"008", Name:"Agent008"}, {Id:"009", Name:"JamesOther"}];
+        return cache.saveAll(records);
+    })
+    .then(function() {
+        console.log("## Doing a fetchSObjectsFromCache with an exact query spec");
+        return Force.fetchSObjectsFromCache(cache, {queryType:"exact", indexPath:"Name", matchKey:"Agent008", order:"ascending", pageSize:1});
+    })
+    .then(function(result) {
+        console.log("## Checking returned result");
+        QUnit.equals(result.records.length, 1, "one record should have been returned");
+        assertContains(result.records[0], {Id:"008"});
+        QUnit.equals(result.hasMore(), false, "there should not be more records");
+        console.log("## Doing a fetchSObjectsFromCache with like query spec");
+        return Force.fetchSObjectsFromCache(cache, {queryType:"like", indexPath:"Name", likeKey:"James%", order:"ascending", pageSize:2});
+    })
+    .then(function(result) {
+        console.log("## Checking returned result");
+        QUnit.equals(result.records.length, 2, "two records should have been returned");
+        assertContains(result.records[0], {Id:"007"});
+        assertContains(result.records[1], {Id:"009"});
+        QUnit.equals(result.hasMore(), false, "there should not be more records");
+        console.log("## Doing a fetchSObjectsFromCache with all query spec and a pageSize smaller than result set");
+        return Force.fetchSObjectsFromCache(cache, {queryType:"range", indexPath:"Id", order:"ascending", pageSize:2});
+    })
+    .then(function(result) {
+        resultSet = result;
+        console.log("## Checking returned result");
+        QUnit.equals(resultSet.records.length, 2, "two records should have been returned");
+        assertContains(resultSet.records[0], {Id:"007"});
+        assertContains(resultSet.records[1], {Id:"008"});
+        QUnit.equals(resultSet.hasMore(), true, "there should be more records");
+        console.log("## Getting the next page of records");
+        return resultSet.getMore();
+    })
+    .then(function(records) {
+        console.log("## Checking returned result");
+        QUnit.equals(records.length, 1, "one record should have been returned");
+        assertContains(records[0], {Id:"009"});
+        QUnit.equals(resultSet.hasMore(), false, "there should not be more records");
+        QUnit.equals(resultSet.records.length, 3, "three records should be in result set");
+        assertContains(resultSet.records[0], {Id:"007"});
+        assertContains(resultSet.records[1], {Id:"008"});
+        assertContains(resultSet.records[2], {Id:"009"});
+        console.log("## Cleaning up");
+        return Force.smartstoreClient.removeSoup(soupName);
+    })
+    .then(function() {
+        self.finalizeTest();
+    });
 };
 
 /** 
@@ -1126,22 +1167,132 @@ ForceEntityTestSuite.prototype.testFetchSObjectsFromCache = function() {
 ForceEntityTestSuite.prototype.testFetchSObjectsFromServer = function() {
     console.log("# In ForceEntityTestSuite.fetchSObjectsFromServer");
     var self = this;
+    var idToName = {};
 
-    QUnit.ok(false, "Test not implemented");
+    console.log("## Direct creation against server");    
+    createRecords(idToName, "testFetchSObjectsFromServer", 3)
+        .then(function() {
+            console.log("## Trying fetch with soql");
+            var config = {type:"soql", query:"SELECT Name FROM Account WHERE Id IN ('" +  _.keys(idToName).join("','") + "')"};
+            return Force.fetchSObjectsFromServer(config);
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from fetch call");
+            QUnit.equals(result.totalSize, 3, "expected 3 results");
+            QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name").sort(), "Wrong names");
 
-    self.finalizeTest();
+            console.log("## Cleaning up");
+            return deleteRecords(idToName)
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
 };
 
 /** 
  * TEST Force.fetchSObjects
  */
 ForceEntityTestSuite.prototype.testFetchSObjects = function() {
-    console.log("# In ForceEntityTestSuite.fetchSObjects");
+    console.log("# In ForceEntityTestSuite.testFetchSObjects");
     var self = this;
+    var idToName = {};
+    var soupName = "testFetchSObjects";
+    var originalsSoupName = "originals-" + soupName;
+    var cache;
+    var cacheForOriginals;
 
-    QUnit.ok(false, "Test not implemented");
+    Force.smartstoreClient.removeSoup(soupName)
+        .then(function() {
+            console.log("## Initialization of StoreCache's");
+            cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
+            cacheForOriginals = new Force.StoreCache(originalsSoupName, [ {path:"Name", type:"string"} ]);
+            return $.when(cache.init(), cacheForOriginals.init());
+        })
+        .then(function() { 
+            console.log("## Direct creation against server");    
+            return createRecords(idToName, "testFetchSObjects", 3);
+        })
+        .then(function() {
+            console.log("## Trying fetch with soql with no cache parameter");
+            return Force.fetchSObjects({type:"soql", query:"SELECT Name FROM Account WHERE Id IN ('" +  _.keys(idToName).join("','") + "') ORDER BY Name"});
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from fetch call");
+            QUnit.equals(result.totalSize, 3, "Expected 3 results");
+            QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
 
-    self.finalizeTest();
+            console.log("## Trying fetch with sosl with no cache parameter");
+            return Force.fetchSObjects({type:"sosl", query:"FIND {testFetchSObjects*} IN ALL FIELDS RETURNING Account(Id, Name) LIMIT 10"});
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from fetch call");
+            QUnit.ok(result.totalSize > 0, "Expected results");
+            var expectedNames = _.values(idToName).sort();
+            QUnit.deepEqual(expectedNames, _.intersection(expectedNames, _.pluck(result.records, "Name")), "Wrong names");
+
+            console.log("## Trying fetch with mru with no cache parameter");
+            return Force.fetchSObjects({type:"mru", sobjectType:"Account", fieldlist:["Name"]});
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from fetch call");
+            QUnit.ok(result.totalSize > 0, "Expected results");
+            var expectedNames = _.values(idToName).sort();
+            QUnit.deepEqual(expectedNames, _.intersection(expectedNames, _.pluck(result.records, "Name")), "Wrong names");
+
+            console.log("## Trying fetch with soql with cache parameter");
+            return Force.fetchSObjects({type:"soql", query:"SELECT Id, Name FROM Account WHERE Id IN ('" +  _.keys(idToName).join("','") + "') ORDER BY Name"}, cache);
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from fetch call");
+            QUnit.equals(result.totalSize, 3, "Expected 3 results");
+            QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
+
+            console.log("## Checking cache");
+            return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
+        })
+        .then(function(result) {
+            console.log("## Checking data retured from cache");
+            QUnit.equals(result.records.length, 3, "Expected 3 records");
+            QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
+
+            console.log("## Trying fetch with cache query");
+            return Force.fetchSObjects({type:"cache", cacheQuery:{queryType:"range", indexPath:"Name", order:"ascending", pageSize:3}}, cache);
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from fetch call");
+            QUnit.equals(result.records.length, 3, "Expected 3 results");
+            QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
+
+            console.log("## Trying fetch with soql with cache parameter and cacheForOriginals parameter");
+            return Force.fetchSObjects({type:"soql", query:"SELECT Id, Name FROM Account WHERE Id IN ('" +  _.keys(idToName).join("','") + "') ORDER BY Name"}, cache, cacheForOriginals);
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from fetch call");
+            QUnit.equals(result.totalSize, 3, "Expected 3 results");
+            QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
+
+            console.log("## Checking cache");
+            return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
+        })
+        .then(function(result) {
+            console.log("## Checking data retured from cache");
+            QUnit.equals(result.records.length, 3, "Expected 3 records");
+            QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
+
+            console.log("## Checking cacheForOriginals");
+            return cacheForOriginals.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
+        })
+        .then(function(result) {
+            console.log("## Checking data retured from cacheForOriginals");
+            QUnit.equals(result.records.length, 3, "Expected 3 records");
+            QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
+
+            console.log("## Cleaning up");
+            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(originalsSoupName));
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
 };
 
 /** 
@@ -1150,10 +1301,109 @@ ForceEntityTestSuite.prototype.testFetchSObjects = function() {
 ForceEntityTestSuite.prototype.testCollectionFetch = function() {
     console.log("# In ForceEntityTestSuite.testCollectionFetch");
     var self = this;
+    var idToName = {};
+    var soupName = "testFetchSObjects";
+    var originalsSoupName = "originals-" + soupName;
+    var cache;
+    var cacheForOriginals;
+    var collection = new Force.SObjectCollection();
+    collection.config = function() {
+        return {type:"soql", query:"SELECT Id, Name FROM Account WHERE Id IN ('" +  _.keys(idToName).join("','") + "') ORDER BY Name"};
+    };
+    var collectionFetch = optionsPromiser(collection, "fetch", "collection");
 
-    QUnit.ok(false, "Test not implemented");
+    Force.smartstoreClient.removeSoup(soupName)
+        .then(function() {
+            console.log("## Initialization of StoreCache's");
+            cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
+            cacheForOriginals = new Force.StoreCache(originalsSoupName, [ {path:"Name", type:"string"} ]);
+            return $.when(cache.init(), cacheForOriginals.init());
+        })
+        .then(function() { 
+            console.log("## Direct creation against server");    
+            return createRecords(idToName, "testFetchSObjects", 3);
+        })
+        .then(function() {
+            console.log("## Trying fetch with soql with no cache parameter");
+            return collectionFetch();
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from fetch call");
+            QUnit.equals(collection.length, 3, "Expected 3 results");
+            QUnit.deepEqual(_.values(idToName).sort(), collection.pluck("Name"), "Wrong names");
 
-    self.finalizeTest();
+            console.log("## Trying fetch with sosl with no cache parameter");
+            return collectionFetch({config: {type:"sosl", query:"FIND {testFetchSObjects*} IN ALL FIELDS RETURNING Account(Id, Name) LIMIT 10"}} );
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from fetch call");
+            QUnit.ok(collection.length > 0, "Expected results");
+            var expectedNames = _.values(idToName).sort();
+            QUnit.deepEqual(expectedNames, _.intersection(expectedNames, collection.pluck("Name")), "Wrong names");
+
+            console.log("## Trying fetch with mru with no cache parameter");
+            return collectionFetch({config: {type:"mru", sobjectType:"Account", fieldlist:["Name"]}} );
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from fetch call");
+            QUnit.ok(collection.length > 0, "Expected results");
+            var expectedNames = _.values(idToName).sort();
+            QUnit.deepEqual(expectedNames, _.intersection(expectedNames, collection.pluck("Name")), "Wrong names");
+
+            console.log("## Trying fetch with soql with cache parameter");
+            return collectionFetch({cache:cache});
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from fetch call");
+            QUnit.equals(collection.length, 3, "Expected 3 results");
+            QUnit.deepEqual(_.values(idToName).sort(), collection.pluck("Name"), "Wrong names");
+
+            console.log("## Checking cache");
+            return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
+        })
+        .then(function(result) {
+            console.log("## Checking data retured from cache");
+            QUnit.equals(result.records.length, 3, "Expected 3 records");
+            QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
+
+            console.log("## Trying fetch with cache query");
+            return collectionFetch({config: {type:"cache", cacheQuery:{queryType:"range", indexPath:"Name", order:"ascending", pageSize:3}}, cache:cache});
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from fetch call");
+            QUnit.equals(collection.length, 3, "Expected 3 results");
+            QUnit.deepEqual(_.values(idToName).sort(), collection.pluck("Name"), "Wrong names");
+            
+            console.log("## Trying fetch with soql with cache parameter and cacheForOriginals parameter");
+            return collectionFetch({cache:cache, cacheForOriginals:cacheForOriginals});
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from fetch call");
+            QUnit.equals(collection.length, 3, "Expected 3 results");
+            QUnit.deepEqual(_.values(idToName).sort(), collection.pluck("Name"), "Wrong names");
+
+            console.log("## Checking cache");
+            return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
+        })
+        .then(function(result) {
+            console.log("## Checking data retured from cache");
+            QUnit.equals(result.records.length, 3, "Expected 3 records");
+            QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
+
+            console.log("## Checking cacheForOriginals");
+            return cacheForOriginals.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
+        })
+        .then(function(result) {
+            console.log("## Checking data retured from cacheForOriginals");
+            QUnit.equals(result.records.length, 3, "Expected 3 records");
+            QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
+
+            console.log("## Cleaning up");
+            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(originalsSoupName));
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
 };
 
 /**
@@ -1182,7 +1432,7 @@ var assertContains = function (data, map, ctx, caller) {
     });
 }
 
-/*
+/**
  * Helper method to get the caller + line number of the function calling getCaller()
  */
 var getCaller = function() {
@@ -1193,5 +1443,53 @@ var getCaller = function() {
         return entry.match(/\((.*)\)/)[1]; // we only want the source:lineNumber, the function name will be useless with all the promises
 	} 
 }
+
+/**
+ * Helper method to create several records on server
+ */
+var createRecords = function(idToName, prefix, count) {
+    return $.when.apply(null, (_.map(_.range(count), function(i) {
+        var name = prefix + i;
+        console.log("Creating " + name);
+        return Force.forcetkClient.create("Account", {Name:name})
+            .then(function(resp) {
+                console.log("Created" + name);
+                idToName[resp.id] = name;
+            });
+    })));
+};
+
+/**
+ * Helper method to delete several records on server
+ */
+var deleteRecords = function(idToName) {
+    return $.when.apply(null, (_.map(_.keys(idToName), function(id) {
+        var name = idToName[id];
+        console.log("Deleting " + name);
+        return Force.forcetkClient.del("account", id)
+                    .then(function() {
+                        console.log("Deleted " + name);
+                    });
+    })));
+};
+
+
+/**
+ * Helper function turning function taking success/error options into promise
+ */
+var optionsPromiser = function(object, methodName, objectName) {
+    var retfn = function () {
+        var args = $.makeArray(arguments);
+        var d = $.Deferred();
+        if (args.length == 0) { args.push({}); }
+        var options = _.last(args);
+        options.success = function() {d.resolve.apply(d, arguments); };
+        options.error = function() { d.reject.apply(d, arguments); };
+        console.log("-----> Calling " + objectName + ":" + methodName);
+        object[methodName].apply(object, args);
+        return d.promise();
+    };
+    return retfn;
+};
 
 }

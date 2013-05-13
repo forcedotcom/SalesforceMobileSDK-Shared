@@ -18,7 +18,7 @@ jQuery(document).ready(function() {
 
     // Use  when testing in browser
     // Also make sure to start browser with same origin policy disable
-    // See http://joshuamcginnis.com/2011/02/28/how-to-disable-same-origin-policy-in-chrome/
+    // See http://stackoverflow.com/questions/3102819/chrome-disable-same-origin-policy
     var creds = {
         accessToken: "--will-be-obtained-by-refresh--",
         refreshToken: "5Aep861KIwKdekr90KsESmRP6soKuBrQlSV5iTuNdX6UHGbZnbEUug1hvYnrlDYmYFX.g2AaD7vtQ==",
