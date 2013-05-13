@@ -247,6 +247,10 @@
                     return $.when(records);
                 }
                 else {
+                    if (_.any(records, function(record) { return !_.has(record, that.keyField); })) {
+                        throw new Error("Can't merge without " + that.keyField);
+                    }
+
                     var oldRecords = {};
                     var smartSql = "SELECT {" + that.soupName + ":_soup} " 
                         + "FROM {" + that.soupName + "} " 
@@ -289,6 +293,7 @@
         //   getMore: "function to fetch more records",
         //   closeCursor: "function to close the open cursor and disable further fetch" 
         // }
+        // XXX we don't have totalSize
         find: function(querySpec) {
 
             var closeCursorIfNeeded = function(cursor) {
@@ -993,7 +998,7 @@
                 };
 
                 var cacheForOriginalsSaveAll = function(records) {
-                    return cacheForOriginals != null ? cacheForOriginal.saveAll(records) : records;
+                    return cacheForOriginals != null ? cacheForOriginals.saveAll(records) : records;
                 };
 
                 var setupGetMore = function(records) {

@@ -141,7 +141,7 @@ SFTestSuite.prototype.startTests = function() {
 		//we specifically don't check hasOwnProperty here, to grab proto methods
 		var val = self[key];
 		if (typeof val === 'function') {
-			if (key.indexOf("test") === 0) {
+			if (key.indexOf("test") === 0 && (self.testsToRun == null || self.testsToRun.indexOf(key) >= 0)) {
 				self.allTests.push(key);
                 var testStatus = new SFTestStatus(key);
                 self.module.testStatusCollection[key] = testStatus;
