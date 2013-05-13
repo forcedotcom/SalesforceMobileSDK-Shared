@@ -515,10 +515,11 @@
 
         localAction = localAction || false;
         var isLocalId = cache.isLocalId(id);
+        var targetedAttributes = (fieldlist == null ? attributes : (attributes == null ? null : _.pick(attributes, fieldlist)));
 
         // Cache actions helper
         var cacheCreate = function() {
-            var data = _.extend(_.pick(attributes, fieldlist), 
+            var data = _.extend(targetedAttributes, 
                                 {Id: (localAction ? cache.makeLocalId() : id), 
                                  __locally_created__:localAction, 
                                  __locally_updated__:false, 
@@ -534,7 +535,7 @@
         };
         
         var cacheUpdate = function() { 
-            var data = _.extend(_.pick(attributes, fieldlist), 
+            var data = _.extend(targetedAttributes,
                                 {Id: id, 
                                  __locally_created__: isLocalId, 
                                  __locally_updated__: localAction, 
@@ -666,10 +667,7 @@
 
         // Cache only
         if (cache != null && cacheMode == Force.CACHE_MODE.CACHE_ONLY) {
-            return cacheSync(method, id, attributes, 
-                             method == "read" ? null : fieldlist
-                             /* we don't want to have a cache miss even if not all fields are there */,
-                             true);
+            return cacheSync(method, id, attributes, null, true);
         }
         
         // Chaining promises that return either a promise or created/upated/reda model attributes or null in the case of delete

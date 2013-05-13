@@ -596,6 +596,22 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithCacheCreate = function() {
         QUnit.equals(_.has(data, "Mission"), false, "Mission should not have been saved");
         checkLocalFlags(data, false, false, false, false);
 
+        console.log("## Trying a create with null fieldlist");
+        return Force.syncSObjectWithCache("create", "010", {Name:"JamesTen", Mission:"TopSecret", City:"London"}, null, cache, false);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned by sync call");
+        assertContains(data, {Id:"010", Name:"JamesTen", Mission:"TopSecret", City:"London"});
+        checkLocalFlags(data, false, false, false, false);
+
+        console.log("## Checking underlying cache");
+        return cache.retrieve(data.Id);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned from cache");
+        assertContains(data, {Id:"010", Name:"JamesTen", Mission:"TopSecret", City:"London"});
+        checkLocalFlags(data, false, false, false, false);
+
         console.log("## Cleaning up");
         return Force.smartstoreClient.removeSoup(soupName);
     })
@@ -646,6 +662,13 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithCacheRead = function() {
     .then(function(data) {
         console.log("## Checking data returned by sync call");
         QUnit.equals(data, null, "No data should have been returned");
+
+        console.log("## Trying read for existing record with null fieldlist");
+        return Force.syncSObjectWithCache("read", "007", null, null, cache);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned by sync call");
+        assertContains(data, {Id:"007", Name:"JamesBond"});
 
         console.log("## Cleaning up");
         return Force.smartstoreClient.removeSoup(soupName);
@@ -708,7 +731,7 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithCacheUpdate = function() {
         checkLocalFlags(data, false, false, false, false);
 
         console.log("## Trying an update with only a subset of existing attributes provided");
-        return Force.syncSObjectWithCache("update", "007", {Mission:"TopSecret3"}, ["Mission"], cache, false);
+        return Force.syncSObjectWithCache("update", "007", {Name:"JamesBond3", Mission:"TopSecret3"}, ["Mission"], cache, false);
     })
     .then(function(data) {
         console.log("## Checking data returned by sync call");
@@ -721,6 +744,22 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithCacheUpdate = function() {
     .then(function(data) {
         console.log("## Checking data returned from cache");
         assertContains(data, {Id:"007", Name:"JamesBond", Mission:"TopSecret3"});
+        checkLocalFlags(data, false, false, false, false);
+
+        console.log("## Trying an update with null fieldlist");
+        return Force.syncSObjectWithCache("update", "007", {Name:"JamesBond4", Mission:"TopSecret4"}, null, cache, false);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned by sync call");
+        assertContains(data, {Id:"007", Name:"JamesBond4", Mission:"TopSecret4"});
+        checkLocalFlags(data, false, false, false, false);
+
+        console.log("## Checking underlying cache");
+        return cache.retrieve(data.Id);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned from cache");
+        assertContains(data, {Id:"007", Name:"JamesBond4", Mission:"TopSecret4"});
         checkLocalFlags(data, false, false, false, false);
 
         console.log("## Cleaning up");
