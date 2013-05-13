@@ -1184,8 +1184,37 @@ ForceEntityTestSuite.prototype.testFetchSObjectsFromCache = function() {
 ForceEntityTestSuite.prototype.testFetchSObjectsFromServer = function() {
     console.log("# In ForceEntityTestSuite.fetchSObjectsFromServer");
     var self = this;
+    var idToName = {};
+    var create = function(i) {
+        var name = "TestAccountForTestFetchSObjectsFromServer" + i;
+        return Force.forcetkClient.create("Account", {Name:name})
+            .then(function(resp) {
+                idToName[resp.id] = name;
+            });
+    }
 
-    QUnit.ok(false, "Test not implemented");
+    var destroy = function(id) {
+        return Force.forcetkClient.del("account", id);
+    };
+
+
+    console.log("## Direct creation against server");    
+    $.when(_.map([1,2,3,4], function(i) { return create("TestAccount" + i); }))
+        .then(function() {
+            console.log("## Trying fetch with soql");
+            var config = {type:"soql", query:"SELECT Name FROM Account WHERE Id IN ('" +  _.keys(idToName).join("','") + "')"};
+            return Force.fetchSObjectsFromServer(config);
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from fetch call");
+            console.log(JSON.stringify(result));
+
+            console.log("## Cleaning up");
+            return $.when(_.map([1,2,3,4], function(i) { return destory(i); }))
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
 
     self.finalizeTest();
 };

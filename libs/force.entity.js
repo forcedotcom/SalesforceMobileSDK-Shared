@@ -672,7 +672,10 @@
 
         // Cache only
         if (cache != null && cacheMode == Force.CACHE_MODE.CACHE_ONLY) {
-            return cacheSync(method, id, attributes, null /* we don't want to have a cache miss even if not all fields are there */, true);
+            return cacheSync(method, id, attributes, 
+                             method == "read" ? null : fieldlist
+                             /* we don't want to have a cache miss even if not all fields are there */,
+                             true);
         }
         
         // Chaining promises that return either a promise or created/upated/reda model attributes or null in the case of delete
