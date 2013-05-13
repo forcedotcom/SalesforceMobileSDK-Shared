@@ -3,8 +3,8 @@
 <head>
 <title>Accounts</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
-<link rel="stylesheet" href="css/styles.css"/>
 <link rel="stylesheet" href="css/ratchet.css"/>
+<link rel="stylesheet" href="css/styles.css"/>
 </head>
 
 <body>
@@ -14,7 +14,6 @@
 <!-- Scripts -->
 
 <!-- Local Testing -->
-<!--
 <script src="../../external/jquery/jquery-2.0.0.min.js"></script>
 <script src="../../external/backbone/underscore-1.4.4.min.js"></script>
 <script src="../../external/backbone/backbone-1.0.0.js"></script>
@@ -26,10 +25,10 @@
 <script src="fastclick.js"></script>
 <script src="stackrouter.js"></script>
 <script src="auth_local.js"></script>
--->
 <!-- End Local Testing -->
 
 <!-- Container -->
+<!--
 <script src="jquery/jquery-2.0.0.min.js"></script>
 <script src="backbone/underscore-1.4.4.min.js"></script>
 <script src="backbone/backbone-1.0.0.min.js"></script>
@@ -40,6 +39,7 @@
 <script src="fastclick.js"></script>
 <script src="stackrouter.js"></script>
 <script src="auth.js"></script>
+-->
 <!-- End Container -->
 
 
@@ -356,7 +356,12 @@ app.views.SyncPage = Backbone.View.extend({
             var options = {
                 mergeMode: Force.MERGE_MODE.MERGE_FAIL_IF_CHANGED,
                 success: function() {
-                    that.sync();
+                    if (that.model.length == 0) {
+                        app.router.navigate("#", {trigger:true});
+                    }
+                    else {
+                        that.sync();
+                    }
                 },
                 error: function() {
                     record = record.set("__sync_failed__", true);
@@ -397,10 +402,9 @@ app.views.EditAccountPage = Backbone.View.extend({
         $(this.el).html(this.template(_.extend({action: this.action}, this.model.toJSON())));
         app.OFflineToggerView.setElement($("#offlineStatus", this.el)).render();
         var online = app.offlineTracker.get("isOnline");
-        if (!online) {
-            $(".merge", this.el).hide();
-            $(".overwrite", this.el).hide();
-        }
+        $(".merge", this.el).hide();
+        $(".overwrite", this.el).hide();
+
         if (this.action == "Add") {
             $(".toggleDelete", this.el).hide();
         }
@@ -422,9 +426,9 @@ app.views.EditAccountPage = Backbone.View.extend({
         app.router.navigate(this.backAction, {trigger:true});
     },
 
-    showFieldError: function(field, message) {
+    showFieldError: function(field, message, error) {
         var errorEl = $("#account" + field + "Error", this.el);
-        errorEl.addClass("count-negative");
+        errorEl.addClass(error ? "count-negative" : "count-other");
         errorEl.html(message);
         errorEl.show();
     },
@@ -440,8 +444,10 @@ app.views.EditAccountPage = Backbone.View.extend({
         else if (error.type == "ConflictError") {
             _.each(error.remoteChanges, function(field) {
                 var conflict = error.conflictingChanges.indexOf(field) >=0;
-                that.showFieldError(field, (conflict ? "[Conflict] " : "") + "Changed on server to: " +  error.theirs[field]);
+                that.showFieldError(field, "Server: " +  error.theirs[field], conflict);
             });
+            $(".merge", this.el).show();
+            $(".overwrite", this.el).show();
         }
     },
 
