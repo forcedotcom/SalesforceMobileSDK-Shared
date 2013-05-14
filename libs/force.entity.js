@@ -1090,6 +1090,8 @@
         //   or {type:"cache", cacheQuery:<cache query>, closeCursorImmediate:(Optional, Default: false)<true/false>}
         // 
         Force.SObjectCollection = Backbone.Collection.extend({
+            model: Force.SObject,
+            
             // Used if none is passed during sync call - can be a cache object or a function returning a cache object
             cache: null,
 
