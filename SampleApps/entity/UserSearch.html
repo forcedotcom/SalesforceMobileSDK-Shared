@@ -152,15 +152,16 @@ app.views.SearchPage = Backbone.View.extend({
 
 app.views.UserListView = Backbone.View.extend({
 
+    listItemViews: [],
+
     initialize: function() {
         this.model.bind("reset", this.render, this);
     },
 
     render: function(eventName) {
-        $(this.el).empty();
-        _.each(this.model.models, function(user) {
-            $(this.el).append(new app.views.UserListItemView({model: user}).render().el);
-        }, this);
+        _.each(this.listItemViews, function(itemView) { itemView.close(); });
+        this.listItemViews = _.map(this.model.models, function(model) { return new app.views.UserListItemView({model: model}); });
+        $(this.el).append(_.map(this.listItemViews, function(itemView) { return itemView.render().el;} ));
         return this;
     }
 
@@ -171,12 +172,15 @@ app.views.UserListItemView = Backbone.View.extend({
     tagName: "li",
     template: _.template($("#user-list-item").html()),
 
-
     render: function(eventName) {
         $(this.el).html(this.template(this.model.toJSON()));
         return this;
-    }
+    },
 
+    close: function() {
+        this.remove();
+        this.off();
+    }
 });
 
 app.views.UserPage = Backbone.View.extend({
@@ -205,23 +209,28 @@ app.Router = Backbone.StackRouter.extend({
         Backbone.Router.prototype.initialize.call(this);
 
         // Collection behind search screen
-        this.searchResults = new app.models.UserCollection();
+        app.searchResults = new app.models.UserCollection();
+
+        // We keep a single instance of SearchPage and UserPage
+        app.searchPage = new app.views.SearchPage({model: app.searchResults});
+        app.userPage = new app.views.UserPage();
     },
 
     list: function() {
-        this.slidePage(new app.views.SearchPage({model: this.searchResults}));
+        app.searchResults.fetch();
+        // Show page right away - list will redraw when data comes in
+        this.slidePage(app.searchPage);
     },
 
     viewUser: function(id) {
         var that = this;
         var user = new app.models.User({Id: id});
-        user.fetch(
-            {
-                success: function() {
-                    that.slidePage(new app.views.UserPage({model: user}))
-                }
+        user.fetch({
+            success: function() {
+                app.userPage.model = user;
+                that.slidePage(app.userPage);
             }
-        );
+        });
     }
 });
 </script>

@@ -28,9 +28,6 @@
                 return;
             }
 
-            // Cleaning up: remove old pages that were moved out of the viewport
-            $('.stage-right, .stage-left').remove();
-
             if (window.location.hash === "") {
                 // Always apply a Back (slide from left) transition when we go back 
                 slideFrom = "left";

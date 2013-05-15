@@ -713,7 +713,7 @@
         // Write back to cache if not read from cache
         promise = promise.then(function(data) {
             if (!wasReadFromCache) {
-                var targetId = (method == "create" ? data.Id : id);
+                var targetId = (method == "create" || cache.isLocalId(id) /* create as far as the server goes but update as far as the cache goes*/ ? data.Id : id);
                 var targetMethod = (method == "read" ? "update" /* we want to write to the cache what was read from the server */: method);
                 return cacheSync(targetMethod, targetId, data);
             }
@@ -1062,9 +1062,9 @@
                 var resolveOption = function(optionName) {
                     return options[optionName] || (_.isFunction(that[optionName]) ? that[optionName](method) : that[optionName]);
                 };
-
+ 
                 console.log("-> In Force.SObject:sync method=" + method + " model.id=" + model.id);
-
+ 
                 var fieldlist         = resolveOption("fieldlist");
                 var cacheMode         = resolveOption("cacheMode");
                 var mergeMode         = resolveOption("mergeMode");
@@ -1090,6 +1090,8 @@
         //   or {type:"cache", cacheQuery:<cache query>, closeCursorImmediate:(Optional, Default: false)<true/false>}
         // 
         Force.SObjectCollection = Backbone.Collection.extend({
+            model: Force.SObject,
+            
             // Used if none is passed during sync call - can be a cache object or a function returning a cache object
             cache: null,
 
@@ -1133,9 +1135,9 @@
                     throw new Error("Method " + method  + " not supported");
                 }
                 
-                var config = options.config || (_.isFunction(this.config) ? this.config() : this.config);
-                var cache = options.cache || (_.isFunction(this.cache) ? this.cache() : this.cache);
-                var cacheForOriginals = options.cacheForOriginals || (_.isFunction(this.cacheForOriginals) ? this.cacheForOriginals() : this.cacheForOriginals);
+                var config = options.config || _.result(this, "config");
+                var cache = options.cache   || _.result(this, "cache");
+                var cacheForOriginals = options.cacheForOriginals || _.result(this, "cacheForOriginals");
 
                 if (config == null) {
                     options.success([]);

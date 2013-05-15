@@ -242,12 +242,13 @@ app.views.SearchPage = Backbone.View.extend({
 
     initialize: function() {
         this.listView = new app.views.AccountListView({model: this.model});
+        this.offlineTogglerView = new app.views.OfflineToggler({model: app.offlineTracker});
     },
 
     render: function(eventName) {
         $(this.el).html(this.template());
         $(".search-key", this.el).val(this.model.getCriteria());
-        app.OFflineToggerView.setElement($("#offlineStatus", this.el)).render();
+        this.offlineTogglerView.setElement($("#offlineStatus", this.el)).render();
         this.listView.setElement($("ul", this.el)).render();
         return this;
     },
@@ -260,19 +261,18 @@ app.views.SearchPage = Backbone.View.extend({
 
 app.views.AccountListView = Backbone.View.extend({
 
+    listItemViews: [],
+
     initialize: function() {
-        this.model.bind("reset", this.render, this);
+        this.model.on("reset", this.render, this);
     },
 
     render: function(eventName) {
-        $(this.el).empty();
-        _.each(this.model.models, function(account) {
-            var templateData = {model: account};
-            $(this.el).append(new app.views.AccountListItemView(templateData).render().el);
-        }, this);
+        _.each(this.listItemViews, function(itemView) { itemView.close(); });
+        this.listItemViews = _.map(this.model.models, function(model) { return new app.views.AccountListItemView({model: model}); });
+        $(this.el).append(_.map(this.listItemViews, function(itemView) { return itemView.render().el;} ));
         return this;
     }
-
 });
 
 app.views.AccountListItemView = Backbone.View.extend({
@@ -284,6 +284,11 @@ app.views.AccountListItemView = Backbone.View.extend({
         var templateData = _.extend({__sync_failed__:false}, this.model.toJSON());
         $(this.el).html(this.template(templateData));
         return this;
+    },
+
+    close: function() {
+        this.remove();
+        this.off();
     }
 });
 
@@ -315,8 +320,6 @@ app.views.OfflineToggler = Backbone.View.extend({
 
 app.views.SyncPage = Backbone.View.extend({
 
-    isSyncPage: true,
-
     template: _.template($("#sync-page").html()),
 
     events: {
@@ -326,7 +329,7 @@ app.views.SyncPage = Backbone.View.extend({
 
     initialize: function() {
         var that = this;
-        _.each(["reset","add","remove"], function(eventName) { that.model.bind(eventName, that.render, that); });
+        _.each(["reset","add","remove"], function(eventName) { that.model.on(eventName, that.render, that); });
         this.listView = new app.views.AccountListView({model: this.model});
     },
 
@@ -392,15 +395,16 @@ app.views.EditAccountPage = Backbone.View.extend({
     },
 
     initialize: function() {
-        this.action = (null == this.model.id) ? "Add" : "Edit";
-        if (this.action == "Add") { this.model.set({__local__: false, Name:"", Industry:"", Phone:"", LastModifiedDate:"", attributes : { type: "Account"}}); }
-        this.backAction = app.router.getLastPage() || "#";
+        this.offlineTogglerView = new app.views.OfflineToggler({model: app.offlineTracker});
         app.offlineTracker.on("change:isOnline", this.render, this);
     },
 
     render: function(eventName) {
+        this.action = (null == this.model.id) ? "Add" : "Edit";
+        if (this.action == "Add") { this.model.set({__local__: false, Name:"", Industry:"", Phone:"", LastModifiedDate:"", attributes : { type: "Account"}}); }
+        this.backAction = app.router.getLastPage() || "#";
         $(this.el).html(this.template(_.extend({action: this.action}, this.model.toJSON())));
-        app.OFflineToggerView.setElement($("#offlineStatus", this.el)).render();
+        this.offlineTogglerView.setElement($("#offlineStatus", this.el)).render();
         var online = app.offlineTracker.get("isOnline");
         $(".merge", this.el).hide();
         $(".overwrite", this.el).hide();
@@ -522,28 +526,30 @@ app.Router = Backbone.StackRouter.extend({
         this.setupCaches();
 
         // Collection behind search screen
-        this.searchResults = new app.models.AccountCollection();
+        app.searchResults = new app.models.AccountCollection();
 
         // Collection behind sync screen
-        this.localAccounts = new app.models.AccountCollection();
-        this.localAccounts.config = {type:"cache", cacheQuery: {queryType:"exact", indexPath:"__local__", matchKey:true, order:"ascending", pageSize:25}};
+        app.localAccounts = new app.models.AccountCollection();
+        app.localAccounts.config = {type:"cache", cacheQuery: {queryType:"exact", indexPath:"__local__", matchKey:true, order:"ascending", pageSize:25}};
 
         // Initializing offline tracker 
         app.offlineTracker = new app.models.OfflineTracker({isOnline: true});
 
-        // We keep a single instance of OfflineTogger
-        app.OFflineToggerView = new app.views.OfflineToggler({model: app.offlineTracker});
+        // We keep a single instance of SearchPage / SyncPage and EditAccountPage
+        app.searchPage = new app.views.SearchPage({model: app.searchResults});
+        app.syncPage = new app.views.SyncPage({model: app.localAccounts});
+        app.editPage = new app.views.EditAccountPage();
     },
 
     list: function() {
-        this.searchResults.fetch();
+        app.searchResults.fetch();
         // Show page right away - list will redraw when data comes in
-        this.slidePage(new app.views.SearchPage({model: this.searchResults})); 
+        this.slidePage(app.searchPage); 
     },
 
     addAccount: function() {
-        var account = new app.models.Account({Id: null});
-        this.slidePage(new app.views.EditAccountPage({model: account}));
+        app.editPage.model = new app.models.Account({Id: null});
+        this.slidePage(app.editPage);
     },
 
     editAccount: function(id) {
@@ -551,7 +557,8 @@ app.Router = Backbone.StackRouter.extend({
         var account = new app.models.Account({Id: id});
         account.fetch({
             success: function(data) {
-                that.slidePage(new app.views.EditAccountPage({model: account}));
+                app.editPage.model = account;
+                that.slidePage(app.editPage);
             },
             error: function() {
                 alert("Failed to get record for edit");
@@ -560,9 +567,9 @@ app.Router = Backbone.StackRouter.extend({
     },
 
     sync: function() {
-        this.localAccounts.fetch();
+        app.localAccounts.fetch();
         // Show page right away - list will redraw when data comes in
-        this.slidePage(new app.views.SyncPage({model: this.localAccounts})); 
+        this.slidePage(app.syncPage);
     }
 });
 </script>
