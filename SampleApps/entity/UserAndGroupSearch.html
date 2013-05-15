@@ -119,15 +119,16 @@ app.views.SearchPage = Backbone.View.extend({
 
 app.views.ListView = Backbone.View.extend({
 
+    listItemViews: [],
+
     initialize: function() {
         this.model.bind("reset", this.render, this);
     },
 
     render: function(eventName) {
-        $(this.el).empty();
-        _.each(this.model.models, function(sobject) {
-            $(this.el).append(new app.views.ListItemView({model: sobject}).render().el);
-        }, this);
+        _.each(this.listItemViews, function(itemView) { itemView.close(); });
+        this.listItemViews = _.map(this.model.models, function(model) { return new app.views.ListItemView({model: model}); });
+        $(this.el).append(_.map(this.listItemViews, function(itemView) { return itemView.render().el;} ));
         return this;
     }
 
@@ -143,8 +144,12 @@ app.views.ListItemView = Backbone.View.extend({
         var template = this.model.sobjectType == "User" ? this.userTemplate : this.groupTemplate;
         $(this.el).html(template(this.model.toJSON()));
         return this;
-    }
+    },
 
+    close: function() {
+        this.remove();
+        this.off();
+    }
 });
 
 // ----------------------------------------------- The Application Router ------------------------------------------ //
