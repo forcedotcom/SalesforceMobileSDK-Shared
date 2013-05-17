@@ -97,6 +97,10 @@ var MockSmartStore = (function(window) {
             if (!this.soupExists(soupName))  throw new Error("Soup: " + soupName + " does not exist");
         },
 
+        checkIndex: function(soupName, path) {
+            if (["_soup", "_soupEntryId"].indexOf(path) == -1 && !this.indexExists(soupName, path)) throw new Error(soupName + " does not have an index on " + path); 
+        },
+
         soupExists: function(soupName) {
             return _soups[soupName] !== undefined;
         },
@@ -205,7 +209,6 @@ var MockSmartStore = (function(window) {
             // NB we don't have full support evidently
 
             var smartSql = querySpec.smartSql;
-            
 
             // SELECT {soupName:selectField} FROM {soupName} WHERE {soupName:whereField} IN (values)
             var m = smartSql.match(/SELECT {(.*):(.*)} FROM {(.*)} WHERE {(.*):(.*)} IN \((.*)\)/i);
@@ -220,6 +223,8 @@ var MockSmartStore = (function(window) {
                 }
 
                 this.checkSoup(soupName); 
+                this.checkIndex(soupName, selectField);
+                this.checkIndex(soupName, whereField);
                 var soup = _soups[soupName];
 
                 var results = [];
@@ -230,6 +235,38 @@ var MockSmartStore = (function(window) {
                         results.push(selectField == "_soup" ? soupElt : (selectField == "_soupEntryId" ? soupEntryId : this.project(soupElt, selectField)));
                     }
                 }
+
+                return results;
+            }
+
+            // Case-insensitive sorted like query
+            // SELECT {soupName:_soup} FROM {soupName} WHERE {soupName:whereField} LIKE 'value' ORDER BY LOWER({soupName:orderByField})
+            var m = smartSql.match(/SELECT {(.*):_soup} FROM {(.*)} WHERE {(.*):(.*)} LIKE '(.*)' ORDER BY LOWER\({(.*):(.*)}\)/i);
+            if (m != null && m[1] == m[2] && m[1] == m[3] && m[1] == m[6]) {
+                var soupName = m[1];
+                var whereField = m[4];
+                var likeRegexp = new RegExp("^" + m[5].replace(/%/g, ".*"), "i");
+                var orderField = m[7];
+
+                this.checkSoup(soupName); 
+                this.checkIndex(soupName, whereField);
+                this.checkIndex(soupName, orderField);
+                var soup = _soups[soupName];
+
+                var results = [];
+                for (var soupEntryId in soup) {
+                    var soupElt = soup[soupEntryId];
+                    var projection = this.project(soupElt, whereField);
+                    if (projection.match(likeRegexp)) {
+                        results.push(soupElt);
+                    }
+                }
+
+                results = results.sort(function(soupElt1,soupElt2) {
+                    var p1 = soupElt1[orderField].toLowerCase();
+                    var p2 = soupElt2[orderField].toLowerCase();
+                    return ( p1 > p2 ? 1 : (p1 == p2 ? 0 : -1));
+                });
 
                 return results;
             }
@@ -258,7 +295,7 @@ var MockSmartStore = (function(window) {
 
             // other query type
             this.checkSoup(soupName); 
-            if (!this.indexExists(soupName, querySpec.indexPath)) throw new Error(soupName + " does not have an index on " + querySpec.indexPath); 
+            this.checkIndex(soupName, querySpec.indexPath);
 
             var soup = _soups[soupName];
             var results = [];
