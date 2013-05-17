@@ -261,6 +261,8 @@
 
                     return smartstoreClient.runSmartQuery(querySpec)
                         .then(function(cursor) {
+                            // smart query result will look like [[soupElt1], ...]
+                            cursor.currentPageOrderedEntries = _.flatten(cursor.currentPageOrderedEntries);
                             _.each(cursor.currentPageOrderedEntries, function(oldRecord) {
                                 oldRecords[oldRecord[that.keyField]] = oldRecord;
                             });
@@ -295,7 +297,6 @@
         // }
         // XXX we don't have totalSize
         find: function(querySpec) {
-
             var closeCursorIfNeeded = function(cursor) {
                 if ((cursor.currentPageIndex + 1) == cursor.totalPages) {
                     return smartstoreClient.closeCursor(cursor).then(function() { 
@@ -336,7 +337,20 @@
                 }
             };
 
-            return (querySpec.queryType == "smart" ? smartstoreClient.runSmartQuery(querySpec) : smartstoreClient.querySoup(this.soupName, querySpec))
+            var runQuery = function(soupName, querySpec) {
+                if (querySpec.queryType === "smart") {
+                    return smartstoreClient.runSmartQuery(querySpec).then(function(cursor) {
+                        // smart query result will look like [[soupElt1], ...]
+                        cursor.currentPageOrderedEntries = _.flatten(cursor.currentPageOrderedEntries);
+                        return cursor;
+                    })
+                }
+                else {
+                    return smartstoreClient.querySoup(soupName, querySpec)
+                }
+            }
+
+            return runQuery(this.soupName, querySpec)
                 .then(closeCursorIfNeeded)
                 .then(buildQueryResponse);
         },

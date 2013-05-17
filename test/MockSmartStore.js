@@ -232,7 +232,9 @@ var MockSmartStore = (function(window) {
                     var soupElt = soup[soupEntryId];
                     var value = (whereField == "_soupEntryId" ? soupEntryId : this.project(soupElt, whereField));
                     if (values.indexOf(value) >= 0) {
-                        results.push(selectField == "_soup" ? soupElt : (selectField == "_soupEntryId" ? soupEntryId : this.project(soupElt, selectField)));
+                        var row = [];
+                        row.push(selectField == "_soup" ? soupElt : (selectField == "_soupEntryId" ? soupEntryId : this.project(soupElt, selectField)));
+                        results.push(row);
                     }
                 }
 
@@ -258,13 +260,15 @@ var MockSmartStore = (function(window) {
                     var soupElt = soup[soupEntryId];
                     var projection = this.project(soupElt, whereField);
                     if (projection.match(likeRegexp)) {
-                        results.push(soupElt);
+                        var row = [];
+                        row.push(soupElt);
+                        results.push(row);
                     }
                 }
 
-                results = results.sort(function(soupElt1,soupElt2) {
-                    var p1 = soupElt1[orderField].toLowerCase();
-                    var p2 = soupElt2[orderField].toLowerCase();
+                results = results.sort(function(row1, row2) {
+                    var p1 = row1[0][orderField].toLowerCase();
+                    var p2 = row2[0][orderField].toLowerCase();
                     return ( p1 > p2 ? 1 : (p1 == p2 ? 0 : -1));
                 });
 
