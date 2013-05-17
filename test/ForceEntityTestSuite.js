@@ -327,7 +327,7 @@ ForceEntityTestSuite.prototype.testStoreCacheFind = function() {
     Force.smartstoreClient.removeSoup(soupName)
     .then(function() {
         console.log("## Initialization of StoreCache");
-        cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
+        cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"}, {path:"Mission", type:"string"} ]);
         return cache.init();
     })
     .then(function() {
@@ -375,6 +375,34 @@ ForceEntityTestSuite.prototype.testStoreCacheFind = function() {
         assertContains(resultSet.records[0], {Id:"007"});
         assertContains(resultSet.records[1], {Id:"008"});
         assertContains(resultSet.records[2], {Id:"009"});
+
+        console.log("## Adding extra field to all records");
+        var updatedRecords = [{Id:"007", Mission:"ABC"},{Id:"008", Mission:"bcd"}, {Id:"009", Mission:"EFG"}];
+        return cache.saveAll(updatedRecords);
+    })
+    .then(function() {
+        console.log("## Doing a find with like query spec");
+        return cache.find({queryType:"like", indexPath:"Mission", likeKey:"%", order:"ascending", pageSize:3});
+    })
+    .then(function(result) {
+        console.log("## Checking returned result - expect case-sensitive sorting");        
+        QUnit.equals(result.records.length, 3, "three records should have been returned");
+        assertContains(result.records[0], {Id:"007", Name:"JamesBond", Mission:"ABC"});
+        assertContains(result.records[1], {Id:"009", Name:"JamesOther", Mission:"EFG"});
+        assertContains(result.records[2], {Id:"008", Name:"Agent008", Mission:"bcd"});
+        QUnit.equals(result.hasMore(), false, "there should not be more records");
+
+        console.log("## Doing a find with smart query spec");
+        return cache.find({queryType:"smart", smartSql:"SELECT {testSoupForStoreCache:_soup} FROM {testSoupForStoreCache} WHERE {testSoupForStoreCache:Name} LIKE '%' ORDER BY LOWER({testSoupForStoreCache:Mission})", pageSize:3});
+    })
+    .then(function(result) {
+        console.log("## Checking returned result - expect case-insensitive sorting");        
+        QUnit.equals(result.records.length, 3, "three records should have been returned");
+        assertContains(result.records[0], {Id:"007", Name:"JamesBond", Mission:"ABC"});
+        assertContains(result.records[1], {Id:"008", Name:"Agent008", Mission:"bcd"});
+        assertContains(result.records[2], {Id:"009", Name:"JamesOther", Mission:"EFG"});
+        QUnit.equals(result.hasMore(), false, "there should not be more records");
+
         console.log("## Cleaning up");
         return Force.smartstoreClient.removeSoup(soupName);
     })
