@@ -1085,31 +1085,26 @@ ForceEntityTestSuite.prototype.testSyncSObjectRetrieve = function() {
             return Force.syncSObject("read", "Account", id, null, ["Name"], cache, Force.CACHE_MODE.SERVER_ONLY);
         })
         .then(function(data) {
-            console.log("## Checking data returned by sync call");
-            assertContains(data, {Name:"TestAccount"});
-
+            console.log("## Checking data returned by sync call and server and cache");
+            return checkResultServerAndCache(data, {Name:"TestAccount"}, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount-local"}, cache);
+        })
+        .then(function() {
             console.log("## Trying retrieve cache-only");
             return Force.syncSObject("read", "Account", id, null, ["Name"], cache, Force.CACHE_MODE.CACHE_ONLY);
         })
         .then(function(data) {
-            console.log("## Checking data returned from cache");
-            assertContains(data, {Id:id, Name:"TestAccount-local"});
-
+            console.log("## Checking data returned by sync call and server and cache");
+            return checkResultServerAndCache(data, {Name:"TestAccount-local"}, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount-local"}, cache);
+        })
+        .then(function() {
             console.log("## Trying retrieve server-first");
             return Force.syncSObject("read", "Account", id, null, ["Name"], cache, Force.CACHE_MODE.SERVER_FIRST);
         })
         .then(function(data) {
-            console.log("## Checking data returned by sync call");
-            assertContains(data, {Id:id, Name:"TestAccount"});
-
-            console.log("## Direct retrieve from cache");
-            return cache.retrieve(id);
+            console.log("## Checking data returned by sync call and server and cache");
+            return checkResultServerAndCache(data, {Name:"TestAccount"}, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount"}, cache);
         })
-        .then(function(data) {
-            console.log("## Checking data returned from cache - should have the last server value fetched");
-            assertContains(data, {Id:id, Name:"TestAccount"});
-        })
-        .then(function(data) {
+        .then(function() {
             console.log("## Direct update of cache");    
             return cache.save({Id:id, Name:"TestAccount-local-again"});
         })
@@ -1118,9 +1113,10 @@ ForceEntityTestSuite.prototype.testSyncSObjectRetrieve = function() {
             return Force.syncSObject("read", "Account", id, null, ["Name"], cache, Force.CACHE_MODE.CACHE_FIRST);
         })
         .then(function(data) {
-            console.log("## Checking data returned by sync call");
-            assertContains(data, {Id:id, Name:"TestAccount-local-again"});
-
+            console.log("## Checking data returned by sync call and server and cache");
+            return checkResultServerAndCache(data, {Name:"TestAccount-local-again"}, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount-local-again"}, cache);
+        })
+        .then(function() {
             console.log("## Direct creation against server");    
             return Force.forcetkClient.create("Account", {Name:"TestAccount2"});
         })
@@ -1131,16 +1127,10 @@ ForceEntityTestSuite.prototype.testSyncSObjectRetrieve = function() {
             return Force.syncSObject("read", "Account", id2, null, ["Name"], cache, Force.CACHE_MODE.CACHE_FIRST);
         })
         .then(function(data) {
-            console.log("## Checking data returned by sync call");
-            assertContains(data, {Name:"TestAccount2"});
-
-            console.log("## Direct retrieve from cache");
-            return cache.retrieve(id2);
+            console.log("## Checking data returned by sync call and server and cache");
+            return checkResultServerAndCache(data, {Name:"TestAccount2"}, id2, {Id:id2, Name:"TestAccount2"}, {Id:id2, Name:"TestAccount2"}, cache);
         })
-        .then(function(data) {
-            console.log("## Checking data returned from cache - should have the last server value fetched");
-            assertContains(data, {Id:id2, Name:"TestAccount2"});
-
+        .then(function() {
             console.log("## Cleaning up");
             return $.when(Force.forcetkClient.del("account", id), Force.forcetkClient.del("account", id2), Force.smartstoreClient.removeSoup(soupName));
         })
@@ -1176,23 +1166,10 @@ ForceEntityTestSuite.prototype.testSyncSObjectUpdate = function() {
             return Force.syncSObject("update", "Account", id, {Name:"TestAccount-updated"}, ["Name"], cache, Force.CACHE_MODE.SERVER_ONLY);
         })
         .then(function(data) {
-            console.log("## Checking data returned by sync call");
-            assertContains(data, {Name:"TestAccount-updated"});
-
-            console.log("## Direct retrieve from server");
-            return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
+            console.log("## Checking data returned by sync call and server and cache");
+            return checkResultServerAndCache(data, {Name:"TestAccount-updated"}, id, {Id:id, Name:"TestAccount-updated"}, null, cache);
         })
-        .then(function(data) {
-            console.log("## Checking data returned from server");
-            assertContains(data, {Id:id, Name:"TestAccount-updated"});
-
-            console.log("## Direct retrieve against cache");
-            return cache.retrieve(id);
-        })
-        .then(function(data) {
-            console.log("## Checking data returned from cache");
-            QUnit.equals(data, null, "Record should not be in cache");
-
+        .then(function() {
             console.log("## Direct insertion in cache");    
             return cache.save({Id:id, Name:"TestAccount-updated"});
         })
@@ -1201,65 +1178,26 @@ ForceEntityTestSuite.prototype.testSyncSObjectUpdate = function() {
             return Force.syncSObject("update", "Account", id, {Name:"TestAccount-updated2"}, ["Name"], cache, Force.CACHE_MODE.CACHE_ONLY);
         })
         .then(function(data) {
-            console.log("## Checking data returned by sync call");
-            assertContains(data, {Name:"TestAccount-updated2"});
-
-            console.log("## Direct retrieve from server");
-            return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
+            console.log("## Checking data returned by sync call and server and cache");
+            return checkResultServerAndCache(data, {Name:"TestAccount-updated2"}, id, {Id:id, Name:"TestAccount-updated"},  {Id:id, Name:"TestAccount-updated2"}, cache);
         })
-        .then(function(data) {
-            console.log("## Checking data returned from server - should not have changed");
-            assertContains(data, {Id:id, Name:"TestAccount-updated"});
-
-            console.log("## Direct retrieve against cache");
-            return cache.retrieve(id);
-        })
-        .then(function(data) {
-            console.log("## Checking data returned from cache");
-            assertContains(data, {Id:id, Name:"TestAccount-updated2"});
-
+        .then(function() {
             console.log("## Trying update cache-first");
             return Force.syncSObject("update", "Account", id, {Name:"TestAccount-updated3"}, ["Name"], cache, Force.CACHE_MODE.CACHE_FIRST);
         })
         .then(function(data) {
-            console.log("## Checking data returned by sync call");
-            assertContains(data, {Name:"TestAccount-updated3"});
-
-            console.log("## Direct retrieve from server");
-            return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
+            console.log("## Checking data returned by sync call and server and cache");
+            return checkResultServerAndCache(data, {Name:"TestAccount-updated3"}, id, {Id:id, Name:"TestAccount-updated"},  {Id:id, Name:"TestAccount-updated3"}, cache);
         })
-        .then(function(data) {
-            console.log("## Checking data returned from server - should not have changed");
-            assertContains(data, {Id:id, Name:"TestAccount-updated"});
-
-            console.log("## Direct retrieve against cache");
-            return cache.retrieve(id);
-        })
-        .then(function(data) {
-            console.log("## Checking data returned from cache");
-            assertContains(data, {Id:id, Name:"TestAccount-updated3"});
-
+        .then(function() {
             console.log("## Trying update server-first");
             return Force.syncSObject("update", "Account", id, {Name:"TestAccount-updated4"}, ["Name"], cache, Force.CACHE_MODE.SERVER_FIRST);
         })
         .then(function(data) {
-            console.log("## Checking data returned by sync call");
-            assertContains(data, {Name:"TestAccount-updated4"});
-
-            console.log("## Direct retrieve from server");
-            return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
+            console.log("## Checking data returned by sync call and server and cache");
+            return checkResultServerAndCache(data, {Name:"TestAccount-updated4"}, id, {Id:id, Name:"TestAccount-updated4"},  {Id:id, Name:"TestAccount-updated4"}, cache);
         })
-        .then(function(data) {
-            console.log("## Checking data returned from server");
-            assertContains(data, {Id:id, Name:"TestAccount-updated4"});
-
-            console.log("## Direct retrieve against cache");
-            return cache.retrieve(id);
-        })
-        .then(function(data) {
-            console.log("## Checking data returned from cache");
-            assertContains(data, {Id:id, Name:"TestAccount-updated4"});
-
+        .then(function() {
             console.log("## Cleaning up");
             return $.when(Force.forcetkClient.del("account", id), Force.smartstoreClient.removeSoup(soupName));
         })
@@ -1274,10 +1212,83 @@ ForceEntityTestSuite.prototype.testSyncSObjectUpdate = function() {
 ForceEntityTestSuite.prototype.testSyncSObjectDelete = function() {
     console.log("# In ForceEntityTestSuite.syncSObjectDelete");
     var self = this;
+    var cache;
+    var soupName = "syncSObjectDelete";
+    var id;
 
-    QUnit.ok(false, "Test not implemented");
+    Force.smartstoreClient.removeSoup(soupName)
+        .then(function() {
+            console.log("## Initialization of StoreCache");
+            cache = new Force.StoreCache(soupName);
+            return cache.init();
+        })
+        .then(function() {
+            console.log("## Direct creation against server");    
+            return Force.forcetkClient.create("Account", {Name:"TestAccount"});
+        })
+        .then(function(data) {
+            id = data.id;
+            console.log("## Trying delete server-only");
+            return Force.syncSObject("delete", "Account", id, null, null, cache, Force.CACHE_MODE.SERVER_ONLY);
+        })
+        .then(function(data) {
+            console.log("## Checking data returned by sync call and server and cache");
+            return checkResultServerAndCache(data, null, id, null, null, cache);
+        })
+        .then(function() {
+            console.log("## Direct creation against server");    
+            return Force.forcetkClient.create("Account", {Name:"TestAccount"});
+        })
+        .then(function(data) {
+            id = data.id;
 
-    self.finalizeTest();
+            console.log("## Direct insertion in cache");    
+            return cache.save({Id:id, Name:"TestAccount"});
+        })
+        .then(function(data) {
+            console.log("## Trying delete cache-only");
+            return Force.syncSObject("delete", "Account", id, null, null, cache, Force.CACHE_MODE.CACHE_ONLY);
+        })
+        .then(function(data) {
+            console.log("## Checking data returned by sync call and server and cache");
+            return checkResultServerAndCache(data, null, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount", __locally_deleted__:true}, cache);
+        })
+        .then(function() {
+/*
+            console.log("## Trying delete cache-first");
+            return Force.syncSObject("delete", "Account", id, null, null, cache, Force.CACHE_MODE.CACHE_FIRST);
+        })
+        .then(function(data) {
+            console.log("## Checking data returned by sync call");
+            assertContains(data, {Id:id, Name:"TestAccount", __locally_deleted__:true});
+
+            console.log("## Direct retrieve against server");
+            return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
+        })
+        .then(function(data) {
+            console.log("## Checking data returned from server");
+            assertContains(data, {Id:id, Name:"TestAccount"});
+
+            console.log("## Trying delete server-first");
+            return Force.syncSObject("delete", "Account", id, null, null, cache, Force.CACHE_MODE.SERVER_FIRST);
+        })
+        .then(function(data) {
+            console.log("## Checking error returned from server");
+            QUnit.equals(error.status, 404, "404 expected");
+
+            console.log("## Direct retrieve against server");
+            return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
+        })
+        .fail(function(data) {
+            console.log("## Checking data returned from server");
+            assertContains(data, {Id:id, Name:"TestAccount"});
+*/
+            console.log("## Cleaning up");
+            return $.when(Force.smartstoreClient.removeSoup(soupName));
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
 };
 
 /** 
@@ -1692,7 +1703,7 @@ var checkLocalFlags = function (data, local, locallyCreated, locallyUpdated, loc
 /**
  * Helper method that checks that <data> contains <map> and fires QUnit failures otherwise
  */
-var assertContains = function (data, map, ctx, caller) {
+var assertContains = function (data, map, caller, ctx) {
     if (caller == null) caller = getCaller();
     _.each(_.keys(map), function(key) {
         var ctxKey = (ctx == null ? "" : ctx + ".") + key;
@@ -1700,7 +1711,7 @@ var assertContains = function (data, map, ctx, caller) {
         if (!_.isObject(data[key])) {
             QUnit.equals(data[key], map[key], "Not the expected value for field " + ctxKey + " at " + caller);
         } else {
-            assertContains(data[key], map[key], ctxKey, caller);
+            assertContains(data[key], map[key], caller, ctxKey);
         }
     });
 }
@@ -1765,4 +1776,56 @@ var optionsPromiser = function(object, methodName, objectName) {
     return retfn;
 };
 
+/** 
+ * Helper function to check cache
+ */
+var checkCache = function(id, expectedCacheRecord, cache, caller) {
+    if (caller == null) caller = getCaller();
+    console.log("## Direct retrieve from cache");
+    return cache.retrieve(id)
+        .then(function(data) {
+            console.log("## Checking data returned from cache");
+            if (expectedCacheRecord == null) {
+                QUnit.equals(data, null, "null should have been returned from cache at " + caller);
+            }
+            else {
+                assertContains(data, expectedCacheRecord, caller);
+            }
+        });
+};
+
+/** 
+ * Helper function to check server
+ */
+var checkServer = function(id, expectedServerRecord, caller) {
+    if (caller == null) caller = getCaller();
+    console.log("## Direct retrieve from server");
+    return Force.forcetkClient.query("select " + (expectedServerRecord == null ? "Id" : _.keys(expectedServerRecord).join(",")) + " from Account where Id = '" + id + "'")
+        .then(function(resp) {
+            console.log("## Checking data returned from server");
+            if (expectedServerRecord == null) {
+                QUnit.equals(resp.totalSize, 0, "no record expected at " + caller);
+            }
+            else {
+                assertContains(resp.records[0], expectedServerRecord, caller);
+            }
+        });
+};
+
+/** 
+ * Helper function to check result, server and cache
+ */
+var checkResultServerAndCache = function(data, expectedData, id, expectedServerRecord, expectedCacheRecord, cache) {
+    var caller = getCaller();
+    if (expectedData == null) {
+        QUnit.equals(data, null, "null expected at " + caller);
+    }
+    else {
+        assertContains(data, expectedData, caller);
+    }
+    return checkServer(id, expectedServerRecord, caller)
+        .then(function() { 
+            return checkCache(id, expectedCacheRecord, cache, caller);
+        });
+};
 }
