@@ -261,6 +261,8 @@
 
                     return smartstoreClient.runSmartQuery(querySpec)
                         .then(function(cursor) {
+                            // smart query result will look like [[soupElt1], ...]
+                            cursor.currentPageOrderedEntries = _.flatten(cursor.currentPageOrderedEntries);
                             _.each(cursor.currentPageOrderedEntries, function(oldRecord) {
                                 oldRecords[oldRecord[that.keyField]] = oldRecord;
                             });
@@ -295,7 +297,6 @@
         // }
         // XXX we don't have totalSize
         find: function(querySpec) {
-
             var closeCursorIfNeeded = function(cursor) {
                 if ((cursor.currentPageIndex + 1) == cursor.totalPages) {
                     return smartstoreClient.closeCursor(cursor).then(function() { 
@@ -336,7 +337,20 @@
                 }
             };
 
-            return smartstoreClient.querySoup(this.soupName, querySpec)
+            var runQuery = function(soupName, querySpec) {
+                if (querySpec.queryType === "smart") {
+                    return smartstoreClient.runSmartQuery(querySpec).then(function(cursor) {
+                        // smart query result will look like [[soupElt1], ...]
+                        cursor.currentPageOrderedEntries = _.flatten(cursor.currentPageOrderedEntries);
+                        return cursor;
+                    })
+                }
+                else {
+                    return smartstoreClient.querySoup(soupName, querySpec)
+                }
+            }
+
+            return runQuery(this.soupName, querySpec)
                 .then(closeCursorIfNeeded)
                 .then(buildQueryResponse);
         },
@@ -883,7 +897,7 @@
     // Helper method to fetch a collection of SObjects from server, using SOQL, SOSL or MRU
     // * config: {type:"soql", query:"<soql query>"} 
     //   or {type:"sosl", query:"<sosl query>"} 
-    //   or {type:"mru", sobjectType:"<sobject type>", fieldlist:"<fields to fetch>"}
+    //   or {type:"mru", sobjectType:"<sobject type>", fieldlist:"<fields to fetch>"[, orderBy:"<field to sort by>", orderDirection:"<ASC|DESC>"]}
     //
     // Return promise On resolve the promise returns the object 
     // {
@@ -932,14 +946,16 @@
             })
         };
 
-        var serverMru = function(sobjectType, fieldlist) {
+        var serverMru = function(sobjectType, fieldlist, orderBy, orderDirection) {
             return forcetkClient.metadata(sobjectType)
                 .then(function(resp) {
                     //Only do query if the fieldList is provided.
                     if (fieldlist) {
                         var soql = "SELECT " + fieldlist.join(",") 
                             + " FROM " + sobjectType
-                            + " WHERE Id IN ('" + _.pluck(resp.recentItems, "Id").join("','") + "')";
+                            + " WHERE Id IN ('" + _.pluck(resp.recentItems, "Id").join("','") + "')"
+                            + (orderBy ? " ORDER BY " + orderBy : "")
+                            + (orderDirection ? " " + orderDirection : "");
                         return serverSoql(soql);
                     } else return {
                         records: resp.recentItems, 
@@ -953,7 +969,7 @@
         switch(config.type) {
         case "soql": promise = serverSoql(config.query); break;
         case "sosl": promise = serverSosl(config.query); break;
-        case "mru":  promise = serverMru(config.sobjectType, config.fieldlist); break;
+        case "mru":  promise = serverMru(config.sobjectType, config.fieldlist, config.orderBy, config.orderDirection); break;
         // XXX what if we fall through the switch
         }
 
@@ -1086,8 +1102,8 @@
         // Where the config is 
         // config: {type:"soql", query:"<soql query>"} 
         //   or {type:"sosl", query:"<sosl query>"} 
-        //   or {type:"mru", sobjectType:"<sobject type>", fieldlist:"<fields to fetch>"}
-        //   or {type:"cache", cacheQuery:<cache query>, closeCursorImmediate:(Optional, Default: false)<true/false>}
+        //   or {type:"mru", sobjectType:"<sobject type>", fieldlist:"<fields to fetch>"[, orderBy:"<field to sort by>", orderDirection:"<ASC|DESC>"]}
+        //   or {type:"cache", cacheQuery:<cache query>[, closeCursorImmediate:<true|false(default)>]}
         // 
         Force.SObjectCollection = Backbone.Collection.extend({
             model: Force.SObject,

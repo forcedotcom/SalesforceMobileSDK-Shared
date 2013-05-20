@@ -199,13 +199,14 @@ app.models.AccountCollection = Force.SObjectCollection.extend({
     config: function() {
         // Offline: do a cache query
         if (!app.offlineTracker.get("isOnline")) {
-            return {type:"cache", cacheQuery:{queryType:_.isEmpty(this.key) ? "range" : "like", indexPath:"Name", likeKey: this.key+"%", order:"ascending", pageSize:25}};
+            // Not using like query because it does a case-sensitive sort
+            return {type:"cache", cacheQuery:{queryType:"smart", smartSql:"SELECT {accounts:_soup} FROM {accounts} WHERE {accounts:Name} LIKE '" + this.key + "%' ORDER BY LOWER({accounts:Name})", pageSize:25}};
         }
         // Online
         else {
             // First time: do a MRU query
             if (this.key == null) {
-                return {type:"mru", sobjectType:"Account", fieldlist: this.fieldlist};
+                return {type:"mru", sobjectType:"Account", fieldlist: this.fieldlist, orderBy:"LastModifiedDate", orderDirection:"DESC"};
             }
             // Other times: do a SOQL query
             else {
@@ -219,6 +220,7 @@ app.models.AccountCollection = Force.SObjectCollection.extend({
 app.models.OfflineTracker = Backbone.Model.extend({
     initialize: function() {
         var that = this;
+        this.set("isOnline", navigator.onLine);
         document.addEventListener("offline", function() {
             console.log("Received OFFLINE event");
             that.set("isOnline", false);
