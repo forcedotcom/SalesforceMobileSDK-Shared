@@ -997,7 +997,7 @@ ForceEntityTestSuite.prototype.testSyncSObjectCreate = function() {
 
     var cache;
     var soupName = "testSyncSObjectCreate";
-    var id;
+    var id, id2;
 
     Force.smartstoreClient.removeSoup(soupName)
         .then(function() {
@@ -1011,19 +1011,27 @@ ForceEntityTestSuite.prototype.testSyncSObjectCreate = function() {
         })
         .then(function(data) {
             id = data.Id;
-            return checkResultServerAndCache(data, {Name:"TestAccount"}, id, {Id:id, Name:"TestAccount"}, null, cache);
+            return checkResultServerAndCaches(data, {Name:"TestAccount"}, id, {Id:id, Name:"TestAccount"}, null, cache);
+        })
+        .then(function() {
+            console.log("## Trying create server-first");
+            return Force.syncSObject("create", "Account", null, {Name:"TestAccount2"}, ["Name"], cache, Force.CACHE_MODE.SERVER_FIRST);
+        })
+        .then(function(data) {
+            id2 = data.Id;
+            return checkResultServerAndCaches(data, {Id:id2, Name:"TestAccount2"}, id2, {Id:id2, Name:"TestAccount2"}, {Id:id2, Name:"TestAccount2"}, cache);
         })
         .then(function() {
             console.log("## Trying create cache-only");
-            return Force.syncSObject("create", "Account", null, {Name:"TestAccount2"}, ["Name"], cache, Force.CACHE_MODE.CACHE_ONLY);
+            return Force.syncSObject("create", "Account", null, {Name:"TestAccount3"}, ["Name"], cache, Force.CACHE_MODE.CACHE_ONLY);
         })
         .then(function(data) {
             var localId = data.Id;
-            return checkResultServerAndCache(data, {Id:localId, Name:"TestAccount2"}, localId, null, {Id:localId, Name:"TestAccount2"}, cache);
+            return checkResultServerAndCaches(data, {Id:localId, Name:"TestAccount3"}, localId, null, {Id:localId, Name:"TestAccount3"}, cache);
         })
-        .then(function(data) {
+        .then(function() {
             console.log("## Cleaning up");
-            return $.when(Force.forcetkClient.del("account", id), Force.smartstoreClient.removeSoup(soupName));
+            return $.when(Force.forcetkClient.del("account", id), Force.forcetkClient.del("account", id2), Force.smartstoreClient.removeSoup(soupName));
         })
         .then(function() {
             self.finalizeTest();
@@ -1063,21 +1071,21 @@ ForceEntityTestSuite.prototype.testSyncSObjectRetrieve = function() {
             return Force.syncSObject("read", "Account", id, null, ["Name"], cache, Force.CACHE_MODE.SERVER_ONLY);
         })
         .then(function(data) {
-            return checkResultServerAndCache(data, {Name:"TestAccount"}, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount-local"}, cache);
+            return checkResultServerAndCaches(data, {Name:"TestAccount"}, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount-local"}, cache);
         })
         .then(function() {
             console.log("## Trying retrieve cache-only");
             return Force.syncSObject("read", "Account", id, null, ["Name"], cache, Force.CACHE_MODE.CACHE_ONLY);
         })
         .then(function(data) {
-            return checkResultServerAndCache(data, {Name:"TestAccount-local"}, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount-local"}, cache);
+            return checkResultServerAndCaches(data, {Name:"TestAccount-local"}, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount-local"}, cache);
         })
         .then(function() {
             console.log("## Trying retrieve server-first");
             return Force.syncSObject("read", "Account", id, null, ["Name"], cache, Force.CACHE_MODE.SERVER_FIRST);
         })
         .then(function(data) {
-            return checkResultServerAndCache(data, {Name:"TestAccount"}, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount"}, cache);
+            return checkResultServerAndCaches(data, {Name:"TestAccount"}, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount"}, cache);
         })
         .then(function() {
             console.log("## Direct update of cache");    
@@ -1088,7 +1096,7 @@ ForceEntityTestSuite.prototype.testSyncSObjectRetrieve = function() {
             return Force.syncSObject("read", "Account", id, null, ["Name"], cache, Force.CACHE_MODE.CACHE_FIRST);
         })
         .then(function(data) {
-            return checkResultServerAndCache(data, {Name:"TestAccount-local-again"}, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount-local-again"}, cache);
+            return checkResultServerAndCaches(data, {Name:"TestAccount-local-again"}, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount-local-again"}, cache);
         })
         .then(function() {
             console.log("## Direct creation against server");    
@@ -1101,7 +1109,7 @@ ForceEntityTestSuite.prototype.testSyncSObjectRetrieve = function() {
             return Force.syncSObject("read", "Account", id2, null, ["Name"], cache, Force.CACHE_MODE.CACHE_FIRST);
         })
         .then(function(data) {
-            return checkResultServerAndCache(data, {Name:"TestAccount2"}, id2, {Id:id2, Name:"TestAccount2"}, {Id:id2, Name:"TestAccount2"}, cache);
+            return checkResultServerAndCaches(data, {Name:"TestAccount2"}, id2, {Id:id2, Name:"TestAccount2"}, {Id:id2, Name:"TestAccount2"}, cache);
         })
         .then(function() {
             console.log("## Cleaning up");
@@ -1139,7 +1147,7 @@ ForceEntityTestSuite.prototype.testSyncSObjectUpdate = function() {
             return Force.syncSObject("update", "Account", id, {Name:"TestAccount-updated"}, ["Name"], cache, Force.CACHE_MODE.SERVER_ONLY);
         })
         .then(function(data) {
-            return checkResultServerAndCache(data, {Name:"TestAccount-updated"}, id, {Id:id, Name:"TestAccount-updated"}, null, cache);
+            return checkResultServerAndCaches(data, {Name:"TestAccount-updated"}, id, {Id:id, Name:"TestAccount-updated"}, null, cache);
         })
         .then(function() {
             console.log("## Direct insertion in cache");    
@@ -1150,21 +1158,14 @@ ForceEntityTestSuite.prototype.testSyncSObjectUpdate = function() {
             return Force.syncSObject("update", "Account", id, {Name:"TestAccount-updated2"}, ["Name"], cache, Force.CACHE_MODE.CACHE_ONLY);
         })
         .then(function(data) {
-            return checkResultServerAndCache(data, {Name:"TestAccount-updated2"}, id, {Id:id, Name:"TestAccount-updated"},  {Id:id, Name:"TestAccount-updated2"}, cache);
-        })
-        .then(function() {
-            console.log("## Trying update cache-first");
-            return Force.syncSObject("update", "Account", id, {Name:"TestAccount-updated3"}, ["Name"], cache, Force.CACHE_MODE.CACHE_FIRST);
-        })
-        .then(function(data) {
-            return checkResultServerAndCache(data, {Name:"TestAccount-updated3"}, id, {Id:id, Name:"TestAccount-updated"},  {Id:id, Name:"TestAccount-updated3"}, cache);
+            return checkResultServerAndCaches(data, {Name:"TestAccount-updated2"}, id, {Id:id, Name:"TestAccount-updated"},  {Id:id, Name:"TestAccount-updated2"}, cache);
         })
         .then(function() {
             console.log("## Trying update server-first");
             return Force.syncSObject("update", "Account", id, {Name:"TestAccount-updated4"}, ["Name"], cache, Force.CACHE_MODE.SERVER_FIRST);
         })
         .then(function(data) {
-            return checkResultServerAndCache(data, {Name:"TestAccount-updated4"}, id, {Id:id, Name:"TestAccount-updated4"},  {Id:id, Name:"TestAccount-updated4"}, cache);
+            return checkResultServerAndCaches(data, {Name:"TestAccount-updated4"}, id, {Id:id, Name:"TestAccount-updated4"},  {Id:id, Name:"TestAccount-updated4"}, cache);
         })
         .then(function() {
             console.log("## Cleaning up");
@@ -1183,7 +1184,7 @@ ForceEntityTestSuite.prototype.testSyncSObjectDelete = function() {
     var self = this;
     var cache;
     var soupName = "syncSObjectDelete";
-    var id, id2;
+    var id;
 
     Force.smartstoreClient.removeSoup(soupName)
         .then(function() {
@@ -1201,7 +1202,7 @@ ForceEntityTestSuite.prototype.testSyncSObjectDelete = function() {
             return Force.syncSObject("delete", "Account", id, null, null, cache, Force.CACHE_MODE.SERVER_ONLY);
         })
         .then(function(data) {
-            return checkResultServerAndCache(data, null, id, null, null, cache);
+            return checkResultServerAndCaches(data, null, id, null, null, cache);
         })
         .then(function() {
             console.log("## Direct creation against server");    
@@ -1217,30 +1218,14 @@ ForceEntityTestSuite.prototype.testSyncSObjectDelete = function() {
             return Force.syncSObject("delete", "Account", id, null, null, cache, Force.CACHE_MODE.CACHE_ONLY);
         })
         .then(function(data) {
-            return checkResultServerAndCache(data, null, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount", __locally_deleted__:true}, cache);
-        })
-        .then(function() {
-            console.log("## Trying delete cache-first");
-            return Force.syncSObject("delete", "Account", id, null, null, cache, Force.CACHE_MODE.CACHE_FIRST);
-        })
-        .then(function(data) {
-            return checkResultServerAndCache(data, null, id, null, null, cache);
-        })
-        .then(function() {
-            console.log("## Direct creation against server");    
-            return Force.forcetkClient.create("Account", {Name:"TestAccount"});
-        })
-        .then(function(data) {
-            id2 = data.id;
-            console.log("## Direct insertion in cache");    
-            return cache.save({Id:id2, Name:"TestAccount"});
+            return checkResultServerAndCaches(data, null, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount", __locally_deleted__:true}, cache);
         })
         .then(function() {
             console.log("## Trying delete server-first");
-            return Force.syncSObject("delete", "Account", id2, null, null, cache, Force.CACHE_MODE.SERVER_FIRST);
+            return Force.syncSObject("delete", "Account", id, null, null, cache, Force.CACHE_MODE.SERVER_FIRST);
         })
         .then(function(data) {
-            return checkResultServerAndCache(data, null, id2, null, null, cache);
+            return checkResultServerAndCaches(data, null, id, null, null, cache);
         })
         .then(function() {
             console.log("## Cleaning up");
@@ -1258,9 +1243,49 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictCreate = function() 
     console.log("# In ForceEntityTestSuite.syncSObjectDetectConflictCreate");
     var self = this;
 
-    QUnit.ok(false, "Test not implemented");
+    var cache, cacheForOriginals;
+    var soupName = "testSyncSObjectDetectConflictCreate";
+    var soupNameForOriginals = "testSyncSObjectDetectConflictCreate-originals";
+    var id, id2;
 
-    self.finalizeTest();
+    Force.smartstoreClient.removeSoup(soupName)
+        .then(function() {
+            console.log("## Initialization of StoreCaches");
+            cache = new Force.StoreCache(soupName);
+            cacheForOriginals = new Force.StoreCache(soupNameForOriginals);
+            return $.when(cache.init(), cacheForOriginals.init());
+        })
+        .then(function() {
+            console.log("## Trying create server-only");
+            return Force.syncSObjectDetectConflict("create", "Account", null, {Name:"TestAccount"}, ["Name"], cache, Force.CACHE_MODE.SERVER_ONLY, cacheForOriginals);
+        })
+        .then(function(data) {
+            id = data.Id;
+            return checkResultServerAndCaches(data, {Name:"TestAccount"}, id, {Id:id, Name:"TestAccount"}, null, cache, {Id:id, Name:"TestAccount"}, cacheForOriginals);
+        })
+        .then(function() {
+            console.log("## Trying create server-first");
+            return Force.syncSObjectDetectConflict("create", "Account", null, {Name:"TestAccount2"}, ["Name"], cache, Force.CACHE_MODE.SERVER_FIRST, cacheForOriginals);
+        })
+        .then(function(data) {
+            id2 = data.Id;
+            return checkResultServerAndCaches(data, {Id:id2, Name:"TestAccount2"}, id2, {Id:id2, Name:"TestAccount2"}, {Id:id2, Name:"TestAccount2"}, cache, {Id:id2, Name:"TestAccount2"}, cacheForOriginals);
+        })
+        .then(function() {
+            console.log("## Trying create cache-only");
+            return Force.syncSObjectDetectConflict("create", "Account", null, {Name:"TestAccount3"}, ["Name"], cache, Force.CACHE_MODE.CACHE_ONLY, cacheForOriginals);
+        })
+        .then(function(data) {
+            var localId = data.Id;
+            return checkResultServerAndCaches(data, {Id:localId, Name:"TestAccount3"}, localId, null, {Id:localId, Name:"TestAccount3"}, cache, null, cacheForOriginals);
+        })
+        .then(function(data) {
+            console.log("## Cleaning up");
+            return $.when(Force.forcetkClient.del("account", id), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
 };
 
 /** 
@@ -1270,9 +1295,81 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictRetrieve = function(
     console.log("# In ForceEntityTestSuite.syncSObjectDetectConflictRetrieve");
     var self = this;
 
-    QUnit.ok(false, "Test not implemented");
+    var cache, cacheForOriginals;
+    var soupName = "testSyncSObjectDetectConflictRetrieve";
+    var soupNameForOriginals = "testSyncSObjectDetectConflictRetrieve-originals";
+    var id, id2;
 
-    self.finalizeTest();
+    Force.smartstoreClient.removeSoup(soupName)
+        .then(function() {
+            console.log("## Initialization of StoreCaches");
+            cache = new Force.StoreCache(soupName);
+            cacheForOriginals = new Force.StoreCache(soupNameForOriginals);
+            return $.when(cache.init(), cacheForOriginals.init());
+        })
+        .then(function() {
+            console.log("## Direct creation against server");    
+            return Force.forcetkClient.create("Account", {Name:"TestAccount"});
+        })
+        .then(function(resp) {
+            id = resp.id;
+
+            console.log("## Direct creation against cache");    
+            return cache.save({Id:id, Name:"TestAccount-local"});
+        })
+        .then(function() {
+            console.log("## Trying retrieve server-only");
+            return Force.syncSObjectDetectConflict("read", "Account", id, null, ["Name"], cache, Force.CACHE_MODE.SERVER_ONLY, cacheForOriginals);
+        })
+        .then(function(data) {
+            return checkResultServerAndCaches(data, {Name:"TestAccount"}, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount-local"}, cache, {Id:id, Name:"TestAccount"}, cacheForOriginals);
+        })
+        .then(function() {
+            console.log("## Trying retrieve cache-only");
+            return Force.syncSObjectDetectConflict("read", "Account", id, null, ["Name"], cache, Force.CACHE_MODE.CACHE_ONLY, cacheForOriginals);
+        })
+        .then(function(data) {
+            return checkResultServerAndCaches(data, {Name:"TestAccount-local"}, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount-local"}, cache, {Id:id, Name:"TestAccount"}, cacheForOriginals);
+        })
+        .then(function() {
+            console.log("## Trying retrieve server-first");
+            return Force.syncSObjectDetectConflict("read", "Account", id, null, ["Name"], cache, Force.CACHE_MODE.SERVER_FIRST, cacheForOriginals);
+        })
+        .then(function(data) {
+            return checkResultServerAndCaches(data, {Name:"TestAccount"}, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount"}, cache, {Id:id, Name:"TestAccount"}, cacheForOriginals);
+        })
+        .then(function() {
+            console.log("## Direct update of cache");    
+            return cache.save({Id:id, Name:"TestAccount-local-again"});
+        })
+        .then(function() {
+            console.log("## Trying retrieve cache-first when data is in the cache");
+            return Force.syncSObjectDetectConflict("read", "Account", id, null, ["Name"], cache, Force.CACHE_MODE.CACHE_FIRST, cacheForOriginals);
+        })
+        .then(function(data) {
+            // XXX broken for now - data is written back to cacheForOriginals even though it was read from cache
+            return checkResultServerAndCaches(data, {Name:"TestAccount-local-again"}, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount-local-again"}, cache, {Id:id, Name:"TestAccount"}, cacheForOriginals);
+        })
+        .then(function() {
+            console.log("## Direct creation against server");    
+            return Force.forcetkClient.create("Account", {Name:"TestAccount2"});
+        })
+        .then(function(resp) {
+            id2 = resp.id;
+
+            console.log("## Trying retrieve cache-first when data is not in the cache");
+            return Force.syncSObjectDetectConflict("read", "Account", id2, null, ["Name"], cache, Force.CACHE_MODE.CACHE_FIRST, cacheForOriginals);
+        })
+        .then(function(data) {
+            return checkResultServerAndCaches(data, {Name:"TestAccount2"}, id2, {Id:id2, Name:"TestAccount2"}, {Id:id2, Name:"TestAccount2"}, cache, {Id:id2, Name:"TestAccount2"}, cacheForOriginals);
+        })
+        .then(function() {
+            console.log("## Cleaning up");
+            return $.when(Force.forcetkClient.del("account", id), Force.forcetkClient.del("account", id2), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
 };
 
 /** 
@@ -1293,10 +1390,64 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() 
 ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() {
     console.log("# In ForceEntityTestSuite.syncSObjectDetectConflictDelete");
     var self = this;
+    var cache, cacheForOriginals;
+    var soupName = "testSyncSObjectDetectConflictDelete";
+    var soupNameForOriginals = "testSyncSObjectDetectConflictDelete-originals";
+    var id;
 
-    QUnit.ok(false, "Test not implemented");
-
-    self.finalizeTest();
+    Force.smartstoreClient.removeSoup(soupName)
+        .then(function() {
+            console.log("## Initialization of StoreCaches");
+            cache = new Force.StoreCache(soupName);
+            cacheForOriginals = new Force.StoreCache(soupNameForOriginals);
+            return $.when(cache.init(), cacheForOriginals.init());
+        })
+        .then(function() {
+            console.log("## Direct creation against server");    
+            return Force.forcetkClient.create("Account", {Name:"TestAccount"});
+        })
+        .then(function(data) {
+            id = data.id;
+            console.log("## Trying delete server-only");
+            return Force.syncSObjectDetectConflict("delete", "Account", id, null, null, cache, Force.CACHE_MODE.SERVER_ONLY, cacheForOriginals);
+        })
+        .then(function(data) {
+            return checkResultServerAndCaches(data, null, id, null, null, cache, null, cacheForOriginals);
+        })
+        .then(function() {
+            console.log("## Direct creation against server");    
+            return Force.forcetkClient.create("Account", {Name:"TestAccount"});
+        })
+        .then(function(data) {
+            id = data.id;
+            console.log("## Direct insertion in cache");    
+            return cache.save({Id:id, Name:"TestAccount"});
+        })
+        .then(function(data) {
+            console.log("## Direct insertion in cacheForOriginals");    
+            return cacheForOriginals.save({Id:id, Name:"TestAccount"});
+        })
+        .then(function(data) {
+            console.log("## Trying delete cache-only");
+            return Force.syncSObjectDetectConflict("delete", "Account", id, null, null, cache, Force.CACHE_MODE.CACHE_ONLY, cacheForOriginals);
+        })
+        .then(function(data) {
+            return checkResultServerAndCaches(data, null, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount", __locally_deleted__:true}, cache, {Id:id, Name:"TestAccount", __locally_deleted__:false}, cacheForOriginals);
+        })
+        .then(function() {
+            console.log("## Trying delete server-first");
+            return Force.syncSObjectDetectConflict("delete", "Account", id, null, null, cache, Force.CACHE_MODE.SERVER_FIRST, cacheForOriginals);
+        })
+        .then(function(data) {
+            return checkResultServerAndCaches(data, null, id, null, null, cache, null, cacheForOriginals);
+        })
+        .then(function() {
+            console.log("## Cleaning up");
+            return $.when(Force.smartstoreClient.removeSoup(soupName));
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
 };
 
 /** 
@@ -1744,6 +1895,11 @@ var optionsPromiser = function(object, methodName, objectName) {
  * Helper function to check cache
  */
 var checkCache = function(id, expectedCacheRecord, cache, caller) {
+    if (cache == null) { 
+        // no cache specified: expectedCacheRecord should be null
+        assertContains(null, expectedCacheRecord, caller);
+        return $.when();
+    }
     if (caller == null) caller = getCaller();
     console.log("## Direct retrieve from cache");
     return cache.retrieve(id)
@@ -1758,7 +1914,8 @@ var checkCache = function(id, expectedCacheRecord, cache, caller) {
  */
 var checkServer = function(id, expectedServerRecord, caller) {
     if (caller == null) caller = getCaller();
-    if (id.indexOf("local_") == 0) { // server won't have record
+    if (id.indexOf("local_") == 0) { 
+        // local id: server won't have record
         assertContains(null, expectedServerRecord, caller);
         return $.when();
     }
@@ -1771,19 +1928,12 @@ var checkServer = function(id, expectedServerRecord, caller) {
 };
 
 /** 
- * Helper function to check result, server and cache
+ * Helper function to check result, server and caches
  */
-var checkResultServerAndCache = function(data, expectedData, id, expectedServerRecord, expectedCacheRecord, cache) {
+var checkResultServerAndCaches = function(data, expectedData, id, expectedServerRecord, expectedCacheRecord, cache, expectedCacheRecord2, cache2) {
     var caller = getCaller();
     console.log("## Checking data returned by sync call");
     assertContains(data, expectedData, caller);
-    console.log("## Checking data on server");
-    return checkServer(id, expectedServerRecord, caller)
-        .then(function() { 
-            if (cache != null) {
-                console.log("## Checking data in cache");
-                return checkCache(id, expectedCacheRecord, cache, caller);
-            }
-        });
+    return $.when(checkServer(id, expectedServerRecord, caller), checkCache(id, expectedCacheRecord, cache, caller), checkCache(id, expectedCacheRecord2, cache2, caller));
 };
 }

@@ -690,6 +690,9 @@
 
         // Go to cache first
         if (cacheMode == Force.CACHE_MODE.CACHE_FIRST) {
+            if (method == "create" || method == "update" || method == "delete") {
+                throw new Error("Can't " + method + " with cacheMode " + cacheMode);
+            }
             promise = cacheSync(method, id, attributes, fieldlist)
                 .then(function(data) {
                     wasReadFromCache = (data != null);
@@ -704,7 +707,7 @@
         else if (cacheMode == Force.CACHE_MODE.SERVER_FIRST || cacheMode == null /* no cacheMode specified means server-first */) {
             if (cache.isLocalId(id)) {
                 if (method == "read" || method == "delete") {
-                    throw new Error("Can't " + method + " on server a locally created record");
+                    throw new Error("Can't " + method + " on server for a locally created record");
                 }
 
                 // For locally created record, we need to do a create on the server
