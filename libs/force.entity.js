@@ -69,12 +69,16 @@
     // Init function
     // creds: credentials returned by authenticate call
     // apiVersion: apiVersion to use, when null, v27.0 (Spring' 13) is used
-    Force.init = function(creds, apiVersion) {
+    // innerForcetkClient: [Optional] A fully initialized forcetkClient to be re-used internally in this entity framework
+    Force.init = function(creds, apiVersion, innerForcetkClient) {
         apiVersion = apiVersion || "v27.0";
-        var innerForcetkClient = new forcetk.Client(creds.clientId, creds.loginUrl);
-        innerForcetkClient.setSessionToken(creds.accessToken, apiVersion, creds.instanceUrl);
-        innerForcetkClient.setRefreshToken(creds.refreshToken);
-        innerForcetkClient.setUserAgentString(patchUserAgent(creds.userAgent));
+        if(!innerForcetkClient) {
+            innerForcetkClient = new forcetk.Client(creds.clientId, creds.loginUrl, creds.proxyUrl);
+            innerForcetkClient.setSessionToken(creds.accessToken, apiVersion, creds.instanceUrl);
+            innerForcetkClient.setRefreshToken(creds.refreshToken);
+            innerForcetkClient.setUserAgentString(patchUserAgent(creds.userAgent));
+        }
+
         forcetkClient = new Object();
         forcetkClient.create = promiser(innerForcetkClient, "create", "forcetkClient");
         forcetkClient.retrieve = promiser(innerForcetkClient, "retrieve", "forcetkClient");
