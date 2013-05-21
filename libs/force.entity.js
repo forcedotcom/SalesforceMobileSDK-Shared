@@ -773,7 +773,6 @@
     // Returns a promise
     // A rejected promise is returned if the server record has changed
     // {
-    //   conflict:true,
     //   base: <originally fetched attributes>,
     //   theirs: <latest server attributes>,
     //   yours:<locally modified attributes>,
@@ -859,7 +858,7 @@
                         case Force.MERGE_MODE.MERGE_FAIL_IF_CHANGED:  shouldFail = remoteChanges.length > 0; break;
                         }
                         if (shouldFail) {
-                            var conflictDetails = {conflict:true, base: originalAttributes, theirs: remoteAttributes, yours:attributes, remoteChanges:remoteChanges, localChanges:localChanges, conflictingChanges:conflictingChanges};
+                            var conflictDetails = {base: originalAttributes, theirs: remoteAttributes, yours:attributes, remoteChanges:remoteChanges, localChanges:localChanges, conflictingChanges:conflictingChanges};
                             return $.Deferred().reject(conflictDetails);
                         }
                         else {

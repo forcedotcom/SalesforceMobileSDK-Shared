@@ -40,7 +40,7 @@ var ForceEntityTestSuite = function () {
     SFTestSuite.call(this, "ForceEntityTestSuite");
 
     // To run specific tests
-    // this.testsToRun = ["testCollectionFetch"];
+    this.testsToRun = ["testSyncSObjectDetectConflictDelete"];
 };
 
 // We are sub-classing SFTestSuite
@@ -976,14 +976,9 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithServerDelete = function() {
             return Force.syncSObjectWithServer("delete", "Account", id);
         })
         .then(function(data) {
-            QUnit.equals(data, null, "wrong data returned");
-
-            console.log("## Direct retrieve from server");
-            return Force.forcetkClient.retrieve("Account", id, ["Id"]);
+            checkResultServerAndCaches(data, null, null);
         })
-        .fail(function(error) {
-            console.log("## Checking error returned from server");
-            QUnit.equals(error.status, 404, "404 expected");
+        .then(function() {
             self.finalizeTest();
         });
 };
@@ -1184,7 +1179,7 @@ ForceEntityTestSuite.prototype.testSyncSObjectDelete = function() {
     var self = this;
     var cache;
     var soupName = "syncSObjectDelete";
-    var id;
+    var id, id2;
 
     Force.smartstoreClient.removeSoup(soupName)
         .then(function() {
@@ -1209,23 +1204,23 @@ ForceEntityTestSuite.prototype.testSyncSObjectDelete = function() {
             return Force.forcetkClient.create("Account", {Name:"TestAccount"});
         })
         .then(function(data) {
-            id = data.id;
+            id2 = data.id;
             console.log("## Direct insertion in cache");    
-            return cache.save({Id:id, Name:"TestAccount"});
+            return cache.save({Id:id2, Name:"TestAccount"});
         })
         .then(function(data) {
             console.log("## Trying delete cache-only");
-            return Force.syncSObject("delete", "Account", id, null, null, cache, Force.CACHE_MODE.CACHE_ONLY);
+            return Force.syncSObject("delete", "Account", id2, null, null, cache, Force.CACHE_MODE.CACHE_ONLY);
         })
         .then(function(data) {
-            return checkResultServerAndCaches(data, null, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount", __locally_deleted__:true}, cache);
+            return checkResultServerAndCaches(data, null, id2, {Id:id2, Name:"TestAccount"}, {Id:id2, Name:"TestAccount", __locally_deleted__:true}, cache);
         })
         .then(function() {
             console.log("## Trying delete server-first");
-            return Force.syncSObject("delete", "Account", id, null, null, cache, Force.CACHE_MODE.SERVER_FIRST);
+            return Force.syncSObject("delete", "Account", id2, null, null, cache, Force.CACHE_MODE.SERVER_FIRST);
         })
         .then(function(data) {
-            return checkResultServerAndCaches(data, null, id, null, null, cache);
+            return checkResultServerAndCaches(data, null, id2, null, null, cache);
         })
         .then(function() {
             console.log("## Cleaning up");
@@ -1393,7 +1388,8 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() 
     var cache, cacheForOriginals;
     var soupName = "testSyncSObjectDetectConflictDelete";
     var soupNameForOriginals = "testSyncSObjectDetectConflictDelete-originals";
-    var id;
+    var id, id2, id3;
+    var base, yours, theirs;
 
     Force.smartstoreClient.removeSoup(soupName)
         .then(function() {
@@ -1409,7 +1405,7 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() 
         .then(function(data) {
             id = data.id;
             console.log("## Trying delete server-only");
-            return Force.syncSObjectDetectConflict("delete", "Account", id, null, null, cache, Force.CACHE_MODE.SERVER_ONLY, cacheForOriginals);
+            return Force.syncSObjectDetectConflict("delete", "Account", id, {Id:id, Name:"TestAccount"}, ["Name"], cache, Force.CACHE_MODE.SERVER_ONLY, cacheForOriginals);
         })
         .then(function(data) {
             return checkResultServerAndCaches(data, null, id, null, null, cache, null, cacheForOriginals);
@@ -1419,27 +1415,73 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() 
             return Force.forcetkClient.create("Account", {Name:"TestAccount"});
         })
         .then(function(data) {
-            id = data.id;
+            id2 = data.id;
             console.log("## Direct insertion in cache");    
-            return cache.save({Id:id, Name:"TestAccount"});
+            return cache.save({Id:id2, Name:"TestAccount"});
         })
         .then(function(data) {
             console.log("## Direct insertion in cacheForOriginals");    
-            return cacheForOriginals.save({Id:id, Name:"TestAccount"});
+            return cacheForOriginals.save({Id:id2, Name:"TestAccount"});
         })
         .then(function(data) {
             console.log("## Trying delete cache-only");
-            return Force.syncSObjectDetectConflict("delete", "Account", id, null, null, cache, Force.CACHE_MODE.CACHE_ONLY, cacheForOriginals);
+            return Force.syncSObjectDetectConflict("delete", "Account", id2, {Id:id2, Name:"TestAccount"}, ["Name"], cache, Force.CACHE_MODE.CACHE_ONLY, cacheForOriginals);
         })
         .then(function(data) {
-            return checkResultServerAndCaches(data, null, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount", __locally_deleted__:true}, cache, {Id:id, Name:"TestAccount", __locally_deleted__:false}, cacheForOriginals);
+            return checkResultServerAndCaches(data, null, id2, {Id:id2, Name:"TestAccount"}, {Id:id2, Name:"TestAccount", __locally_deleted__:true}, cache, {Id:id2, Name:"TestAccount", __locally_deleted__:false}, cacheForOriginals);
         })
         .then(function() {
             console.log("## Trying delete server-first");
-            return Force.syncSObjectDetectConflict("delete", "Account", id, null, null, cache, Force.CACHE_MODE.SERVER_FIRST, cacheForOriginals);
+            return Force.syncSObjectDetectConflict("delete", "Account", id2, {Id:id, Name:"TestAccount"}, ["Name"], cache, Force.CACHE_MODE.SERVER_FIRST, cacheForOriginals);
         })
         .then(function(data) {
-            return checkResultServerAndCaches(data, null, id, null, null, cache, null, cacheForOriginals);
+            return checkResultServerAndCaches(data, null, id2, null, null, cache, null, cacheForOriginals);
+        })
+        .then(function() {
+            console.log("## Direct creation against server");    
+            return Force.forcetkClient.create("Account", {Name:"TestAccount-1", Industry: "Computer-1"});
+        })
+        .then(function(data) {
+            id3 = data.id;
+            theirs = {Id:id3, Name:"TestAccount-1", Industry:"Computer-1"};
+            base = {Id:id3, Name:"TestAccount-0", Industry:"Computer-1"};
+            console.log("## Direct insertion in cacheForOriginals with name different from server");    
+            return cacheForOriginals.save(base);
+        })
+        .then(function() {
+            console.log("## Trying delete server-first with mergeMode MERGE_FAIL_IF_CHANGED with non-conflicting remote change");
+            yours = {Id:id3, Name: "TestAccount-0", Industry:"Computer-1"};
+            return rejectedPromiseWrapper(Force.syncSObjectDetectConflict("delete", "Account", id3, yours, ["Name", "Industry"], cache, Force.CACHE_MODE.SERVER_FIRST, cacheForOriginals, Force.MERGE_MODE.MERGE_FAIL_IF_CHANGED));
+        })
+        .then(function(result) {
+            assertContains(result, {success: false, result: {localChanges:[], remoteChanges:["Name"], conflictingChanges:[], base:base, yours:yours, theirs:theirs}});
+
+            console.log("## Trying delete server-first with mergeMode MERGE_FAIL_IF_CHANGED with conflicting change");
+            yours = {Id:id3, Name: "TestAccount-2", Industry:"Computer-1"}
+            return rejectedPromiseWrapper(Force.syncSObjectDetectConflict("delete", "Account", id3, yours, ["Name", "Industry"], cache, Force.CACHE_MODE.SERVER_FIRST, cacheForOriginals, Force.MERGE_MODE.MERGE_FAIL_IF_CHANGED));
+        })
+        .then(function(result) {
+            assertContains(result, {success: false, result: {localChanges:["Name"], remoteChanges:["Name"], conflictingChanges:["Name"], base:base, yours:yours, theirs:theirs}});
+
+            console.log("## Trying delete server-first with mergeMode MERGE_FAIL_IF_CONFLICT with conflicting change");
+            yours = {Id:id3, Name: "TestAccount-2", Industry:"Computer-1"}
+            return rejectedPromiseWrapper(Force.syncSObjectDetectConflict("delete", "Account", id3, yours, ["Name", "Industry"], cache, Force.CACHE_MODE.SERVER_FIRST, cacheForOriginals, Force.MERGE_MODE.MERGE_FAIL_IF_CONFLICT));
+        })
+        .then(function(result) {
+            assertContains(result, {success: false, result: {localChanges:["Name"], remoteChanges:["Name"], conflictingChanges:["Name"], base:base, yours:yours, theirs:theirs}});
+
+            console.log("## Trying delete server-first with mergeMode MERGE_FAIL_IF_CONFLICT with conflicting change and non-conflicting change");
+            yours = {Id:id3, Name: "TestAccount-2", Industry:"Computer-2"}
+            return rejectedPromiseWrapper(Force.syncSObjectDetectConflict("delete", "Account", id3, yours, ["Name", "Industry"], cache, Force.CACHE_MODE.SERVER_FIRST, cacheForOriginals, Force.MERGE_MODE.MERGE_FAIL_IF_CONFLICT));
+        })
+        .then(function(result) {
+            assertContains(result, {success: false, result: {localChanges:["Name", "Industry"], remoteChanges:["Name"], conflictingChanges:["Name"], base:base, yours:yours, theirs:theirs}});
+
+            console.log("## Trying delete server-first with mergeMode MERGE_FAIL_IF_CONFLICT with non-conflicting remote change");
+            return Force.syncSObjectDetectConflict("delete", "Account", id3, base, ["Name", "Industry"], cache, Force.CACHE_MODE.SERVER_FIRST, cacheForOriginals, Force.MERGE_MODE.MERGE_FAIL_IF_CONFLICT);
+        })
+        .then(function(data) {
+            return checkResultServerAndCaches(data, null, id3, null, null, cache, null, cacheForOriginals);
         })
         .then(function() {
             console.log("## Cleaning up");
@@ -1824,6 +1866,7 @@ var assertContains = function (data, expectedData, caller, ctx) {
         var ctxKey = (ctx == null ? "" : ctx + ".") + key;
         QUnit.equals(_.has(data, key), true, "Should contain field " + ctxKey + " at " + caller);
         if (!_.isObject(data[key])) {
+            // console.log("Comparing value for field " + ctxKey + " at " + caller);
             QUnit.equals(data[key], expectedData[key], "Not the expected value for field " + ctxKey + " at " + caller);
         } else {
             assertContains(data[key], expectedData[key], caller, ctxKey);
@@ -1890,6 +1933,23 @@ var optionsPromiser = function(object, methodName, objectName) {
     };
     return retfn;
 };
+
+/**
+ * Helper function to wrap a rejected promise into a promise that returns either:
+ * {success:true, result:<wrapped promise result>} or {success:false, result:<wrapper promise fail result>}
+ */
+var rejectedPromiseWrapper = function(p) {
+    var d = $.Deferred();
+    p
+        .then(function(result) {
+            d.resolve.apply(d, [{success:true, result:result}]);
+        })
+        .fail(function(err) {
+            d.resolve.apply(d, [{success:false, result:err}]);
+        });
+    return d.promise();
+};
+
 
 /** 
  * Helper function to check cache
