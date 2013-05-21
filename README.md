@@ -2,9 +2,8 @@
 This repository contains JavaScript artifacts that are shared between the different Salesforce Mobile SDK repositories. 
 For more information, please check out the [Salesforce Mobile SDK for Android](https://github.com/forcedotcom/SalesforceMobileSDK-Android/), or the [Salesforce Mobile SDK for iOS](https://github.com/forcedotcom/SalesforceMobileSDK-iOS).
 
-Overview
+# /libs
 ==
-__libs__
 
 Contains all the SalesforceMobileSDK JavaScript libraries.
 
@@ -23,7 +22,8 @@ Contains the new SDK 2.0 Entity Framework.
 This library depends on forcetk.js and cordova.force.js. It also requires jquery, underscore and backbone.
 
 
-__external__
+# /external
+==
 
 Contains all the external libraries used in sample apps or required by some of the libraries above:
 
@@ -40,7 +40,9 @@ Required by entiy framework and used in some of the sample apps.
 
 Contains qunit. A unit test library for JavaScript.
 
-__SampleApps__
+
+# /SampleApps
+==
 
 Contains all the SalesforceMobileSDK JavaScript sample applications.
 
@@ -67,7 +69,8 @@ HTML/CSS/JavaScript used by SmartStore Explorer application.
 
 Contains bootconfig.json for VF Connector application.
 
-__test__
+# /test
+==
 
 Contains all the tests for the SalesforceMobileSDK JavaScript libraries.
 
