@@ -187,6 +187,7 @@ app.models.AccountCollection = Force.SObjectCollection.extend({
     model: app.models.Account,
     fieldlist: ["Id", "Name", "Industry", "Phone", "Owner.Name", "LastModifiedBy.Name", "LastModifiedDate"],
     cache: function() { return app.cache},
+    cacheForOriginals: function() { return app.cacheForOriginals;},
 
     getCriteria: function() {
         return this.key;
@@ -200,7 +201,7 @@ app.models.AccountCollection = Force.SObjectCollection.extend({
         // Offline: do a cache query
         if (!app.offlineTracker.get("isOnline")) {
             // Not using like query because it does a case-sensitive sort
-            return {type:"cache", cacheQuery:{queryType:"smart", smartSql:"SELECT {accounts:_soup} FROM {accounts} WHERE {accounts:Name} LIKE '" + this.key + "%' ORDER BY LOWER({accounts:Name})", pageSize:25}};
+            return {type:"cache", cacheQuery:{queryType:"smart", smartSql:"SELECT {accounts:_soup} FROM {accounts} WHERE {accounts:Name} LIKE '" + (this.key == null ? "" : this.key) + "%' ORDER BY LOWER({accounts:Name})", pageSize:25}};
         }
         // Online
         else {

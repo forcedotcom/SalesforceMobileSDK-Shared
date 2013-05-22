@@ -40,7 +40,7 @@ var ForceEntityTestSuite = function () {
     SFTestSuite.call(this, "ForceEntityTestSuite");
 
     // To run specific tests
-    this.testsToRun = ["testSyncSObjectDetectConflictDelete"];
+    // this.testsToRun = ["testSyncSObjectDetectConflictUpdate"];
 };
 
 // We are sub-classing SFTestSuite
@@ -976,7 +976,8 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithServerDelete = function() {
             return Force.syncSObjectWithServer("delete", "Account", id);
         })
         .then(function(data) {
-            checkResultServerAndCaches(data, null, null);
+            QUnit.equals(data, null, "Expected null");
+            checkServer(id, null);
         })
         .then(function() {
             self.finalizeTest();
@@ -1373,10 +1374,56 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictRetrieve = function(
 ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() {
     console.log("# In ForceEntityTestSuite.syncSObjectDetectConflictUpdate");
     var self = this;
+    var cache, cacheForOriginals;
+    var soupName = "testSyncSObjectDetectConflictUpdate";
+    var soupNameForOriginals = "testSyncSObjectDetectConflictUpdate-originals";
+    var id;
 
-    QUnit.ok(false, "Test not implemented");
+    Force.smartstoreClient.removeSoup(soupName)
+        .then(function() {
+            console.log("## Initialization of StoreCaches");
+            cache = new Force.StoreCache(soupName);
+            cacheForOriginals = new Force.StoreCache(soupNameForOriginals);
+            return $.when(cache.init(), cacheForOriginals.init());
+        })
+        .then(function() {
+            console.log("## Direct creation against server");    
+            return Force.forcetkClient.create("Account", {Name:"TestAccount"});
+        })
+        .then(function(data) {
+            id = data.id;
+            console.log("## Trying update server-only");
+            return Force.syncSObjectDetectConflict("update", "Account", id, {Id: id, Name:"TestAccount-2"}, ["Name"], cache, Force.CACHE_MODE.SERVER_ONLY, cacheForOriginals);
+        })
+        .then(function(data) {
+            return checkResultServerAndCaches(data, {Id:id, Name:"TestAccount-2"}, id, {Id:id, Name:"TestAccount-2"}, null, cache, {Id:id, Name:"TestAccount-2"}, cacheForOriginals);
+        })
+        .then(function() {
+            console.log("## Trying update cache-only");
+            return Force.syncSObjectDetectConflict("update", "Account", id, {Name:"TestAccount-3"}, ["Name"], cache, Force.CACHE_MODE.CACHE_ONLY, cacheForOriginals);
+        })
+        .then(function(data) {
+            return checkResultServerAndCaches(data, {Id:id, Name:"TestAccount-3"}, id, {Id:id, Name:"TestAccount-2"}, {Id:id, Name:"TestAccount-3"}, cache, {Id:id, Name:"TestAccount-2"}, cacheForOriginals);
+        })
+        .then(function() {
+            console.log("## Trying update server-first");
+            return Force.syncSObjectDetectConflict("update", "Account", id, {Name:"TestAccount-4"}, ["Name"], cache, Force.CACHE_MODE.SERVER_FIRST, cacheForOriginals);
+        })
+        .then(function(data) {
+            return checkResultServerAndCaches(data, {Id:id, Name:"TestAccount-4"}, id, {Id:id, Name:"TestAccount-4"}, {Id:id, Name:"TestAccount-4"}, cache, {Id:id, Name:"TestAccount-4"}, cacheForOriginals);
+        })
 
-    self.finalizeTest();
+    //
+    // TODO Try update with conflicts and various merge modes
+    // 
+
+        .then(function() {
+            console.log("## Cleaning up");
+            return $.when(Force.forcetkClient.del("account", id), Force.smartstoreClient.removeSoup(soupName));
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
 };
 
 /** 
@@ -1439,7 +1486,7 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() 
         })
         .then(function() {
             console.log("## Direct creation against server");    
-            return Force.forcetkClient.create("Account", {Name:"TestAccount-1", Industry: "Computer-1"});
+            return Force.forcetkClient.create("Account", {Name:"TestAccount-1", Industry: "Computer-1", Phone:"111"});
         })
         .then(function(data) {
             id3 = data.id;
@@ -1457,21 +1504,21 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() 
             assertContains(result, {success: false, result: {localChanges:[], remoteChanges:["Name"], conflictingChanges:[], base:base, yours:yours, theirs:theirs}});
 
             console.log("## Trying delete server-first with mergeMode MERGE_FAIL_IF_CHANGED with conflicting change");
-            yours = {Id:id3, Name: "TestAccount-2", Industry:"Computer-1"}
+            yours = {Id:id3, Name: "TestAccount-2", Industry:"Computer-1"};
             return rejectedPromiseWrapper(Force.syncSObjectDetectConflict("delete", "Account", id3, yours, ["Name", "Industry"], cache, Force.CACHE_MODE.SERVER_FIRST, cacheForOriginals, Force.MERGE_MODE.MERGE_FAIL_IF_CHANGED));
         })
         .then(function(result) {
             assertContains(result, {success: false, result: {localChanges:["Name"], remoteChanges:["Name"], conflictingChanges:["Name"], base:base, yours:yours, theirs:theirs}});
 
             console.log("## Trying delete server-first with mergeMode MERGE_FAIL_IF_CONFLICT with conflicting change");
-            yours = {Id:id3, Name: "TestAccount-2", Industry:"Computer-1"}
+            yours = {Id:id3, Name: "TestAccount-2", Industry:"Computer-1"};
             return rejectedPromiseWrapper(Force.syncSObjectDetectConflict("delete", "Account", id3, yours, ["Name", "Industry"], cache, Force.CACHE_MODE.SERVER_FIRST, cacheForOriginals, Force.MERGE_MODE.MERGE_FAIL_IF_CONFLICT));
         })
         .then(function(result) {
             assertContains(result, {success: false, result: {localChanges:["Name"], remoteChanges:["Name"], conflictingChanges:["Name"], base:base, yours:yours, theirs:theirs}});
 
             console.log("## Trying delete server-first with mergeMode MERGE_FAIL_IF_CONFLICT with conflicting change and non-conflicting change");
-            yours = {Id:id3, Name: "TestAccount-2", Industry:"Computer-2"}
+            yours = {Id:id3, Name: "TestAccount-2", Industry:"Computer-2"};
             return rejectedPromiseWrapper(Force.syncSObjectDetectConflict("delete", "Account", id3, yours, ["Name", "Industry"], cache, Force.CACHE_MODE.SERVER_FIRST, cacheForOriginals, Force.MERGE_MODE.MERGE_FAIL_IF_CONFLICT));
         })
         .then(function(result) {
