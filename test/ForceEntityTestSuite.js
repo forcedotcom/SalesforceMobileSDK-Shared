@@ -1486,7 +1486,7 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() 
         })
         .then(function() {
             console.log("## Direct creation against server");    
-            return Force.forcetkClient.create("Account", {Name:"TestAccount-1", Industry: "Computer-1", Phone:"111"});
+            return Force.forcetkClient.create("Account", {Name:"TestAccount-1", Industry: "Computer-1"});
         })
         .then(function(data) {
             id3 = data.id;
