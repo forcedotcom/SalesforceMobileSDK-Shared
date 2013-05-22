@@ -27,16 +27,16 @@ Contains all the external libraries used in sample apps or required by some of t
 
 **backbone**
 
-Contains backbone and underscore.
+Contains [backbone](http://backbonejs.org/) and [underscore](http://underscorejs.org/).
 
 **jquery**
 
-Contains jquery and jquery mobile.
+Contains [jquery](http://jquery.com/) and [jquery mobile](http://jquerymobile.com/).
 Required by entiy framework and used in some of the sample apps.
 
 **qunit** 
 
-Contains qunit. A unit test library for JavaScript.
+Contains [qunit](http://qunitjs.com/). A unit test library for JavaScript.
 
 
 # /SampleApps
