@@ -143,7 +143,7 @@
 
         }
         // Conflict error
-        else if (_.has(rawError, "conflict")) {
+        else if (_.has(rawError, "remoteChanges")) {
             this.type = "ConflictError";
             _.extend(this, rawError);
         }
