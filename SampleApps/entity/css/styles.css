@@ -20,9 +20,9 @@
 }
 
 .transition {
-    -moz-transition-duration: .375s;
-    -webkit-transition-duration: .375s;
-    -o-transition-duration: .375s;
+    -moz-transition-duration: .3s;
+    -webkit-transition-duration: .3s;
+    -o-transition-duration: .3s;
 }
 
 .small-img {

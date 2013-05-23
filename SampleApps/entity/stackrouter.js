@@ -31,20 +31,20 @@
             if (window.location.hash === "") {
                 // Always apply a Back (slide from left) transition when we go back 
                 slideFrom = "left";
-                $(page.el).attr('class', 'page stage-left');
+                $(page.el).attr('class', 'page transition stage-left');
                 // Reinitialize page history
                 this.pageHistory = [window.location.hash];
             } 
             else if (this.pageHistory.length > 1 && window.location.hash === this.pageHistory[this.pageHistory.length - 2]) {
                 // The new page is the same as the previous page -> Back transition
                 slideFrom = "left";
-                $(page.el).attr('class', 'page stage-left');
+                $(page.el).attr('class', 'page transition stage-left');
                 this.pageHistory.pop();
             } 
             else {
                 // Forward transition (slide from right)
                 slideFrom = "right";
-                $(page.el).attr('class', 'page stage-right');
+                $(page.el).attr('class', 'page transition stage-right');
                 this.pageHistory.push(window.location.hash);
             }
 
