@@ -1412,11 +1412,130 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() 
         .then(function(data) {
             return checkResultServerAndCaches(data, {Id:id, Name:"TestAccount-4"}, id, {Id:id, Name:"TestAccount-4"}, {Id:id, Name:"TestAccount-4"}, cache, {Id:id, Name:"TestAccount-4"}, cacheForOriginals);
         })
-
-    //
-    // TODO Try update with conflicts and various merge modes
-    // 
-
+        .then(function() {
+            var theirs = {Name:"TestAccount-1", Industry:"Computer-0", Phone:"Phone-0"};
+            var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
+            var yours = base;
+            return tryConflictDetection("with only remote change",
+                                        cache, cacheForOriginals, theirs, yours, base, "delete", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.MERGE_FAIL_IF_CHANGED, 
+                                        {success: false, result: {localChanges:[], remoteChanges:["Name"], conflictingChanges:[], base:base, yours:yours, theirs:theirs}},
+                                        true);
+        })
+        .then(function() {
+            var theirs = {Name:"TestAccount-1", Industry:"Computer-0", Phone:"Phone-0"};
+            var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
+            var yours = base;
+            var after = {Name:"TestAccount-1", Industry:"Computer-0", Phone:"Phone-0"};
+            return tryConflictDetection("with only remote change",
+                                        cache, cacheForOriginals, theirs, yours, base, "update", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.MERGE_FAIL_IF_CONFLICT, 
+                                        {success: true, result: after},
+                                        true,
+                                        after, after, after);
+        })
+        .then(function() {
+            var theirs = {Name:"TestAccount-1", Industry:"Computer-0", Phone:"Phone-0"};
+            var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
+            var yours = base;
+            var after = {Name:"TestAccount-1", Industry:"Computer-0", Phone:"Phone-0"};
+            return tryConflictDetection("with only remote change",
+                                        cache, cacheForOriginals, theirs, yours, base, "update", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.MERGE_ACCEPT_YOURS, 
+                                        {success: true, result: after},
+                                        true,
+                                        after, after, after);
+        })
+        .then(function() {
+            var theirs = {Name:"TestAccount-1", Industry:"Computer-0", Phone:"Phone-0"};
+            var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
+            var yours = base;
+            var after = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
+            return tryConflictDetection("with only remote change",
+                                        cache, cacheForOriginals, theirs, yours, base, "update", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.OVERWRITE, 
+                                        {success: true, result: after},
+                                        true,
+                                        after, after, after);
+        })
+        .then(function() {
+            var theirs = {Name:"TestAccount-0", Industry:"Computer-1", Phone:"Phone-0"};
+            var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
+            var yours = {Name: "TestAccount-0", Industry:"Computer-0", Phone:"Phone-1"};
+            return tryConflictDetection("with non-conflicting changes",
+                                        cache, cacheForOriginals, theirs, yours, base, "update", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.MERGE_FAIL_IF_CHANGED, 
+                                        {success: false, result: {localChanges:["Phone"], remoteChanges:["Industry"], conflictingChanges:[], base:base, yours:yours, theirs:theirs}},
+                                        true);
+        })
+        .then(function() {
+            var theirs = {Name:"TestAccount-0", Industry:"Computer-1", Phone:"Phone-0"};
+            var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
+            var yours = {Name: "TestAccount-0", Industry:"Computer-0", Phone:"Phone-1"};
+            var after = {Name: "TestAccount-0", Industry:"Computer-1", Phone:"Phone-1"};
+            return tryConflictDetection("with non-conflicting changes",
+                                        cache, cacheForOriginals, theirs, yours, base, "update", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.MERGE_FAIL_IF_CONFLICT, 
+                                        {success: true, result: after},
+                                        true,
+                                        after, after, after);
+        })
+        .then(function() {
+            var theirs = {Name:"TestAccount-0", Industry:"Computer-1", Phone:"Phone-0"};
+            var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
+            var yours = {Name: "TestAccount-0", Industry:"Computer-0", Phone:"Phone-1"};
+            var after = {Name: "TestAccount-0", Industry:"Computer-1", Phone:"Phone-1"};
+            return tryConflictDetection("with non-conflicting changes",
+                                        cache, cacheForOriginals, theirs, yours, base, "update", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.MERGE_ACCEPT_YOURS, 
+                                        {success: true, result: after},
+                                        true,
+                                        after, after, after);
+        })
+        .then(function() {
+            var theirs = {Name:"TestAccount-0", Industry:"Computer-1", Phone:"Phone-0"};
+            var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
+            var yours = {Name: "TestAccount-0", Industry:"Computer-0", Phone:"Phone-1"};
+            var after = {Name: "TestAccount-0", Industry:"Computer-0", Phone:"Phone-1"};
+            return tryConflictDetection("with non-conflicting changes",
+                                        cache, cacheForOriginals, theirs, yours, base, "update", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.OVERWRITE, 
+                                        {success: true, result: after},
+                                        true,
+                                        after, after, after);
+        })
+        .then(function() {
+            var theirs = {Name:"TestAccount-b", Industry:"Computer-1", Phone:"Phone-0"};
+            var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
+            var yours = {Name: "TestAccount-a", Industry:"Computer-0", Phone:"Phone-1"};
+            return tryConflictDetection("with conflicting and non-conflicting changes",
+                                        cache, cacheForOriginals, theirs, yours, base, "update", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.MERGE_FAIL_IF_CHANGED, 
+                                        {success: false, result: {localChanges:["Name", "Phone"], remoteChanges:["Name", "Industry"], conflictingChanges:["Name"], base:base, yours:yours, theirs:theirs}},
+                                        true);
+        })
+        .then(function() {
+            var theirs = {Name:"TestAccount-b", Industry:"Computer-1", Phone:"Phone-0"};
+            var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
+            var yours = {Name: "TestAccount-a", Industry:"Computer-0", Phone:"Phone-1"};
+            return tryConflictDetection("with conflicting and non-conflicting changes",
+                                        cache, cacheForOriginals, theirs, yours, base, "update", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.MERGE_FAIL_IF_CONFLICT, 
+                                        {success: false, result: {localChanges:["Name", "Phone"], remoteChanges:["Name", "Industry"], conflictingChanges:["Name"], base:base, yours:yours, theirs:theirs}},
+                                        true);
+        })
+        .then(function() {
+            var theirs = {Name:"TestAccount-b", Industry:"Computer-1", Phone:"Phone-0"};
+            var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
+            var yours = {Name: "TestAccount-a", Industry:"Computer-0", Phone:"Phone-1"};
+            var after = {Name: "TestAccount-a", Industry:"Computer-1", Phone:"Phone-1"};
+            return tryConflictDetection("with conflicting and non-conflicting changes",
+                                        cache, cacheForOriginals, theirs, yours, base, "update", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.MERGE_ACCEPT_YOURS, 
+                                        {success: true, result: after},
+                                        true,
+                                        after, after, after);
+        })
+        .then(function() {
+            var theirs = {Name:"TestAccount-b", Industry:"Computer-1", Phone:"Phone-0"};
+            var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
+            var yours = {Name: "TestAccount-a", Industry:"Computer-0", Phone:"Phone-1"};
+            var after = {Name: "TestAccount-a", Industry:"Computer-0", Phone:"Phone-1"};
+            return tryConflictDetection("with conflicting and non-conflicting changes",
+                                        cache, cacheForOriginals, theirs, yours, base, "update", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.OVERWRITE, 
+                                        {success: true, result: yours},
+                                        true,
+                                        after, after, after);
+        })
         .then(function() {
             console.log("## Cleaning up");
             return $.when(Force.forcetkClient.del("account", id), Force.smartstoreClient.removeSoup(soupName));
@@ -1435,8 +1554,7 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() 
     var cache, cacheForOriginals;
     var soupName = "testSyncSObjectDetectConflictDelete";
     var soupNameForOriginals = "testSyncSObjectDetectConflictDelete-originals";
-    var id, id2, id3;
-    var base, yours, theirs;
+    var id, id2;
 
     Force.smartstoreClient.removeSoup(soupName)
         .then(function() {
@@ -1485,50 +1603,120 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() 
             return checkResultServerAndCaches(data, null, id2, null, null, cache, null, cacheForOriginals);
         })
         .then(function() {
-            console.log("## Direct creation against server");    
-            return Force.forcetkClient.create("Account", {Name:"TestAccount-1", Industry: "Computer-1"});
-        })
-        .then(function(data) {
-            id3 = data.id;
-            theirs = {Id:id3, Name:"TestAccount-1", Industry:"Computer-1"};
-            base = {Id:id3, Name:"TestAccount-0", Industry:"Computer-1"};
-            console.log("## Direct insertion in cacheForOriginals with name different from server");    
-            return cacheForOriginals.save(base);
+            var theirs = {Name:"TestAccount-1", Industry:"Computer-0", Phone:"Phone-0"};
+            var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
+            var yours = base;
+            return tryConflictDetection("with only remote change",
+                                        cache, cacheForOriginals, theirs, yours, base, "delete", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.MERGE_FAIL_IF_CHANGED, 
+                                        {success: false, result: {localChanges:[], remoteChanges:["Name"], conflictingChanges:[], base:base, yours:yours, theirs:theirs}},
+                                        true);
         })
         .then(function() {
-            console.log("## Trying delete server-first with mergeMode MERGE_FAIL_IF_CHANGED with non-conflicting remote change");
-            yours = {Id:id3, Name: "TestAccount-0", Industry:"Computer-1"};
-            return rejectedPromiseWrapper(Force.syncSObjectDetectConflict("delete", "Account", id3, yours, ["Name", "Industry"], cache, Force.CACHE_MODE.SERVER_FIRST, cacheForOriginals, Force.MERGE_MODE.MERGE_FAIL_IF_CHANGED));
+            var theirs = {Name:"TestAccount-1", Industry:"Computer-0", Phone:"Phone-0"};
+            var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
+            var yours = base;
+            return tryConflictDetection("with only remote change",
+                                        cache, cacheForOriginals, theirs, yours, base, "delete", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.MERGE_FAIL_IF_CONFLICT, 
+                                        {success: true, result: null},
+                                        false,
+                                        null, null, null);
         })
-        .then(function(result) {
-            assertContains(result, {success: false, result: {localChanges:[], remoteChanges:["Name"], conflictingChanges:[], base:base, yours:yours, theirs:theirs}});
-
-            console.log("## Trying delete server-first with mergeMode MERGE_FAIL_IF_CHANGED with conflicting change");
-            yours = {Id:id3, Name: "TestAccount-2", Industry:"Computer-1"};
-            return rejectedPromiseWrapper(Force.syncSObjectDetectConflict("delete", "Account", id3, yours, ["Name", "Industry"], cache, Force.CACHE_MODE.SERVER_FIRST, cacheForOriginals, Force.MERGE_MODE.MERGE_FAIL_IF_CHANGED));
+        .then(function() {
+            var theirs = {Name:"TestAccount-1", Industry:"Computer-0", Phone:"Phone-0"};
+            var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
+            var yours = base;
+            return tryConflictDetection("with only remote change",
+                                        cache, cacheForOriginals, theirs, yours, base, "delete", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.MERGE_ACCEPT_YOURS, 
+                                        {success: true, result: null},
+                                        false,
+                                        null, null, null);
         })
-        .then(function(result) {
-            assertContains(result, {success: false, result: {localChanges:["Name"], remoteChanges:["Name"], conflictingChanges:["Name"], base:base, yours:yours, theirs:theirs}});
-
-            console.log("## Trying delete server-first with mergeMode MERGE_FAIL_IF_CONFLICT with conflicting change");
-            yours = {Id:id3, Name: "TestAccount-2", Industry:"Computer-1"};
-            return rejectedPromiseWrapper(Force.syncSObjectDetectConflict("delete", "Account", id3, yours, ["Name", "Industry"], cache, Force.CACHE_MODE.SERVER_FIRST, cacheForOriginals, Force.MERGE_MODE.MERGE_FAIL_IF_CONFLICT));
+        .then(function() {
+            var theirs = {Name:"TestAccount-1", Industry:"Computer-0", Phone:"Phone-0"};
+            var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
+            var yours = base;
+            return tryConflictDetection("with only remote change",
+                                        cache, cacheForOriginals, theirs, yours, base, "delete", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.OVERWRITE, 
+                                        {success: true, result: null},
+                                        false,
+                                        null, null, null);
         })
-        .then(function(result) {
-            assertContains(result, {success: false, result: {localChanges:["Name"], remoteChanges:["Name"], conflictingChanges:["Name"], base:base, yours:yours, theirs:theirs}});
-
-            console.log("## Trying delete server-first with mergeMode MERGE_FAIL_IF_CONFLICT with conflicting change and non-conflicting change");
-            yours = {Id:id3, Name: "TestAccount-2", Industry:"Computer-2"};
-            return rejectedPromiseWrapper(Force.syncSObjectDetectConflict("delete", "Account", id3, yours, ["Name", "Industry"], cache, Force.CACHE_MODE.SERVER_FIRST, cacheForOriginals, Force.MERGE_MODE.MERGE_FAIL_IF_CONFLICT));
+        .then(function() {
+            var theirs = {Name:"TestAccount-0", Industry:"Computer-1", Phone:"Phone-0"};
+            var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
+            var yours = {Name: "TestAccount-0", Industry:"Computer-0", Phone:"Phone-1"};
+            return tryConflictDetection("with non-conflicting changes",
+                                        cache, cacheForOriginals, theirs, yours, base, "delete", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.MERGE_FAIL_IF_CHANGED, 
+                                        {success: false, result: {localChanges:["Phone"], remoteChanges:["Industry"], conflictingChanges:[], base:base, yours:yours, theirs:theirs}},
+                                        true);
         })
-        .then(function(result) {
-            assertContains(result, {success: false, result: {localChanges:["Name", "Industry"], remoteChanges:["Name"], conflictingChanges:["Name"], base:base, yours:yours, theirs:theirs}});
-
-            console.log("## Trying delete server-first with mergeMode MERGE_FAIL_IF_CONFLICT with non-conflicting remote change");
-            return Force.syncSObjectDetectConflict("delete", "Account", id3, base, ["Name", "Industry"], cache, Force.CACHE_MODE.SERVER_FIRST, cacheForOriginals, Force.MERGE_MODE.MERGE_FAIL_IF_CONFLICT);
+        .then(function() {
+            var theirs = {Name:"TestAccount-0", Industry:"Computer-1", Phone:"Phone-0"};
+            var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
+            var yours = {Name: "TestAccount-0", Industry:"Computer-0", Phone:"Phone-1"};
+            return tryConflictDetection("with non-conflicting changes",
+                                        cache, cacheForOriginals, theirs, yours, base, "delete", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.MERGE_FAIL_IF_CONFLICT, 
+                                        {success: true, result: null},
+                                        false,
+                                        null, null, null);
         })
-        .then(function(data) {
-            return checkResultServerAndCaches(data, null, id3, null, null, cache, null, cacheForOriginals);
+        .then(function() {
+            var theirs = {Name:"TestAccount-0", Industry:"Computer-1", Phone:"Phone-0"};
+            var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
+            var yours = {Name: "TestAccount-0", Industry:"Computer-0", Phone:"Phone-1"};
+            return tryConflictDetection("with non-conflicting changes",
+                                        cache, cacheForOriginals, theirs, yours, base, "delete", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.MERGE_ACCEPT_YOURS, 
+                                        {success: true, result: null},
+                                        false,
+                                        null, null, null);
+        })
+        .then(function() {
+            var theirs = {Name:"TestAccount-0", Industry:"Computer-1", Phone:"Phone-0"};
+            var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
+            var yours = {Name: "TestAccount-0", Industry:"Computer-0", Phone:"Phone-1"};
+            return tryConflictDetection("with non-conflicting changes",
+                                        cache, cacheForOriginals, theirs, yours, base, "delete", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.OVERWRITE, 
+                                        {success: true, result: null},
+                                        false,
+                                        null, null, null);
+        })
+        .then(function() {
+            var theirs = {Name:"TestAccount-b", Industry:"Computer-1", Phone:"Phone-0"};
+            var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
+            var yours = {Name: "TestAccount-a", Industry:"Computer-0", Phone:"Phone-1"};
+            return tryConflictDetection("with conflicting and non-conflicting changes",
+                                        cache, cacheForOriginals, theirs, yours, base, "delete", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.MERGE_FAIL_IF_CHANGED, 
+                                        {success: false, result: {localChanges:["Name", "Phone"], remoteChanges:["Name", "Industry"], conflictingChanges:["Name"], base:base, yours:yours, theirs:theirs}},
+                                        true);
+        })
+        .then(function() {
+            var theirs = {Name:"TestAccount-b", Industry:"Computer-1", Phone:"Phone-0"};
+            var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
+            var yours = {Name: "TestAccount-a", Industry:"Computer-0", Phone:"Phone-1"};
+            return tryConflictDetection("with conflicting and non-conflicting changes",
+                                        cache, cacheForOriginals, theirs, yours, base, "delete", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.MERGE_FAIL_IF_CONFLICT, 
+                                        {success: false, result: {localChanges:["Name", "Phone"], remoteChanges:["Name", "Industry"], conflictingChanges:["Name"], base:base, yours:yours, theirs:theirs}},
+                                        true);
+        })
+        .then(function() {
+            var theirs = {Name:"TestAccount-b", Industry:"Computer-1", Phone:"Phone-0"};
+            var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
+            var yours = {Name: "TestAccount-a", Industry:"Computer-0", Phone:"Phone-1"};
+            return tryConflictDetection("with conflicting and non-conflicting changes",
+                                        cache, cacheForOriginals, theirs, yours, base, "delete", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.MERGE_ACCEPT_YOURS, 
+                                        {success: true, result: null},
+                                        false,
+                                        null, null, null);
+        })
+        .then(function() {
+            var theirs = {Name:"TestAccount-b", Industry:"Computer-1", Phone:"Phone-0"};
+            var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
+            var yours = {Name: "TestAccount-a", Industry:"Computer-0", Phone:"Phone-1"};
+            return tryConflictDetection("with conflicting and non-conflicting changes",
+                                        cache, cacheForOriginals, theirs, yours, base, "delete", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.OVERWRITE, 
+                                        {success: true, result: null},
+                                        false,
+                                        null, null, null);
         })
         .then(function() {
             console.log("## Cleaning up");
@@ -2027,7 +2215,8 @@ var checkServer = function(id, expectedServerRecord, caller) {
         return $.when();
     }
     console.log("## Direct retrieve from server");
-    return Force.forcetkClient.query("select " + (expectedServerRecord == null ? "Id" : _.keys(expectedServerRecord).join(",")) + " from Account where Id = '" + id + "'")
+    var fields = expectedServerRecord == null ? "Id" : _.select(_.keys(expectedServerRecord), function(field) { return field.indexOf("__local") == -1; }).join(",");
+    return Force.forcetkClient.query("select " + fields + " from Account where Id = '" + id + "'")
         .then(function(resp) {
             console.log("## Checking data returned from server");
             assertContains(resp.records.length == 0 ? null : resp.records[0], expectedServerRecord, caller);
@@ -2037,10 +2226,46 @@ var checkServer = function(id, expectedServerRecord, caller) {
 /** 
  * Helper function to check result, server and caches
  */
-var checkResultServerAndCaches = function(data, expectedData, id, expectedServerRecord, expectedCacheRecord, cache, expectedCacheRecord2, cache2) {
-    var caller = getCaller();
+var checkResultServerAndCaches = function(data, expectedData, id, expectedServerRecord, expectedCacheRecord, cache, expectedCacheRecord2, cache2, caller) {
+    if (caller == null) caller = getCaller();
     console.log("## Checking data returned by sync call");
     assertContains(data, expectedData, caller);
     return $.when(checkServer(id, expectedServerRecord, caller), checkCache(id, expectedCacheRecord, cache, caller), checkCache(id, expectedCacheRecord2, cache2, caller));
 };
+
+/** 
+ * Helper function to try syncSObjectDetectConflict
+ * Save theirs to server, yours to cache and base to cacheForOriginals
+ * Then does a syncSObjectDetectConflict with the given method, cacheMode and mergeMode
+ * Compare the result with expectedResult
+ * When the operation is successful, also checks that the server now has newTheirs, cache has newYours and cacheForOriginals has newBase
+ * If cleanup is true, the record is then deleted from the server
+ */
+var tryConflictDetection = function(message, cache, cacheForOriginals, theirs, yours, base, method, fieldlist, cacheMode, mergeMode, expectedResult, cleanup, newTheirs, newYours, newBase) {
+    var caller = getCaller();
+    var id;
+    console.log("## Direct creation on server");    
+    return Force.forcetkClient.create("Account", theirs)
+    .then(function(data) {
+        id = data.id;
+        console.log("## Direct insertion in cache");    
+        if (cache != null && yours != null) return cache.save(_.extend({Id:id}, yours));
+    })
+    .then(function() {
+        console.log("## Direct insertion in cacheForOriginals");    
+        if (cacheForOriginals != null && base != null) return cacheForOriginals.save(_.extend({Id:id}, base));
+    })
+    .then(function() {
+        console.log("## Trying " + method + " " + cacheMode + " with mergeMode " + mergeMode + " " + message);
+        return rejectedPromiseWrapper(Force.syncSObjectDetectConflict(method, "Account", id, yours, fieldlist, cache, cacheMode, cacheForOriginals, mergeMode))
+    })
+    .then(function(result) {
+        assertContains(result, expectedResult, caller);
+        if (expectedResult.success) return checkResultServerAndCaches(result.result, newTheirs, id, newTheirs, newYours, cache, newBase, cacheForOriginals, caller);
+    })
+    .then(function() {
+        if (cleanup) return $.when(Force.forcetkClient.del("account", id));
+    });
+};
+
 }

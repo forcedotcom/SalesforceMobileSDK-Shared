@@ -667,7 +667,7 @@
     // Returns a promise
     //
     //
-    Force.syncSObject = function(method, sobjectType, id, attributes, fieldlist, cache, cacheMode) {
+    Force.syncSObject = function(method, sobjectType, id, attributes, fieldlist, cache, cacheMode, info) {
         console.log("--> In Force.syncSObject:method=" + method + " id=" + id + " cacheMode=" + cacheMode);
 
         var serverSync = function(method, id) {
@@ -690,7 +690,10 @@
         
         // Chaining promises that return either a promise or created/upated/reda model attributes or null in the case of delete
         var promise = null;
-        var wasReadFromCache = false;
+
+        // To keep track of whether data was read from cache or not
+        info = info || {};
+        info.wasReadFromCache = false;
 
         // Go to cache first
         if (cacheMode == Force.CACHE_MODE.CACHE_FIRST) {
@@ -699,8 +702,8 @@
             }
             promise = cacheSync(method, id, attributes, fieldlist)
                 .then(function(data) {
-                    wasReadFromCache = (data != null);
-                    if (!wasReadFromCache) {
+                    info.wasReadFromCache = (data != null);
+                    if (!info.wasReadFromCache) {
                         // Not found in cache, go to server
                         return serverSync(method, id);
                     }
@@ -733,7 +736,7 @@
 
         // Write back to cache if not read from cache
         promise = promise.then(function(data) {
-            if (!wasReadFromCache) {
+            if (!info.wasReadFromCache) {
                 var targetId = (method == "create" || cache.isLocalId(id) /* create as far as the server goes but update as far as the cache goes*/ ? data.Id : id);
                 var targetMethod = (method == "read" ? "update" /* we want to write to the cache what was read from the server */: method);
                 return cacheSync(targetMethod, targetId, data);
@@ -788,8 +791,11 @@
     Force.syncSObjectDetectConflict = function(method, sobjectType, id, attributes, fieldlist, cache, cacheMode, cacheForOriginals, mergeMode) {
         console.log("--> In Force.syncSObjectDetectConflict:method=" + method + " id=" + id + " cacheMode=" + cacheMode + " mergeMode=" + mergeMode);
 
+        // To keep track of whether data was read from cache or not
+        var info = {};
+
         var sync = function(attributes) {
-            return Force.syncSObject(method, sobjectType, id, attributes, fieldlist, cache, cacheMode);
+            return Force.syncSObject(method, sobjectType, id, attributes, fieldlist, cache, cacheMode, info);
         };
 
         // Original cache required for conflict detection
@@ -809,7 +815,9 @@
 
         var cacheForOriginalsSave = function(data) {
             return (cacheMode == Force.CACHE_MODE.CACHE_ONLY || data.__local__ /* locally changed: don't write to cacheForOriginals */ 
-                    ? data : cacheForOriginals.save(data));
+                    || (method == "read" && cacheMode == Force.CACHE_MODE.CACHE_FIRST && info.wasReadFromCache) /* read from cache: don't write to cacheForOriginals */)
+                ? data 
+                : cacheForOriginals.save(data);
         };
 
         var cacheForOriginalsRemove = function() {
