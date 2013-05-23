@@ -1425,31 +1425,34 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() 
             var theirs = {Name:"TestAccount-1", Industry:"Computer-0", Phone:"Phone-0"};
             var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
             var yours = base;
+            var after = {Name:"TestAccount-1", Industry:"Computer-0", Phone:"Phone-0"};
             return tryConflictDetection("with only remote change",
                                         cache, cacheForOriginals, theirs, yours, base, "update", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.MERGE_FAIL_IF_CONFLICT, 
-                                        {success: true, result: theirs},
+                                        {success: true, result: after},
                                         true,
-                                        theirs, theirs, theirs);
+                                        after, after, after);
         })
         .then(function() {
             var theirs = {Name:"TestAccount-1", Industry:"Computer-0", Phone:"Phone-0"};
             var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
             var yours = base;
+            var after = {Name:"TestAccount-1", Industry:"Computer-0", Phone:"Phone-0"};
             return tryConflictDetection("with only remote change",
                                         cache, cacheForOriginals, theirs, yours, base, "update", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.MERGE_ACCEPT_YOURS, 
-                                        {success: true, result: theirs},
+                                        {success: true, result: after},
                                         true,
-                                        theirs, theirs, theirs);
+                                        after, after, after);
         })
         .then(function() {
             var theirs = {Name:"TestAccount-1", Industry:"Computer-0", Phone:"Phone-0"};
             var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
             var yours = base;
+            var after = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
             return tryConflictDetection("with only remote change",
                                         cache, cacheForOriginals, theirs, yours, base, "update", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.OVERWRITE, 
-                                        {success: true, result: yours},
+                                        {success: true, result: after},
                                         true,
-                                        yours, yours, yours);
+                                        after, after, after);
         })
         .then(function() {
             var theirs = {Name:"TestAccount-0", Industry:"Computer-1", Phone:"Phone-0"};
@@ -1464,33 +1467,34 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() 
             var theirs = {Name:"TestAccount-0", Industry:"Computer-1", Phone:"Phone-0"};
             var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
             var yours = {Name: "TestAccount-0", Industry:"Computer-0", Phone:"Phone-1"};
-            var merged = {Name: "TestAccount-0", Industry:"Computer-1", Phone:"Phone-1"};
+            var after = {Name: "TestAccount-0", Industry:"Computer-1", Phone:"Phone-1"};
             return tryConflictDetection("with non-conflicting changes",
                                         cache, cacheForOriginals, theirs, yours, base, "update", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.MERGE_FAIL_IF_CONFLICT, 
-                                        {success: true, result: merged},
+                                        {success: true, result: after},
                                         true,
-                                        merged, merged, merged);
+                                        after, after, after);
         })
         .then(function() {
             var theirs = {Name:"TestAccount-0", Industry:"Computer-1", Phone:"Phone-0"};
             var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
             var yours = {Name: "TestAccount-0", Industry:"Computer-0", Phone:"Phone-1"};
-            var merged = {Name: "TestAccount-0", Industry:"Computer-1", Phone:"Phone-1"};
+            var after = {Name: "TestAccount-0", Industry:"Computer-1", Phone:"Phone-1"};
             return tryConflictDetection("with non-conflicting changes",
                                         cache, cacheForOriginals, theirs, yours, base, "update", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.MERGE_ACCEPT_YOURS, 
-                                        {success: true, result: merged},
+                                        {success: true, result: after},
                                         true,
-                                        merged, merged, merged);
+                                        after, after, after);
         })
         .then(function() {
             var theirs = {Name:"TestAccount-0", Industry:"Computer-1", Phone:"Phone-0"};
             var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
             var yours = {Name: "TestAccount-0", Industry:"Computer-0", Phone:"Phone-1"};
+            var after = {Name: "TestAccount-0", Industry:"Computer-0", Phone:"Phone-1"};
             return tryConflictDetection("with non-conflicting changes",
                                         cache, cacheForOriginals, theirs, yours, base, "update", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.OVERWRITE, 
-                                        {success: true, result: yours},
+                                        {success: true, result: after},
                                         true,
-                                        yours, yours, yours);
+                                        after, after, after);
         })
         .then(function() {
             var theirs = {Name:"TestAccount-b", Industry:"Computer-1", Phone:"Phone-0"};
@@ -1514,22 +1518,23 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() 
             var theirs = {Name:"TestAccount-b", Industry:"Computer-1", Phone:"Phone-0"};
             var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
             var yours = {Name: "TestAccount-a", Industry:"Computer-0", Phone:"Phone-1"};
-            var merged = {Name: "TestAccount-a", Industry:"Computer-1", Phone:"Phone-1"};
+            var after = {Name: "TestAccount-a", Industry:"Computer-1", Phone:"Phone-1"};
             return tryConflictDetection("with conflicting and non-conflicting changes",
                                         cache, cacheForOriginals, theirs, yours, base, "update", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.MERGE_ACCEPT_YOURS, 
-                                        {success: true, result: merged},
+                                        {success: true, result: after},
                                         true,
-                                        merged, merged, merged);
+                                        after, after, after);
         })
         .then(function() {
             var theirs = {Name:"TestAccount-b", Industry:"Computer-1", Phone:"Phone-0"};
             var base = {Name:"TestAccount-0", Industry:"Computer-0", Phone:"Phone-0"};
             var yours = {Name: "TestAccount-a", Industry:"Computer-0", Phone:"Phone-1"};
+            var after = {Name: "TestAccount-a", Industry:"Computer-0", Phone:"Phone-1"};
             return tryConflictDetection("with conflicting and non-conflicting changes",
                                         cache, cacheForOriginals, theirs, yours, base, "update", ["Name", "Industry", "Phone"], Force.CACHE_MODE.SERVER_FIRST, Force.MERGE_MODE.OVERWRITE, 
                                         {success: true, result: yours},
                                         true,
-                                        yours, yours, yours);
+                                        after, after, after);
         })
         .then(function() {
             console.log("## Cleaning up");
