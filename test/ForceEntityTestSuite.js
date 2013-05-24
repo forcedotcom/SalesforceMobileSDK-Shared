@@ -40,7 +40,7 @@ var ForceEntityTestSuite = function () {
     SFTestSuite.call(this, "ForceEntityTestSuite");
 
     // To run specific tests
-    this.testsToRun = ["testSObjectDestroy"];
+    // this.testsToRun = ["testSObjectDestroy"];
 };
 
 // We are sub-classing SFTestSuite
@@ -1794,11 +1794,12 @@ ForceEntityTestSuite.prototype.testSObjectSave = function() {
         .then(function() {
             console.log("## Trying save with default cacheMode and mergeMode");
             account.set({Name:"TestAccount"});
-            return accountSave();
+            return accountSave(null);
         })
-        .then(function() {
+        .then(function(obj) {
+            QUnit.equals(obj, account, "Should return back the account object");
             id = account.id;
-            return checkResultServerAndCaches(obj.attributes, {Id:id, Name:"TestAccount"}, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount"}, cache, {Id:id, Name:"TestAccount"}, cacheForOriginals);
+            return checkResultServerAndCaches(account.attributes, {Id:id, Name:"TestAccount"}, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount"}, cache, {Id:id, Name:"TestAccount"}, cacheForOriginals);
         })
         .then(function() {
             console.log("## Cleaning up");
@@ -1833,18 +1834,18 @@ ForceEntityTestSuite.prototype.testSObjectDestroy = function() {
         .then(function() {
             console.log("## Trying destroy with default cacheMode and mergeMode");
             account.set({Name:"TestAccount"});
-            return accountSave();
+            return accountSave(null);
         })
-        .then(function(obj) {
-            id = obj.id;
-            return checkResultServerAndCaches(obj.attributes, {Id:id, Name:"TestAccount"}, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount"}, cache, {Id:id, Name:"TestAccount"}, cacheForOriginals);
+        .then(function() {
+            id = account.id;
+            return checkResultServerAndCaches(account.attributes, {Id:id, Name:"TestAccount"}, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount"}, cache, {Id:id, Name:"TestAccount"}, cacheForOriginals);
         })
         .then(function() {
             console.log("## Trying destroy with default cacheMode and mergeMode");
             return accountDestroy();
         })
-        .then(function(data) {
-            return checkResultServerAndCaches(data, null, id, null, null, cache, null, cacheForOriginals);
+        .then(function() {
+            return checkResultServerAndCaches(null, null, id, null, null, cache, null, cacheForOriginals);
         })
         .then(function() {
             console.log("## Cleaning up");
@@ -2250,10 +2251,10 @@ var optionsPromiser = function(object, methodName, objectName) {
     var retfn = function () {
         var args = $.makeArray(arguments);
         var d = $.Deferred();
-        if (args.length == 0) { args.push({}); }
+        if (args.length == 0 || !_.isObject(_.last(args))) { args.push({}); }
         var options = _.last(args);
-        options.success = function() {d.resolve.apply(d, arguments); };
-        options.error = function() { d.reject.apply(d, arguments); };
+        options.success = function() {d.resolve.apply(d, arguments);};
+        options.error = function() {d.reject.apply(d, arguments);};
         console.log("-----> Calling " + objectName + ":" + methodName);
         object[methodName].apply(object, args);
         return d.promise();
