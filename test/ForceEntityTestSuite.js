@@ -40,7 +40,7 @@ var ForceEntityTestSuite = function () {
     SFTestSuite.call(this, "ForceEntityTestSuite");
 
     // To run specific tests
-    // this.testsToRun = ["testSyncSObjectDetectConflictUpdate"];
+    // this.testsToRun = ["testSObjectDestroy"];
 };
 
 // We are sub-classing SFTestSuite
@@ -1241,10 +1241,10 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictCreate = function() 
 
     var cache, cacheForOriginals;
     var soupName = "testSyncSObjectDetectConflictCreate";
-    var soupNameForOriginals = "testSyncSObjectDetectConflictCreate-originals";
+    var soupNameForOriginals = "originalsFor" + soupName;
     var id, id2;
 
-    Force.smartstoreClient.removeSoup(soupName)
+    $.when(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals))
         .then(function() {
             console.log("## Initialization of StoreCaches");
             cache = new Force.StoreCache(soupName);
@@ -1293,10 +1293,10 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictRetrieve = function(
 
     var cache, cacheForOriginals;
     var soupName = "testSyncSObjectDetectConflictRetrieve";
-    var soupNameForOriginals = "testSyncSObjectDetectConflictRetrieve-originals";
+    var soupNameForOriginals = "originalsFor" + soupName;
     var id, id2;
 
-    Force.smartstoreClient.removeSoup(soupName)
+    $.when(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals))
         .then(function() {
             console.log("## Initialization of StoreCaches");
             cache = new Force.StoreCache(soupName);
@@ -1376,10 +1376,10 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() 
     var self = this;
     var cache, cacheForOriginals;
     var soupName = "testSyncSObjectDetectConflictUpdate";
-    var soupNameForOriginals = "testSyncSObjectDetectConflictUpdate-originals";
+    var soupNameForOriginals = "originalsFor" + soupName;
     var id;
 
-    Force.smartstoreClient.removeSoup(soupName)
+    $.when(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals))
         .then(function() {
             console.log("## Initialization of StoreCaches");
             cache = new Force.StoreCache(soupName);
@@ -1538,7 +1538,7 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() 
         })
         .then(function() {
             console.log("## Cleaning up");
-            return $.when(Force.forcetkClient.del("account", id), Force.smartstoreClient.removeSoup(soupName));
+            return $.when(Force.forcetkClient.del("account", id), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
         })
         .then(function() {
             self.finalizeTest();
@@ -1553,10 +1553,10 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() 
     var self = this;
     var cache, cacheForOriginals;
     var soupName = "testSyncSObjectDetectConflictDelete";
-    var soupNameForOriginals = "testSyncSObjectDetectConflictDelete-originals";
+    var soupNameForOriginals = "originalsFor" + soupName;
     var id, id2;
 
-    Force.smartstoreClient.removeSoup(soupName)
+    $.when(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals))
         .then(function() {
             console.log("## Initialization of StoreCaches");
             cache = new Force.StoreCache(soupName);
@@ -1720,7 +1720,7 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() 
         })
         .then(function() {
             console.log("## Cleaning up");
-            return $.when(Force.smartstoreClient.removeSoup(soupName));
+            return $.when(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
         })
         .then(function() {
             self.finalizeTest();
@@ -1733,10 +1733,42 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() 
 ForceEntityTestSuite.prototype.testSObjectFetch = function() {
     console.log("# In ForceEntityTestSuite.testSObjectFetch");
     var self = this;
+    var soupName = "testSObjectFetch";
+    var soupNameForOriginals = "originalsFor" + soupName;
+    var cache = new Force.StoreCache(soupName);
+    var cacheForOriginals = new Force.StoreCache(soupNameForOriginals);
+    var Account = Force.SObject.extend({sobjectType:"Account", fieldlist:["Id", "Name"], cache:cache, cacheForOriginals:cacheForOriginals});
+    var account = new Account();
+    var accountFetch = optionsPromiser(account, "fetch", "account");
+    var id;
 
-    QUnit.ok(false, "Test not implemented");
+    $.when(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals))
+        .then(function() {
+            console.log("## Initialization of StoreCaches");
+            return $.when(cache.init(), cacheForOriginals.init());
+        })
+        .then(function() {
+            console.log("## Direct creation against server");    
+            return Force.forcetkClient.create("Account", {Name:"TestAccount"});
+        })
+        .then(function(data) {
+            id = data.id;
+            console.log("## Trying fetch with default cacheMode and mergeMode");
+            account.set({Id:id});
+            return accountFetch();
+        })
+        .then(function(obj) {
+            QUnit.equals(obj, account, "Should have returned same account");
+            return checkResultServerAndCaches(account.attributes, {Id:id, Name:"TestAccount"}, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount"}, cache, {Id:id, Name:"TestAccount"}, cacheForOriginals);
+        })
+        .then(function() {
+            console.log("## Cleaning up");
+            return $.when(Force.forcetkClient.del("account", id), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
 
-    self.finalizeTest();
 };
 
 /** 
@@ -1745,10 +1777,37 @@ ForceEntityTestSuite.prototype.testSObjectFetch = function() {
 ForceEntityTestSuite.prototype.testSObjectSave = function() {
     console.log("# In ForceEntityTestSuite.testSObjectSave");
     var self = this;
+    var soupName = "testSObjectSave";
+    var soupNameForOriginals = "originalsFor" + soupName;
+    var cache = new Force.StoreCache(soupName);
+    var cacheForOriginals = new Force.StoreCache(soupNameForOriginals);
+    var Account = Force.SObject.extend({sobjectType:"Account", fieldlist:["Id", "Name"], cache:cache, cacheForOriginals:cacheForOriginals});
+    var account = new Account();
+    var accountSave = optionsPromiser(account, "save", "account");
+    var id;
 
-    QUnit.ok(false, "Test not implemented");
-
-    self.finalizeTest();
+    $.when(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals))
+        .then(function() {
+            console.log("## Initialization of StoreCaches");
+            return $.when(cache.init(), cacheForOriginals.init());
+        })
+        .then(function() {
+            console.log("## Trying save with default cacheMode and mergeMode");
+            account.set({Name:"TestAccount"});
+            return accountSave(null);
+        })
+        .then(function(obj) {
+            QUnit.equals(obj, account, "Should return back the account object");
+            id = account.id;
+            return checkResultServerAndCaches(account.attributes, {Id:id, Name:"TestAccount"}, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount"}, cache, {Id:id, Name:"TestAccount"}, cacheForOriginals);
+        })
+        .then(function() {
+            console.log("## Cleaning up");
+            return $.when(Force.forcetkClient.del("account", id), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
 };
 
 /** 
@@ -1757,10 +1816,44 @@ ForceEntityTestSuite.prototype.testSObjectSave = function() {
 ForceEntityTestSuite.prototype.testSObjectDestroy = function() {
     console.log("# In ForceEntityTestSuite.testSObjectDestroy");
     var self = this;
+    var soupName = "testSObjectDestroy";
+    var soupNameForOriginals = "originalsFor" + soupName;
+    var cache = new Force.StoreCache(soupName);
+    var cacheForOriginals = new Force.StoreCache(soupNameForOriginals);
+    var Account = Force.SObject.extend({sobjectType:"Account", fieldlist:["Id", "Name"], cache:cache, cacheForOriginals:cacheForOriginals});
+    var account = new Account();
+    var accountSave = optionsPromiser(account, "save", "account");
+    var accountDestroy = optionsPromiser(account, "destroy", "account");
+    var id;
 
-    QUnit.ok(false, "Test not implemented");
-
-    self.finalizeTest();
+    $.when(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals))
+        .then(function() {
+            console.log("## Initialization of StoreCaches");
+            return $.when(cache.init(), cacheForOriginals.init());
+        })
+        .then(function() {
+            console.log("## Trying destroy with default cacheMode and mergeMode");
+            account.set({Name:"TestAccount"});
+            return accountSave(null);
+        })
+        .then(function() {
+            id = account.id;
+            return checkResultServerAndCaches(account.attributes, {Id:id, Name:"TestAccount"}, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount"}, cache, {Id:id, Name:"TestAccount"}, cacheForOriginals);
+        })
+        .then(function() {
+            console.log("## Trying destroy with default cacheMode and mergeMode");
+            return accountDestroy();
+        })
+        .then(function() {
+            return checkResultServerAndCaches(null, null, id, null, null, cache, null, cacheForOriginals);
+        })
+        .then(function() {
+            console.log("## Cleaning up");
+            return $.when(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
 };
 
 /** 
@@ -1869,7 +1962,7 @@ ForceEntityTestSuite.prototype.testFetchSObjects = function() {
     var self = this;
     var idToName = {};
     var soupName = "testFetchSObjects";
-    var originalsSoupName = "originals-" + soupName;
+    var soupNameForOriginals = "originalsFor" + soupName;
     var cache;
     var cacheForOriginals;
 
@@ -1877,7 +1970,7 @@ ForceEntityTestSuite.prototype.testFetchSObjects = function() {
         .then(function() {
             console.log("## Initialization of StoreCache's");
             cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
-            cacheForOriginals = new Force.StoreCache(originalsSoupName, [ {path:"Name", type:"string"} ]);
+            cacheForOriginals = new Force.StoreCache(soupNameForOriginals, [ {path:"Name", type:"string"} ]);
             return $.when(cache.init(), cacheForOriginals.init());
         })
         .then(function() { 
@@ -1960,7 +2053,7 @@ ForceEntityTestSuite.prototype.testFetchSObjects = function() {
             QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
 
             console.log("## Cleaning up");
-            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(originalsSoupName));
+            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
         })
         .then(function() {
             self.finalizeTest();
@@ -1975,7 +2068,7 @@ ForceEntityTestSuite.prototype.testCollectionFetch = function() {
     var self = this;
     var idToName = {};
     var soupName = "testFetchSObjects";
-    var originalsSoupName = "originals-" + soupName;
+    var soupNameForOriginals = "originalsFor" + soupName;
     var cache;
     var cacheForOriginals;
     var collection = new Force.SObjectCollection();
@@ -1988,7 +2081,7 @@ ForceEntityTestSuite.prototype.testCollectionFetch = function() {
         .then(function() {
             console.log("## Initialization of StoreCache's");
             cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
-            cacheForOriginals = new Force.StoreCache(originalsSoupName, [ {path:"Name", type:"string"} ]);
+            cacheForOriginals = new Force.StoreCache(soupNameForOriginals, [ {path:"Name", type:"string"} ]);
             return $.when(cache.init(), cacheForOriginals.init());
         })
         .then(function() { 
@@ -2071,7 +2164,7 @@ ForceEntityTestSuite.prototype.testCollectionFetch = function() {
             QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
 
             console.log("## Cleaning up");
-            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(originalsSoupName));
+            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
         })
         .then(function() {
             self.finalizeTest();
@@ -2158,10 +2251,10 @@ var optionsPromiser = function(object, methodName, objectName) {
     var retfn = function () {
         var args = $.makeArray(arguments);
         var d = $.Deferred();
-        if (args.length == 0) { args.push({}); }
+        if (args.length == 0 || !_.isObject(_.last(args))) { args.push({}); }
         var options = _.last(args);
-        options.success = function() {d.resolve.apply(d, arguments); };
-        options.error = function() { d.reject.apply(d, arguments); };
+        options.success = function() {d.resolve.apply(d, arguments);};
+        options.error = function() {d.reject.apply(d, arguments);};
         console.log("-----> Calling " + objectName + ":" + methodName);
         object[methodName].apply(object, args);
         return d.promise();
