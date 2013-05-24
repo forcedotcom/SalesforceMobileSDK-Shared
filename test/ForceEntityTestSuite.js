@@ -2209,8 +2209,10 @@ var getCaller = function() {
 	try {
 		throw new Error();
 	} catch ( e ) {
-		var entry = e.stack.split("\n")[3]; // 0->Error, 1-->getCaller, 2-->assertContains or checkLocalFlags, 3-->the caller we are interested in!
-        return entry.match(/\((.*)\)/)[1]; // we only want the source:lineNumber, the function name will be useless with all the promises
+        var simplifiedStack = _.filter(_.map(e.stack.split("\n"), 
+                                             function(line) {var m = line.match(/ForceEntityTestSuite.js:[0-9]*:[0-9]*/); return m == null ? null : m[0];}),
+                                       function(x) { return x != null; });
+        return simplifiedStack[2]; // 0->getCaller, 1-->assertContains or checkLocalFlags, 2-->the caller we are interested in!
 	} 
 }
 
