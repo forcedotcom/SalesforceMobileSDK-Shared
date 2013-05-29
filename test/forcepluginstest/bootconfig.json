@@ -1,10 +1,10 @@
 {
-    "remoteAccessConsumerKey": "__NOT_USED__",
-    "oauthRedirectURI": "__NOT_USED__",
-    "oauthScopes": ["__NOT_USED__"],
+    "remoteAccessConsumerKey": "3MVG92.uWdyphVj4bnolD7yuIpCQsNgddWtqRND3faxrv9uKnbj47H4RkwheHA2lKY4cBusvDVp0M6gdGE8hp",
+    "oauthRedirectURI": "sfdc:///axm/detect/oauth/done",
+    "oauthScopes": ["api"],
     "isLocal": true,
     "startPage": "index.html",
     "errorPage": "error.html",
-    "shouldAuthenticate": false,
+    "shouldAuthenticate": true,
     "attemptOfflineLoad": false
 }
