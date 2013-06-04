@@ -71,7 +71,7 @@
     // apiVersion: apiVersion to use, when null, v27.0 (Spring' 13) is used
     // innerForcetkClient: [Optional] A fully initialized forcetkClient to be re-used internally in this entity framework
     Force.init = function(creds, apiVersion, innerForcetkClient) {
-        apiVersion = apiVersion || "v27.0";
+        apiVersion = apiVersion || "v28.0";
         if(!innerForcetkClient) {
             innerForcetkClient = new forcetk.Client(creds.clientId, creds.loginUrl, creds.proxyUrl);
             innerForcetkClient.setSessionToken(creds.accessToken, apiVersion, creds.instanceUrl);
@@ -89,6 +89,7 @@
         forcetkClient.search = promiser(innerForcetkClient, "search", "forcetkClient");
         forcetkClient.metadata = promiser(innerForcetkClient, "metadata", "forcetkClient");
         forcetkClient.describe = promiser(innerForcetkClient, "describe", "forcetkClient");
+        forcetkClient.describeLayout = promiser(innerForcetkClient, "describeLayout", "forcetkClient");
 
         // Exposing outside
         Force.forcetkClient = forcetkClient;
@@ -421,13 +422,14 @@
         // Check first if cache exists and if data exists in cache.
         // Then update the current instance with data from cache.
         var cacheRetrieve = function() { 
-            if (that.cache) {
+            if (that.cache && !wasReadFromCache) {
                 return that.cache.retrieve(that.sobjectType)
                         .then(function(data) {
                             if (data) {
                                 wasReadFromCache = (data != null); 
                                 that._describeResult = data.describeResult;
                                 that._metadataResult = data.metadataResult;
+                                that._layoutInfos = data.layoutInfos;
                             }
                         });
             }
@@ -439,7 +441,8 @@
             if (!wasReadFromCache && that.cache) {
                 var record = {
                     describeResult: that._describeResult, 
-                    metadataResult: that._metadataResult
+                    metadataResult: that._metadataResult,
+                    layoutInfos: that._layoutInfos
                 };
 
                 record[that.cache.keyField] = that.sobjectType;
@@ -478,6 +481,19 @@
             }
         };
 
+        // If no layout data exists for this record type on the instance, 
+        // get it from server.
+        var serverDescribeLayoutUnlessCached = function(recordTypeId) { 
+            if(!that._layoutInfos || !that._layoutInfos[recordTypeId]) {
+                wasReadFromCache = false;
+                return forcetkClient.describeLayout(that.sobjectType, recordTypeId)
+                        .then(function(layoutResult) {
+                            if (!that._layoutInfos) that._layoutInfos = {};
+                            that._layoutInfos[recordTypeId] = layoutResult;
+                        });
+            }
+        };
+
         /*----- EXTERNAL METHODS ------*/
         return {
             // Returns a promise, which once resolved 
@@ -502,6 +518,28 @@
                         .then(cacheSave)
                         .then(function() {
                             return that._metadataResult;
+                        });
+            },
+            // Returns a promise, which once resolved
+            // returns layout information associated 
+            // to a particular record type.
+            // @param recordTypeId (Default: 012000000000000AAA)
+            describeLayout: function(recordTypeId) {
+                that = this;
+                // Defaults to Record type id of Master
+                if (!recordTypeId) recordTypeId = '012000000000000AAA';
+                if (that._layoutInfos) {
+                    var layoutInfo = this._layoutInfos[recordTypeId];
+                    if (layoutInfo) return $.when(layoutInfo);
+                }
+
+                return $.when(cacheRetrieve())
+                        .then(function() { 
+                            return serverDescribeLayoutUnlessCached(recordTypeId); 
+                        })
+                        .then(cacheSave)
+                        .then(function() { 
+                            return that._layoutInfos[recordTypeId]; 
                         });
             },
             // Returns a promise, which once resolved clears 

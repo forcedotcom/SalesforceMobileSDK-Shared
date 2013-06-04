@@ -133,7 +133,7 @@ if (forcetk.Client === undefined) {
     forcetk.Client.prototype.setSessionToken = function(sessionId, apiVersion, instanceUrl) {
         this.sessionId = sessionId;
         this.apiVersion = (typeof apiVersion === 'undefined' || apiVersion === null)
-        ? 'v27.0': apiVersion;
+        ? 'v28.0': apiVersion;
         if (typeof instanceUrl === 'undefined' || instanceUrl == null) {
             // location.hostname can be of the form 'abc.na1.visual.force.com',
             // 'na1.salesforce.com' or 'abc.my.salesforce.com' (custom domains). 
@@ -363,6 +363,19 @@ if (forcetk.Client === undefined) {
     forcetk.Client.prototype.describe = function(objtype, callback, error) {
         return this.ajax('/' + this.apiVersion + '/sobjects/' + objtype
         + '/describe/', callback, error);
+    }
+
+    /*
+     * Fetches the layout configuration for a particular sobject type and record type id.
+     * @param objtype object type; e.g. "Account"
+     * @param (Optional) recordTypeId Id of the layout's associated record type
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    forcetk.Client.prototype.describeLayout = function(objtype, recordTypeId, callback, error) {
+        recordTypeId = recordTypeId ? recordTypeId : '';
+        return this.ajax('/' + this.apiVersion + '/sobjects/' + objtype
+        + '/describe/layouts/' + recordTypeId, callback, error);
     }
 
     /*

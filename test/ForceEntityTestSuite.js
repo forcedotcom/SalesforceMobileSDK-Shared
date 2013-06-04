@@ -513,6 +513,44 @@ ForceEntityTestSuite.prototype.testSObjectTypeGetMetadata = function() {
 }
 
 /** 
+ * TEST Force.SObjectType.describeLayout
+ */
+ForceEntityTestSuite.prototype.testSObjectTypeDescribeLayout = function() {
+    console.log("# In ForceEntityTestSuite.testSObjectTypeDescribeLayout");
+    var self = this;
+    var soupName = "testSoupForSObjectType";
+    var cache;
+    var describeLayoutResult;
+
+    Force.smartstoreClient.removeSoup(soupName)
+    .then(function() {
+        console.log("## Initialization of StoreCache");
+        cache = new Force.StoreCache(soupName);
+        return cache.init();
+    })
+    .then(function() { 
+        console.log("## Calling describe layout");
+        var sobjectType = new Force.SObjectType("Account", cache);
+        return sobjectType.describeLayout();
+    })
+    .then(function(data) {
+        describeLayoutResult = data;
+        QUnit.equals(_.has(describeLayoutResult, "detailLayoutSections"), true, "Detail layout sections expected");
+        console.log("## Checking underlying cache");
+        return cache.retrieve("Account");
+    })
+    .then(function(cacheRow) {    
+        assertContains(describeLayoutResult, cacheRow.layoutInfos['012000000000000AAA']);
+        console.log("## Cleaning up");
+        return Force.smartstoreClient.removeSoup(soupName);
+    })
+    .then(function() {
+        self.finalizeTest();
+    });
+
+}
+
+/** 
  * TEST Force.SObjectType.reset
  */
 ForceEntityTestSuite.prototype.testSObjectTypeRest = function() {
