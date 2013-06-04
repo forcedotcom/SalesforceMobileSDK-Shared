@@ -293,7 +293,7 @@ cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
      *   userAgent
      */
     var authenticate = function (success, fail) {
-        exec(SDK_VERSION, success, fail, SERVICE, "authenticate");
+        exec(SDK_VERSION, success, fail, SERVICE, "authenticate", []);
     };
 
     /**
