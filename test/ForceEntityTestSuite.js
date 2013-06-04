@@ -513,10 +513,124 @@ ForceEntityTestSuite.prototype.testSObjectTypeGetMetadata = function() {
 }
 
 /** 
+ * TEST Force.SObjectType.describeLayout
+ */
+ForceEntityTestSuite.prototype.testSObjectTypeDescribeLayout = function() {
+    console.log("# In ForceEntityTestSuite.testSObjectTypeDescribeLayout");
+    var self = this;
+    var soupName = "testSoupForSObjectType";
+    var cache;
+    var describeLayoutResult;
+
+    Force.smartstoreClient.removeSoup(soupName)
+    .then(function() {
+        console.log("## Initialization of StoreCache");
+        cache = new Force.StoreCache(soupName);
+        return cache.init();
+    })
+    .then(function() { 
+        console.log("## Calling describe layout");
+        var sobjectType = new Force.SObjectType("Account", cache);
+        return sobjectType.describeLayout();
+    })
+    .then(function(data) {
+        describeLayoutResult = data;
+        QUnit.equals(_.has(describeLayoutResult, "detailLayoutSections"), true, "Detail layout sections expected");
+        console.log("## Checking underlying cache");
+        return cache.retrieve("Account");
+    })
+    .then(function(cacheRow) {    
+        assertContains(describeLayoutResult, cacheRow['layoutInfo_012000000000000AAA']);
+        console.log("## Cleaning up");
+        return Force.smartstoreClient.removeSoup(soupName);
+    })
+    .then(function() {
+        self.finalizeTest();
+    });
+}
+
+/** 
+ * TEST Force.SObjectType cache merge by multiple instances
+ */
+ForceEntityTestSuite.prototype.testSObjectTypeCacheMerge = function() {
+    console.log("# In ForceEntityTestSuite.testSObjectTypeCacheMerge");
+    var self = this;
+    var soupName = "testSoupForSObjectType";
+    var cache, describeResult, metadataResult;
+
+    Force.smartstoreClient.removeSoup(soupName)
+    .then(function() {
+        console.log("## Initialization of StoreCache");
+        cache = new Force.StoreCache(soupName);
+        return cache.init();
+    })
+    .then(function() { 
+        console.log("## Calling describe layout");
+        var sobjectType1 = new Force.SObjectType("Account", cache);
+        var sobjectType2 = new Force.SObjectType("Account", cache);
+        return $.when(sobjectType1.describe(), sobjectType2.getMetadata());
+    })
+    .then(function(data1, data2) {
+        describeResult = data1;
+        metadataResult = data2;
+        // Fetch the cache row to check if both describeResult and metadata Result are saved.
+        console.log("## Checking underlying cache");
+        return cache.retrieve("Account");
+    })
+    .then(function(cacheRow) {    
+        assertContains(describeResult, cacheRow.describeResult);
+        assertContains(metadataResult, cacheRow.metadataResult);
+        console.log("## Cleaning up");
+        return Force.smartstoreClient.removeSoup(soupName);
+    })
+    .then(function() {
+        self.finalizeTest();
+    });
+}
+
+/** 
+ * TEST Force.SObjectType multiple types
+ */
+ForceEntityTestSuite.prototype.testMultiSObjectTypes = function() {
+    console.log("# In ForceEntityTestSuite.testMultiSObjectTypes");
+    var self = this;
+    var soupName = "testSoupForSObjectType";
+    var cache, accountDescribe, contactDescribe;
+
+    Force.smartstoreClient.removeSoup(soupName)
+    .then(function() {
+        console.log("## Initialization of StoreCache");
+        cache = new Force.StoreCache(soupName);
+        return cache.init();
+    })
+    .then(function() { 
+        console.log("## Calling describe layout");
+        var accountType = new Force.SObjectType("Account", cache);
+        var contactType = new Force.SObjectType("Contact", cache);
+        return $.when(accountType.describe(), contactType.describe());
+    })
+    .then(function(data1, data2) {
+        accountDescribe = data1;
+        contactDescribe = data2;
+        console.log("## Checking underlying cache");
+        return $.when(cache.retrieve("Account"), cache.retrieve("Contact"));
+    })
+    .then(function(accountCache, contactCache) {    
+        assertContains(accountDescribe, accountCache.describeResult);
+        assertContains(contactDescribe, contactCache.describeResult);
+        console.log("## Cleaning up");
+        return Force.smartstoreClient.removeSoup(soupName);
+    })
+    .then(function() {
+        self.finalizeTest();
+    });
+}
+
+/** 
  * TEST Force.SObjectType.reset
  */
-ForceEntityTestSuite.prototype.testSObjectTypeRest = function() {
-    console.log("# In ForceEntityTestSuite.testSObjectTypeRest");
+ForceEntityTestSuite.prototype.testSObjectTypeReset = function() {
+    console.log("# In ForceEntityTestSuite.testSObjectTypeReset");
     var self = this;
     var soupName = "testSoupForSObjectType";
     var cache;
