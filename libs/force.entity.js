@@ -68,7 +68,7 @@
 
     // Init function
     // creds: credentials returned by authenticate call
-    // apiVersion: apiVersion to use, when null, v27.0 (Spring' 13) is used
+    // apiVersion: apiVersion to use, when null, v28.0 (Summer '13) is used
     // innerForcetkClient: [Optional] A fully initialized forcetkClient to be re-used internally in this entity framework
     Force.init = function(creds, apiVersion, innerForcetkClient) {
         apiVersion = apiVersion || "v28.0";
@@ -410,88 +410,89 @@
     Force.SObjectType = function (sobjectType, cache) {
         this.sobjectType = sobjectType;
         this.cache = cache;
+        this._data = {};
+        this._cacheSynced = false;
     };
 
     _.extend(Force.SObjectType.prototype, (function() {
         //TBD: Should we support cache modes here too.
-        var that;
-        var wasReadFromCache = false;
 
         /*----- INTERNAL METHODS ------*/
         // Cache actions helper
         // Check first if cache exists and if data exists in cache.
         // Then update the current instance with data from cache.
-        var cacheRetrieve = function() { 
-            if (that.cache && !wasReadFromCache) {
+        var cacheRetrieve = function(that) { 
+            // Always fetch from the cache again so as to obtain the
+            // changes done to the cache by other instances of this SObjectType.
+            if (that.cache) {
                 return that.cache.retrieve(that.sobjectType)
                         .then(function(data) {
                             if (data) {
-                                wasReadFromCache = (data != null); 
-                                that._describeResult = data.describeResult;
-                                that._metadataResult = data.metadataResult;
-                                that._layoutInfos = data.layoutInfos;
+                                that._cacheSynced = (data != null); 
+                                that._data = data;
                             }
+                            return that;
                         });
-            }
+            } else return that;
         };
 
         // Check first if cache exists.
         // Then save the current instance data to cache.
-        var cacheSave = function() {
-            if (!wasReadFromCache && that.cache) {
-                var record = {
-                    describeResult: that._describeResult, 
-                    metadataResult: that._metadataResult,
-                    layoutInfos: that._layoutInfos
-                };
-
-                record[that.cache.keyField] = that.sobjectType;
-                return that.cache.save(record);
-            }
+        var cacheSave = function(that) {
+            if (!that._cacheSynced && that.cache) {
+                that._data[that.cache.keyField] = that.sobjectType;
+                return that.cache.save(that._data).then(function(){
+                    that._cacheSynced = true;
+                    return that;
+                });
+            } else return that;
         };
 
         // Check first if cache exists. If yes, then 
         // clear any data from the cache for this sobject type.
-        var cacheClear = function() {
+        var cacheClear = function(that) {
             if (that.cache) {
-                return that.cache.remove(that.sobjectType);
-            }
+                return that.cache.remove(that.sobjectType)
+                            .then(function() { return that; });
+            } else return that;
         };
         
         // Server action helper
         // If no describe data exists on the instance, get it from server.
-        var serverDescribeUnlessCached = function() { 
-            if(!that._describeResult) {
-                wasReadFromCache = false;
+        var serverDescribeUnlessCached = function(that) { 
+            if(!that._data.describeResult) {
                 return forcetkClient.describe(that.sobjectType)
                         .then(function(describeResult) {
-                            that._describeResult = describeResult;
+                            that._data.describeResult = describeResult;
+                            that._cacheSynced = false;
+                            return that;
                         });
-            }
+            } else return that;
         };
 
         // If no metadata data exists on the instance, get it from server.
-        var serverMetadataUnlessCached = function() { 
-            if(!that._metadataResult) {
-                wasReadFromCache = false;
+        var serverMetadataUnlessCached = function(that) { 
+            if(!that._data.metadataResult) {
                 return forcetkClient.metadata(that.sobjectType)
                         .then(function(metadataResult) {
-                            that._metadataResult = metadataResult;
+                            that._data.metadataResult = metadataResult;
+                            that._cacheSynced = false;
+                            return that;
                         });
-            }
+            } else return that;
         };
 
         // If no layout data exists for this record type on the instance, 
         // get it from server.
-        var serverDescribeLayoutUnlessCached = function(recordTypeId) { 
-            if(!that._layoutInfos || !that._layoutInfos[recordTypeId]) {
-                wasReadFromCache = false;
+        var serverDescribeLayoutUnlessCached = function(that, recordTypeId) { 
+            if(!that._data["layoutInfo_" + recordTypeId]) {
                 return forcetkClient.describeLayout(that.sobjectType, recordTypeId)
                         .then(function(layoutResult) {
-                            if (!that._layoutInfos) that._layoutInfos = {};
-                            that._layoutInfos[recordTypeId] = layoutResult;
+                            that._data["layoutInfo_" + recordTypeId] = layoutResult;
+                            that._cacheSynced = false;
+                            return that;
                         });
-            }
+            } else return that;
         };
 
         /*----- EXTERNAL METHODS ------*/
@@ -499,25 +500,25 @@
             // Returns a promise, which once resolved 
             // returns describe data of the sobject.
             describe: function() {
-                that = this;
-                if (that._describeResult) return $.when(that._describeResult);
-                else return $.when(cacheRetrieve())
+                var that = this;
+                if (that._data.describeResult) return $.when(that._data.describeResult);
+                else return $.when(cacheRetrieve(that))
                         .then(serverDescribeUnlessCached)
                         .then(cacheSave)
                         .then(function() {
-                            return that._describeResult;
+                            return that._data.describeResult;
                         });
             },
             // Returns a promise, which once resolved 
             // returns metadata of the sobject. 
             getMetadata: function() {
-                that = this;
-                if (that._metadataResult) return $.when(that._metadataResult);
-                else return $.when(cacheRetrieve())
+                var that = this;
+                if (that._data.metadataResult) return $.when(that._data.metadataResult);
+                else return $.when(cacheRetrieve(that))
                         .then(serverMetadataUnlessCached)
                         .then(cacheSave)
                         .then(function() {
-                            return that._metadataResult;
+                            return that._data.metadataResult;
                         });
             },
             // Returns a promise, which once resolved
@@ -525,30 +526,27 @@
             // to a particular record type.
             // @param recordTypeId (Default: 012000000000000AAA)
             describeLayout: function(recordTypeId) {
-                that = this;
+                var that = this;
                 // Defaults to Record type id of Master
                 if (!recordTypeId) recordTypeId = '012000000000000AAA';
-                if (that._layoutInfos) {
-                    var layoutInfo = this._layoutInfos[recordTypeId];
-                    if (layoutInfo) return $.when(layoutInfo);
+                if (that._data["layoutInfo_" + recordTypeId]) {
+                    return $.when(that._data["layoutInfo_" + recordTypeId]);
                 }
 
-                return $.when(cacheRetrieve())
-                        .then(function() { 
-                            return serverDescribeLayoutUnlessCached(recordTypeId); 
-                        })
+                return $.when(cacheRetrieve(that), recordTypeId)
+                        .then(serverDescribeLayoutUnlessCached)
                         .then(cacheSave)
                         .then(function() { 
-                            return that._layoutInfos[recordTypeId]; 
+                            return that._data["layoutInfo_" + recordTypeId];
                         });
             },
             // Returns a promise, which once resolved clears 
             // the cached data for the current sobject type.
             reset: function() {
-                that = this;
-                wasReadFromCache = false;
-                that._metadataResult = that._describeResult = undefined;
-                return $.when(cacheClear());
+                var that = this;
+                that._cacheSynced = false;
+                that._data = {};
+                return $.when(cacheClear(that));
             }
         }
     })());
