@@ -103,23 +103,8 @@ if (forcetk.Client === undefined) {
      * @param error function to call on failure
      */
     forcetk.Client.prototype.refreshAccessToken = function(callback, error) {
-        var that = this;
-        var url = this.loginUrl + '/services/oauth2/token';
-        return $j.ajax({
-            type: 'POST',
-            url: (this.proxyUrl !== null) ? this.proxyUrl: url,
-            cache: false,
-            processData: false,
-            data: 'grant_type=refresh_token&client_id=' + this.clientId + '&refresh_token=' + this.refreshToken,
-            success: callback,
-            error: error,
-            dataType: "json",
-            beforeSend: function(xhr) {
-                if (that.proxyUrl !== null) {
-                    xhr.setRequestHeader('SalesforceProxy-Endpoint', url);
-                }
-            }
-        });
+        var sfOAuthPlugin = cordova.require("salesforce/plugin/oauth");
+        sfOAuthPlugin.authenticate(callback, error);
     }
 
     /**
@@ -176,8 +161,11 @@ if (forcetk.Client === undefined) {
             error: (!this.refreshToken || retry ) ? error : function(jqXHR, textStatus, errorThrown) {
                 if (jqXHR.status === 401) {
                     that.refreshAccessToken(function(oauthResponse) {
-                        that.setSessionToken(oauthResponse.access_token, null,
-                        oauthResponse.instance_url);
+                        var oauthResponseData = oauthResponse;
+                        if (oauthResponse.data)  {
+                            oauthResponseData = oauthResponse.data;
+                        }
+                        that.setSessionToken(oauthResponseData.accessToken, null, oauthResponseData.instanceUrl);
                         that.ajax(path, callback, error, method, payload, true);
                     }, error);
                 } else {
@@ -244,7 +232,11 @@ if (forcetk.Client === undefined) {
                 //refresh token in 401
                 else if(request.status == 401 && !retry) {
                     that.refreshAccessToken(function(oauthResponse) {
-                        that.setSessionToken(oauthResponse.access_token, null, oauthResponse.instance_url);
+                        var oauthResponseData = oauthResponse;
+                        if (oauthResponse.data)  {
+                            oauthResponseData = oauthResponse.data;
+                        }
+                        that.setSessionToken(oauthResponseData.accessToken, null, oauthResponseData.instanceUrl);
                         that.getChatterFile(path, mimeType, callback, error, true);
                     }, error);
                 } else {
@@ -281,8 +273,11 @@ if (forcetk.Client === undefined) {
             error: (!this.refreshToken || retry ) ? error : function(jqXHR, textStatus, errorThrown) {
                 if (jqXHR.status === 401) {
                     that.refreshAccessToken(function(oauthResponse) {
-                        that.setSessionToken(oauthResponse.access_token, null,
-                        oauthResponse.instance_url);
+                        var oauthResponseData = oauthResponse;
+                        if (oauthResponse.data)  {
+                            oauthResponseData = oauthResponse.data;
+                        }
+                        that.setSessionToken(oauthResponseData.accessToken, null, oauthResponseData.instanceUrl);
                         that.apexrest(path, callback, error, method, payload, paramMap, true);
                     },
                     error);
