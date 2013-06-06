@@ -30,6 +30,13 @@
 var readline = require('readline');
 var outputColors = require('./outputColors');
 
+/**
+ * Parses an array of command line arguments, each of the form '--argName=argValue', or
+ * optionally, '--argName'.
+ *
+ * @param {Array} argsArray The array of String arguments of the specified format.
+ * @return A map in the form of { 'argName': 'argValue' [, ...] }
+ */ 
 var parseArgs = function(argsArray) {
     var argMap = {};
     for (var i = 0; i < argsArray.length; i++) {
@@ -46,78 +53,69 @@ var parseArgs = function(argsArray) {
 
     return argMap;
 };
-module.exports.parseArgs = parseArgs;
 
-module.exports.requiredArgsPresent = function(argMap, argNamesArray) {
-    var allRequiredArgsPresent = true;
-    for (var i = 0; i < argNamesArray.length; i++) {
-        var argNameObj = argNamesArray[i];
-        var valueRequired = true;
-        var argName;
-        if (typeof argNameObj === 'string') {
-            argName = argNameObj;
-        } else {
-            // Additional options for arg parsing.
-            if (!validateExtendedArgObject(argNameObj)) {
-                return false;
-            }
-            argName = argNameObj.name;
-            valueRequired = argNameObj.valueRequired;
-        }
-
-        var argVal = argMap[argName];
-        if (typeof argVal === 'undefined') {
-            console.log('The required argument \'' + argName + '\' is not present.');
-            allRequiredArgsPresent = false;
-        } else if ((argVal === null || argVal.trim() === '') && valueRequired) {
-            console.log('The argument \'' + argName + '\' requires a value.');
-            allRequiredArgsPresent = false;
-        }
-    }
-    
-    return allRequiredArgsPresent;
-};
-
-function validateExtendedArgObject(arg) {
-    if (typeof arg !== 'object') {
-        console.log('Extended arg is not an object (' + (typeof arg) + ').');
-        return false;
-    }
-    if (typeof arg.name !== 'string') {
-        console.log('Extended arg\'s \'name\' property must be a string (currently \'' + (typeof arg.name) + '\').');
-        return false;
-    }
-    if (arg.name.trim() === '') {
-        console.log('Arg name cannot be empty.');
-        return false;
-    }
-    if (typeof arg.valueRequired !== 'boolean') {
-        console.log('Extended arg\'s \'valueRequired\' property must be a boolean (currently \'' + (typeof arg.valueRequired) + '\').');
-        return false;
-    }
-
-    return true;
-}
-
-module.exports.processArgsInteractive = function(argsArray, argProcessorList, callback) {
+/**
+ * A method to process command line arguments interactively.  Any arguments that were not specified
+ * on the command line will be prompted for on stdin, for the user to configure.
+ *
+ * @param {Array} argsArray The array of command line arguments (if any), of the form --argName=argValue, or --argName.
+ * @param {ArgProcessorList} argProcessorList A list of arguments and their various processing characteristics.
+ * @param {Function} callback The callback method to invoke once all arguments have been processed.
+ */
+var processArgsInteractive = function(argsArray, argProcessorList, callback) {
     // Get any initial arguments from the command line.
     var argsMap = parseArgs(argsArray);
 
     processArgsInteractiveHelper(argsMap, argProcessorList, callback, 0);
 };
 
+/**
+ * (Recursive) helper function for processArgsInteractive.
+ * @param argsMap A map of arguments in the form of { 'argName': 'argValue' [, ...] }.
+ * @param {ArgProcessorList} argProcessorList A list of arguments and their various processing characteristics.
+ * @param {Function} callback The callback method to invoke once all arguments have been processed.
+ * @param {Number} currentIndex The index of the current argument being processed.
+ */
 var processArgsInteractiveHelper = function(argsMap, argProcessorList, callback, currentIndex) {
     if (currentIndex === argProcessorList.processorList.length)
         return callback(argsMap);
 
     var argProcessor = argProcessorList.processorList[currentIndex];
     var initialArgValue = argsMap[argProcessor.argName];
-    processArgument(initialArgValue, argsMap, argProcessor, function(resultArgValue) {
-        argsMap[argProcessor.argName] = resultArgValue;
-        processArgsInteractiveHelper(argsMap, argProcessorList, callback, currentIndex + 1);
-    })
+
+    // Arg preprocessors determine whether an arg should even be presented as an option.
+    if (typeof argProcessor.preprocessorFunction === 'undefined') {
+        // By default, process each argument.
+        processArgument(initialArgValue, argsMap, argProcessor, function(resultArgValue) {
+            argsMap[argProcessor.argName] = resultArgValue;
+            processArgsInteractiveHelper(argsMap, argProcessorList, callback, currentIndex + 1);
+        });
+    } else {
+        var shouldProcessArgument = argProcessor.preprocessorFunction(argsMap);
+        if (shouldProcessArgument) {
+            processArgument(initialArgValue, argsMap, argProcessor, function(resultArgValue) {
+                argsMap[argProcessor.argName] = resultArgValue;
+                processArgsInteractiveHelper(argsMap, argProcessorList, callback, currentIndex + 1);
+            });
+        } else {
+            // If the user specified a value already, warn them that it won't be used.
+            if (typeof initialArgValue !== 'undefined') {
+                console.log(outputColors.yellow + 'WARNING: ' + outputColors.reset
+                    + '\'' + argProcessor.argName + '\' is not a valid argument in this scenario, and its value will be ignored.');
+                argsMap[argProcessor.argName] = undefined;
+            }
+            processArgsInteractiveHelper(argsMap, argProcessorList, callback, currentIndex + 1);
+        }
+    }
 };
 
+/**
+ * Evaluates an argument value against its argument processor
+ * @param {String} argValue The specified value of the argument.
+ * @param argsMap A map of arguments in the form of { 'argName': 'argValue' [, ...] }.
+ * @param {ArgProcessor} argProcessor The argument processor, used to evaluate the arg value.
+ * @param {Function} postProcessingCallback The callback to invoke once a valid arg value has been determined.
+ */
 var processArgument = function(argValue, argsMap, argProcessor, postProcessingCallback) {
     // NB: If argValue is undefined (i.e. no initial command line input), even for optional arguments the user must
     // be prompted at least once.
@@ -154,18 +152,40 @@ var processArgument = function(argValue, argsMap, argProcessor, postProcessingCa
     });
 };
 
+/**
+ * Creates an instance of an ArgProcessorList.
+ *
+ * @constructor
+ */
 var ArgProcessorList = function() {
     this.processorList = [];
 };
 
-ArgProcessorList.prototype.addArgProcessor = function(argName, inputPrompt, processorFunction) {
-    var argProcessor = new ArgProcessor(argName, inputPrompt, processorFunction);
+/**
+ * Adds an ArgProcessor to the list of processors.
+ *
+ * @param {String} argName The name of the argument.
+ * @param {String} inputPrompt The prompt to show the user, when interactively configuring the arg value.
+ * @param {Function} processorFunction The function used to validate the arg value.
+ * @param {Function} preprocessorFunction An optional function that can be used to determine whether the argument should be configured.
+ * @return {ArgProcessorList} The updated ArgProcessorList, for chaining calls.
+ */
+ArgProcessorList.prototype.addArgProcessor = function(argName, inputPrompt, processorFunction, preprocessorFunction) {
+    var argProcessor = new ArgProcessor(argName, inputPrompt, processorFunction, preprocessorFunction);
     this.processorList.push(argProcessor);
     return this;
 };
-module.exports.ArgProcessorList = ArgProcessorList;
 
-var ArgProcessor = function(argName, inputPrompt, processorFunction) {
+/**
+ * Creates an instance of the ArgProcessor object.
+ *
+ * @constructor
+ * @param {String} argName The name of the argument.
+ * @param {String} inputPrompt The prompt to show the user, when interactively configuring the arg value.
+ * @param {Function} processorFunction The function used to validate the arg value.
+ * @param {Function} preprocessorFunction An optional function that can be used to determine whether the argument should be configured.
+ */
+var ArgProcessor = function(argName, inputPrompt, processorFunction, preprocessorFunction) {
     if ((typeof argName !== 'string') || argName.trim() === '') {
         throw new Error('Invalid value for argName: \'' + argName + '\'.');
     }
@@ -175,12 +195,24 @@ var ArgProcessor = function(argName, inputPrompt, processorFunction) {
     if (typeof processorFunction !== 'function') {
         throw new Error('processorFunction should be a function.');
     }
+    if ((typeof preprocessorFunction !== 'undefined') && (typeof preprocessorFunction !== 'function')) {
+        throw new Error('If defined, preprocessorFunction should be a function.');
+    }
 
     this.argName = argName;
     this.inputPrompt = inputPrompt;
     this.processorFunction = processorFunction;
+    this.preprocessorFunction = preprocessorFunction;
+    console.log('preprocessorFunction: ' + (typeof this.preprocessorFunction));
 };
 
+/**
+ * Creates an instance of the ArgProcessorOutput object, used to return the result of processing an arg value.
+ *
+ * @constructor
+ * @param {Boolean} isValid Whether or not the arg value was a valid value.
+ * @param {String} messageOrReplacementValue Optional value. If arg is not valid, a message explaining the failure.  If valid, an optional replacment value for the argument.
+ */
 var ArgProcessorOutput = function(isValid, messageOrReplacementValue) {
 
     // If an argument is valid (isValid == true), there won't need to be a message
@@ -202,4 +234,10 @@ var ArgProcessorOutput = function(isValid, messageOrReplacementValue) {
             this.message = messageOrReplacementValue;
     }
 };
+
+// Exports
+
+module.exports.parseArgs = parseArgs;
+module.exports.ArgProcessorList = ArgProcessorList;
+module.exports.processArgsInteractive = processArgsInteractive;
 module.exports.ArgProcessorOutput = ArgProcessorOutput;
