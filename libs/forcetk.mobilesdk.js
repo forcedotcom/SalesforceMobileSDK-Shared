@@ -24,8 +24,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* JavaScript library to wrap REST API on Visualforce. Leverages Ajax Proxy
- * (see http://bit.ly/sforce_ajax_proxy for details).
+/*
+ * JavaScript library to wrap REST API on Visualforce. Leverages Ajax Proxy
+ * (see http://bit.ly/sforce_ajax_proxy for details). Based on forcetk.js,
+ * but customized for consumption from within the Mobile SDK.
  *
  * Note that you must add the REST endpoint hostname for your instance (i.e. 
  * https://na1.salesforce.com/ or similar) as a remote site - in the admin
