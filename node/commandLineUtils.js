@@ -203,7 +203,6 @@ var ArgProcessor = function(argName, inputPrompt, processorFunction, preprocesso
     this.inputPrompt = inputPrompt;
     this.processorFunction = processorFunction;
     this.preprocessorFunction = preprocessorFunction;
-    console.log('preprocessorFunction: ' + (typeof this.preprocessorFunction));
 };
 
 /**
