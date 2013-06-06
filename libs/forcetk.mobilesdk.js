@@ -141,7 +141,7 @@ if (forcetk.Client === undefined) {
                 }
             });
         } else {
-            authCallback(callback, error);
+            this.authCallback(callback, error);
         }
     }
 

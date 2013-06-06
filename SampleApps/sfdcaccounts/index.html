@@ -78,23 +78,23 @@
             credsData = creds.data;
         
         logToConsole("salesforceSessionRefreshed");
-        forcetkClient = new forcetk.Client(credsData.clientId, credsData.loginUrl, reauth);
+        forcetkClient = new forcetk.Client(credsData.clientId, credsData.loginUrl, null,
+            function (callback, error) {
+                var sfOAuthPlugin = cordova.require("salesforce/plugin/oauth");
+                sfOAuthPlugin.authenticate(function(oauthResponse) {
+                    var oauthResponseData = oauthResponse;
+                    if (oauthResponse.data)  {
+                        oauthResponseData = oauthResponse.data;
+                    }
+                    forcetkClient.setSessionToken(oauthResponseData.accessToken, null, oauthResponseData.instanceUrl);
+                    callback();
+                },
+                error);
+            }
+        );
         forcetkClient.setSessionToken(credsData.accessToken, apiVersion, credsData.instanceUrl);
         forcetkClient.setRefreshToken(credsData.refreshToken);
         forcetkClient.setUserAgentString(credsData.userAgent);
-    }
-
-    function reauth(callback, error) {
-        var sfOAuthPlugin = cordova.require("salesforce/plugin/oauth");
-        sfOAuthPlugin.authenticate(function(oauthResponse) {
-            var oauthResponseData = oauthResponse;
-            if (oauthResponse.data)  {
-                oauthResponseData = oauthResponse.data;
-            }
-            forcetkClient.setSessionToken(oauthResponseData.accessToken, null, oauthResponseData.instanceUrl);
-            callback();
-        },
-        error);
     }
 
     function getAuthCredentialsError(error) {
