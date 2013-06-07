@@ -324,6 +324,20 @@ cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
         exec(SDK_VERSION, success, null, SERVICE, "getAppHomeUrl", []);
     };
 
+    /**
+     * Goes through the refresh flow, and sets the new session token in the supplied forcetkClient.
+     */
+    var forcetkRefresh = function (forcetkClient, success, fail) {
+        authenticate(function(oauthResponse) {
+            var oauthResponseData = oauthResponse;
+            if (oauthResponse.data)  {
+                oauthResponseData = oauthResponse.data;
+            }
+            forcetkClient.setSessionToken(oauthResponseData.accessToken, null, oauthResponseData.instanceUrl);
+            success();
+        },
+        error);
+    };
 
     /**
      * Part of the module that is public
@@ -332,7 +346,8 @@ cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
         getAuthCredentials: getAuthCredentials,
         authenticate: authenticate,
         logout: logout,
-        getAppHomeUrl: getAppHomeUrl
+        getAppHomeUrl: getAppHomeUrl,
+        forcetkRefresh: forcetkRefresh
     };
 });
 

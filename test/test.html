@@ -12,7 +12,7 @@
     <script src="MockCordova.js"></script>
 
     <!-- sfdc libs -->
-    <script src="../libs/forcetk.js"></script>
+    <script src="../libs/forcetk.mobilesdk.js"></script>
     <script src="../libs/cordova.force.js"></script>
     <script src="../libs/force.entity.js"></script>
 
@@ -43,7 +43,7 @@
         instanceUrl: "https://cs7.salesforce.com",
     };
 
-    Force.init(creds);
+    Force.init(creds, null, null, null);
 
     window.addEventListener("load", function() {
         document.getElementById("link_smartstore_test_suite")

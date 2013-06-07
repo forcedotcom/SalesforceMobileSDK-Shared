@@ -70,10 +70,14 @@
     // creds: credentials returned by authenticate call
     // apiVersion: apiVersion to use, when null, v28.0 (Summer '13) is used
     // innerForcetkClient: [Optional] A fully initialized forcetkClient to be re-used internally in this entity framework
-    Force.init = function(creds, apiVersion, innerForcetkClient) {
-        apiVersion = apiVersion || "v28.0";
-        if(!innerForcetkClient) {
-            innerForcetkClient = new forcetk.Client(creds.clientId, creds.loginUrl, creds.proxyUrl);
+    // reauth: auth module for the refresh flow
+    Force.init = function(creds, apiVersion, innerForcetkClient, reauth) {
+        if (!apiVersion || apiVersion == null) {
+            apiVersion = "v28.0";
+        }
+
+        if(!innerForcetkClient || innerForcetkClient == null) {
+            innerForcetkClient = new forcetk.Client(creds.clientId, creds.loginUrl, creds.proxyUrl, reauth);
             innerForcetkClient.setSessionToken(creds.accessToken, apiVersion, creds.instanceUrl);
             innerForcetkClient.setRefreshToken(creds.refreshToken);
             innerForcetkClient.setUserAgentString(patchUserAgent(creds.userAgent));

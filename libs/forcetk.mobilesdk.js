@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, salesforce.com, inc.
+ * Copyright (c) 2013, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -24,8 +24,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* JavaScript library to wrap REST API on Visualforce. Leverages Ajax Proxy
- * (see http://bit.ly/sforce_ajax_proxy for details).
+/*
+ * JavaScript library to wrap REST API on Visualforce. Leverages Ajax Proxy
+ * (see http://bit.ly/sforce_ajax_proxy for details). Based on forcetk.js,
+ * but customized for consumption from within the Mobile SDK.
  *
  * Note that you must add the REST endpoint hostname for your instance (i.e. 
  * https://na1.salesforce.com/ or similar) as a remote site - in the admin
@@ -56,6 +58,21 @@ if (forcetk.Client === undefined) {
      * @constructor
      */
     forcetk.Client = function(clientId, loginUrl, proxyUrl) {
+        forcetk.Client(clientId, loginUrl, proxyUrl, null);
+    }
+
+    /**
+     * The Client provides a convenient wrapper for the Force.com REST API, 
+     * allowing JavaScript in Visualforce pages to use the API via the Ajax
+     * Proxy.
+     * @param [clientId=null] 'Consumer Key' in the Remote Access app settings
+     * @param [loginUrl='https://login.salesforce.com/'] Login endpoint
+     * @param [proxyUrl=null] Proxy URL. Omit if running on Visualforce or 
+     *                  Cordova etc
+     * @param authCallback Callback method to perform authentication when 401 is received.
+     * @constructor
+     */
+    forcetk.Client = function(clientId, loginUrl, proxyUrl, authCallback) {
         this.clientId = clientId;
         this.loginUrl = loginUrl || 'https://login.salesforce.com/';
         if (typeof proxyUrl === 'undefined' || proxyUrl === null) {
@@ -79,6 +96,7 @@ if (forcetk.Client === undefined) {
         this.instanceUrl = null;
         this.asyncAjax = true;
         this.userAgentString = null;
+        this.authCallback = authCallback;
     }
 
     /**
@@ -104,29 +122,36 @@ if (forcetk.Client === undefined) {
      */
     forcetk.Client.prototype.refreshAccessToken = function(callback, error) {
         var that = this;
-        var url = this.loginUrl + '/services/oauth2/token';
-        return $j.ajax({
-            type: 'POST',
-            url: (this.proxyUrl !== null) ? this.proxyUrl: url,
-            cache: false,
-            processData: false,
-            data: 'grant_type=refresh_token&client_id=' + this.clientId + '&refresh_token=' + this.refreshToken,
-            success: callback,
-            error: error,
-            dataType: "json",
-            beforeSend: function(xhr) {
-                if (that.proxyUrl !== null) {
-                    xhr.setRequestHeader('SalesforceProxy-Endpoint', url);
+        if (this.authCallback == null) {
+            var url = this.loginUrl + '/services/oauth2/token';
+            return $j.ajax({
+                type: 'POST',
+                url: (this.proxyUrl !== null) ? this.proxyUrl: url,
+                cache: false,
+                processData: false,
+                data: 'grant_type=refresh_token&client_id=' + this.clientId + '&refresh_token=' + this.refreshToken,
+                success: function(response) {
+                    that.setSessionToken(response.access_token, null, response.instance_url);
+                    callback();
+                },
+                error: error,
+                dataType: "json",
+                beforeSend: function(xhr) {
+                    if (that.proxyUrl !== null) {
+                        xhr.setRequestHeader('SalesforceProxy-Endpoint', url);
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            this.authCallback(that, callback, error);
+        }
     }
 
     /**
      * Set a session token and the associated metadata in the client.
      * @param sessionId a salesforce.com session ID. In a Visualforce page,
      *                   use '{!$Api.sessionId}' to obtain a session ID.
-     * @param [apiVersion="21.0"] Force.com API version
+     * @param [apiVersion="28.0"] Force.com API version
      * @param [instanceUrl] Omit this if running on Visualforce; otherwise 
      *                   use the value from the OAuth token.
      */
@@ -175,11 +200,10 @@ if (forcetk.Client === undefined) {
             success: callback,
             error: (!this.refreshToken || retry ) ? error : function(jqXHR, textStatus, errorThrown) {
                 if (jqXHR.status === 401) {
-                    that.refreshAccessToken(function(oauthResponse) {
-                        that.setSessionToken(oauthResponse.access_token, null,
-                        oauthResponse.instance_url);
+                    that.refreshAccessToken(function() {
                         that.ajax(path, callback, error, method, payload, true);
-                    }, error);
+                    },
+                    error);
                 } else {
                     error(jqXHR, textStatus, errorThrown);
                 }
@@ -243,10 +267,10 @@ if (forcetk.Client === undefined) {
                 }
                 //refresh token in 401
                 else if(request.status == 401 && !retry) {
-                    that.refreshAccessToken(function(oauthResponse) {
-                        that.setSessionToken(oauthResponse.access_token, null, oauthResponse.instance_url);
+                    that.refreshAccessToken(function() {
                         that.getChatterFile(path, mimeType, callback, error, true);
-                    }, error);
+                    },
+                    error);
                 } else {
                     // display status message
                     error(request,request.statusText,request.response);
@@ -280,9 +304,7 @@ if (forcetk.Client === undefined) {
             success: callback,
             error: (!this.refreshToken || retry ) ? error : function(jqXHR, textStatus, errorThrown) {
                 if (jqXHR.status === 401) {
-                    that.refreshAccessToken(function(oauthResponse) {
-                        that.setSessionToken(oauthResponse.access_token, null,
-                        oauthResponse.instance_url);
+                    that.refreshAccessToken(function() {
                         that.apexrest(path, callback, error, method, payload, paramMap, true);
                     },
                     error);

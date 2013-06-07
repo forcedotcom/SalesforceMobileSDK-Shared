@@ -11,14 +11,14 @@ Contains all the SalesforceMobileSDK JavaScript libraries.
 Contains all the Cordova plugins for the SalesforceMobileSDK (oauth / smartstore / sdkinfo).
 Includes this library after cordova.js in your HTML application.
 
-**forcetk.js**
+**forcetk.mobilesdk.js**
 
 Library to do REST API calls from JavaScript.
 
 **force.entity.js**
 
 Contains the new SDK 2.0 Entity Framework. 
-This library depends on forcetk.js and cordova.force.js. It also requires jquery, underscore and backbone.
+This library depends on forcetk.mobilesdk.js and cordova.force.js. It also requires jquery, underscore and backbone.
 
 
 # /external
