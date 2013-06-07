@@ -34,7 +34,7 @@ jQuery(document).ready(function() {
 function appStart(creds)
 {
     // Force init
-    Force.init(creds);
+    Force.init(creds, null, null, cordova.require("salesforce/plugin/oauth").forcetkRefresh);
 
     // router
     app.router = new app.Router();

@@ -55,7 +55,7 @@
         logToConsole("salesforceSessionRefreshed");
 		
         // Initializing entity framework
-        Force.init(creds);
+        Force.init(creds, null, null, null);
 
         // Now we are ready
         cordova.require("salesforce/plugin/testrunner").onReadyForTests();
