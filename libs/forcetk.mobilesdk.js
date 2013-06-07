@@ -121,8 +121,8 @@ if (forcetk.Client === undefined) {
      * @param error function to call on failure
      */
     forcetk.Client.prototype.refreshAccessToken = function(callback, error) {
+        var that = this;
         if (this.authCallback == null) {
-            var that = this;
             var url = this.loginUrl + '/services/oauth2/token';
             return $j.ajax({
                 type: 'POST',
