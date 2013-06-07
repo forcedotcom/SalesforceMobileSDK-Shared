@@ -16,7 +16,7 @@
     <script src="cordova.force.js"></script>
 
     <!-- include forcetk for REST transaction support -->
-    <script src="forcetk.js"></script>    
+    <script src="forcetk.mobilesdk.js"></script>
 
     <!-- log window styling -->
     <style>
@@ -83,12 +83,12 @@
         if (creds.data)  // Event sets the `data` object with the auth data.
             credsData = creds.data;
 
-        forcetkClient = new forcetk.Client(credsData.clientId, credsData.loginUrl);
+        forcetkClient = new forcetk.Client(credsData.clientId, credsData.loginUrl, null,
+            cordova.require("salesforce/plugin/oauth").forcetkRefresh);
         forcetkClient.setSessionToken(credsData.accessToken, apiVersion, credsData.instanceUrl);
         forcetkClient.setRefreshToken(credsData.refreshToken);
         forcetkClient.setUserAgentString(credsData.userAgent);
     }
-
 
     function getAuthCredentialsError(error) {
         logToConsole("getAuthCredentialsError: " + error);
