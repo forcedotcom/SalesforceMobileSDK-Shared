@@ -74,19 +74,7 @@
         apiVersion = apiVersion || "v28.0";
         if(!innerForcetkClient) {
             innerForcetkClient = new forcetk.Client(creds.clientId, creds.loginUrl, creds.proxyUrl,
-                function (callback, error) {
-                    var sfOAuthPlugin = cordova.require("salesforce/plugin/oauth");
-                    sfOAuthPlugin.authenticate(function(oauthResponse) {
-                        var oauthResponseData = oauthResponse;
-                        if (oauthResponse.data)  {
-                            oauthResponseData = oauthResponse.data;
-                        }
-                        forcetkClient.setSessionToken(oauthResponseData.accessToken, null, oauthResponseData.instanceUrl);
-                        callback();
-                    },
-                    error);
-                }
-            );
+                cordova.require("salesforce/plugin/oauth").forcetkRefresh);
             innerForcetkClient.setSessionToken(creds.accessToken, apiVersion, creds.instanceUrl);
             innerForcetkClient.setRefreshToken(creds.refreshToken);
             innerForcetkClient.setUserAgentString(patchUserAgent(creds.userAgent));
