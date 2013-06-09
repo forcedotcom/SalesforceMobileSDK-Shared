@@ -214,13 +214,9 @@ if (forcetk.Client === undefined) {
                     xhr.setRequestHeader('SalesforceProxy-Endpoint', url);
                 }
                 xhr.setRequestHeader(that.authzHeader, "Bearer " + that.sessionId);
-                var forceTkAgent = 'salesforce-toolkit-rest-javascript/' + that.apiVersion;
                 if (that.userAgentString !== null) {
-                    xhr.setRequestHeader('X-User-Agent', that.userAgentString + " " + forceTkAgent);
-                    xhr.setRequestHeader('User-Agent', that.userAgentString); // XXX this line might be useless
-                }
-                else {
-                    xhr.setRequestHeader('X-User-Agent', forceTkAgent);
+                    xhr.setRequestHeader('User-Agent', that.userAgentString);
+                    xhr.setRequestHeader('X-User-Agent', that.userAgentString);
                 }
             }
         });
@@ -245,9 +241,9 @@ if (forcetk.Client === undefined) {
         request.open("GET",  (this.proxyUrl !== null) ? this.proxyUrl: url, true);
         request.responseType = "arraybuffer";
         request.setRequestHeader(that.authzHeader, "Bearer " + that.sessionId);
-        request.setRequestHeader('X-User-Agent', 'salesforce-toolkit-rest-javascript/' + that.apiVersion);
         if (that.userAgentString !== null) {
-            xhr.setRequestHeader('User-Agent', that.userAgentString);
+            request.setRequestHeader('User-Agent', that.userAgentString);
+            request.setRequestHeader('X-User-Agent', that.userAgentString);
         }
         if (this.proxyUrl !== null) {
             request.setRequestHeader('SalesforceProxy-Endpoint', url);
@@ -325,9 +321,9 @@ if (forcetk.Client === undefined) {
 					xhr.setRequestHeader(paramName, paramMap[paramName]);
 				}
                 xhr.setRequestHeader(that.authzHeader, "Bearer " + that.sessionId);
-                xhr.setRequestHeader('X-User-Agent', 'salesforce-toolkit-rest-javascript/' + that.apiVersion);
                 if (that.userAgentString !== null) {
                     xhr.setRequestHeader('User-Agent', that.userAgentString);
+                    xhr.setRequestHeader('X-User-Agent', that.userAgentString);
                 }
             }
         });
