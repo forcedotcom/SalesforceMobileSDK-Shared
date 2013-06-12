@@ -54,10 +54,6 @@ Contains sample applications demonstrating the use of the new SDK 2.0 Entity Fra
 
 HTML/CSS/JavaScript used by ContactExplorer application.
 
-**sfdcaccounts**
-
-HTML/CSS/JavaScript used by SFDCAccounts application.
-
 **smartstoreexplorer**
 
 HTML/CSS/JavaScript used by SmartStore Explorer application.
