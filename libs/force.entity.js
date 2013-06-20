@@ -1182,10 +1182,10 @@
                 if (that.hasMore()) 
                     return that._fetchResponse.getMore()
                         .then(function(records) {
-                            that.set(records);
+                            that.add(records);
                             return records;
                         });
-                else $.when([]);
+                else return $.when([]);
             },
 
             // Close any open cursors to fetch more records.
