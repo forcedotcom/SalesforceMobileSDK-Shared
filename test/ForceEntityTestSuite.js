@@ -612,6 +612,8 @@ ForceEntityTestSuite.prototype.testMultiSObjectTypes = function() {
     .then(function(data1, data2) {
         accountDescribe = data1;
         contactDescribe = data2;
+        QUnit.equals('Account', accountDescribe.name, 'Describe result should be for Account');
+        QUnit.equals('Contact', contactDescribe.name, 'Describe result should be for Contact');
         console.log("## Checking underlying cache");
         return $.when(cache.retrieve("Account"), cache.retrieve("Contact"));
     })
@@ -2245,14 +2247,23 @@ ForceEntityTestSuite.prototype.testCollectionFetch = function() {
             QUnit.equals(result.records.length, 3, "Expected 3 records");
             QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
 
-            console.log("## Trying fetch with cache query");
-            return collectionFetch({config: {type:"cache", cacheQuery:{queryType:"range", indexPath:"Name", order:"ascending", pageSize:3}}, cache:cache});
+            console.log("## Trying fetch with cache query. Fetch first 2 records.");
+            return collectionFetch({config: {type:"cache", cacheQuery:{queryType:"range", indexPath:"Name", order:"ascending", pageSize:2}}, cache:cache});
         })
         .then(function(result) {
             console.log("## Checking data returned from fetch call");
-            QUnit.equals(collection.length, 3, "Expected 3 results");
-            QUnit.deepEqual(_.values(idToName).sort(), collection.pluck("Name"), "Wrong names");
-            
+            QUnit.equals(collection.length, 2, "Expected 2 results");
+            QUnit.deepEqual(_.values(idToName).sort().slice(0, 2), collection.pluck("Name"), "Wrong names");
+            QUnit.ok(collection.hasMore(), "Collection must have more records to fetch.");
+
+            console.log("## Trying to get more records from the cache.")
+            return collection.getMore();
+        }).then(function(records) {
+            console.log("## Checking data from collection getMore");
+            QUnit.equals(records.length, 1, "Expected 1 record");
+            QUnit.equals(collection.length, 3, "Expected collection length 3.");
+            QUnit.ok(!collection.hasMore(), "Collection must not have more records to fetch.");
+
             console.log("## Trying fetch with soql with cache parameter and cacheForOriginals parameter");
             return collectionFetch({cache:cache, cacheForOriginals:cacheForOriginals});
         })
