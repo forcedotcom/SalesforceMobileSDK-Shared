@@ -62,14 +62,14 @@
         var sdkIndex = userAgent.indexOf("SalesforceMobileSDK");
         var hybridIndex = userAgent.indexOf("Hybrid", sdkIndex);
         return hybridIndex < 0 
-            ? userAgent + " EntityFramework"
-            : userAgent.substring(0, hybridIndex) + "Hybrid EntityFramework" + userAgent.substring(hybridIndex + "Hybrid".length);
+            ? userAgent + " SmartSync"
+            : userAgent.substring(0, hybridIndex) + "Hybrid SmartSync" + userAgent.substring(hybridIndex + "Hybrid".length);
     };
 
     // Init function
     // creds: credentials returned by authenticate call
     // apiVersion: apiVersion to use, when null, v28.0 (Summer '13) is used
-    // innerForcetkClient: [Optional] A fully initialized forcetkClient to be re-used internally in this entity framework
+    // innerForcetkClient: [Optional] A fully initialized forcetkClient to be re-used internally in the SmartSync library
     // reauth: auth module for the refresh flow
     Force.init = function(creds, apiVersion, innerForcetkClient, reauth) {
         if (!apiVersion || apiVersion == null) {
