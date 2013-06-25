@@ -15,9 +15,9 @@ Includes this library after cordova.js in your HTML application.
 
 Library to do REST API calls from JavaScript.
 
-**force.entity.js**
+**smartsync.js**
 
-Contains the new SDK 2.0 Entity Framework. 
+Contains the new SDK 2.0 SmartSync data library. 
 This library depends on forcetk.mobilesdk.js and cordova.force.js. It also requires jquery, underscore and backbone.
 
 
@@ -32,7 +32,7 @@ Contains [backbone](http://backbonejs.org/) and [underscore](http://underscorejs
 **jquery**
 
 Contains [jquery](http://jquery.com/) and [jquery mobile](http://jquerymobile.com/).
-Required by entiy framework and used in some of the sample apps.
+Required by SmartSync library and used in some of the sample apps.
 
 **qunit** 
 
@@ -43,9 +43,9 @@ Contains [qunit](http://qunitjs.com/). A unit test library for JavaScript.
 
 Contains all the SalesforceMobileSDK JavaScript sample applications.
 
-**entity**
+**smartsync**
 
-Contains sample applications demonstrating the use of the new SDK 2.0 Entity Framework:
+Contains sample applications demonstrating the use of the new SDK 2.0 SmartSync library:
 * UserAndGroupSearch.html: simplest sample app with a single search/list screen that allows searching for users or collaboration groups
 * UserSearch.html: another sample app that allows searching for users and has a basic user detail screen to the search/list screen
 * AccountEditor.html: most advanced sample app that allows searching for accounts, editing their details, creating new accounts or deleting existing accounts. It also works offline and detects conflicts when records have changed on the server.
@@ -82,6 +82,6 @@ Super class of test suites.
 
 Test suites for SmartStore.
 
-**ForceEntityTestSuite.js**
+**SFSmartSyncTestSuite.js**
 
-Test suite for the new SDK 2.0 Entity Framework.
+Test suite for the new SDK 2.0 SmartSync library.
