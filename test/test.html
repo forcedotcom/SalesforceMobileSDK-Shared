@@ -14,7 +14,7 @@
     <!-- sfdc libs -->
     <script src="../libs/forcetk.mobilesdk.js"></script>
     <script src="../libs/cordova.force.js"></script>
-    <script src="../libs/force.entity.js"></script>
+    <script src="../libs/smartsync.js"></script>
 
     <!-- mock for native implementations -->
     <script src="MockSmartStore.js"></script>
@@ -30,7 +30,7 @@
     <script src="SFSmartStoreTestSuite.js"></script>
     <script src="SFSmartStoreLoadTestSuite.js"></script>
     <script src="SFSDKInfoTestSuite.js"></script>
-    <script src="ForceEntityTestSuite.js"></script>
+    <script src="SFSmartSyncTestSuite.js"></script>
 
     <script charset="utf-8">
     var debugMode = true;
@@ -52,8 +52,8 @@
             .addEventListener("click", function() {new SmartStoreLoadTestSuite().startTests();});
         document.getElementById("link_sdkinfo_test_suite")
             .addEventListener("click", function() {new SDKInfoTestSuite().startTests();});
-        document.getElementById("link_force_entity_test_suite")
-            .addEventListener("click", function() {new ForceEntityTestSuite().startTests();});
+        document.getElementById("link_smart_sync_test_suite")
+            .addEventListener("click", function() {new SmartSyncTestSuite().startTests();});
     });
     </script>
   </head>
@@ -63,10 +63,10 @@
               <h1>Salesforce Javascript Libraries Tests</h1> 
           </div> 
 
+          <p><a href="#" id="link_sdkinfo_test_suite" data-role="button" data-inline="true">Run SDK Info Tests</a></p>
           <p><a href="#" id="link_smartstore_test_suite" data-role="button" data-inline="true">Run SmartStore Tests</a></p>
           <p><a href="#" id="link_smartstore_load_test_suite" data-role="button" data-inline="true">Run SmartStore Load Tests</a></p>
-          <p><a href="#" id="link_sdkinfo_test_suite" data-role="button" data-inline="true">Run SDK Info Tests</a></p>
-          <p><a href="#" id="link_force_entity_test_suite" data-role="button" data-inline="true">Run Entity Framework Tests</a></p>
+          <p><a href="#" id="link_smart_sync_test_suite" data-role="button" data-inline="true">Run SmartSync Tests</a></p>
 
 		  <div id="qunit-testrunner-toolbar"></div>
 		  <h2 id="qunit-userAgent"></h2>

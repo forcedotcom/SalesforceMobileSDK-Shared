@@ -25,33 +25,27 @@
  */
 "use strict";
 
-/**
- * An abstract super class for SmartStore test suites
- * This file assumes that qunit.js has been previously loaded, as well as jquery.js and SFTestSuite.js
- */
-if (typeof ForceEntityTestSuite === 'undefined') { 
-
-
+if (typeof SmartSyncTestSuite === 'undefined') { 
 
 /**
  * Constructor
  */
-var ForceEntityTestSuite = function () {
-    SFTestSuite.call(this, "ForceEntityTestSuite");
+var SmartSyncTestSuite = function () {
+    SFTestSuite.call(this, "SmartSyncTestSuite");
 
     // To run specific tests
     // this.testsToRun = ["testSObjectDestroy"];
 };
 
 // We are sub-classing SFTestSuite
-ForceEntityTestSuite.prototype = new SFTestSuite();
-ForceEntityTestSuite.prototype.constructor = ForceEntityTestSuite;
+SmartSyncTestSuite.prototype = new SFTestSuite();
+SmartSyncTestSuite.prototype.constructor = SmartSyncTestSuite;
 
 /** 
  * TEST Force.StoreCache.init 
  */
-ForceEntityTestSuite.prototype.testStoreCacheInit = function() {
-    console.log("# In ForceEntityTestSuite.testStoreCacheInit");
+SmartSyncTestSuite.prototype.testStoreCacheInit = function() {
+    console.log("# In SmartSyncTestSuite.testStoreCacheInit");
     var self = this;
     var soupName = "testSoupForStoreCache";
     Force.smartstoreClient.soupExists(soupName)
@@ -79,8 +73,8 @@ ForceEntityTestSuite.prototype.testStoreCacheInit = function() {
 /** 
  * TEST Force.StoreCache.retrieve
  */
-ForceEntityTestSuite.prototype.testStoreCacheRetrieve = function() {
-    console.log("# In ForceEntityTestSuite.testStoreCacheRetrieve");
+SmartSyncTestSuite.prototype.testStoreCacheRetrieve = function() {
+    console.log("# In SmartSyncTestSuite.testStoreCacheRetrieve");
     var self = this;
     var cache;
     var soupName = "testSoupForStoreCache";
@@ -139,8 +133,8 @@ ForceEntityTestSuite.prototype.testStoreCacheRetrieve = function() {
 /** 
  * TEST Force.StoreCache.save
  */
-ForceEntityTestSuite.prototype.testStoreCacheSave = function() {
-    console.log("# In ForceEntityTestSuite.testStoreCacheSave");
+SmartSyncTestSuite.prototype.testStoreCacheSave = function() {
+    console.log("# In SmartSyncTestSuite.testStoreCacheSave");
     var self = this;
     var cache;
     var soupName = "testSoupForStoreCache";
@@ -199,8 +193,8 @@ ForceEntityTestSuite.prototype.testStoreCacheSave = function() {
 /** 
  * TEST Force.StoreCache.saveAll
  */
-ForceEntityTestSuite.prototype.testStoreCacheSaveAll = function() {
-    console.log("# In ForceEntityTestSuite.testStoreCacheSaveAll");
+SmartSyncTestSuite.prototype.testStoreCacheSaveAll = function() {
+    console.log("# In SmartSyncTestSuite.testStoreCacheSaveAll");
     var self = this;
     var cache;
     var soupName = "testSoupForStoreCache";
@@ -270,8 +264,8 @@ ForceEntityTestSuite.prototype.testStoreCacheSaveAll = function() {
 /** 
  * TEST Force.StoreCache.remove
  */
-ForceEntityTestSuite.prototype.testStoreCacheRemove = function() {
-    console.log("# In ForceEntityTestSuite.testStoreCacheRemove");
+SmartSyncTestSuite.prototype.testStoreCacheRemove = function() {
+    console.log("# In SmartSyncTestSuite.testStoreCacheRemove");
     var self = this;
     var cache;
     var soupName = "testSoupForStoreCache";
@@ -318,8 +312,8 @@ ForceEntityTestSuite.prototype.testStoreCacheRemove = function() {
 /** 
  * TEST Force.StoreCache.find
  */
-ForceEntityTestSuite.prototype.testStoreCacheFind = function() {
-    console.log("# In ForceEntityTestSuite.testStoreCacheFind");
+SmartSyncTestSuite.prototype.testStoreCacheFind = function() {
+    console.log("# In SmartSyncTestSuite.testStoreCacheFind");
     var self = this;
     var cache;
     var soupName = "testSoupForStoreCache";
@@ -414,8 +408,8 @@ ForceEntityTestSuite.prototype.testStoreCacheFind = function() {
 /** 
  * TEST Force.StoreCache.addLocalFields
  */
-ForceEntityTestSuite.prototype.testStoreCacheAddLocalFields = function() {
-    console.log("# In ForceEntityTestSuite.testStoreCacheAddLocalFields");
+SmartSyncTestSuite.prototype.testStoreCacheAddLocalFields = function() {
+    console.log("# In SmartSyncTestSuite.testStoreCacheAddLocalFields");
     var soupName = "testSoupForStoreCache";
     var cache = new Force.StoreCache(soupName);    
 
@@ -437,8 +431,8 @@ ForceEntityTestSuite.prototype.testStoreCacheAddLocalFields = function() {
 /** 
  * TEST Force.SObjectType.describe
  */
-ForceEntityTestSuite.prototype.testSObjectTypeDescribe = function() {
-    console.log("# In ForceEntityTestSuite.testSObjectTypeDescribe");
+SmartSyncTestSuite.prototype.testSObjectTypeDescribe = function() {
+    console.log("# In SmartSyncTestSuite.testSObjectTypeDescribe");
     var self = this;
     var soupName = "testSoupForSObjectType";
     var cache;
@@ -476,8 +470,8 @@ ForceEntityTestSuite.prototype.testSObjectTypeDescribe = function() {
 /** 
  * TEST Force.SObjectType.getMetadata
  */
-ForceEntityTestSuite.prototype.testSObjectTypeGetMetadata = function() {
-    console.log("# In ForceEntityTestSuite.testSObjectTypeGetMetadata");
+SmartSyncTestSuite.prototype.testSObjectTypeGetMetadata = function() {
+    console.log("# In SmartSyncTestSuite.testSObjectTypeGetMetadata");
     var self = this;
     var soupName = "testSoupForSObjectType";
     var cache;
@@ -515,8 +509,8 @@ ForceEntityTestSuite.prototype.testSObjectTypeGetMetadata = function() {
 /** 
  * TEST Force.SObjectType.describeLayout
  */
-ForceEntityTestSuite.prototype.testSObjectTypeDescribeLayout = function() {
-    console.log("# In ForceEntityTestSuite.testSObjectTypeDescribeLayout");
+SmartSyncTestSuite.prototype.testSObjectTypeDescribeLayout = function() {
+    console.log("# In SmartSyncTestSuite.testSObjectTypeDescribeLayout");
     var self = this;
     var soupName = "testSoupForSObjectType";
     var cache;
@@ -552,8 +546,8 @@ ForceEntityTestSuite.prototype.testSObjectTypeDescribeLayout = function() {
 /** 
  * TEST Force.SObjectType cache merge by multiple instances
  */
-ForceEntityTestSuite.prototype.testSObjectTypeCacheMerge = function() {
-    console.log("# In ForceEntityTestSuite.testSObjectTypeCacheMerge");
+SmartSyncTestSuite.prototype.testSObjectTypeCacheMerge = function() {
+    console.log("# In SmartSyncTestSuite.testSObjectTypeCacheMerge");
     var self = this;
     var soupName = "testSoupForSObjectType";
     var cache, describeResult, metadataResult;
@@ -591,8 +585,8 @@ ForceEntityTestSuite.prototype.testSObjectTypeCacheMerge = function() {
 /** 
  * TEST Force.SObjectType multiple types
  */
-ForceEntityTestSuite.prototype.testMultiSObjectTypes = function() {
-    console.log("# In ForceEntityTestSuite.testMultiSObjectTypes");
+SmartSyncTestSuite.prototype.testMultiSObjectTypes = function() {
+    console.log("# In SmartSyncTestSuite.testMultiSObjectTypes");
     var self = this;
     var soupName = "testSoupForSObjectType";
     var cache, accountDescribe, contactDescribe;
@@ -631,8 +625,8 @@ ForceEntityTestSuite.prototype.testMultiSObjectTypes = function() {
 /** 
  * TEST Force.SObjectType.reset
  */
-ForceEntityTestSuite.prototype.testSObjectTypeReset = function() {
-    console.log("# In ForceEntityTestSuite.testSObjectTypeReset");
+SmartSyncTestSuite.prototype.testSObjectTypeReset = function() {
+    console.log("# In SmartSyncTestSuite.testSObjectTypeReset");
     var self = this;
     var soupName = "testSoupForSObjectType";
     var cache;
@@ -677,8 +671,8 @@ ForceEntityTestSuite.prototype.testSObjectTypeReset = function() {
 /** 
  * TEST Force.syncSObjectWithCache for create method
  */
-ForceEntityTestSuite.prototype.testSyncSObjectWithCacheCreate = function() {
-    console.log("# In ForceEntityTestSuite.testSyncSObjectWithCacheCreate");
+SmartSyncTestSuite.prototype.testSyncSObjectWithCacheCreate = function() {
+    console.log("# In SmartSyncTestSuite.testSyncSObjectWithCacheCreate");
     var self = this;
     var soupName = "testSoupForSyncSObjectWithCache";
     var cache;
@@ -769,8 +763,8 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithCacheCreate = function() {
 /** 
  * TEST Force.syncSObjectWithCache for read method
  */
-ForceEntityTestSuite.prototype.testSyncSObjectWithCacheRead = function() {
-    console.log("# In ForceEntityTestSuite.testSyncSObjectWithCacheRead");
+SmartSyncTestSuite.prototype.testSyncSObjectWithCacheRead = function() {
+    console.log("# In SmartSyncTestSuite.testSyncSObjectWithCacheRead");
     var self = this;
     var soupName = "testSoupForSyncSObjectWithCache";
     var cache;
@@ -826,8 +820,8 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithCacheRead = function() {
 /** 
  * TEST Force.syncSObjectWithCache for update method
  */
-ForceEntityTestSuite.prototype.testSyncSObjectWithCacheUpdate = function() {
-    console.log("# In ForceEntityTestSuite.testSyncSObjectWithUpdate");
+SmartSyncTestSuite.prototype.testSyncSObjectWithCacheUpdate = function() {
+    console.log("# In SmartSyncTestSuite.testSyncSObjectWithUpdate");
     var self = this;
     var soupName = "testSoupForSyncSObjectWithCache";
     var cache;
@@ -919,8 +913,8 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithCacheUpdate = function() {
 /** 
  * TEST Force.syncSObjectWithCache for delete method
  */
-ForceEntityTestSuite.prototype.testSyncSObjectWithCacheDelete = function() {
-    console.log("# In ForceEntityTestSuite.testSyncSObjectWithCacheDelete");
+SmartSyncTestSuite.prototype.testSyncSObjectWithCacheDelete = function() {
+    console.log("# In SmartSyncTestSuite.testSyncSObjectWithCacheDelete");
     var self = this;
     var soupName = "testSoupForSyncSObjectWithCache";
     var cache;
@@ -984,8 +978,8 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithCacheDelete = function() {
 /** 
  * TEST Force.syncSObjectWithServer for create method
  */
-ForceEntityTestSuite.prototype.testSyncSObjectWithServerCreate = function() {
-    console.log("# In ForceEntityTestSuite.testSyncSObjectWithServerCreate");
+SmartSyncTestSuite.prototype.testSyncSObjectWithServerCreate = function() {
+    console.log("# In SmartSyncTestSuite.testSyncSObjectWithServerCreate");
     var self = this;
     var id;
 
@@ -1015,8 +1009,8 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithServerCreate = function() {
 /** 
  * TEST Force.syncSObjectWithServer for read method
  */
-ForceEntityTestSuite.prototype.testSyncSObjectWithServerRead = function() {
-    console.log("# In ForceEntityTestSuite.testSyncSObjectWithServerRead");
+SmartSyncTestSuite.prototype.testSyncSObjectWithServerRead = function() {
+    console.log("# In SmartSyncTestSuite.testSyncSObjectWithServerRead");
     var self = this;
     var id;
 
@@ -1043,8 +1037,8 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithServerRead = function() {
 /** 
  * TEST Force.syncSObjectWithServer for update method
  */
-ForceEntityTestSuite.prototype.testSyncSObjectWithServerUpdate = function() {
-    console.log("# In ForceEntityTestSuite.testSyncSObjectWithServerUpdate");
+SmartSyncTestSuite.prototype.testSyncSObjectWithServerUpdate = function() {
+    console.log("# In SmartSyncTestSuite.testSyncSObjectWithServerUpdate");
     var self = this;
     var id;
 
@@ -1078,8 +1072,8 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithServerUpdate = function() {
 /** 
  * TEST Force.syncSObjectWithServer for delete method
  */
-ForceEntityTestSuite.prototype.testSyncSObjectWithServerDelete = function() {
-    console.log("# In ForceEntityTestSuite.testSyncSObjectWithServerDelete");
+SmartSyncTestSuite.prototype.testSyncSObjectWithServerDelete = function() {
+    console.log("# In SmartSyncTestSuite.testSyncSObjectWithServerDelete");
     var self = this;
     var id;
 
@@ -1103,8 +1097,8 @@ ForceEntityTestSuite.prototype.testSyncSObjectWithServerDelete = function() {
 /** 
  * TEST Force.syncSObject for method create
  */
-ForceEntityTestSuite.prototype.testSyncSObjectCreate = function() {
-    console.log("# In ForceEntityTestSuite.testSyncSObjectCreate");
+SmartSyncTestSuite.prototype.testSyncSObjectCreate = function() {
+    console.log("# In SmartSyncTestSuite.testSyncSObjectCreate");
     var self = this;
 
     var cache;
@@ -1153,8 +1147,8 @@ ForceEntityTestSuite.prototype.testSyncSObjectCreate = function() {
 /** 
  * TEST Force.syncSObject for method retrieve
  */
-ForceEntityTestSuite.prototype.testSyncSObjectRetrieve = function() {
-    console.log("# In ForceEntityTestSuite.syncSObjectRetrieve");
+SmartSyncTestSuite.prototype.testSyncSObjectRetrieve = function() {
+    console.log("# In SmartSyncTestSuite.syncSObjectRetrieve");
     var self = this;
 
     var cache;
@@ -1235,8 +1229,8 @@ ForceEntityTestSuite.prototype.testSyncSObjectRetrieve = function() {
 /** 
  * TEST Force.syncSObject for method update
  */
-ForceEntityTestSuite.prototype.testSyncSObjectUpdate = function() {
-    console.log("# In ForceEntityTestSuite.syncSObjectUpdate");
+SmartSyncTestSuite.prototype.testSyncSObjectUpdate = function() {
+    console.log("# In SmartSyncTestSuite.syncSObjectUpdate");
     var self = this;
     var cache;
     var soupName = "syncSObjectUpdate";
@@ -1291,8 +1285,8 @@ ForceEntityTestSuite.prototype.testSyncSObjectUpdate = function() {
 /** 
  * TEST Force.syncSObject for method delete
  */
-ForceEntityTestSuite.prototype.testSyncSObjectDelete = function() {
-    console.log("# In ForceEntityTestSuite.syncSObjectDelete");
+SmartSyncTestSuite.prototype.testSyncSObjectDelete = function() {
+    console.log("# In SmartSyncTestSuite.syncSObjectDelete");
     var self = this;
     var cache;
     var soupName = "syncSObjectDelete";
@@ -1351,8 +1345,8 @@ ForceEntityTestSuite.prototype.testSyncSObjectDelete = function() {
 /** 
  * TEST Force.syncSObjectDetectConflict for method create
  */
-ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictCreate = function() {
-    console.log("# In ForceEntityTestSuite.syncSObjectDetectConflictCreate");
+SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictCreate = function() {
+    console.log("# In SmartSyncTestSuite.syncSObjectDetectConflictCreate");
     var self = this;
 
     var cache, cacheForOriginals;
@@ -1403,8 +1397,8 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictCreate = function() 
 /** 
  * TEST Force.syncSObjectDetectConflict for method retrieve
  */
-ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictRetrieve = function() {
-    console.log("# In ForceEntityTestSuite.syncSObjectDetectConflictRetrieve");
+SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictRetrieve = function() {
+    console.log("# In SmartSyncTestSuite.syncSObjectDetectConflictRetrieve");
     var self = this;
 
     var cache, cacheForOriginals;
@@ -1487,8 +1481,8 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictRetrieve = function(
 /** 
  * TEST Force.syncSObjectDetectConflict for method update
  */
-ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() {
-    console.log("# In ForceEntityTestSuite.syncSObjectDetectConflictUpdate");
+SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() {
+    console.log("# In SmartSyncTestSuite.syncSObjectDetectConflictUpdate");
     var self = this;
     var cache, cacheForOriginals;
     var soupName = "testSyncSObjectDetectConflictUpdate";
@@ -1664,8 +1658,8 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() 
 /** 
  * TEST Force.syncSObjectDetectConflict for method delete
  */
-ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() {
-    console.log("# In ForceEntityTestSuite.syncSObjectDetectConflictDelete");
+SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() {
+    console.log("# In SmartSyncTestSuite.syncSObjectDetectConflictDelete");
     var self = this;
     var cache, cacheForOriginals;
     var soupName = "testSyncSObjectDetectConflictDelete";
@@ -1846,8 +1840,8 @@ ForceEntityTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() 
 /** 
  * TEST Force.SObject.fetch
  */
-ForceEntityTestSuite.prototype.testSObjectFetch = function() {
-    console.log("# In ForceEntityTestSuite.testSObjectFetch");
+SmartSyncTestSuite.prototype.testSObjectFetch = function() {
+    console.log("# In SmartSyncTestSuite.testSObjectFetch");
     var self = this;
     var soupName = "testSObjectFetch";
     var soupNameForOriginals = "originalsFor" + soupName;
@@ -1890,8 +1884,8 @@ ForceEntityTestSuite.prototype.testSObjectFetch = function() {
 /** 
  * TEST Force.SObject.save
  */
-ForceEntityTestSuite.prototype.testSObjectSave = function() {
-    console.log("# In ForceEntityTestSuite.testSObjectSave");
+SmartSyncTestSuite.prototype.testSObjectSave = function() {
+    console.log("# In SmartSyncTestSuite.testSObjectSave");
     var self = this;
     var soupName = "testSObjectSave";
     var soupNameForOriginals = "originalsFor" + soupName;
@@ -1929,8 +1923,8 @@ ForceEntityTestSuite.prototype.testSObjectSave = function() {
 /** 
  * TEST Force.SObject.destroy
  */
-ForceEntityTestSuite.prototype.testSObjectDestroy = function() {
-    console.log("# In ForceEntityTestSuite.testSObjectDestroy");
+SmartSyncTestSuite.prototype.testSObjectDestroy = function() {
+    console.log("# In SmartSyncTestSuite.testSObjectDestroy");
     var self = this;
     var soupName = "testSObjectDestroy";
     var soupNameForOriginals = "originalsFor" + soupName;
@@ -1975,8 +1969,8 @@ ForceEntityTestSuite.prototype.testSObjectDestroy = function() {
 /** 
  * TEST Force.fetchSObjectsFromCache
  */
-ForceEntityTestSuite.prototype.testFetchSObjectsFromCache = function() {
-    console.log("# In ForceEntityTestSuite.fetchSObjectsFromCache");
+SmartSyncTestSuite.prototype.testFetchSObjectsFromCache = function() {
+    console.log("# In SmartSyncTestSuite.fetchSObjectsFromCache");
     var self = this;
 
     var cache;
@@ -2045,8 +2039,8 @@ ForceEntityTestSuite.prototype.testFetchSObjectsFromCache = function() {
 /** 
  * TEST Force.fetchSObjectsFromServer
  */
-ForceEntityTestSuite.prototype.testFetchSObjectsFromServer = function() {
-    console.log("# In ForceEntityTestSuite.fetchSObjectsFromServer");
+SmartSyncTestSuite.prototype.testFetchSObjectsFromServer = function() {
+    console.log("# In SmartSyncTestSuite.fetchSObjectsFromServer");
     var self = this;
     var idToName = {};
 
@@ -2073,8 +2067,8 @@ ForceEntityTestSuite.prototype.testFetchSObjectsFromServer = function() {
 /** 
  * TEST Force.fetchSObjects
  */
-ForceEntityTestSuite.prototype.testFetchSObjects = function() {
-    console.log("# In ForceEntityTestSuite.testFetchSObjects");
+SmartSyncTestSuite.prototype.testFetchSObjects = function() {
+    console.log("# In SmartSyncTestSuite.testFetchSObjects");
     var self = this;
     var idToName = {};
     var soupName = "testFetchSObjects";
@@ -2179,8 +2173,8 @@ ForceEntityTestSuite.prototype.testFetchSObjects = function() {
 /** 
  * TEST Force.Collection.fetch
  */
-ForceEntityTestSuite.prototype.testCollectionFetch = function() {
-    console.log("# In ForceEntityTestSuite.testCollectionFetch");
+SmartSyncTestSuite.prototype.testCollectionFetch = function() {
+    console.log("# In SmartSyncTestSuite.testCollectionFetch");
     var self = this;
     var idToName = {};
     var soupName = "testFetchSObjects";
@@ -2335,7 +2329,7 @@ var getCaller = function() {
 		throw new Error();
 	} catch ( e ) {
         var simplifiedStack = _.filter(_.map(e.stack.split("\n"), 
-                                             function(line) {var m = line.match(/ForceEntityTestSuite.js:[0-9]*:[0-9]*/); return m == null ? null : m[0];}),
+                                             function(line) {var m = line.match(/SmartSyncTestSuite.js:[0-9]*:[0-9]*/); return m == null ? null : m[0];}),
                                        function(x) { return x != null; });
         return simplifiedStack[2]; // 0->getCaller, 1-->assertContains or checkLocalFlags, 2-->the caller we are interested in!
 	} 

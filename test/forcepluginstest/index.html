@@ -19,7 +19,7 @@
     <script src="forcetk.mobilesdk.js"></script>
     <script src="cordova.force.js"></script>
     <script src="SFTestRunnerPlugin.js"></script>
-    <script src="force.entity.js"></script>
+    <script src="smartsync.js"></script>
 
 	<!-- load qunit -->
     <link rel="stylesheet" type="text/css" href="qunit/qunit.css" />
@@ -31,7 +31,7 @@
     <script src="SFSmartStoreTestSuite.js"></script>
     <script src="SFSmartStoreLoadTestSuite.js"></script>
     <script src="SFSDKInfoTestSuite.js"></script>
-    <script src="ForceEntityTestSuite.js"></script>
+    <script src="SFSmartSyncTestSuite.js"></script>
 
     <script type="text/javascript" charset="utf-8">
     var debugMode = true;
@@ -54,7 +54,7 @@
     function salesforceSessionRefreshed(creds) {
         logToConsole("salesforceSessionRefreshed");
 		
-        // Initializing entity framework
+        // Initializing SmartSync library
         Force.init(creds, null, null, null);
 
         // Now we are ready
