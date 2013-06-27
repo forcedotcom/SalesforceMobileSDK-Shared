@@ -24,6 +24,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+// Version this js was shipped with
+var SALESFORCE_MOBILE_SDK_VERSION = "2.0.0";
+
 /**
  * Utilify functions for logging
  */
@@ -202,9 +205,6 @@ cordova.define("salesforce/util/exec", function(require, exports, module) {
 });
 
 cordova.define("salesforce/plugin/sdkinfo", function(require, exports, module) {
-    // Version this js was shipped with
-    var SDK_VERSION = "2.0.0unstable";
-
     var SERVICE = "com.salesforce.sdkinfo";
 
     var exec = require("salesforce/util/exec").exec;
@@ -223,7 +223,7 @@ cordova.define("salesforce/plugin/sdkinfo", function(require, exports, module) {
      * Returns a populated SDKInfo object (via a callback)
      */
     var getInfo = function(successCB, errorCB) {
-        exec(SDK_VERSION, successCB, errorCB, SERVICE, "getInfo", []);
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE, "getInfo", []);
     };
 
 
@@ -245,9 +245,6 @@ var SFHybridApp = {
 };
 
 cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
-    // Version this js was shipped with
-    var SDK_VERSION = "2.0.0unstable";
-
     var SERVICE = "com.salesforce.oauth";
 
     var exec = require("salesforce/util/exec").exec;
@@ -275,7 +272,7 @@ cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
 	 *     userAgent
 	 */
     var getAuthCredentials = function (success, fail) {
-        exec(SDK_VERSION, success, fail, SERVICE, "getAuthCredentials", []);
+        exec(SALESFORCE_MOBILE_SDK_VERSION, success, fail, SERVICE, "getAuthCredentials", []);
     };
  
     /**
@@ -293,7 +290,7 @@ cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
      *   userAgent
      */
     var authenticate = function (success, fail) {
-        exec(SDK_VERSION, success, fail, SERVICE, "authenticate", []);
+        exec(SALESFORCE_MOBILE_SDK_VERSION, success, fail, SERVICE, "authenticate", []);
     };
 
     /**
@@ -309,7 +306,7 @@ cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
     var logout = function () {
         if (!logoutInitiated) {
             logoutInitiated = true;
-            exec(SDK_VERSION, null, null, SERVICE, "logoutCurrentUser", []);
+            exec(SALESFORCE_MOBILE_SDK_VERSION, null, null, SERVICE, "logoutCurrentUser", []);
         }
     };
  
@@ -321,7 +318,7 @@ cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
      * initialized.
      */
     var getAppHomeUrl = function (success) {
-        exec(SDK_VERSION, success, null, SERVICE, "getAppHomeUrl", []);
+        exec(SALESFORCE_MOBILE_SDK_VERSION, success, null, SERVICE, "getAppHomeUrl", []);
     };
 
     /**
@@ -355,9 +352,6 @@ cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
 var SalesforceOAuthPlugin = cordova.require("salesforce/plugin/oauth");
 
 cordova.define("salesforce/plugin/smartstore", function (require, exports, module) {
-    // Version this js was shipped with
-    var SDK_VERSION = "2.0.0unstable";
-
     var SERVICE = "com.salesforce.smartstore";
 
     var exec = require("salesforce/util/exec").exec;
@@ -483,7 +477,7 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
     // ====== Soup manipulation ======
     var registerSoup = function (soupName, indexSpecs, successCB, errorCB) {
         console.log("SmartStore.registerSoup: '" + soupName + "' indexSpecs: " + JSON.stringify(indexSpecs));
-        exec(SDK_VERSION, successCB, errorCB, SERVICE,
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgRegisterSoup",
              [{"soupName": soupName, "indexes": indexSpecs}]
             );
@@ -491,7 +485,7 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
 
     var removeSoup = function (soupName, successCB, errorCB) {
         console.log("SmartStore.removeSoup: " + soupName);
-        exec(SDK_VERSION, successCB, errorCB, SERVICE,
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgRemoveSoup",
              [{"soupName": soupName}]
             );
@@ -499,7 +493,7 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
 
     var soupExists = function (soupName, successCB, errorCB) {
         console.log("SmartStore.soupExists: " + soupName);
-        exec(SDK_VERSION, successCB, errorCB, SERVICE,
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgSoupExists",
              [{"soupName": soupName}]
             );
@@ -508,7 +502,7 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
     var querySoup = function (soupName, querySpec, successCB, errorCB) {
         if (querySpec.queryType == "smart") throw new Error("Smart queries can only be run using runSmartQuery");
     	console.log("SmartStore.querySoup: '" + soupName + "' indexPath: " + querySpec.indexPath);
-        exec(SDK_VERSION, successCB, errorCB, SERVICE,
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgQuerySoup",
              [{"soupName": soupName, "querySpec": querySpec}]
             );
@@ -517,7 +511,7 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
     var runSmartQuery = function (querySpec, successCB, errorCB) {
         if (querySpec.queryType != "smart") throw new Error("runSmartQuery can only run smart queries");
     	console.log("SmartStore.runSmartQuery: smartSql: " + querySpec.smartSql);
-        exec(SDK_VERSION, successCB, errorCB, SERVICE,
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgRunSmartQuery",
              [{"querySpec": querySpec}]
             );
@@ -527,7 +521,7 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
         if (logLevel > 0) {
             console.log("SmartStore.retrieveSoupEntry: '" + soupName + "' entryIds: " + entryIds);
         }
-        exec(SDK_VERSION, successCB, errorCB, SERVICE,
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgRetrieveSoupEntries",
              [{"soupName": soupName, "entryIds": entryIds}]
             );
@@ -541,7 +535,7 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
         if (logLevel > 0) { 
             console.log("SmartStore.upsertSoupEntries: '" + soupName + "' entries.length: " + entries.length);
         }
-        exec(SDK_VERSION, successCB, errorCB, SERVICE,
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgUpsertSoupEntries", 
              [{"soupName": soupName, "entries": entries, "externalIdPath": externalIdPath}]
             );
@@ -549,7 +543,7 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
 
     var removeFromSoup = function (soupName, entryIds, successCB, errorCB) {
         console.log("SmartStore.removeFromSoup: '" + soupName + "' entryIds: " + entryIds);
-        exec(SDK_VERSION, successCB, errorCB, SERVICE,
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgRemoveFromSoup",
              [{"soupName": soupName, "entryIds": entryIds}]
             );
@@ -558,7 +552,7 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
     //====== Cursor manipulation ======
     var moveCursorToPageIndex = function (cursor, newPageIndex, successCB, errorCB) {
         console.log("moveCursorToPageIndex: " + cursor.cursorId + "  newPageIndex: " + newPageIndex);
-        exec(SDK_VERSION, successCB, errorCB, SERVICE,
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgMoveCursorToPageIndex",
              [{"cursorId": cursor.cursorId, "index": newPageIndex}]
             );
@@ -586,7 +580,7 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
 
     var closeCursor = function (cursor, successCB, errorCB) {
         console.log("closeCursor: " + cursor.cursorId);
-        exec(SDK_VERSION, successCB, errorCB, SERVICE,
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgCloseCursor",
              [{"cursorId": cursor.cursorId}]
             );

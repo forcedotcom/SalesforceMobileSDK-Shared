@@ -24,9 +24,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+// Version this js was shipped with
+var SALESFORCE_MOBILE_SDK_VERSION = "2.0.0";
+
 cordova.define("salesforce/plugin/testrunner", function(require, exports, module) {
-    // Version this js was shipped with
-    var SDK_VERSION = "2.0.0unstable";
     var SERVICE = "com.salesforce.testrunner";
     var exec = require("salesforce/util/exec").exec;
 
@@ -45,7 +46,7 @@ cordova.define("salesforce/plugin/testrunner", function(require, exports, module
 
     var onReadyForTests = function (successCB, errorCB) {
         console.log("TestRunner.onReadyForTests");
-        exec(SDK_VERSION,
+        exec(SALESFORCE_MOBILE_SDK_VERSION,
              successCB, errorCB, 
              SERVICE,
              "onReadyForTests",
@@ -60,7 +61,7 @@ cordova.define("salesforce/plugin/testrunner", function(require, exports, module
 
     var onTestComplete = function (testName, success, message, status, successCB, errorCB) {
         console.log("TestRunner.onTestComplete: " + testName + ",success:" + success);
-        exec(SDK_VERSION,
+        exec(SALESFORCE_MOBILE_SDK_VERSION,
              successCB, errorCB, 
              SERVICE,
              "onTestComplete",
