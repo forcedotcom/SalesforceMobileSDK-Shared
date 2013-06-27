@@ -60,11 +60,30 @@
     var patchUserAgent = function(userAgent) {
         userAgent = userAgent || "";
         var sdkIndex = userAgent.indexOf("SalesforceMobileSDK");
-        var hybridIndex = userAgent.indexOf("Hybrid", sdkIndex);
-        return hybridIndex < 0 
-            ? userAgent + " SmartSync"
-            : userAgent.substring(0, hybridIndex) + "Hybrid SmartSync" + userAgent.substring(hybridIndex + "Hybrid".length);
+        if (sdkIndex < 0) {
+            return computeWebAppSdkAgent() + "SmartSync " + userAgent;
+        }
+        else {
+            var hybridIndex = userAgent.indexOf("Hybrid", sdkIndex);
+            return hybridIndex < 0 
+                    ? userAgent + " SmartSync"
+                    : userAgent.substring(0, hybridIndex) + "HybridSmartSync" + userAgent.substring(hybridIndex + "Hybrid".length);
+        }
     };
+
+    // Compute SalesforceMobileSDK for web app
+    var computeWebAppSdkAgent = function() {
+        // var re = new RegExp(/.*\(([^;]*);([^\)]*)\)/);
+        // var match = navigator.userAgent.match(re);
+        var sdkVersion = "2.0.0"; // XXX move to constant
+        var platform = "Unknown"; // (model.contains("iPhone") || model.contains("iPad") ? "iPhone OS" : "");
+        var platformVersion = "Unknown"; // match[2].match(/.* ([0-9]+_[0-9]+[^ ]*)/).pop().replace(/_/g, ".");
+        var model = "Unknown"; //match[1];
+        var appName = window.location.pathname.split("/").pop();
+        var appVersion = "1.0";
+        var userAgent = "SalesforceMobileSDK/" + sdkVersion + " " + platform + "/" + platformVersion + " (" + model + ") " + appName + "/" + appVersion + " Web";
+        return userAgent;
+    }    
 
     // Init function
     // creds: credentials returned by authenticate call
@@ -80,7 +99,7 @@
             innerForcetkClient = new forcetk.Client(creds.clientId, creds.loginUrl, creds.proxyUrl, reauth);
             innerForcetkClient.setSessionToken(creds.accessToken, apiVersion, creds.instanceUrl);
             innerForcetkClient.setRefreshToken(creds.refreshToken);
-            innerForcetkClient.setUserAgentString(patchUserAgent(creds.userAgent));
+            innerForcetkClient.setUserAgentString(patchUserAgent(creds.userAgent || navigator.userAgent));
         }
 
         forcetkClient = new Object();
