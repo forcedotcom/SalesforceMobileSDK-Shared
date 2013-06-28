@@ -58,12 +58,14 @@
 
     // Helper function to patch user agent
     var patchUserAgent = function(userAgent) {
-        userAgent = userAgent || "";
-        var sdkIndex = userAgent.indexOf("SalesforceMobileSDK");
-        var hybridIndex = userAgent.indexOf("Hybrid", sdkIndex);
-        return hybridIndex < 0 
-            ? userAgent + " SmartSync"
-            : userAgent.substring(0, hybridIndex) + "Hybrid SmartSync" + userAgent.substring(hybridIndex + "Hybrid".length);
+        var match = /^(SalesforceMobileSDK\/[^\ ]* [^\/]*\/[^\ ]* \([^\)]*\) [^\/]*\/[^ ]* )(Hybrid|Web)(.*$)/.exec(userAgent);
+        if (match != null && match.length == 4) {
+            return match[1] + match[2] + "SmartSync" + match[3];
+        }
+        else {
+            // Not a SalesforceMobileSDK user agent, we leave it unchanged
+            return userAgent; 
+        }
     };
 
     // Init function
@@ -80,7 +82,7 @@
             innerForcetkClient = new forcetk.Client(creds.clientId, creds.loginUrl, creds.proxyUrl, reauth);
             innerForcetkClient.setSessionToken(creds.accessToken, apiVersion, creds.instanceUrl);
             innerForcetkClient.setRefreshToken(creds.refreshToken);
-            innerForcetkClient.setUserAgentString(patchUserAgent(creds.userAgent));
+            innerForcetkClient.setUserAgentString(patchUserAgent(creds.userAgent || innerForcetkClient.getUserAgentString()));
         }
 
         forcetkClient = new Object();
