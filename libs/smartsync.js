@@ -60,7 +60,7 @@
     var patchUserAgent = function(userAgent) {
         var match = /^(SalesforceMobileSDK\/[^\ ]* [^\/]*\/[^\ ]* \([^\)]*\) [^\/]*\/[^ ]* )(Hybrid|Web)(.*$)/.exec(userAgent);
         if (match != null && match.length == 4) {
-            return match[1] + match[2] + "Sync" + match[3];
+            return match[1] + match[2] + "SmartSync" + match[3];
         }
         else {
             // Not a SalesforceMobileSDK user agent, we leave it unchanged

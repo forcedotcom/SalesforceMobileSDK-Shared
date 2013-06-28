@@ -197,13 +197,13 @@ if (forcetk.Client === undefined) {
                 break;
 
             case "Windows Phone": 
-                platform = "WindowsPhone"; 
+                platform = "Windows Phone"; 
                 platformVersion = getWindowsPhoneVersion(); 
                 model = getWindowsPhoneModel();
                 break;
 
             case "Macintosh":    
-                platform = "Macintosh"; 
+                platform = "Mac OS"; 
                 platformVersion = getMacOSVersion(); 
                 break;
 

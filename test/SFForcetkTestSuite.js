@@ -86,8 +86,8 @@ ForcetkTestSuite.prototype.testComputeWebAppSdkAgentForWindowsPhoneUserAgents = 
     console.log("In SFForcetkTestSuite.testComputeWebAppSdkAgentForWindowsPhoneUserAgents");
 
     // User agents taken from http://www.zytrax.com/tech/web/mobile_ids.html
-    this.tryUserAgent("WindowsPhone", "7.0", "7_Trophy", "Mozilla/4.0 (compatible: MSIE 7.0; Windows Phone OS 7.0; Trident/3.1; IEMobile/7.0; HTC; 7 Trophy)");
-    this.tryUserAgent("WindowsPhone", "7.5", "Lumia_710", "Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0; NOKIA; Lumia 710)");
+    this.tryUserAgent("Windows Phone", "7.0", "7_Trophy", "Mozilla/4.0 (compatible: MSIE 7.0; Windows Phone OS 7.0; Trident/3.1; IEMobile/7.0; HTC; 7 Trophy)");
+    this.tryUserAgent("Windows Phone", "7.5", "Lumia_710", "Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0; NOKIA; Lumia 710)");
     this.finalizeTest();
 }; 
 
@@ -99,7 +99,7 @@ ForcetkTestSuite.prototype.testComputeWebAppSdkAgentForDesktopUserAgents = funct
     console.log("In SFForcetkTestSuite.testComputeWebAppSdkAgentForDesktopUserAgents");
 
     // User agents taken from http://techblog.willshouse.com/2012/01/03/most-common-user-agents/
-    this.tryUserAgent("Macintosh", "10.8.4", "Unknown", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.116 Safari/537.36");
+    this.tryUserAgent("Mac OS", "10.8.4", "Unknown", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.116 Safari/537.36");
     this.tryUserAgent("Windows", "6.2", "Unknown", "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.110 Safari/537.36");
     this.tryUserAgent("Windows", "6.1", "Unknown", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.110 Safari/537.36");
     this.tryUserAgent("Windows", "5.1", "Unknown", "Mozilla/5.0 (Windows NT 5.1; rv:21.0) Gecko/20100101 Firefox/21.0");
