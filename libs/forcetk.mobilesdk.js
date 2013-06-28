@@ -24,6 +24,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+// Version this js was shipped with
+var SALESFORCE_MOBILE_SDK_VERSION = "2.0.0";
+
 /*
  * JavaScript library to wrap REST API on Visualforce. Leverages Ajax Proxy
  * (see http://bit.ly/sforce_ajax_proxy for details). Based on forcetk.js,
@@ -95,7 +98,7 @@ if (forcetk.Client === undefined) {
         this.apiVersion = null;
         this.instanceUrl = null;
         this.asyncAjax = true;
-        this.userAgentString = null;
+        this.userAgentString = this.computeWebAppSdkAgent(navigator.userAgent);
         this.authCallback = authCallback;
     }
 
@@ -106,6 +109,113 @@ if (forcetk.Client === undefined) {
     forcetk.Client.prototype.setUserAgentString = function(uaString) {
         this.userAgentString = uaString;
     }
+
+    /**
+    * Get User-Agent used by this client.
+    */
+    forcetk.Client.prototype.getUserAgentString = function() {
+        return this.userAgentString;
+    }
+
+
+    /**
+    * Compute SalesforceMobileSDK for web app
+    */
+    forcetk.Client.prototype.computeWebAppSdkAgent = function(navigatorUserAgent) {
+        var sdkVersion = SALESFORCE_MOBILE_SDK_VERSION;
+        var model = "Unknown"
+        var platform = "Unknown";
+        var platformVersion = "Unknown";
+        var appName = window.location.pathname.split("/").pop();
+        var appVersion = "1.0";
+
+        var getIPadVersion = function() {
+            var match = /CPU OS ([0-9_]*) like Mac OS X/.exec(navigatorUserAgent);
+            return (match != null && match.length == 2 ? match[1].replace(/_/g, ".") : "Unknown");
+        };
+
+        var getIPhoneVersion = function() {
+            var match = /CPU iPhone OS ([0-9_]*) like Mac OS X/.exec(navigatorUserAgent);
+            return (match != null && match.length == 2 ? match[1].replace(/_/g, ".") : "Unknown");
+        };
+
+        var getIOSModel = function() {
+            var match = /(iPad|iPhone|iPod)/.exec(navigatorUserAgent);
+            return (match != null && match.length == 2 ? match[1] : "Unknown");
+        };
+
+        var getAndroidVersion = function() {
+            var match = /Android ([0-9\.]*)/.exec(navigatorUserAgent);
+            return (match != null && match.length == 2 ? match[1] : "Unknown");
+        };
+
+        var getAndroidModel = function() {
+            var match = /Android[^\)]*; ([^;\)]*)/.exec(navigatorUserAgent);
+            return (match != null && match.length == 2 ? match[1].replace(/[\/ ]/g, "_") : "Unknown");
+        };
+
+        var getWindowsPhoneVersion = function() {
+            var match = /Windows Phone OS ([0-9\.]*)/.exec(navigatorUserAgent);
+            return (match != null && match.length == 2 ? match[1] : "Unknown");
+        };
+
+        var getWindowsPhoneModel = function() {
+            var match = /Windows Phone OS [^\)]*; ([^;\)]*)/.exec(navigatorUserAgent);
+            return (match != null && match.length == 2 ? match[1].replace(/[\/ ]/g, "_") : "Unknown");
+        };
+
+        var getMacOSVersion = function() {
+            var match = /Mac OS X ([0-9_]*)/.exec(navigatorUserAgent);
+            return (match != null && match.length == 2 ? match[1].replace(/_/g, ".") : "Unknown");
+        };
+
+        var getWindowsVersion = function() {
+            var match = /Windows NT ([0-9\.]*)/.exec(navigatorUserAgent);
+            return (match != null && match.length == 2 ? match[1] : "Unknown");
+        };
+
+        var match = /(iPhone|iPad|iPod|Android|Windows Phone|Macintosh|Windows)/.exec(navigatorUserAgent);
+        if (match != null && match.length == 2) {
+            switch(match[1]) {
+            case "iPad":       
+                platform = "iPhone OS"; 
+                platformVersion = getIPadVersion();
+                model = "iPad";
+                break;
+
+            case "iPhone":       
+            case "iPod":       
+                platform = "iPhone OS"; 
+                platformVersion = getIPhoneVersion();
+                model = match[1];
+                break;
+
+            case "Android":      
+                platform = "android mobile"; 
+                platformVersion = getAndroidVersion(); 
+                model = getAndroidModel(); 
+                break;
+
+            case "Windows Phone": 
+                platform = "WindowsPhone"; 
+                platformVersion = getWindowsPhoneVersion(); 
+                model = getWindowsPhoneModel();
+                break;
+
+            case "Macintosh":    
+                platform = "Macintosh"; 
+                platformVersion = getMacOSVersion(); 
+                break;
+
+            case "Windows": 
+                platform = "Windows"; 
+                platformVersion = getWindowsVersion(); 
+                break;
+            }
+        }
+
+        return "SalesforceMobileSDK/" + sdkVersion + " " + platform + "/" + platformVersion + " (" + model + ") " + appName + "/" + appVersion + " Web " + navigatorUserAgent;
+    }    
 
     /**
      * Set a refresh token in the client.

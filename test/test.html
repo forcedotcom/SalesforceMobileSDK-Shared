@@ -26,10 +26,11 @@
 
 	<!-- we load all the test suite definitions here but do not run them until the native test runner tells us to -->
 	<script src="SFTestSuite.js"></script>
+    <script src="SFSDKInfoTestSuite.js"></script>
+    <script src="SFForcetkTestSuite.js"></script>
     <script src="SFAbstractSmartStoreTestSuite.js"></script>
     <script src="SFSmartStoreTestSuite.js"></script>
     <script src="SFSmartStoreLoadTestSuite.js"></script>
-    <script src="SFSDKInfoTestSuite.js"></script>
     <script src="SFSmartSyncTestSuite.js"></script>
 
     <script charset="utf-8">
@@ -46,12 +47,14 @@
     Force.init(creds, null, null, null);
 
     window.addEventListener("load", function() {
+        document.getElementById("link_sdkinfo_test_suite")
+            .addEventListener("click", function() {new SDKInfoTestSuite().startTests();});
+        document.getElementById("link_forcetk_test_suite")
+            .addEventListener("click", function() {new ForcetkTestSuite().startTests();});
         document.getElementById("link_smartstore_test_suite")
             .addEventListener("click", function() {new SmartStoreTestSuite().startTests();});
         document.getElementById("link_smartstore_load_test_suite")
             .addEventListener("click", function() {new SmartStoreLoadTestSuite().startTests();});
-        document.getElementById("link_sdkinfo_test_suite")
-            .addEventListener("click", function() {new SDKInfoTestSuite().startTests();});
         document.getElementById("link_smart_sync_test_suite")
             .addEventListener("click", function() {new SmartSyncTestSuite().startTests();});
     });
@@ -64,6 +67,7 @@
           </div> 
 
           <p><a href="#" id="link_sdkinfo_test_suite" data-role="button" data-inline="true">Run SDK Info Tests</a></p>
+          <p><a href="#" id="link_forcetk_test_suite" data-role="button" data-inline="true">Run Forcetk Tests</a></p>
           <p><a href="#" id="link_smartstore_test_suite" data-role="button" data-inline="true">Run SmartStore Tests</a></p>
           <p><a href="#" id="link_smartstore_load_test_suite" data-role="button" data-inline="true">Run SmartStore Load Tests</a></p>
           <p><a href="#" id="link_smart_sync_test_suite" data-role="button" data-inline="true">Run SmartSync Tests</a></p>
