@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+
+
+    <!-- external libs -->
+    <link rel="stylesheet" href="jquery/jquery.mobile-1.3.1.min.css" />
+    <script src="jquery/jquery-2.0.0.min.js"></script>
+    <script src="jquery/jquery.mobile-1.3.1.min.js"></script>
+    <script src="backbone/underscore-1.4.4.min.js"></script>
+    <script src="backbone/backbone-1.0.0.min.js"></script>
+
+    <!-- cordova -->
+    <script src="cordova-2.3.0.js"></script>
+
+    <!-- sfdc libs -->
+    <script src="forcetk.mobilesdk.js"></script>
+    <script src="cordova.force.js"></script>
+    <script src="SFTestRunnerPlugin.js"></script>
+    <script src="smartsync.js"></script>
+
+	<!-- load qunit -->
+    <link rel="stylesheet" type="text/css" href="qunit/qunit.css" />
+    <script src="qunit/qunit.js"></script>
+
+	<!-- we load all the test suite definitions here but do not run them until the native test runner tells us to -->
+	<script src="SFTestSuite.js"></script>
+    <script src="SFAbstractSmartStoreTestSuite.js"></script>
+    <script src="SFSmartStoreTestSuite.js"></script>
+    <script src="SFSmartStoreLoadTestSuite.js"></script>
+    <script src="SFSDKInfoTestSuite.js"></script>
+    <script src="SFSmartSyncTestSuite.js"></script>
+
+    <script type="text/javascript" charset="utf-8">
+    var debugMode = true;
+    var logToConsole = cordova.require("salesforce/util/logger").logToConsole;
+
+    $(function() {
+        //Add event listeners and so forth here
+        logToConsole("onLoad: jquery ready");
+		document.addEventListener("deviceready", onDeviceReady,false);
+    });
+
+    // When this function is called, Cordova has been initialized and is ready to roll 
+    function onDeviceReady() {
+        
+        logToConsole("onDeviceReady: Cordova ready");
+        //Call getAuthCredentials to get the initial session credentials
+        cordova.require("salesforce/plugin/oauth").getAuthCredentials(salesforceSessionRefreshed, getAuthCredentialsError);
+    }
+
+    function salesforceSessionRefreshed(creds) {
+        logToConsole("salesforceSessionRefreshed");
+		
+        // Initializing SmartSync library
+        Force.init(creds, null, null, null);
+
+        // Now we are ready
+        cordova.require("salesforce/plugin/testrunner").onReadyForTests();
+    }
+
+
+    function getAuthCredentialsError(error) {
+        logToConsole("getAuthCredentialsError: " + error);
+    }
+    </script>
+        
+  </head>
+  <body>
+      <div data-role="page" data-theme="b" id="jqm-home"> 
+          <div  data-role="header"> 
+              <h1>Force Plugins Test</h1> 
+          </div> 
+
+		  <div id="qunit-testrunner-toolbar"></div>
+		  <h2 id="qunit-userAgent"></h2>
+		  <ol id="qunit-tests"></ol>
+		  <div id="qunit-fixture">test markup, will be hidden</div>
+
+          <h3>console:</h3>
+          <p id="console" class="logWindow"/>
+      </div> 
+  </body>
+</html>

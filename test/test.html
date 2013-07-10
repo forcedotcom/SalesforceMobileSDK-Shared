@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+
+    <!-- external libs -->
+    <script src="../external/jquery/jquery-2.0.0.min.js"></script>
+    <script src="../external/backbone/underscore-1.4.4.min.js"></script>
+    <script src="../external/backbone/backbone-1.0.0.min.js"></script>
+
+    <!-- mock cordova -->
+    <script src="MockCordova.js"></script>
+
+    <!-- sfdc libs -->
+    <script src="../libs/forcetk.mobilesdk.js"></script>
+    <script src="../libs/cordova.force.js"></script>
+    <script src="../libs/smartsync.js"></script>
+
+    <!-- mock for native implementations -->
+    <script src="MockSmartStore.js"></script>
+    <script src="MockSDKInfo.js"></script>
+
+	<!-- load qunit -->
+    <link rel="stylesheet" type="text/css" href="../external/qunit/qunit.css" />
+    <script src="../external/qunit/qunit.js"></script>
+
+	<!-- we load all the test suite definitions here but do not run them until the native test runner tells us to -->
+	<script src="SFTestSuite.js"></script>
+    <script src="SFSDKInfoTestSuite.js"></script>
+    <script src="SFForcetkTestSuite.js"></script>
+    <script src="SFAbstractSmartStoreTestSuite.js"></script>
+    <script src="SFSmartStoreTestSuite.js"></script>
+    <script src="SFSmartStoreLoadTestSuite.js"></script>
+    <script src="SFSmartSyncTestSuite.js"></script>
+
+    <script charset="utf-8">
+    var debugMode = true;
+
+    var creds = {
+        accessToken: "--will-be-obtained-by-refresh--",
+        refreshToken: "5Aep86184zVXgc.GEj2BlAGkySQlTzaN7cdTyBqL8D19FKdBonRaKWuaHajxJWOWEjLNkIrEi3hGpDN2fWtU7kG",
+        clientId: "3MVG92.uWdyphVj4bnolD7yuIpCQsNgddWtqRND3faxrv9uKnbj47H4RkwheHA2lKY4cBusvDVp0M6gdGE8hp",
+        loginUrl: "https://test.salesforce.com",
+        instanceUrl: "https://cs7.salesforce.com"
+    };
+
+    Force.init(creds, null, null, null);
+
+    window.addEventListener("load", function() {
+        document.getElementById("link_sdkinfo_test_suite")
+            .addEventListener("click", function() {new SDKInfoTestSuite().startTests();});
+        document.getElementById("link_forcetk_test_suite")
+            .addEventListener("click", function() {new ForcetkTestSuite().startTests();});
+        document.getElementById("link_smartstore_test_suite")
+            .addEventListener("click", function() {new SmartStoreTestSuite().startTests();});
+        document.getElementById("link_smartstore_load_test_suite")
+            .addEventListener("click", function() {new SmartStoreLoadTestSuite().startTests();});
+        document.getElementById("link_smart_sync_test_suite")
+            .addEventListener("click", function() {new SmartSyncTestSuite().startTests();});
+    });
+    </script>
+  </head>
+  <body>
+      <div data-role="page" data-theme="b" id="jqm-home"> 
+          <div  data-role="header"> 
+              <h1>Salesforce Javascript Libraries Tests</h1> 
+          </div> 
+
+          <p><a href="#" id="link_sdkinfo_test_suite" data-role="button" data-inline="true">Run SDK Info Tests</a></p>
+          <p><a href="#" id="link_forcetk_test_suite" data-role="button" data-inline="true">Run Forcetk Tests</a></p>
+          <p><a href="#" id="link_smartstore_test_suite" data-role="button" data-inline="true">Run SmartStore Tests</a></p>
+          <p><a href="#" id="link_smartstore_load_test_suite" data-role="button" data-inline="true">Run SmartStore Load Tests</a></p>
+          <p><a href="#" id="link_smart_sync_test_suite" data-role="button" data-inline="true">Run SmartSync Tests</a></p>
+
+		  <div id="qunit-testrunner-toolbar"></div>
+		  <h2 id="qunit-userAgent"></h2>
+		  <ol id="qunit-tests"></ol>
+		  <div id="qunit-fixture">test markup, will be hidden</div>
+  </div> 
+  </body>
+</html>
