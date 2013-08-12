@@ -36,6 +36,7 @@ if (typeof ForcetkTestSuite === 'undefined') {
  */
 var ForcetkTestSuite = function () {
     SFTestSuite.call(this, "forcetk");
+    this.apiVersion = "v28.0";
 };
 
 // We are sub-classing SFTestSuite
@@ -108,11 +109,70 @@ ForcetkTestSuite.prototype.testComputeWebAppSdkAgentForDesktopUserAgents = funct
 }; 
 
 
+/** 
+ * TEST ownedFilesList
+ */
+ForcetkTestSuite.prototype.testOwnedFilesList = function()  {
+    console.log("In SFForcetkTestSuite.testOwnedFilesList");
+    var forcetkClient = this.getTestForcetkClient();
+    QUnit.equals(forcetkClient.ownedFilesList(), "/" + this.apiVersion + "/chatter/users/me/files");
+    QUnit.equals(forcetkClient.ownedFilesList("me"), "/" + this.apiVersion + "/chatter/users/me/files");
+    QUnit.equals(forcetkClient.ownedFilesList("someUserId"), "/" + this.apiVersion + "/chatter/users/someUserId/files");
+    QUnit.equals(forcetkClient.ownedFilesList(null, 1), "/" + this.apiVersion + "/chatter/users/me/files?page=1");
+    QUnit.equals(forcetkClient.ownedFilesList("me", 2), "/" + this.apiVersion + "/chatter/users/me/files?page=2");
+    QUnit.equals(forcetkClient.ownedFilesList("someUserId", 3), "/" + this.apiVersion + "/chatter/users/someUserId/files?page=3");
 
+    this.finalizeTest();
+}; 
+
+/** 
+ * TEST filesInUsersGroups
+ */
+ForcetkTestSuite.prototype.testFilesInUsersGroups = function()  {
+    console.log("In SFForcetkTestSuite.testFilesInUsersGroups");
+    var forcetkClient = this.getTestForcetkClient();
+    QUnit.equals(forcetkClient.filesInUsersGroups(), "/" + this.apiVersion + "/chatter/users/me/files/filter/groups");
+    QUnit.equals(forcetkClient.filesInUsersGroups("me"), "/" + this.apiVersion + "/chatter/users/me/files/filter/groups");
+    QUnit.equals(forcetkClient.filesInUsersGroups("someUserId"), "/" + this.apiVersion + "/chatter/users/someUserId/files/filter/groups");
+    QUnit.equals(forcetkClient.filesInUsersGroups(null, 1), "/" + this.apiVersion + "/chatter/users/me/files/filter/groups?page=1");
+    QUnit.equals(forcetkClient.filesInUsersGroups("me", 2), "/" + this.apiVersion + "/chatter/users/me/files/filter/groups?page=2");
+    QUnit.equals(forcetkClient.filesInUsersGroups("someUserId", 3), "/" + this.apiVersion + "/chatter/users/someUserId/files/filter/groups?page=3");
+    this.finalizeTest();
+}; 
+
+/** 
+ * TEST filesSharedWithUser
+ */
+ForcetkTestSuite.prototype.testFilesSharedWithUser = function()  {
+    console.log("In SFForcetkTestSuite.testFilesInUsersGroups");
+    var forcetkClient = this.getTestForcetkClient();
+    QUnit.equals(forcetkClient.filesSharedWithUser(), "/" + this.apiVersion + "/chatter/users/me/files/filter/sharedWithMe");
+    QUnit.equals(forcetkClient.filesSharedWithUser("me"), "/" + this.apiVersion + "/chatter/users/me/files/filter/sharedWithMe");
+    QUnit.equals(forcetkClient.filesSharedWithUser("someUserId"), "/" + this.apiVersion + "/chatter/users/someUserId/files/filter/sharedWithMe");
+    QUnit.equals(forcetkClient.filesSharedWithUser(null, 1), "/" + this.apiVersion + "/chatter/users/me/files/filter/sharedWithMe?page=1");
+    QUnit.equals(forcetkClient.filesSharedWithUser("me", 2), "/" + this.apiVersion + "/chatter/users/me/files/filter/sharedWithMe?page=2");
+    QUnit.equals(forcetkClient.filesSharedWithUser("someUserId", 3), "/" + this.apiVersion + "/chatter/users/someUserId/files/filter/sharedWithMe?page=3");
+    this.finalizeTest();
+}; 
+
+/** 
+ * TEST fileDetails
+ */
+ForcetkTestSuite.prototype.testFileDetails = function()  {
+    console.log("In SFForcetkTestSuite.testFileDetails");
+    var forcetkClient = this.getTestForcetkClient();
+    QUnit.equals(forcetkClient.fileDetails("someFileId"), "/" + this.apiVersion + "/chatter/files/someFileId");
+    QUnit.equals(forcetkClient.fileDetails("someFileId", "someVersionNumber"), "/" + this.apiVersion + "/chatter/files/someFileId?versionNumber=someVersionNumber");
+    this.finalizeTest();
+}; 
+
+/**
+ * Helper function for user agent testing
+ */
 ForcetkTestSuite.prototype.tryUserAgent = function(expectedPlatform, expectedPlatformVersion, expectedModel, userAgent) {
     var forcetkClient = new forcetk.Client();
     var webAppSdkAgent = forcetkClient.computeWebAppSdkAgent(userAgent);
-    var match = /SalesforceMobileSDK\/2.0.0 ([^\/]*)\/([^\ ]*) \(([^\)]*)\) test.html\/1.0 Web (.*)/.exec(webAppSdkAgent);
+    var match = /SalesforceMobileSDK\/2.1.0.unstable ([^\/]*)\/([^\ ]*) \(([^\)]*)\) test.html\/1.0 Web (.*)/.exec(webAppSdkAgent);
     if (match != null && match.length == 5) {
         QUnit.equals(match[1], expectedPlatform, "Wrong platform for user agent [" + userAgent + "]");
         QUnit.equals(match[2], expectedPlatformVersion, "Wrong platformVersion for user agent [" + userAgent + "]");
@@ -124,6 +184,15 @@ ForcetkTestSuite.prototype.tryUserAgent = function(expectedPlatform, expectedPla
     }
 };
 
+/**
+ * Helper function to get a forcetk client that doesn't actually send requests
+ */
+ForcetkTestSuite.prototype.getTestForcetkClient = function() {
+    var forcetkClient = new forcetk.Client();
+    forcetkClient.apiVersion = this.apiVersion;
+    forcetkClient.ajax = function(path) { return path; }
+    return forcetkClient;
+};
 
 }
 

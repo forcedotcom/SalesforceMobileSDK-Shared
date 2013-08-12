@@ -630,4 +630,53 @@ if (forcetk.Client === undefined) {
         return this.ajax('/' + this.apiVersion + '/search?q=' + escape(sosl)
         , callback, error);
     }
+
+    /*
+     * Returns a page from the list of files owned by the specified user
+     * @param userId a user id or 'me' - when null uses current user
+     * @param page page number - when null fetches first page
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    forcetk.Client.prototype.ownedFilesList = function(userId, page, callback, error) {
+        return this.ajax('/' + this.apiVersion + '/chatter/users/' + (userId == null ? 'me' : userId) +  '/files' + (page != null ? '?page=' + page : '')
+        , callback, error);
+    }
+
+    /*
+     * Returns a page from the list of files from groups that the specified user is a member of
+     * @param userId a user id or 'me' - when null uses current user
+     * @param page page number - when null fetches first page
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    forcetk.Client.prototype.filesInUsersGroups = function(userId, page, callback, error) {
+        return this.ajax('/' + this.apiVersion + '/chatter/users/' + (userId == null ? 'me' : userId) +  '/files/filter/groups' + (page != null ? '?page=' + page : '')
+        , callback, error);
+    }
+
+    /*
+     * Returns a page from the list of files shared with the specified user
+     * @param userId a user id or 'me' - when null uses current user
+     * @param page page number - when null fetches first page
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    forcetk.Client.prototype.filesSharedWithUser = function(userId, page, callback, error) {
+        return this.ajax('/' + this.apiVersion + '/chatter/users/' + (userId == null ? 'me' : userId) +  '/files/filter/sharedWithMe' + (page != null ? '?page=' + page : '')
+        , callback, error);
+    }
+
+    /*
+     * Returns file details
+     * @param id file id
+     * @param version - when null fetches details of most recent version
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    forcetk.Client.prototype.fileDetails = function(id, version, callback, error) {
+        return this.ajax('/' + this.apiVersion + '/chatter/files/' + id + (version != null ? '?versionNumber=' + version : '')
+        , callback, error);
+    }
+
 }
