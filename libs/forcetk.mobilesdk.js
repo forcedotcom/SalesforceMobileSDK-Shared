@@ -328,6 +328,7 @@ if (forcetk.Client === undefined) {
                     xhr.setRequestHeader('User-Agent', that.userAgentString);
                     xhr.setRequestHeader('X-User-Agent', that.userAgentString);
                 }
+                xhr.setRequestHeader('Cache-Control', 'no-store');
             }
         });
     }
@@ -358,6 +359,7 @@ if (forcetk.Client === undefined) {
         if (this.proxyUrl !== null) {
             request.setRequestHeader('SalesforceProxy-Endpoint', url);
         }
+        request.setRequestHeader('Cache-Control', 'no-store');
         request.onreadystatechange = function() {
             // continue if the process is completed
             if (request.readyState == 4) {
@@ -435,6 +437,7 @@ if (forcetk.Client === undefined) {
                     xhr.setRequestHeader('User-Agent', that.userAgentString);
                     xhr.setRequestHeader('X-User-Agent', that.userAgentString);
                 }
+                xhr.setRequestHeader('Cache-Control', 'no-store');
             }
         });
     }
