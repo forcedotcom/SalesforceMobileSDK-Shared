@@ -347,7 +347,7 @@ if (forcetk.Client === undefined) {
      **/
     forcetk.Client.prototype.getChatterFile = function(path,mimeType,callback,error,retry) {
         var that = this;
-        var url = this.instanceUrl + path;
+        var url = this.instanceUrl + '/services/data' + path;
         var request = new XMLHttpRequest();
         request.open("GET",  (this.proxyUrl !== null) ? this.proxyUrl: url, true);
         request.responseType = "arraybuffer";
@@ -704,8 +704,30 @@ if (forcetk.Client === undefined) {
      */
     forcetk.Client.prototype.fileRendition = function(id, version, renditionType, page, callback, error) {
         var mimeType = (renditionType == "FLASH" ? "application/x-shockwave-flash" : (renditionType == "PDF" ? "application/pdf" : "image/jpeg"));
-        return this.getChatterFile('/' + this.apiVersion + '/chatter/files/' + id + '/rendition?type=' + renditionType + (version != null ? '&versionNumber=' + version : '') + (page != null ? '&page=' + page : '')
+        return this.getChatterFile(this.fileRenditionPath(id, version, renditionType, page)
                                    , mimeType , callback, error);
+    }
+
+    /*
+     * Returns file rendition url
+     * @param id file id
+     * @param version - when null fetches details of most recent version
+     * @param rentidionType - FLASH, PDF, THUMB120BY90, THUMB240BY180, THUMB720BY480
+     * @param page page number - when null fetches first page
+     */
+    forcetk.Client.prototype.fileRenditionUrl = function(id, version, renditionType, page) {
+        return this.instanceUrl + '/services/data' + this.fileRenditionPath(id, version, renditionType, page);
+    }
+
+    /*
+     * Returns file rendition path (relative to service/data)
+     * @param id file id
+     * @param version - when null fetches details of most recent version
+     * @param rentidionType - FLASH, PDF, THUMB120BY90, THUMB240BY180, THUMB720BY480
+     * @param page page number - when null fetches first page
+     */
+    forcetk.Client.prototype.fileRenditionPath = function(id, version, renditionType, page) {
+        return '/' + this.apiVersion + '/chatter/files/' + id + '/rendition?type=' + renditionType + (version != null ? '&versionNumber=' + version : '') + (page != null ? '&page=' + page : '');
     }
 
     /*
@@ -717,9 +739,26 @@ if (forcetk.Client === undefined) {
      */
     forcetk.Client.prototype.fileContents = function(id, version, callback, error) {
         var mimeType = null; // we don't know
-        return this.getChatterFile('/' + this.apiVersion + '/chatter/files/' + id + '/content' + (version != null ? '?versionNumber=' + version : '')
+        return this.getChatterFile(this.fileContentsPath(id, version)
                                    , mimeType , callback, error);
     }
 
+    /*
+     * Returns file content url
+     * @param id file id
+     * @param version - when null fetches details of most recent version
+     */
+    forcetk.Client.prototype.fileContentsUrl = function(id, version, contentType, page) {
+        return this.instanceUrl + '/services/data' + this.fileContentsPath(id, version);
+    }
+
+    /*
+     * Returns file content path (relative to service/data)
+     * @param id file id
+     * @param version - when null fetches details of most recent version
+     */
+    forcetk.Client.prototype.fileContentsPath = function(id, version) {
+        return '/' + this.apiVersion + '/chatter/files/' + id + '/content' + (version != null ? '?versionNumber=' + version : '');
+    }
 
 }

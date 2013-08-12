@@ -179,6 +179,75 @@ ForcetkTestSuite.prototype.testBatchFileDetails = function()  {
 }; 
 
 /** 
+ * TEST fileRenditionPath
+ */
+ForcetkTestSuite.prototype.testFileRenditionPath = function()  {
+    console.log("In SFForcetkTestSuite.testFileRenditionPath");
+    var forcetkClient = this.getTestForcetkClientForBinary();
+    // only rendition type provided
+    QUnit.equals(forcetkClient.fileRenditionPath("someFileId", null, "FLASH"), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=FLASH");
+    QUnit.equals(forcetkClient.fileRenditionPath("someFileId", null, "PDF"), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=PDF");
+    QUnit.equals(forcetkClient.fileRenditionPath("someFileId", null, "THUMB120BY90"), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB120BY90");
+    QUnit.equals(forcetkClient.fileRenditionPath("someFileId", null, "THUMB240BY180"), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB240BY180");
+    QUnit.equals(forcetkClient.fileRenditionPath("someFileId", null, "THUMB720BY480"), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB720BY480");
+    // rendition type and version provided
+    QUnit.equals(forcetkClient.fileRenditionPath("someFileId", "someVersionNumber", "FLASH"), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=FLASH&versionNumber=someVersionNumber");
+    QUnit.equals(forcetkClient.fileRenditionPath("someFileId", "someVersionNumber", "PDF"), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=PDF&versionNumber=someVersionNumber");
+    QUnit.equals(forcetkClient.fileRenditionPath("someFileId", "someVersionNumber", "THUMB120BY90"), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB120BY90&versionNumber=someVersionNumber");
+    QUnit.equals(forcetkClient.fileRenditionPath("someFileId", "someVersionNumber", "THUMB240BY180"), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB240BY180&versionNumber=someVersionNumber");
+    QUnit.equals(forcetkClient.fileRenditionPath("someFileId", "someVersionNumber", "THUMB720BY480"), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB720BY480&versionNumber=someVersionNumber");
+    // rendition type and page number provided
+    QUnit.equals(forcetkClient.fileRenditionPath("someFileId", null, "FLASH", 3), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=FLASH&page=3");
+    QUnit.equals(forcetkClient.fileRenditionPath("someFileId", null, "PDF", 3), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=PDF&page=3");
+    QUnit.equals(forcetkClient.fileRenditionPath("someFileId", null, "THUMB120BY90", 3), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB120BY90&page=3");
+    QUnit.equals(forcetkClient.fileRenditionPath("someFileId", null, "THUMB240BY180", 3), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB240BY180&page=3");
+    QUnit.equals(forcetkClient.fileRenditionPath("someFileId", null, "THUMB720BY480", 3), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB720BY480&page=3");
+    // rendition type, version and page number provided
+    QUnit.equals(forcetkClient.fileRenditionPath("someFileId", "someVersionNumber", "FLASH", 3), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=FLASH&versionNumber=someVersionNumber&page=3");
+    QUnit.equals(forcetkClient.fileRenditionPath("someFileId", "someVersionNumber", "PDF", 3), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=PDF&versionNumber=someVersionNumber&page=3");
+    QUnit.equals(forcetkClient.fileRenditionPath("someFileId", "someVersionNumber", "THUMB120BY90", 3), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB120BY90&versionNumber=someVersionNumber&page=3");
+    QUnit.equals(forcetkClient.fileRenditionPath("someFileId", "someVersionNumber", "THUMB240BY180", 3), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB240BY180&versionNumber=someVersionNumber&page=3");
+    QUnit.equals(forcetkClient.fileRenditionPath("someFileId", "someVersionNumber", "THUMB720BY480", 3), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB720BY480&versionNumber=someVersionNumber&page=3");
+
+    this.finalizeTest();
+}; 
+
+/** 
+ * TEST fileRenditionUrl
+ */
+ForcetkTestSuite.prototype.testFileRenditionUrl = function()  {
+    console.log("In SFForcetkTestSuite.testFileRenditionUrl");
+    var forcetkClient = this.getTestForcetkClientForBinary();
+    forcetkClient.instanceUrl = "https://cs1.salesforce.com";
+    // only rendition type provided
+    QUnit.equals(forcetkClient.fileRenditionUrl("someFileId", null, "FLASH"), "https://cs1.salesforce.com/services/data/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=FLASH");
+    QUnit.equals(forcetkClient.fileRenditionUrl("someFileId", null, "PDF"), "https://cs1.salesforce.com/services/data/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=PDF");
+    QUnit.equals(forcetkClient.fileRenditionUrl("someFileId", null, "THUMB120BY90"), "https://cs1.salesforce.com/services/data/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB120BY90");
+    QUnit.equals(forcetkClient.fileRenditionUrl("someFileId", null, "THUMB240BY180"), "https://cs1.salesforce.com/services/data/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB240BY180");
+    QUnit.equals(forcetkClient.fileRenditionUrl("someFileId", null, "THUMB720BY480"), "https://cs1.salesforce.com/services/data/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB720BY480");
+    // rendition type and version provided
+    QUnit.equals(forcetkClient.fileRenditionUrl("someFileId", "someVersionNumber", "FLASH"), "https://cs1.salesforce.com/services/data/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=FLASH&versionNumber=someVersionNumber");
+    QUnit.equals(forcetkClient.fileRenditionUrl("someFileId", "someVersionNumber", "PDF"), "https://cs1.salesforce.com/services/data/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=PDF&versionNumber=someVersionNumber");
+    QUnit.equals(forcetkClient.fileRenditionUrl("someFileId", "someVersionNumber", "THUMB120BY90"), "https://cs1.salesforce.com/services/data/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB120BY90&versionNumber=someVersionNumber");
+    QUnit.equals(forcetkClient.fileRenditionUrl("someFileId", "someVersionNumber", "THUMB240BY180"), "https://cs1.salesforce.com/services/data/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB240BY180&versionNumber=someVersionNumber");
+    QUnit.equals(forcetkClient.fileRenditionUrl("someFileId", "someVersionNumber", "THUMB720BY480"), "https://cs1.salesforce.com/services/data/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB720BY480&versionNumber=someVersionNumber");
+    // rendition type and page number provided
+    QUnit.equals(forcetkClient.fileRenditionUrl("someFileId", null, "FLASH", 3), "https://cs1.salesforce.com/services/data/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=FLASH&page=3");
+    QUnit.equals(forcetkClient.fileRenditionUrl("someFileId", null, "PDF", 3), "https://cs1.salesforce.com/services/data/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=PDF&page=3");
+    QUnit.equals(forcetkClient.fileRenditionUrl("someFileId", null, "THUMB120BY90", 3), "https://cs1.salesforce.com/services/data/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB120BY90&page=3");
+    QUnit.equals(forcetkClient.fileRenditionUrl("someFileId", null, "THUMB240BY180", 3), "https://cs1.salesforce.com/services/data/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB240BY180&page=3");
+    QUnit.equals(forcetkClient.fileRenditionUrl("someFileId", null, "THUMB720BY480", 3), "https://cs1.salesforce.com/services/data/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB720BY480&page=3");
+    // rendition type, version and page number provided
+    QUnit.equals(forcetkClient.fileRenditionUrl("someFileId", "someVersionNumber", "FLASH", 3), "https://cs1.salesforce.com/services/data/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=FLASH&versionNumber=someVersionNumber&page=3");
+    QUnit.equals(forcetkClient.fileRenditionUrl("someFileId", "someVersionNumber", "PDF", 3), "https://cs1.salesforce.com/services/data/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=PDF&versionNumber=someVersionNumber&page=3");
+    QUnit.equals(forcetkClient.fileRenditionUrl("someFileId", "someVersionNumber", "THUMB120BY90", 3), "https://cs1.salesforce.com/services/data/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB120BY90&versionNumber=someVersionNumber&page=3");
+    QUnit.equals(forcetkClient.fileRenditionUrl("someFileId", "someVersionNumber", "THUMB240BY180", 3), "https://cs1.salesforce.com/services/data/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB240BY180&versionNumber=someVersionNumber&page=3");
+    QUnit.equals(forcetkClient.fileRenditionUrl("someFileId", "someVersionNumber", "THUMB720BY480", 3), "https://cs1.salesforce.com/services/data/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB720BY480&versionNumber=someVersionNumber&page=3");
+
+    this.finalizeTest();
+}; 
+
+/** 
  * TEST fileRendition
  */
 ForcetkTestSuite.prototype.testFileRendition = function()  {
@@ -213,6 +282,29 @@ ForcetkTestSuite.prototype.testFileRendition = function()  {
 }; 
 
 /** 
+ * TEST fileContentsPath
+ */
+ForcetkTestSuite.prototype.testFileContentsPath = function()  {
+    console.log("In SFForcetkTestSuite.testFileContentsPath");
+    var forcetkClient = this.getTestForcetkClientForBinary();
+    QUnit.equals(forcetkClient.fileContentsPath("someFileId"), "/" + this.apiVersion + "/chatter/files/someFileId/content");
+    QUnit.deepEqual(forcetkClient.fileContentsPath("someFileId", "someVersionNumber"), "/" + this.apiVersion + "/chatter/files/someFileId/content?versionNumber=someVersionNumber");
+    this.finalizeTest();
+}; 
+
+/** 
+ * TEST fileContentsUrl
+ */
+ForcetkTestSuite.prototype.testFileContentsUrl = function()  {
+    console.log("In SFForcetkTestSuite.testFileContentsUrl");
+    var forcetkClient = this.getTestForcetkClientForBinary();
+    forcetkClient.instanceUrl = "https://cs1.salesforce.com";
+    QUnit.equals(forcetkClient.fileContentsUrl("someFileId"), "https://cs1.salesforce.com/services/data/" + this.apiVersion + "/chatter/files/someFileId/content");
+    QUnit.deepEqual(forcetkClient.fileContentsUrl("someFileId", "someVersionNumber"), "https://cs1.salesforce.com/services/data/" + this.apiVersion + "/chatter/files/someFileId/content?versionNumber=someVersionNumber");
+    this.finalizeTest();
+}; 
+
+/** 
  * TEST fileContents
  */
 ForcetkTestSuite.prototype.testFileContents = function()  {
@@ -222,6 +314,7 @@ ForcetkTestSuite.prototype.testFileContents = function()  {
     QUnit.deepEqual(forcetkClient.fileContents("someFileId", "someVersionNumber"), ["/" + this.apiVersion + "/chatter/files/someFileId/content?versionNumber=someVersionNumber", null]);
     this.finalizeTest();
 }; 
+
 
 /**
  * Helper function for user agent testing
