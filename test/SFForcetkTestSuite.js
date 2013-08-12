@@ -146,12 +146,12 @@ ForcetkTestSuite.prototype.testFilesInUsersGroups = function()  {
 ForcetkTestSuite.prototype.testFilesSharedWithUser = function()  {
     console.log("In SFForcetkTestSuite.testFilesInUsersGroups");
     var forcetkClient = this.getTestForcetkClient();
-    QUnit.equals(forcetkClient.filesSharedWithUser(), "/" + this.apiVersion + "/chatter/users/me/files/filter/sharedWithMe");
-    QUnit.equals(forcetkClient.filesSharedWithUser("me"), "/" + this.apiVersion + "/chatter/users/me/files/filter/sharedWithMe");
-    QUnit.equals(forcetkClient.filesSharedWithUser("someUserId"), "/" + this.apiVersion + "/chatter/users/someUserId/files/filter/sharedWithMe");
-    QUnit.equals(forcetkClient.filesSharedWithUser(null, 1), "/" + this.apiVersion + "/chatter/users/me/files/filter/sharedWithMe?page=1");
-    QUnit.equals(forcetkClient.filesSharedWithUser("me", 2), "/" + this.apiVersion + "/chatter/users/me/files/filter/sharedWithMe?page=2");
-    QUnit.equals(forcetkClient.filesSharedWithUser("someUserId", 3), "/" + this.apiVersion + "/chatter/users/someUserId/files/filter/sharedWithMe?page=3");
+    QUnit.equals(forcetkClient.filesSharedWithUser(), "/" + this.apiVersion + "/chatter/users/me/files/filter/sharedwithme");
+    QUnit.equals(forcetkClient.filesSharedWithUser("me"), "/" + this.apiVersion + "/chatter/users/me/files/filter/sharedwithme");
+    QUnit.equals(forcetkClient.filesSharedWithUser("someUserId"), "/" + this.apiVersion + "/chatter/users/someUserId/files/filter/sharedwithme");
+    QUnit.equals(forcetkClient.filesSharedWithUser(null, 1), "/" + this.apiVersion + "/chatter/users/me/files/filter/sharedwithme?page=1");
+    QUnit.equals(forcetkClient.filesSharedWithUser("me", 2), "/" + this.apiVersion + "/chatter/users/me/files/filter/sharedwithme?page=2");
+    QUnit.equals(forcetkClient.filesSharedWithUser("someUserId", 3), "/" + this.apiVersion + "/chatter/users/someUserId/files/filter/sharedwithme?page=3");
     this.finalizeTest();
 }; 
 

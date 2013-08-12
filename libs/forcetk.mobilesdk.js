@@ -663,7 +663,7 @@ if (forcetk.Client === undefined) {
      * @param [error=null] function to which jqXHR will be passed in case of error
      */
     forcetk.Client.prototype.filesSharedWithUser = function(userId, page, callback, error) {
-        return this.ajax('/' + this.apiVersion + '/chatter/users/' + (userId == null ? 'me' : userId) +  '/files/filter/sharedWithMe' + (page != null ? '?page=' + page : '')
+        return this.ajax('/' + this.apiVersion + '/chatter/users/' + (userId == null ? 'me' : userId) +  '/files/filter/sharedwithme' + (page != null ? '?page=' + page : '')
         , callback, error);
     }
 
