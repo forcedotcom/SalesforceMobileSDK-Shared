@@ -693,5 +693,33 @@ if (forcetk.Client === undefined) {
         , callback, error);
     }
 
+    /*
+     * Returns file rendition
+     * @param id file id
+     * @param version - when null fetches details of most recent version
+     * @param rentidionType - FLASH, PDF, THUMB120BY90, THUMB240BY180, THUMB720BY480
+     * @param page page number - when null fetches first page
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    forcetk.Client.prototype.fileRendition = function(id, version, renditionType, page, callback, error) {
+        var mimeType = (renditionType == "FLASH" ? "application/x-shockwave-flash" : (renditionType == "PDF" ? "application/pdf" : "image/jpeg"));
+        return this.getChatterFile('/' + this.apiVersion + '/chatter/files/' + id + '/rendition?type=' + renditionType + (version != null ? '&versionNumber=' + version : '') + (page != null ? '&page=' + page : '')
+                                   , mimeType , callback, error);
+    }
+
+    /*
+     * Returns file content
+     * @param id file id
+     * @param version - when null fetches details of most recent version
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    forcetk.Client.prototype.fileContents = function(id, version, callback, error) {
+        var mimeType = null; // we don't know
+        return this.getChatterFile('/' + this.apiVersion + '/chatter/files/' + id + '/content' + (version != null ? '?versionNumber=' + version : '')
+                                   , mimeType , callback, error);
+    }
+
 
 }

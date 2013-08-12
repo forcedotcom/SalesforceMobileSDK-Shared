@@ -178,6 +178,51 @@ ForcetkTestSuite.prototype.testBatchFileDetails = function()  {
     this.finalizeTest();
 }; 
 
+/** 
+ * TEST fileRendition
+ */
+ForcetkTestSuite.prototype.testFileRendition = function()  {
+    console.log("In SFForcetkTestSuite.testFileRendition");
+    var forcetkClient = this.getTestForcetkClientForBinary();
+    // only rendition type provided
+    QUnit.deepEqual(forcetkClient.fileRendition("someFileId", null, "FLASH"), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=FLASH", "application/x-shockwave-flash"]);
+    QUnit.deepEqual(forcetkClient.fileRendition("someFileId", null, "PDF"), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=PDF", "application/pdf"]);
+    QUnit.deepEqual(forcetkClient.fileRendition("someFileId", null, "THUMB120BY90"), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB120BY90", "image/jpeg"]);
+    QUnit.deepEqual(forcetkClient.fileRendition("someFileId", null, "THUMB240BY180"), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB240BY180", "image/jpeg"]);
+    QUnit.deepEqual(forcetkClient.fileRendition("someFileId", null, "THUMB720BY480"), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB720BY480", "image/jpeg"]);
+    // rendition type and version provided
+    QUnit.deepEqual(forcetkClient.fileRendition("someFileId", "someVersionNumber", "FLASH"), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=FLASH&versionNumber=someVersionNumber", "application/x-shockwave-flash"]);
+    QUnit.deepEqual(forcetkClient.fileRendition("someFileId", "someVersionNumber", "PDF"), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=PDF&versionNumber=someVersionNumber", "application/pdf"]);
+    QUnit.deepEqual(forcetkClient.fileRendition("someFileId", "someVersionNumber", "THUMB120BY90"), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB120BY90&versionNumber=someVersionNumber", "image/jpeg"]);
+    QUnit.deepEqual(forcetkClient.fileRendition("someFileId", "someVersionNumber", "THUMB240BY180"), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB240BY180&versionNumber=someVersionNumber", "image/jpeg"]);
+    QUnit.deepEqual(forcetkClient.fileRendition("someFileId", "someVersionNumber", "THUMB720BY480"), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB720BY480&versionNumber=someVersionNumber", "image/jpeg"]);
+    // rendition type and page number provided
+    QUnit.deepEqual(forcetkClient.fileRendition("someFileId", null, "FLASH", 3), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=FLASH&page=3", "application/x-shockwave-flash"]);
+    QUnit.deepEqual(forcetkClient.fileRendition("someFileId", null, "PDF", 3), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=PDF&page=3", "application/pdf"]);
+    QUnit.deepEqual(forcetkClient.fileRendition("someFileId", null, "THUMB120BY90", 3), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB120BY90&page=3", "image/jpeg"]);
+    QUnit.deepEqual(forcetkClient.fileRendition("someFileId", null, "THUMB240BY180", 3), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB240BY180&page=3", "image/jpeg"]);
+    QUnit.deepEqual(forcetkClient.fileRendition("someFileId", null, "THUMB720BY480", 3), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB720BY480&page=3", "image/jpeg"]);
+    // rendition type, version and page number provided
+    QUnit.deepEqual(forcetkClient.fileRendition("someFileId", "someVersionNumber", "FLASH", 3), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=FLASH&versionNumber=someVersionNumber&page=3", "application/x-shockwave-flash"]);
+    QUnit.deepEqual(forcetkClient.fileRendition("someFileId", "someVersionNumber", "PDF", 3), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=PDF&versionNumber=someVersionNumber&page=3", "application/pdf"]);
+    QUnit.deepEqual(forcetkClient.fileRendition("someFileId", "someVersionNumber", "THUMB120BY90", 3), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB120BY90&versionNumber=someVersionNumber&page=3", "image/jpeg"]);
+    QUnit.deepEqual(forcetkClient.fileRendition("someFileId", "someVersionNumber", "THUMB240BY180", 3), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB240BY180&versionNumber=someVersionNumber&page=3", "image/jpeg"]);
+    QUnit.deepEqual(forcetkClient.fileRendition("someFileId", "someVersionNumber", "THUMB720BY480", 3), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB720BY480&versionNumber=someVersionNumber&page=3", "image/jpeg"]);
+
+    this.finalizeTest();
+}; 
+
+/** 
+ * TEST fileContents
+ */
+ForcetkTestSuite.prototype.testFileContents = function()  {
+    console.log("In SFForcetkTestSuite.testFileContents");
+    var forcetkClient = this.getTestForcetkClientForBinary();
+    QUnit.deepEqual(forcetkClient.fileContents("someFileId"), ["/" + this.apiVersion + "/chatter/files/someFileId/content", null]);
+    QUnit.deepEqual(forcetkClient.fileContents("someFileId", "someVersionNumber"), ["/" + this.apiVersion + "/chatter/files/someFileId/content?versionNumber=someVersionNumber", null]);
+    this.finalizeTest();
+}; 
+
 /**
  * Helper function for user agent testing
  */
@@ -203,6 +248,16 @@ ForcetkTestSuite.prototype.getTestForcetkClient = function() {
     var forcetkClient = new forcetk.Client();
     forcetkClient.apiVersion = this.apiVersion;
     forcetkClient.ajax = function(path) { return path; }
+    return forcetkClient;
+};
+
+/**
+ * Helper function to get a forcetk client that doesn't actually send requests
+ */
+ForcetkTestSuite.prototype.getTestForcetkClientForBinary = function() {
+    var forcetkClient = new forcetk.Client();
+    forcetkClient.apiVersion = this.apiVersion;
+    forcetkClient.getChatterFile = function(path, mimeType) { return [path, mimeType]; }
     return forcetkClient;
 };
 
