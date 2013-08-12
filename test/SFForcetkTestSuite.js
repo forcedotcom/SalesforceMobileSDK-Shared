@@ -166,6 +166,18 @@ ForcetkTestSuite.prototype.testFileDetails = function()  {
     this.finalizeTest();
 }; 
 
+/** 
+ * TEST batchFileDetails
+ */
+ForcetkTestSuite.prototype.testBatchFileDetails = function()  {
+    console.log("In SFForcetkTestSuite.testBatchFileDetails");
+    var forcetkClient = this.getTestForcetkClient();
+    QUnit.equals(forcetkClient.batchFileDetails(["someFileId"]), "/" + this.apiVersion + "/chatter/files/batch/someFileId");
+    QUnit.equals(forcetkClient.batchFileDetails(["someFileId", "otherFileId"]), "/" + this.apiVersion + "/chatter/files/batch/someFileId,otherFileId");
+    QUnit.equals(forcetkClient.batchFileDetails(["someFileId", "otherFileId", "thirdFileId"]), "/" + this.apiVersion + "/chatter/files/batch/someFileId,otherFileId,thirdFileId");
+    this.finalizeTest();
+}; 
+
 /**
  * Helper function for user agent testing
  */

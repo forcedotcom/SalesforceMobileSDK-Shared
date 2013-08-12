@@ -682,4 +682,16 @@ if (forcetk.Client === undefined) {
         , callback, error);
     }
 
+    /*
+     * Returns file details for multiple files
+     * @param ids file ids
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    forcetk.Client.prototype.batchFileDetails = function(ids, callback, error) {
+        return this.ajax('/' + this.apiVersion + '/chatter/files/batch/' + ids.join(',')
+        , callback, error);
+    }
+
+
 }
