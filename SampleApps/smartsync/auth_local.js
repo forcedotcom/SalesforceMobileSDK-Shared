@@ -15,13 +15,12 @@ jQuery(document).ready(function() {
     // Creds
     var partialNavigatorUserAgent = navigator.userAgent.substring(0, navigator.userAgent.indexOf(")") + 1);
     var sdkLikeUserAgent = "SalesforceMobileSDK/2.0 " + partialNavigatorUserAgent + " AccountEditor/1.0 Hybrid"
-
     // Use  when testing in browser
     // Also make sure to start browser with same origin policy disable
     // See http://stackoverflow.com/questions/3102819/chrome-disable-same-origin-policy
     var creds = {
         accessToken: "--will-be-obtained-by-refresh--",
-        refreshToken: "5Aep861KIwKdekr90KsESmRP6soKuBrQlSV5iTuNdX6UHGbZnbEUug1hvYnrlDYmYFX.g2AaD7vtQ==",
+        refreshToken: "5Aep861KIwKdekr90KsESmRP6soKuBrQlSV5iTuNdX6UHGbZnZVjpx9mfUUGXx7GdAv6ZGq9Bd5QEoQmRzuwf6.",
         clientId: "3MVG9Iu66FKeHhINkB1l7xt7kR8czFcCTUhgoA8Ol2Ltf1eYHOU4SqQRSEitYFDUpqRWcoQ2.dBv_a1Dyu5xa",
         loginUrl: "https://test.salesforce.com",
         instanceUrl: "https://cs1.salesforce.com",
@@ -34,7 +33,7 @@ jQuery(document).ready(function() {
 function appStart(creds)
 {
     // Force init
-    Force.init(creds, null, null, cordova.require("salesforce/plugin/oauth").forcetkRefresh);
+    Force.init(creds);
 
     // router
     app.router = new app.Router();
