@@ -935,6 +935,19 @@
         return promise;
     };
 
+    // Force.fetchRemoteObjectsFromCache
+    // ----------------------------
+    // Helper method to fetch a collection of remote objects from cache
+    // * cache: cache into which fetched records should be cached
+    // * cacheQuery: cache-specific query
+    //
+    // Return promise 
+    // 
+    Force.fetchRemoteObjectsFromCache = function(cache, cacheQuery) {
+        console.log("---> In Force.fetchRemoteObjectsFromCache");
+        return cache.find(cacheQuery);;
+    };
+
     // Force.fetchSObjectsFromCache
     // ----------------------------
     // Helper method to fetch a collection of SObjects from cache
@@ -945,8 +958,9 @@
     // 
     Force.fetchSObjectsFromCache = function(cache, cacheQuery) {
         console.log("---> In Force.fetchSObjectsFromCache");
-        return cache.find(cacheQuery);
+        return Force.fetchRemoteObjectsFromCache(cache, cacheQuery);
     };
+
 
     // Force.fetchSObjectsFromServer
     // -----------------------------
@@ -1032,28 +1046,25 @@
         return promise;
     };
 
-
-    // Force.fetchSObjects
-    // -------------------
-    // Helper method combining Force.fetchSObjectsFromCache anf Force.fetchSObjectsFromServer
-    //
-    // If cache is null, it simply calls Force.fetchSObjectsFromServer
-    // If cache is not null and config.type is cache then it simply calls Force.fetchSObjectsFromCache with config.cacheQuery
+    // Force.fetchRemoteObjects
+    // ------------------------
+    // If cache is null, it simply calls fetchRemoteObjectsFromServer
+    // If cache is not null and cacheMode is Force.CACHE_MODE.CACHE_ONLY then it simply calls fetchRemoteObjectsFromCache
     // Otherwise, the server is queried first and the cache is updated afterwards
     //
     // Returns a promise
     //
-    Force.fetchSObjects = function(config, cache, cacheForOriginals) {
-        console.log("--> In Force.fetchSObjects:config.type=" + config.type);
+    Force.fetchRemoteObjects = function(fetchRemoteObjectsFromServer, fetchRemoteObjectsFromCache, cacheMode, cache, cacheForOriginals) {
+        console.log("--> In Force.fetchRemoteObjects:cacheMode=" + cacheMode);
 
         var promise;
 
-        if (cache != null && config.type == "cache") {
-            promise = Force.fetchSObjectsFromCache(cache, config.cacheQuery);
+        if (cache != null && cacheMode == Force.CACHE_MODE.CACHE_ONLY) {
+            promise = fetchRemoteObjectsFromCache();
 
         } else {
 
-            promise = Force.fetchSObjectsFromServer(config);
+            promise = fetchRemoteObjectsFromServer();
 
             if (cache != null) {
 
@@ -1090,6 +1101,33 @@
         }
 
         return promise;
+    };
+
+
+    // Force.fetchSObjects
+    // -------------------
+    // Helper method combining Force.fetchSObjectsFromCache anf Force.fetchSObjectsFromServer
+    //
+    // If cache is null, it simply calls Force.fetchSObjectsFromServer
+    // If cache is not null and config.type is cache then it simply calls Force.fetchSObjectsFromCache with config.cacheQuery
+    // Otherwise, the server is queried first and the cache is updated afterwards
+    //
+    // Returns a promise
+    //
+    Force.fetchSObjects = function(config, cache, cacheForOriginals) {
+        console.log("--> In Force.fetchSObjects:config.type=" + config.type);
+
+        var fetchRemoteObjectsFromServer = function() {
+            return Force.fetchSObjectsFromServer(config);
+        };
+
+        var fetchRemoteObjectsFromCache = function() {
+            return Force.fetchSObjectsFromCache(cache, config.cacheQuery);
+        };
+
+        var cacheMode = (config.type == "cache" ? Force.CACHE_MODE.CACHE_ONLY : Force.CACHE_MODE.SERVER_FIRST);
+
+        return Force.fetchRemoteObjects(fetchRemoteObjectsFromServer, fetchRemoteObjectsFromCache, cacheMode, cache, cacheForOriginals);
     };
 
     if (!_.isUndefined(Backbone)) {
@@ -1150,19 +1188,16 @@
         });
 
 
-        // Force.SObjectCollection
-        // -----------------------
-        // Subclass of Backbone.Collection to represent a collection of SObject's on the client.
+        // Force.RemoteObjectCollection
+        // ----------------------------
+        // Abstract subclass of Backbone.Collection to represent a collection of remote objects on the client.
         // Only fetch is supported (no create/update or delete).
-        // To define the set of SObject's to fetch pass an options.config or set the config property on this collection object.
+        // To define the set of remote object to fetch, provide a implementation for the method fetchRemoteObjectFromServer
         // Where the config is 
-        // config: {type:"soql", query:"<soql query>"} 
-        //   or {type:"sosl", query:"<sosl query>"} 
-        //   or {type:"mru", sobjectType:"<sobject type>", fieldlist:"<fields to fetch>"[, orderBy:"<field to sort by>", orderDirection:"<ASC|DESC>"]}
-        //   or {type:"cache", cacheQuery:<cache query>[, closeCursorImmediate:<true|false(default)>]}
-        // 
-        Force.SObjectCollection = Backbone.Collection.extend({
-            model: Force.SObject,
+        // config: {type:"cache", cacheQuery:<cache query>[, closeCursorImmediate:<true|false(default)>]} or something else
+        Force.RemoteObjectCollection = Backbone.Collection.extend({
+            // To be defined in concrete subclass
+            model: null,
             
             // Used if none is passed during sync call - can be a cache object or a function returning a cache object
             cache: null,
@@ -1170,8 +1205,15 @@
             // Used if none is passed during sync call - can be a cache object or a function returning a cache object
             cacheForOriginals: null,
 
-            // Used if none is passed during sync call - can be a string or a function returning a string
-            config:null, 
+            // To be defined in concrete subclass
+            fetchRemoteObjectsFromServer: function(config) {
+                return $.when([]);
+            },
+
+            // Method to fetch remote objects from cache
+            fetchRemoteObjectsFromCache: function(cache, cacheQuery) {
+                return Force.fetchRemoteObjectsFromCache(cache, cacheQuery);
+            },
 
             // Method to check if the current collection has more data to fetch
             hasMore: function() {
@@ -1200,7 +1242,7 @@
             // * config:<see above for details>
             // * cache:<cache object>
             sync: function(method, model, options) {
-                console.log("-> In Force.SObjectCollection:sync method=" + method);
+                console.log("-> In Force.RemoteObjectCollection:sync method=" + method);
                 var that = this;
 
                 if (method != "read") {
@@ -1216,17 +1258,55 @@
                     return;
                 }
 
+                var fetchRemoteObjectsFromServer = function() {
+                    return that.fetchRemoteObjectsFromServer(config);
+                };
+
+                var fetchRemoteObjectsFromCache = function() {
+                    return that.fetchRemoteObjectsFromCache(cache, config.cacheQuery);
+                };
+
+                var cacheMode = (config.type == "cache" ? Force.CACHE_MODE.CACHE_ONLY : Force.CACHE_MODE.SERVER_FIRST);
+
                 options.reset = true;
-                Force.fetchSObjects(config, cache, cacheForOriginals)
+                Force.fetchRemoteObjects(fetchRemoteObjectsFromServer, fetchRemoteObjectsFromCache, cacheMode, cache, cacheForOriginals)
                     .then(function(resp) {
                         that._fetchResponse = resp;
                         that.set(resp.records);
                         if (config.closeCursorImmediate) that.closeCursor();
-
                         return resp.records;
                     })
                     .done(options.success)
                     .fail(options.error);
+            },
+
+            // Overriding Backbone parse method (responsible for parsing server response)
+            parse: function(resp, options) {
+                var that = this;
+                return _.map(resp, function(result) {
+                    var remoteObject = new that.model(result);
+                    return remoteObject;
+                });
+            }
+        });
+
+        // Force.SObjectCollection
+        // -----------------------
+        // Subclass of Force.RemoteObjectCollection to represent a collection of SObject's on the client.
+        // Only fetch is supported (no create/update or delete).
+        // To define the set of SObject's to fetch pass an options.config or set the config property on this collection object.
+        // Where the config is 
+        // config: {type:"soql", query:"<soql query>"} 
+        //   or {type:"sosl", query:"<sosl query>"} 
+        //   or {type:"mru", sobjectType:"<sobject type>", fieldlist:"<fields to fetch>"[, orderBy:"<field to sort by>", orderDirection:"<ASC|DESC>"]}
+        //   or {type:"cache", cacheQuery:<cache query>[, closeCursorImmediate:<true|false(default)>]}
+        // 
+        Force.SObjectCollection = Force.RemoteObjectCollection.extend({
+            model: Force.SObject,
+
+            // To be defined in concrete subclass
+            fetchRemoteObjectsFromServer: function(config) {
+                return Force.fetchSObjectsFromServer(config);
             },
 
             // Overriding Backbone parse method (responsible for parsing server response)
