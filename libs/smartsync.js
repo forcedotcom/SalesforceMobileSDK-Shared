@@ -96,6 +96,10 @@
         forcetkClient.metadata = promiser(innerForcetkClient, "metadata", "forcetkClient");
         forcetkClient.describe = promiser(innerForcetkClient, "describe", "forcetkClient");
         forcetkClient.describeLayout = promiser(innerForcetkClient, "describeLayout", "forcetkClient");
+        forcetkClient.ownedFilesList = promiser(innerForcetkClient, "ownedFilesList", "forcetkClient");
+        forcetkClient.filesInUsersGroups = promiser(innerForcetkClient, "filesInUsersGroups", "forcetkClient");
+        forcetkClient.filesSharedWithUser = promiser(innerForcetkClient, "filesSharedWithUser", "forcetkClient");
+        forcetkClient.fileDetails = promiser(innerForcetkClient, "fileDetails", "forcetkClient");
 
         // Exposing outside
         Force.forcetkClient = forcetkClient;
@@ -1304,7 +1308,6 @@
         Force.SObjectCollection = Force.RemoteObjectCollection.extend({
             model: Force.SObject,
 
-            // To be defined in concrete subclass
             fetchRemoteObjectsFromServer: function(config) {
                 return Force.fetchSObjectsFromServer(config);
             },
