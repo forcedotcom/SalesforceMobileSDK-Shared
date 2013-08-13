@@ -48,9 +48,9 @@
   </header>
 
   <div class="bar-standard bar-header-secondary">
-      <a class="button ownedFilesList">Owned</a>
-      <a class="button filesInUsersGroups">In Groups</a>
-      <a class="button filesSharedWithUser">Shared with Me</a>
+      <a class="button ownedFiles">Owned</a>
+      <a class="button groupsFiles">In Groups</a>
+      <a class="button sharedFiles">Shared with Me</a>
   </div>
 
   <div class="content">
@@ -61,11 +61,11 @@
 <!-- --------------------------------------- File list item template ---------------------------------------------- -->
 <script id="file-list-item" type="text/template">
 
-  <a href="#files/<%= Id %>" class="pad-right">
-    <img src="<%= SmallPhotoUrl %>" class="small-img" />
+  <a href="#files/<%= id %>" class="pad-right">
+    <img src="<%= thumbnailUrl %>" class="small-img" />
     <div class="details-short">
-      <b><%= FirstName %> <%= LastName %></b><br/>
-      Title<%= Title %>
+      <b><%= title %>
+      <%= owner.name %>
     </div>
   </a>
 </script>
@@ -104,36 +104,31 @@ app.models.File = Force.SObject.extend({
 });
 
 // The FileCollection Model
-app.models.FileCollection = Force.SObjectCollection.extend({
-    key: "ownedFilesList", 
+app.models.FileCollection = Force.RemoteObjectCollection.extend({
     model: app.models.File,
 
     setCriteria: function(key) {
-        this.key = key;
+        this.config = {type:key};
     },
 
     fetchRemoteObjectsFromServer: function(config) {
-        return forcetkClient[key]() // hmm hmm
+        return Force.forcetkClient[config.type](null, null) // hmm hmm
             .then(function(resp) { 
-                var nextRecordsUrl = resp.nextRecordsUrl;
                 return {
-                    totalSize: resp.totalSize,
-                    records: resp.records,
-                    hasMore: function() { return nextRecordsUrl != null; },
-                    getMore: function() {
-                        var that = this;
-                        if (!nextRecordsUrl) return null;
-                        return forcetkClient.queryMore(nextRecordsUrl).then(function(resp) {
-                            nextRecordsUrl = resp.nextRecordsUrl;
-                            that.records.pushObjects(resp.records);
-                            return resp.records;
-                        });
-                    },
-                    closeCursor: function() {
-                        return $.when(function() { nextRecordsUrl = null; });
-                    }
+                    totalSize: resp.files.length,
+                    records: resp.files,
+                    hasMore: function() { return false; }
                 };
             });
+    },
+
+    parse: function(resp, options) {
+        var that = this;
+        return _.map(resp, function(result) {
+            var file = new that.model(result);
+            file.set("thumbnailUrl",  Force.innerForcetkClient.fileRenditionUrl(result.id, null, "THUMB120BY90"));
+            return file;
+        });
     }
 });
 
@@ -145,9 +140,9 @@ app.views.SearchPage = Backbone.View.extend({
     template: _.template($("#list-page").html()),
 
     events: {
-        "click .ownedFilesList": "ownedFilesList",
-        "click .filesInUsersGroups": "filesInUsersGroups",
-        "click .filesSharedWithUser": "filesSharedWithUser"
+        "click .ownedFiles": "fetchOwnedFiles",
+        "click .groupsFiles": "fetchGroupsFiles",
+        "click .sharedFiles": "fetchSharedFiles"
     },
 
     initialize: function() {
@@ -160,17 +155,17 @@ app.views.SearchPage = Backbone.View.extend({
         return this;
     },
 
-    ownedFilesList: function(event) {
+    fetchOwnedFiles: function(event) {
         this.model.setCriteria("ownedFilesList");
         this.model.fetch();
     },
 
-    filesInUsersGroups: function(event) {
+    fetchGroupsFiles: function(event) {
         this.model.setCriteria("filesInUsersGroups");
         this.model.fetch();
     },
 
-    filesSharedWithUser: function(event) {
+    fetchSharedFiles: function(event) {
         this.model.setCriteria("filesSharedWithUser");
         this.model.fetch();
     }

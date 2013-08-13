@@ -103,6 +103,7 @@
 
         // Exposing outside
         Force.forcetkClient = forcetkClient;
+        Force.innerForcetkClient = innerForcetkClient;
 
         if (navigator.smartstore) 
         {
