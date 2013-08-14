@@ -23,7 +23,7 @@
 <script src="fastclick.js"></script>
 <script src="stackrouter.js"></script>
 <script src="auth_local.js"></script>
- <!-- End Local Testing -->
+<!-- End Local Testing -->
 
 <!-- Container -->
 <!--
@@ -83,7 +83,7 @@
 
   <div class="content">
     <div class="content-padded">
-<!--      <img src="<%= thumbnailUrl %>" class="large-img" /> -->
+      <img src="<%= thumbnailUrl %>" class="large-img" /> 
       <div class="details">
         <b><%= title %></b><br/>
         <%= owner.name %><br/>
@@ -114,7 +114,7 @@ app.models.FileCollection = Force.RemoteObjectCollection.extend({
             .then(function(resp) { 
                 var files = _.map(resp.files, function(file) {
                     file.Id = file.id;
-                    file.thumbnailUrl = Force.innerForcetkClient.fileRenditionUrl(file.id, null, "THUMB120BY90");
+                    file.thumbnailUrl = Force.innerForcetkClient.instanceUrl + file.renditionUrl;
                     return file;
                 });
                 return {
