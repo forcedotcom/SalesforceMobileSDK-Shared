@@ -324,6 +324,8 @@ if (forcetk.Client === undefined) {
                     xhr.setRequestHeader('SalesforceProxy-Endpoint', url);
                 }
                 xhr.setRequestHeader(that.authzHeader, "Bearer " + that.sessionId);
+                // See http://www.salesforce.com/us/developer/docs/chatterapi/Content/intro_requesting_bearer_token_url.htm#kanchor36
+                xhr.setRequestHeader("X-Connect-Bearer-Urls", true);
                 if (that.userAgentString !== null) {
                     xhr.setRequestHeader('User-Agent', that.userAgentString);
                     xhr.setRequestHeader('X-User-Agent', that.userAgentString);
