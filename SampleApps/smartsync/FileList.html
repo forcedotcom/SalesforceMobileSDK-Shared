@@ -23,7 +23,7 @@
 <script src="fastclick.js"></script>
 <script src="stackrouter.js"></script>
 <script src="auth_local.js"></script>
-<!-- End Local Testing -->
+ <!-- End Local Testing -->
 
 <!-- Container -->
 <!--
@@ -64,7 +64,7 @@
   <a href="#files/<%= id %>" class="pad-right">
     <img src="<%= thumbnailUrl %>" class="small-img" />
     <div class="details-short">
-      <b><%= title %>
+      <b><%= title %></b><br>
       <%= owner.name %>
     </div>
   </a>
@@ -83,14 +83,10 @@
 
   <div class="content">
     <div class="content-padded">
-      <img id="employeePic" src="<%= SmallPhotoUrl %>" class="large-img" />
+<!--      <img src="<%= thumbnailUrl %>" class="large-img" /> -->
       <div class="details">
-        <b><%= FirstName %> <%= LastName %></b><br/>
-        <%= Id %><br/>
-        <% if (Title) { %><%= Title %><br/><% } %>
-        <% if (City) { %><%= City %><br/><% } %>
-        <% if (MobilePhone) { %> <a href="tel:<%= MobilePhone %>"><%= MobilePhone %></a><br/><% } %>
-        <% if (Email) { %><a href="mailto:<%= Email %>"><%= Email %></a><% } %>
+        <b><%= title %></b><br/>
+        <%= owner.name %><br/>
       </div>
     </div>
   </div>
@@ -100,12 +96,14 @@
 // -------------------------------------------------- The Models ---------------------------------------------------- //
 // The File Model
 app.models.File = Force.SObject.extend({
-    sobjectType: "File"
+    cacheMode: Force.CACHE_MODE.CACHE_ONLY,
+    cache: function() { return app.cache; }
 });
 
 // The FileCollection Model
 app.models.FileCollection = Force.RemoteObjectCollection.extend({
     model: app.models.File,
+    cache: function() { return app.cache;},
 
     setCriteria: function(key) {
         this.config = {type:key};
@@ -114,21 +112,17 @@ app.models.FileCollection = Force.RemoteObjectCollection.extend({
     fetchRemoteObjectsFromServer: function(config) {
         return Force.forcetkClient[config.type](null, null) // hmm hmm
             .then(function(resp) { 
+                var files = _.map(resp.files, function(file) {
+                    file.Id = file.id;
+                    file.thumbnailUrl = Force.innerForcetkClient.fileRenditionUrl(file.id, null, "THUMB120BY90");
+                    return file;
+                });
                 return {
-                    totalSize: resp.files.length,
-                    records: resp.files,
+                    totalSize: files.length,
+                    records: files,
                     hasMore: function() { return false; }
                 };
             });
-    },
-
-    parse: function(resp, options) {
-        var that = this;
-        return _.map(resp, function(result) {
-            var file = new that.model(result);
-            file.set("thumbnailUrl",  Force.innerForcetkClient.fileRenditionUrl(result.id, null, "THUMB120BY90"));
-            return file;
-        });
     }
 });
 
@@ -226,10 +220,18 @@ app.Router = Backbone.StackRouter.extend({
         "list": "list",
         "files/:id": "viewFile"
     },
+                                         
+    setupCache: function() {
+        app.cache = new Force.StoreCache("files", [], "id");
+        return $.when(app.cache.init());
+    },
 
     initialize: function() {
         Backbone.Router.prototype.initialize.call(this);
 
+        // Setup caches
+        this.setupCache();
+                                         
         // Collection behind search screen
         app.searchResults = new app.models.FileCollection();
 
