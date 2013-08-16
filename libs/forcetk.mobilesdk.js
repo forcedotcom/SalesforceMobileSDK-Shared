@@ -745,10 +745,12 @@ if (forcetk.Client === undefined) {
 
 
     /**
-     * Returns list of entities that this file is shared to.
+     * Returns a page from the list of entities that this file is shared to
      * 
      * @param fileId file's Id
      * @param page page number - when null fetches first page
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
      */
     forcetk.Client.prototype.fileShares = function(fileId, page, callback, error) {
         return this.ajax('/' + this.apiVersion + '/chatter/files/' + fileId + '/file-shares' + (page != null ? '?page=' + page : '')
@@ -761,16 +763,73 @@ if (forcetk.Client === undefined) {
      * @param fileId file's Id
      * @param entityId Id of the entity to share the file to (e.g. a user or a group)
      * @param shareType the type of share (V - View, C - Collaboration)
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
      */
-    forcetk.Client.prototype.addShare = function(fileId, entityId, shareType, callback, error) {
-        return this.create("ContentDocumentLink", {"ContentDocumentId":fileId, "LinkedEntityId":entityId, "ShareType":shareType}, callback, error);
+    forcetk.Client.prototype.addFileShare = function(fileId, entityId, shareType, callback, error) {
+        return this.create("ContentDocumentLink", {ContentDocumentId:fileId, LinkedEntityId:entityId, ShareType:shareType}, callback, error);
     }
 
     /**
      * Deletes the specified file share.
      * @param shareId Id of the file share record (aka ContentDocumentLink)
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
      */
     forcetk.Client.prototype.deleteFileShare = function(sharedId, callback, error) {
         return this.del("ContentDocumentLink", sharedId, callback, error);
     }
+
+   /**
+     * Returns a page from the list of files and folders that belong to the current user and are children of the given parentFolder
+     * 
+     * @param parentFolderId id of the parent folder. If null, root is used
+     * @param pageSize number of children per page
+     * @param page page we are requesting
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     * @return A new RestRequest that can be used to fetch this data
+     */
+    forcetk.Client.prototype.ownedFilesAndFoldersList = function(parentFolderId, pageSize, page, callback, error) {
+        return this.ajax('/' + this.apiVersion + '/chatter/folders/' + (parentFolderId == null ? 'ROOT' : parentFolderId) + '/items' 
+                         + '?page=' + (page ==null ? '0' : page)
+                         + (pageSize == null ? '' : '&pageSize=' + pageSize)
+                         , callback, error);
+    }
+
+    /*
+     * Returns folder information
+     * @param folderId id of the folder
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    forcetk.Client.prototype.folderInfo = function(folderId, callback, error) {
+        return this.ajax('/' + this.apiVersion + '/chatter/folders/' + folderId
+        , callback, error);
+    }
+
+    /**
+     * Creates a new folder with the given name as a child of the given folder
+     * 
+     * @param parentFolderId id of parent folder. If null, root is used
+     * @param newFolderName Name of the new folder (cannot contain '/' character)
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    forcetk.Client.prototype.createNewFolder = function(newFolderName, parentFolderId, callback, error) {
+        return this.ajax('/' + this.apiVersion + '/chatter/folders/' + (parentFolderId == null ? 'ROOT' : parentFolderId) + '/items'
+                         , callback, error, 'POST', JSON.stringify({folderPath : newFolderName, type: "Folder"}));
+    }
+
+    /*
+     * Returns folder path
+     * @param folderId id of the folder
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    forcetk.Client.prototype.folderPath = function(folderId, callback, error) {
+        return this.ajax('/' + this.apiVersion + '/chatter/folders/' + folderId + '/path'
+        , callback, error);
+    }
+
 }
