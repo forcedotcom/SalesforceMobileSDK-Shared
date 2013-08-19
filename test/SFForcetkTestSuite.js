@@ -299,54 +299,6 @@ ForcetkTestSuite.prototype.testDeleteFileShare = function()  {
     this.finalizeTest();
 }; 
 
-/** 
- * TEST ownedFilesList
- */
-ForcetkTestSuite.prototype.testOwnedFilesAndFoldersList = function()  {
-    console.log("In SFForcetkTestSuite.ownedFilesAndFoldersList");
-    var forcetkClient = this.getTestForcetkClientForGet();
-    QUnit.equals(forcetkClient.ownedFilesAndFoldersList(), "/" + this.apiVersion + "/chatter/folders/ROOT/items?page=0");
-    QUnit.equals(forcetkClient.ownedFilesAndFoldersList(null, 1), "/" + this.apiVersion + "/chatter/folders/ROOT/items?page=0&pageSize=1");
-    QUnit.equals(forcetkClient.ownedFilesAndFoldersList(null, null, 2), "/" + this.apiVersion + "/chatter/folders/ROOT/items?page=2");
-    QUnit.equals(forcetkClient.ownedFilesAndFoldersList(null, 1, 2), "/" + this.apiVersion + "/chatter/folders/ROOT/items?page=2&pageSize=1");
-    QUnit.equals(forcetkClient.ownedFilesAndFoldersList("parentFolderId", 1), "/" + this.apiVersion + "/chatter/folders/parentFolderId/items?page=0&pageSize=1");
-    QUnit.equals(forcetkClient.ownedFilesAndFoldersList("parentFolderId", null, 2), "/" + this.apiVersion + "/chatter/folders/parentFolderId/items?page=2");
-    QUnit.equals(forcetkClient.ownedFilesAndFoldersList("parentFolderId", 1, 2), "/" + this.apiVersion + "/chatter/folders/parentFolderId/items?page=2&pageSize=1");
-    this.finalizeTest();
-}; 
-
-/** 
- * TEST folderInfo
- */
-ForcetkTestSuite.prototype.testFolderInfo = function()  {
-    console.log("In SFForcetkTestSuite.testFolderInfo");
-    var forcetkClient = this.getTestForcetkClientForGet();
-    QUnit.equals(forcetkClient.folderInfo("folderId"), "/" + this.apiVersion + "/chatter/folders/folderId");
-    this.finalizeTest();
-}; 
-
-/** 
- * TEST createNewFolder
- */
-ForcetkTestSuite.prototype.testCreateNewFolder = function()  {
-    console.log("In SFForcetkTestSuite.testCreateNewFolder");
-    var forcetkClient = this.getTestForcetkClient();
-    QUnit.deepEqual(forcetkClient.createNewFolder("folderName"), {path:"/" + this.apiVersion + "/chatter/folders/ROOT/items", method:"POST", payload:'{"folderPath":"folderName","type":"Folder"}'});
-    QUnit.deepEqual(forcetkClient.createNewFolder("folderName", "parentFolderId"), {path:"/" + this.apiVersion + "/chatter/folders/parentFolderId/items", method:"POST", payload:'{"folderPath":"folderName","type":"Folder"}'});
-    this.finalizeTest();
-}; 
-
-/** 
- * TEST folderPath
- */
-ForcetkTestSuite.prototype.testFolderPath = function()  {
-    console.log("In SFForcetkTestSuite.testFolderPath");
-    var forcetkClient = this.getTestForcetkClientForGet();
-    QUnit.equals(forcetkClient.folderPath("folderId"), "/" + this.apiVersion + "/chatter/folders/folderId/path");
-    this.finalizeTest();
-}; 
-
-
 /**
  * Helper function for user agent testing
  */
