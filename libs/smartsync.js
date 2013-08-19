@@ -718,7 +718,7 @@
     //
     //
     Force.syncRemoteObject = function(method, id, attributes, fieldlist, cache, cacheMode, info, syncWithServer) {
-        console.log("--> In Force.syncRemoteObjectt:method=" + method + " id=" + id + " cacheMode=" + cacheMode);
+        console.log("--> In Force.syncRemoteObject:method=" + method + " id=" + id + " cacheMode=" + cacheMode);
 
         var cacheSync = function(method, id, attributes, fieldlist, localAction) {
             return Force.syncRemoteObjectWithCache(method, id, attributes, fieldlist, cache, localAction);
