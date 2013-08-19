@@ -943,7 +943,7 @@
                         }
                         else {
                             var mergedAttributes = _.extend(attributes, _.pick(remoteAttributes, nonConflictingRemoteChanges));
-                            return sync(mergedAttributes);
+                            return syncRemoteObject(mergedAttributes);
                         }
                     }
                 });
@@ -975,7 +975,7 @@
             return Force.syncSObjectWithServer(method, sobjectType, id, attributes, fieldlist);
         };
 
-        return Force.syncRemoteObjectDetectConflict(method, attributes, fieldlist, cache, cacheMode, cacheForOriginals, mergeMode, syncWithServer);
+        return Force.syncRemoteObjectDetectConflict(method, id, attributes, fieldlist, cache, cacheMode, cacheForOriginals, mergeMode, syncWithServer);
     };
 
     // Force.fetchSObjectsFromServer
@@ -1135,7 +1135,7 @@
         };
 
         var fetchFromCache = function() {
-            return cache.find(cacheQuery);
+            return cache.find(config.cacheQuery);
         };
 
         var cacheMode = (config.type == "cache" ? Force.CACHE_MODE.CACHE_ONLY : Force.CACHE_MODE.SERVER_FIRST);

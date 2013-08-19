@@ -34,7 +34,7 @@ var SmartSyncTestSuite = function () {
     SFTestSuite.call(this, "SmartSyncTestSuite");
 
     // To run specific tests
-    // this.testsToRun = ["testSObjectSave"];
+    // this.testsToRun = ["testSyncSObjectDetectConflictRetrieve"];
 };
 
 // We are sub-classing SFTestSuite
