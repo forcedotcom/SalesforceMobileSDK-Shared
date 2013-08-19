@@ -87,6 +87,8 @@
       <div class="details">
         <b><%= title %></b><br/>
         <%= owner.name %><br/>
+        <%= contentSize %> bytes<br/>
+        <%= fileType %><br/>
       </div>
     </div>
   </div>
@@ -95,15 +97,22 @@
 <script>
 // -------------------------------------------------- The Models ---------------------------------------------------- //
 // The File Model
-app.models.File = Force.SObject.extend({
-    cacheMode: Force.CACHE_MODE.CACHE_ONLY,
-    cache: function() { return app.cache; }
+app.models.File = Force.RemoteObject.extend({
+    syncRemoteObjectWithServer: function(method, id) {
+        if (method != "read") throw "Method not supported " + method;
+        return Force.forcetkClient.fileDetails(id, null);
+    },
+
+    // adding computed fields
+    toJSON: function() {
+        var that = this;
+        return _.extend(Backbone.Model.prototype.toJSON.call(this), {thumbnailUrl: Force.innerForcetkClient.instanceUrl + that.get('renditionUrl')});
+    }
 });
 
 // The FileCollection Model
 app.models.FileCollection = Force.RemoteObjectCollection.extend({
     model: app.models.File,
-    cache: function() { return app.cache;},
 
     setCriteria: function(key) {
         this.config = {type:key};
@@ -112,14 +121,9 @@ app.models.FileCollection = Force.RemoteObjectCollection.extend({
     fetchRemoteObjectsFromServer: function(config) {
         return Force.forcetkClient[config.type](null, null) // hmm hmm
             .then(function(resp) { 
-                var files = _.map(resp.files, function(file) {
-                    file.Id = file.id;
-                    file.thumbnailUrl = Force.innerForcetkClient.instanceUrl + file.renditionUrl;
-                    return file;
-                });
                 return {
-                    totalSize: files.length,
-                    records: files,
+                    totalSize: resp.files.length,
+                    records: resp.files,
                     hasMore: function() { return false; }
                 };
             });
@@ -221,17 +225,9 @@ app.Router = Backbone.StackRouter.extend({
         "files/:id": "viewFile"
     },
                                          
-    setupCache: function() {
-        app.cache = new Force.StoreCache("files", [], "id");
-        return $.when(app.cache.init());
-    },
-
     initialize: function() {
         Backbone.Router.prototype.initialize.call(this);
 
-        // Setup caches
-        this.setupCache();
-                                         
         // Collection behind search screen
         app.searchResults = new app.models.FileCollection();
 
@@ -248,7 +244,8 @@ app.Router = Backbone.StackRouter.extend({
 
     viewFile: function(id) {
         var that = this;
-        var file = new app.models.File({Id: id});
+        var file = new app.models.File();
+        file.id = id;
         file.fetch({
             success: function() {
                 app.filePage.model = file;
