@@ -305,12 +305,13 @@ ForcetkTestSuite.prototype.testDeleteFileShare = function()  {
 ForcetkTestSuite.prototype.tryUserAgent = function(expectedPlatform, expectedPlatformVersion, expectedModel, userAgent) {
     var forcetkClient = new forcetk.Client();
     var webAppSdkAgent = forcetkClient.computeWebAppSdkAgent(userAgent);
-    var match = /SalesforceMobileSDK\/2.1.0.unstable ([^\/]*)\/([^\ ]*) \(([^\)]*)\) test.html\/1.0 Web (.*)/.exec(webAppSdkAgent);
-    if (match != null && match.length == 5) {
+    var match = /SalesforceMobileSDK\/2.1.0.unstable ([^\/]*)\/([^\ ]*) \(([^\)]*)\) ([^\/]*)\/1.0 Web (.*)/.exec(webAppSdkAgent);
+    if (match != null && match.length == 6) {
         QUnit.equals(match[1], expectedPlatform, "Wrong platform for user agent [" + userAgent + "]");
         QUnit.equals(match[2], expectedPlatformVersion, "Wrong platformVersion for user agent [" + userAgent + "]");
         QUnit.equals(match[3], expectedModel, "Wrong model for user agent [" + userAgent + "]");
-        QUnit.equals(match[4], userAgent, "Wrong user agent appended for user agent [" + userAgent + "]");
+        QUnit.equals(match[4], window.location.pathname.split("/").pop(), "Wrong appName for user agent [" + userAgent + "]");
+        QUnit.equals(match[5], userAgent, "Wrong user agent appended for user agent [" + userAgent + "]");
     }
     else {
         QUnit.ok(false, "Wrong user agent produced [" + webAppSdkAgent + "] for user agent [" + userAgent + "]");
