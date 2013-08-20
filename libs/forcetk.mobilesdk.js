@@ -324,6 +324,8 @@ if (forcetk.Client === undefined) {
                     xhr.setRequestHeader('SalesforceProxy-Endpoint', url);
                 }
                 xhr.setRequestHeader(that.authzHeader, "Bearer " + that.sessionId);
+                // See http://www.salesforce.com/us/developer/docs/chatterapi/Content/intro_requesting_bearer_token_url.htm#kanchor36
+                xhr.setRequestHeader("X-Connect-Bearer-Urls", true);
                 if (that.userAgentString !== null) {
                     xhr.setRequestHeader('User-Agent', that.userAgentString);
                     xhr.setRequestHeader('X-User-Agent', that.userAgentString);
@@ -347,7 +349,7 @@ if (forcetk.Client === undefined) {
      **/
     forcetk.Client.prototype.getChatterFile = function(path,mimeType,callback,error,retry) {
         var that = this;
-        var url = this.instanceUrl + path;
+        var url = this.instanceUrl + '/services/data' + path;
         var request = new XMLHttpRequest();
         request.open("GET",  (this.proxyUrl !== null) ? this.proxyUrl: url, true);
         request.responseType = "arraybuffer";
@@ -632,5 +634,149 @@ if (forcetk.Client === undefined) {
     forcetk.Client.prototype.search = function(sosl, callback, error) {
         return this.ajax('/' + this.apiVersion + '/search?q=' + escape(sosl)
         , callback, error);
+    }
+
+    /*
+     * Returns a page from the list of files owned by the specified user
+     * @param userId a user id or 'me' - when null uses current user
+     * @param page page number - when null fetches first page
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    forcetk.Client.prototype.ownedFilesList = function(userId, page, callback, error) {
+        return this.ajax('/' + this.apiVersion + '/chatter/users/' + (userId == null ? 'me' : userId) +  '/files' + (page != null ? '?page=' + page : '')
+        , callback, error);
+    }
+
+    /*
+     * Returns a page from the list of files from groups that the specified user is a member of
+     * @param userId a user id or 'me' - when null uses current user
+     * @param page page number - when null fetches first page
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    forcetk.Client.prototype.filesInUsersGroups = function(userId, page, callback, error) {
+        return this.ajax('/' + this.apiVersion + '/chatter/users/' + (userId == null ? 'me' : userId) +  '/files/filter/groups' + (page != null ? '?page=' + page : '')
+        , callback, error);
+    }
+
+    /*
+     * Returns a page from the list of files shared with the specified user
+     * @param userId a user id or 'me' - when null uses current user
+     * @param page page number - when null fetches first page
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    forcetk.Client.prototype.filesSharedWithUser = function(userId, page, callback, error) {
+        return this.ajax('/' + this.apiVersion + '/chatter/users/' + (userId == null ? 'me' : userId) +  '/files/filter/sharedwithme' + (page != null ? '?page=' + page : '')
+        , callback, error);
+    }
+
+    /*
+     * Returns file details
+     * @param fileId file's Id
+     * @param version - when null fetches details of most recent version
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    forcetk.Client.prototype.fileDetails = function(fileId, version, callback, error) {
+        return this.ajax('/' + this.apiVersion + '/chatter/files/' + fileId + (version != null ? '?versionNumber=' + version : '')
+        , callback, error);
+    }
+
+    /*
+     * Returns file details for multiple files
+     * @param fileIds file ids
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    forcetk.Client.prototype.batchFileDetails = function(fileIds, callback, error) {
+        return this.ajax('/' + this.apiVersion + '/chatter/files/batch/' + fileIds.join(',')
+        , callback, error);
+    }
+
+    /*
+     * Returns file rendition
+     * @param fileId file's Id
+     * @param version - when null fetches details of most recent version
+     * @param rentidionType - FLASH, PDF, THUMB120BY90, THUMB240BY180, THUMB720BY480
+     * @param page page number - when null fetches first page
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    forcetk.Client.prototype.fileRendition = function(fileId, version, renditionType, page, callback, error) {
+        var mimeType = (renditionType == "FLASH" ? "application/x-shockwave-flash" : (renditionType == "PDF" ? "application/pdf" : "image/jpeg"));
+        return this.getChatterFile(this.fileRenditionPath(fileId, version, renditionType, page)
+                                   , mimeType , callback, error);
+    }
+
+    /*
+     * Returns file rendition path (relative to service/data) - from html (e.g. img tag), use the bearer token url instead
+     * @param fileId file's Id
+     * @param version - when null fetches details of most recent version
+     * @param rentidionType - FLASH, PDF, THUMB120BY90, THUMB240BY180, THUMB720BY480
+     * @param page page number - when null fetches first page
+     */
+    forcetk.Client.prototype.fileRenditionPath = function(fileId, version, renditionType, page) {
+        return '/' + this.apiVersion + '/chatter/files/' + fileId + '/rendition?type=' + renditionType + (version != null ? '&versionNumber=' + version : '') + (page != null ? '&page=' + page : '');
+    }
+
+    /*
+     * Returns file content
+     * @param fileId file's Id
+     * @param version - when null fetches details of most recent version
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    forcetk.Client.prototype.fileContents = function(fileId, version, callback, error) {
+        var mimeType = null; // we don't know
+        return this.getChatterFile(this.fileContentsPath(fileId, version)
+                                   , mimeType , callback, error);
+    }
+
+    /*
+     * Returns file content path (relative to service/data) - from html (e.g. img tag), use the bearer token url instead
+     * @param fileId file's Id
+     * @param version - when null fetches details of most recent version
+     */
+    forcetk.Client.prototype.fileContentsPath = function(fileId, version) {
+        return '/' + this.apiVersion + '/chatter/files/' + fileId + '/content' + (version != null ? '?versionNumber=' + version : '');
+    }
+
+
+    /**
+     * Returns a page from the list of entities that this file is shared to
+     * 
+     * @param fileId file's Id
+     * @param page page number - when null fetches first page
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    forcetk.Client.prototype.fileShares = function(fileId, page, callback, error) {
+        return this.ajax('/' + this.apiVersion + '/chatter/files/' + fileId + '/file-shares' + (page != null ? '?page=' + page : '')
+        , callback, error);
+    }
+
+    /**
+     * Adds a file share for the specified fileId to the specified entityId
+     * 
+     * @param fileId file's Id
+     * @param entityId Id of the entity to share the file to (e.g. a user or a group)
+     * @param shareType the type of share (V - View, C - Collaboration)
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    forcetk.Client.prototype.addFileShare = function(fileId, entityId, shareType, callback, error) {
+        return this.create("ContentDocumentLink", {ContentDocumentId:fileId, LinkedEntityId:entityId, ShareType:shareType}, callback, error);
+    }
+
+    /**
+     * Deletes the specified file share.
+     * @param shareId Id of the file share record (aka ContentDocumentLink)
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    forcetk.Client.prototype.deleteFileShare = function(sharedId, callback, error) {
+        return this.del("ContentDocumentLink", sharedId, callback, error);
     }
 }
