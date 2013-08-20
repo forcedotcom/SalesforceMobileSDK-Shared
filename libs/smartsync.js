@@ -69,10 +69,10 @@
     };
 
     // Init function
-    // creds: credentials returned by authenticate call
-    // apiVersion: apiVersion to use, when null, v28.0 (Summer '13) is used
-    // innerForcetkClient: [Optional] A fully initialized forcetkClient to be re-used internally in the SmartSync library
-    // reauth: auth module for the refresh flow
+    // * creds: credentials returned by authenticate call
+    // * apiVersion: apiVersion to use, when null, v28.0 (Summer '13) is used
+    // * innerForcetkClient: [Optional] A fully initialized forcetkClient to be re-used internally in the SmartSync library
+    // * reauth: auth module for the refresh flow
     Force.init = function(creds, apiVersion, innerForcetkClient, reauth) {
         if (!apiVersion || apiVersion == null) {
             apiVersion = "v28.0";
@@ -96,9 +96,14 @@
         forcetkClient.metadata = promiser(innerForcetkClient, "metadata", "forcetkClient");
         forcetkClient.describe = promiser(innerForcetkClient, "describe", "forcetkClient");
         forcetkClient.describeLayout = promiser(innerForcetkClient, "describeLayout", "forcetkClient");
+        forcetkClient.ownedFilesList = promiser(innerForcetkClient, "ownedFilesList", "forcetkClient");
+        forcetkClient.filesInUsersGroups = promiser(innerForcetkClient, "filesInUsersGroups", "forcetkClient");
+        forcetkClient.filesSharedWithUser = promiser(innerForcetkClient, "filesSharedWithUser", "forcetkClient");
+        forcetkClient.fileDetails = promiser(innerForcetkClient, "fileDetails", "forcetkClient");
 
         // Exposing outside
         Force.forcetkClient = forcetkClient;
+        Force.innerForcetkClient = innerForcetkClient;
 
         if (navigator.smartstore) 
         {
@@ -121,9 +126,10 @@
 
     // Force.Error
     // -----------
-    //
-    // XXX revisit error handling
-    //
+    // Wrapper around rest errors or conflict errors
+    // For rest errors, has fields: type with value RestError, xhr, status and details
+    // For conflict errors, has fields: type with value ConflictError, base, theirs, yours, remoteChanges, localChanges, conflictingChanges (see syncRemoteObjectDetectConflict for details)
+    // 
     Force.Error = function(rawError) {
         // Rest error
         if (_.has(rawError, "responseText")) {
@@ -558,8 +564,8 @@
     })());
 
 
-    // Force.syncSObjectWithCache
-    // ---------------------------
+    // Force.syncRemoteObjectWithCache
+    // -------------------------------
     // Helper method to do any single record CRUD operation against cache
     // * method:<create, read, delete or update>
     // * id:<record id or null during create>
@@ -570,8 +576,8 @@
     //
     // Returns a promise
     //
-    Force.syncSObjectWithCache = function(method, id, attributes, fieldlist, cache, localAction) {
-        console.log("---> In Force.syncSObjectWithCache:method=" + method + " id=" + id);
+    Force.syncRemoteObjectWithCache = function(method, id, attributes, fieldlist, cache, localAction) {
+        console.log("---> In Force.syncRemoteObjectWithCache:method=" + method + " id=" + id);
 
         localAction = localAction || false;
         var isLocalId = cache.isLocalId(id);
@@ -580,10 +586,10 @@
         // Cache actions helper
         var cacheCreate = function() {
             var data = _.extend(targetedAttributes, 
-                                {Id: (localAction ? cache.makeLocalId() : id), 
-                                 __locally_created__:localAction, 
+                                {__locally_created__:localAction, 
                                  __locally_updated__:false, 
                                  __locally_deleted__:false});
+            data[cache.keyField] = (localAction ? cache.makeLocalId() : id);
             return cache.save(data);
         };
 
@@ -596,10 +602,10 @@
         
         var cacheUpdate = function() { 
             var data = _.extend(targetedAttributes,
-                                {Id: id, 
-                                 __locally_created__: isLocalId, 
+                                {__locally_created__: isLocalId, 
                                  __locally_updated__: localAction, 
                                  __locally_deleted__: false});
+            data[cache.keyField] = id;
             return cache.save(data);
         };
 
@@ -608,7 +614,9 @@
                 return cache.remove(id);
             }
             else {
-                return cache.save({Id:id, __locally_deleted__:true})
+                var data = {__locally_deleted__:true};
+                data[cache.keyField] = id;
+                return cache.save(data)
                     .then(function() {
                         return null;
                     });
@@ -697,28 +705,29 @@
         SERVER_FIRST: "server-first"
     };
 
-    // Force.syncSObject
-    // -----------------
-    // Helper method combining Force.syncObjectWithServer and Force.syncObjectWithCache
+    // Force.syncRemoteObject
+    // ---------------------
+    // Combines syncWithServer (passed as argument) and Force.syncRemoteObjectWithCache
     // * cache:<cache object>
     // * cacheMode:<any Force.CACHE_MODE values>
+    // * syncWithServer: function taking method, id, attributes, fieldlist arguments to do CRUD operation against a server (see Force.syncSObjectWithServer for an example)
     //
-    // If cache is null, it simply calls Force.syncObjectWithServer
+    // If cache is null, it simply syncWithServer
     // Otherwise behaves according to the cacheMode
     //
     // Returns a promise
     //
     //
-    Force.syncSObject = function(method, sobjectType, id, attributes, fieldlist, cache, cacheMode, info) {
-        console.log("--> In Force.syncSObject:method=" + method + " id=" + id + " cacheMode=" + cacheMode);
-
-        var serverSync = function(method, id) {
-            return Force.syncSObjectWithServer(method, sobjectType, id, attributes, fieldlist);
-        };
+    Force.syncRemoteObject = function(method, id, attributes, fieldlist, cache, cacheMode, info, syncWithServer) {
+        console.log("--> In Force.syncRemoteObject:method=" + method + " id=" + id + " cacheMode=" + cacheMode);
 
         var cacheSync = function(method, id, attributes, fieldlist, localAction) {
-            return Force.syncSObjectWithCache(method, id, attributes, fieldlist, cache, localAction);
-        }            
+            return Force.syncRemoteObjectWithCache(method, id, attributes, fieldlist, cache, localAction);
+        };
+
+        var serverSync = function(method, id) {
+            return syncWithServer(method, id, attributes, fieldlist);
+        };
 
         // Server only
         if (cache == null || cacheMode == Force.CACHE_MODE.SERVER_ONLY) {
@@ -790,6 +799,23 @@
         return promise;
     };
 
+    // Force.syncSObject
+    // -----------------
+    // Calls Force.syncRemoteObject using Force.syncSObjectWithServer to get the data from the server
+    //
+    // Returns a promise
+    //
+    //
+    Force.syncSObject = function(method, sobjectType, id, attributes, fieldlist, cache, cacheMode, info) {
+        console.log("--> In Force.syncSObject:method=" + method + " id=" + id + " cacheMode=" + cacheMode);
+
+        var syncWithServer = function(method, id, attributes, fieldlist) {
+            return Force.syncSObjectWithServer(method, sobjectType, id, attributes, fieldlist);
+        };
+
+        return Force.syncRemoteObject(method, id, attributes, fieldlist, cache, cacheMode, info, syncWithServer);
+    };
+
     // Force.MERGE_MODE
     // -----------------
     //   If we call "theirs" the current server record, "yours" the locally modified record, "base" the server record that was originally fetched:
@@ -805,17 +831,18 @@
         MERGE_FAIL_IF_CHANGED: "merge-fail-if-changed"
     };
 
-    // Force.syncSObjectDetectConflict
-    // -------------------------------
+    // Force.syncRemoteObjectDetectConflict
+    // ------------------------------------
     //
-    // Helper method that adds conflict detection to Force.syncSObject
+    // Helper method that adds conflict detection to syncRemoteObject
     // * cacheForOriginals:<cache object> cache where originally fetched SObject are stored
     // * mergeMode:<any Force.MERGE_MODE values>
+    // * syncWithServer: function taking method, id, attributes, fieldlist arguments to do CRUD operation against a server (see Force.syncSObjectWithServer for an example)
     //
-    // If cacheForOriginals is null, it simply calls Force.syncSObject
+    // If cacheForOriginals is null, it simply calls syncRemoteObject
     // If cacheForOriginals is not null,
-    // * on create, it calls Force.syncSObject then stores a copy of the newly created record in cacheForOriginals
-    // * on retrieve, it calls Force.syncSObject then stores a copy of retrieved record in cacheForOriginals
+    // * on create, it calls Force.syncRemoteObject then stores a copy of the newly created record in cacheForOriginals
+    // * on retrieve, it calls Force.syncRemoteObject then stores a copy of retrieved record in cacheForOriginals
     // * on update, it gets the current server record and compares it with the original cached locally, it then proceeds according to the merge mode
     // * on delete, it gets the current server record and compares it with the original cached locally, it then proceeds according to the merge mode
     //
@@ -830,25 +857,25 @@
     //   conflictingChanges:<fields changed both in theirs and yours with different values>
     // }
     // 
-    Force.syncSObjectDetectConflict = function(method, sobjectType, id, attributes, fieldlist, cache, cacheMode, cacheForOriginals, mergeMode) {
-        console.log("--> In Force.syncSObjectDetectConflict:method=" + method + " id=" + id + " cacheMode=" + cacheMode + " mergeMode=" + mergeMode);
+    Force.syncRemoteObjectDetectConflict = function(method, id, attributes, fieldlist, cache, cacheMode, cacheForOriginals, mergeMode, syncWithServer) {
+        console.log("--> In Force.syncRemoteObjectDetectConflict:method=" + method + " id=" + id + " cacheMode=" + cacheMode + " mergeMode=" + mergeMode);
 
         // To keep track of whether data was read from cache or not
         var info = {};
 
-        var sync = function(attributes) {
-            return Force.syncSObject(method, sobjectType, id, attributes, fieldlist, cache, cacheMode, info);
+
+        var syncRemoteObject = function(attributes) {
+            return Force.syncRemoteObject(method, id, attributes, fieldlist, cache, cacheMode, info, syncWithServer);
+        };
+
+        var serverRetrieve = function() {
+            return syncWithServer("read", id, null, fieldlist);
         };
 
         // Original cache required for conflict detection
         if (cacheForOriginals == null) {
-            return sync(attributes);
+            return syncRemoteObject(attributes);
         }
-
-        // Server retrieve action
-        var serverRetrieve = function() { 
-            return forcetkClient.retrieve(sobjectType, id, fieldlist || ['Id']);
-        };
 
         // Original cache actions -- does nothing for local actions
         var cacheForOriginalsRetrieve = function(data) {
@@ -875,7 +902,7 @@
                             });
         };
 
-        // When conflict is detected (according to mergeMode), the promise is failed, otherwise sync() is invoked
+        // When conflict is detected (according to mergeMode), the promise is failed, otherwise syncRemoteObject() is invoked
         var checkConflictAndSync = function() {
             var originalAttributes;
 
@@ -884,7 +911,7 @@
                 || cacheMode == Force.CACHE_MODE.CACHE_ONLY 
                 || (cache != null && cache.isLocalId(id))) 
             {
-                return sync(attributes);
+                return syncRemoteObject(attributes);
             }
             
             // Otherwise get original copy, get latest server and compare
@@ -897,7 +924,7 @@
                     var shouldFail = false;
 
                     if (remoteAttributes == null || originalAttributes == null) {
-                        return sync(attributes);
+                        return syncRemoteObject(attributes);
                     }
                     else {
                         var localChanges = identifyChanges(originalAttributes, attributes); 
@@ -917,7 +944,7 @@
                         }
                         else {
                             var mergedAttributes = _.extend(attributes, _.pick(remoteAttributes, nonConflictingRemoteChanges));
-                            return sync(mergedAttributes);
+                            return syncRemoteObject(mergedAttributes);
                         }
                     }
                 });
@@ -925,8 +952,8 @@
 
         var promise = null;
         switch(method) {
-        case "create": promise = sync(attributes).then(cacheForOriginalsSave); break;
-        case "read":   promise = sync(attributes).then(cacheForOriginalsSave); break;
+        case "create": promise = syncRemoteObject(attributes).then(cacheForOriginalsSave); break;
+        case "read":   promise = syncRemoteObject(attributes).then(cacheForOriginalsSave); break;
         case "update": promise = checkConflictAndSync().then(cacheForOriginalsSave); break;
         case "delete": promise = checkConflictAndSync().then(cacheForOriginalsRemove); break; 
         }
@@ -935,17 +962,21 @@
         return promise;
     };
 
-    // Force.fetchSObjectsFromCache
-    // ----------------------------
-    // Helper method to fetch a collection of SObjects from cache
-    // * cache: cache into which fetched records should be cached
-    // * cacheQuery: cache-specific query
+    // Force.syncSObjectDetectConflict
+    // -------------------------------
+    // Calls Force.syncRemoteObjectDetectConflict using Force.syncSObjectWithServer to get the data from the server
     //
-    // Return promise 
-    // 
-    Force.fetchSObjectsFromCache = function(cache, cacheQuery) {
-        console.log("---> In Force.fetchSObjectsFromCache");
-        return cache.find(cacheQuery);
+    // Returns a promise
+    //
+    //
+    Force.syncSObjectDetectConflict = function(method, sobjectType, id, attributes, fieldlist, cache, cacheMode, cacheForOriginals, mergeMode) {
+        console.log("--> In Force.syncSyncSObjectDetectConflict:method=" + method + " id=" + id + " cacheMode=" + cacheMode + " mergeMode=" + mergeMode);
+
+        var syncWithServer = function(method, id, attributes, fieldlist) {
+            return Force.syncSObjectWithServer(method, sobjectType, id, attributes, fieldlist);
+        };
+
+        return Force.syncRemoteObjectDetectConflict(method, id, attributes, fieldlist, cache, cacheMode, cacheForOriginals, mergeMode, syncWithServer);
     };
 
     // Force.fetchSObjectsFromServer
@@ -1032,28 +1063,29 @@
         return promise;
     };
 
-
-    // Force.fetchSObjects
-    // -------------------
-    // Helper method combining Force.fetchSObjectsFromCache anf Force.fetchSObjectsFromServer
-    //
-    // If cache is null, it simply calls Force.fetchSObjectsFromServer
-    // If cache is not null and config.type is cache then it simply calls Force.fetchSObjectsFromCache with config.cacheQuery
+    // Force.fetchRemoteObjects
+    // ------------------------
+    // Helper method combining fetchFromServer and fetchFromCache (both passed in as arguments)
+    // If cache is null, it simply calls fetchFromServer
+    // If cache is not null and cacheMode is Force.CACHE_MODE.CACHE_ONLY then it simply calls fetchFromCache
     // Otherwise, the server is queried first and the cache is updated afterwards
+    //
+    // * fetchFromServer: function taking no arguments and fetching the remote objects from the server (see Force.fetchSObjectsFromServer for an example)
+    // * fetchFromCache: function taking no arguments and fetching the remote objects from the cache
     //
     // Returns a promise
     //
-    Force.fetchSObjects = function(config, cache, cacheForOriginals) {
-        console.log("--> In Force.fetchSObjects:config.type=" + config.type);
+    Force.fetchRemoteObjects = function(fetchFromServer, fetchFromCache, cacheMode, cache, cacheForOriginals) {
+        console.log("--> In Force.fetchRemoteObjects:cacheMode=" + cacheMode);
 
         var promise;
 
-        if (cache != null && config.type == "cache") {
-            promise = Force.fetchSObjectsFromCache(cache, config.cacheQuery);
+        if (cache != null && cacheMode == Force.CACHE_MODE.CACHE_ONLY) {
+            promise = fetchFromCache();
 
         } else {
 
-            promise = Force.fetchSObjectsFromServer(config);
+            promise = fetchFromServer();
 
             if (cache != null) {
 
@@ -1092,13 +1124,37 @@
         return promise;
     };
 
+
+    // Force.fetchSObjects
+    // -------------------
+    // Calls Force.fetchRemoteObjects using Force.fetchSObjectsFromServer to get the data from the server
+    //
+    // Returns a promise
+    //
+    Force.fetchSObjects = function(config, cache, cacheForOriginals) {
+        console.log("--> In Force.fetchSObjects:config.type=" + config.type);
+
+        var fetchFromServer = function() {
+            return Force.fetchSObjectsFromServer(config);
+        };
+
+        var fetchFromCache = function() {
+            return cache.find(config.cacheQuery);
+        };
+
+        var cacheMode = (config.type == "cache" ? Force.CACHE_MODE.CACHE_ONLY : Force.CACHE_MODE.SERVER_FIRST);
+
+        return Force.fetchRemoteObjects(fetchFromServer, fetchFromCache, cacheMode, cache, cacheForOriginals);
+    };
+
     if (!_.isUndefined(Backbone)) {
 
-        // Force.SObject
-        // --------------
-        // Subclass of Backbone.Model to represent a SObject on the client (fetch/save/delete update server through the REST API and or cache)
+
+        // Force.RemoteObject
+        // ------------------
+        // Abstract subclass of Backbone.Model to represent a remote object on the client
         // 
-        Force.SObject = Backbone.Model.extend({
+        Force.RemoteObject = Backbone.Model.extend({
             // Used if none is passed during sync call - can be a string or a function taking the method and returning a string
             fieldlist:null,
             
@@ -1114,11 +1170,10 @@
             // Used if none is passed during sync call - can be a cache object or a function returning a cache object
             cacheForOriginals: null,
 
-            // sobjectType is expected on every instance
-            sobjectType:null,
-
-            // Id is the id attribute
-            idAttribute: 'Id',
+            // To be defined in concrete subclass
+            syncRemoteObjectWithServer: function(method, id, attributes, fieldlist) {
+                return $.when([]);
+            },
 
             // Overriding Backbone sync method (responsible for all server interactions)
             //
@@ -1135,7 +1190,7 @@
                     return options[optionName] || (_.isFunction(that[optionName]) ? that[optionName](method) : that[optionName]);
                 };
  
-                console.log("-> In Force.SObject:sync method=" + method + " model.id=" + model.id);
+                console.log("-> In Force.RemoteObject:sync method=" + method + " model.id=" + model.id);
  
                 var fieldlist         = resolveOption("fieldlist");
                 var cacheMode         = resolveOption("cacheMode");
@@ -1143,26 +1198,44 @@
                 var cache             = resolveOption("cache");
                 var cacheForOriginals = resolveOption("cacheForOriginals");
 
-                Force.syncSObjectDetectConflict(method, this.sobjectType, model.id, model.attributes, fieldlist, cache, cacheMode, cacheForOriginals, mergeMode)
+                var syncWithServer = function(method, id, attributes, fieldlist) {
+                    return that.syncRemoteObjectWithServer(method, id, attributes, fieldlist);
+                };
+
+                Force.syncRemoteObjectDetectConflict(method, model.id, model.attributes, fieldlist, cache, cacheMode, cacheForOriginals, mergeMode, syncWithServer)
                     .done(options.success)
                     .fail(options.error);
             }
         });
 
 
-        // Force.SObjectCollection
-        // -----------------------
-        // Subclass of Backbone.Collection to represent a collection of SObject's on the client.
-        // Only fetch is supported (no create/update or delete).
-        // To define the set of SObject's to fetch pass an options.config or set the config property on this collection object.
-        // Where the config is 
-        // config: {type:"soql", query:"<soql query>"} 
-        //   or {type:"sosl", query:"<sosl query>"} 
-        //   or {type:"mru", sobjectType:"<sobject type>", fieldlist:"<fields to fetch>"[, orderBy:"<field to sort by>", orderDirection:"<ASC|DESC>"]}
-        //   or {type:"cache", cacheQuery:<cache query>[, closeCursorImmediate:<true|false(default)>]}
+        // Force.SObject
+        // --------------
+        // Subclass of Force.RemoteObject to represent a SObject on the client (fetch/save/delete update server through the REST API and or cache)
         // 
-        Force.SObjectCollection = Backbone.Collection.extend({
-            model: Force.SObject,
+        Force.SObject = Force.RemoteObject.extend({
+            // sobjectType is expected on every instance
+            sobjectType:null,
+
+            // Id is the id attribute
+            idAttribute: 'Id',
+
+            syncRemoteObjectWithServer: function(method, id, attributes, fieldlist) {
+                return Force.syncSObjectWithServer(method, this.sobjectType, id, attributes, fieldlist);
+            }
+        });
+
+
+        // Force.RemoteObjectCollection
+        // ----------------------------
+        // Abstract subclass of Backbone.Collection to represent a collection of remote objects on the client.
+        // Only fetch is supported (no create/update or delete).
+        // To define the set of remote object to fetch, provide a implementation for the method fetchRemoteObjectFromServer
+        // Where the config is 
+        // config: {type:"cache", cacheQuery:<cache query>[, closeCursorImmediate:<true|false(default)>]} or something else understood by the fetchRemoteObjectFromServer method of your subclass
+        Force.RemoteObjectCollection = Backbone.Collection.extend({
+            // To be defined in concrete subclass
+            model: null,
             
             // Used if none is passed during sync call - can be a cache object or a function returning a cache object
             cache: null,
@@ -1170,8 +1243,15 @@
             // Used if none is passed during sync call - can be a cache object or a function returning a cache object
             cacheForOriginals: null,
 
-            // Used if none is passed during sync call - can be a string or a function returning a string
-            config:null, 
+            // To be defined in concrete subclass
+            fetchRemoteObjectFromServer: function(config) {
+                return $.when([]);
+            },
+
+            // Method to fetch remote objects from cache
+            fetchRemoteObjectsFromCache: function(cache, cacheQuery) {
+                return cache.find(cacheQuery);
+            },
 
             // Method to check if the current collection has more data to fetch
             hasMore: function() {
@@ -1200,7 +1280,7 @@
             // * config:<see above for details>
             // * cache:<cache object>
             sync: function(method, model, options) {
-                console.log("-> In Force.SObjectCollection:sync method=" + method);
+                console.log("-> In Force.RemoteObjectCollection:sync method=" + method);
                 var that = this;
 
                 if (method != "read") {
@@ -1216,17 +1296,54 @@
                     return;
                 }
 
+                var fetchFromServer = function() {
+                    return that.fetchRemoteObjectsFromServer(config);
+                };
+
+                var fetchFromCache = function() {
+                    return that.fetchRemoteObjectsFromCache(cache, config.cacheQuery);
+                };
+
+                var cacheMode = (config.type == "cache" ? Force.CACHE_MODE.CACHE_ONLY : Force.CACHE_MODE.SERVER_FIRST);
+
                 options.reset = true;
-                Force.fetchSObjects(config, cache, cacheForOriginals)
+                Force.fetchRemoteObjects(fetchFromServer, fetchFromCache, cacheMode, cache, cacheForOriginals)
                     .then(function(resp) {
                         that._fetchResponse = resp;
                         that.set(resp.records);
                         if (config.closeCursorImmediate) that.closeCursor();
-
                         return resp.records;
                     })
                     .done(options.success)
                     .fail(options.error);
+            },
+
+            // Overriding Backbone parse method (responsible for parsing server response)
+            parse: function(resp, options) {
+                var that = this;
+                return _.map(resp, function(result) {
+                    var remoteObject = new that.model(result);
+                    return remoteObject;
+                });
+            }
+        });
+
+        // Force.SObjectCollection
+        // -----------------------
+        // Subclass of Force.RemoteObjectCollection to represent a collection of SObject's on the client.
+        // Only fetch is supported (no create/update or delete).
+        // To define the set of SObject's to fetch pass an options.config or set the config property on this collection object.
+        // Where the config is 
+        // config: {type:"soql", query:"<soql query>"} 
+        //   or {type:"sosl", query:"<sosl query>"} 
+        //   or {type:"mru", sobjectType:"<sobject type>", fieldlist:"<fields to fetch>"[, orderBy:"<field to sort by>", orderDirection:"<ASC|DESC>"]}
+        //   or {type:"cache", cacheQuery:<cache query>[, closeCursorImmediate:<true|false(default)>]}
+        // 
+        Force.SObjectCollection = Force.RemoteObjectCollection.extend({
+            model: Force.SObject,
+
+            fetchRemoteObjectsFromServer: function(config) {
+                return Force.fetchSObjectsFromServer(config);
             },
 
             // Overriding Backbone parse method (responsible for parsing server response)
