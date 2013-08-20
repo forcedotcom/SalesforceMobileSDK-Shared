@@ -69,10 +69,10 @@
     };
 
     // Init function
-    // creds: credentials returned by authenticate call
-    // apiVersion: apiVersion to use, when null, v28.0 (Summer '13) is used
-    // innerForcetkClient: [Optional] A fully initialized forcetkClient to be re-used internally in the SmartSync library
-    // reauth: auth module for the refresh flow
+    // * creds: credentials returned by authenticate call
+    // * apiVersion: apiVersion to use, when null, v28.0 (Summer '13) is used
+    // * innerForcetkClient: [Optional] A fully initialized forcetkClient to be re-used internally in the SmartSync library
+    // * reauth: auth module for the refresh flow
     Force.init = function(creds, apiVersion, innerForcetkClient, reauth) {
         if (!apiVersion || apiVersion == null) {
             apiVersion = "v28.0";
@@ -126,9 +126,10 @@
 
     // Force.Error
     // -----------
-    //
-    // XXX revisit error handling
-    //
+    // Wrapper around rest errors or conflict errors
+    // For rest errors, has fields: type with value RestError, xhr, status and details
+    // For conflict errors, has fields: type with value ConflictError, base, theirs, yours, remoteChanges, localChanges, conflictingChanges (see syncRemoteObjectDetectConflict for details)
+    // 
     Force.Error = function(rawError) {
         // Rest error
         if (_.has(rawError, "responseText")) {
@@ -709,7 +710,7 @@
     // Combines syncWithServer (passed as argument) and Force.syncRemoteObjectWithCache
     // * cache:<cache object>
     // * cacheMode:<any Force.CACHE_MODE values>
-    // * syncWithServer: function taking method, id, attributes, fieldlist arguments to do CRUD operation against a server
+    // * syncWithServer: function taking method, id, attributes, fieldlist arguments to do CRUD operation against a server (see Force.syncSObjectWithServer for an example)
     //
     // If cache is null, it simply syncWithServer
     // Otherwise behaves according to the cacheMode
@@ -836,7 +837,7 @@
     // Helper method that adds conflict detection to syncRemoteObject
     // * cacheForOriginals:<cache object> cache where originally fetched SObject are stored
     // * mergeMode:<any Force.MERGE_MODE values>
-    // * syncWithServer: function taking method, id, attributes, fieldlist arguments to do CRUD operation against a server
+    // * syncWithServer: function taking method, id, attributes, fieldlist arguments to do CRUD operation against a server (see Force.syncSObjectWithServer for an example)
     //
     // If cacheForOriginals is null, it simply calls syncRemoteObject
     // If cacheForOriginals is not null,
@@ -1068,6 +1069,9 @@
     // If cache is null, it simply calls fetchFromServer
     // If cache is not null and cacheMode is Force.CACHE_MODE.CACHE_ONLY then it simply calls fetchFromCache
     // Otherwise, the server is queried first and the cache is updated afterwards
+    //
+    // * fetchFromServer: function taking no arguments and fetching the remote objects from the server (see Force.fetchSObjectsFromServer for an example)
+    // * fetchFromCache: function taking no arguments and fetching the remote objects from the cache
     //
     // Returns a promise
     //
