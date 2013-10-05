@@ -393,14 +393,14 @@ if (forcetk.Client === undefined) {
     /*
      * Low level utility function to call the Salesforce endpoint specific for Apex REST API.
      * @param path resource path relative to /services/apexrest
-     * @param callback function to which response will be passed
-     * @param [error=null] function to which jqXHR will be passed in case of error
      * @param [method="GET"] HTTP method for call
      * @param [payload=null] payload for POST/PATCH etc
 	 * @param [paramMap={}] parameters to send as header values for POST/PATCH etc
 	 * @param [retry] specifies whether to retry on error
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
      */
-    forcetk.Client.prototype.apexrest = function(path, callback, error, method, payload, paramMap, retry) {
+    forcetk.Client.prototype.apexrest = function(path, method, payload, paramMap, retry, callback, error) {
         var that = this;
         var url = this.instanceUrl + '/services/apexrest' + path;
         return $j.ajax({
@@ -415,7 +415,7 @@ if (forcetk.Client === undefined) {
             error: (!this.refreshToken || retry ) ? error : function(jqXHR, textStatus, errorThrown) {
                 if (jqXHR.status === 401) {
                     that.refreshAccessToken(function() {
-                        that.apexrest(path, callback, error, method, payload, paramMap, true);
+                        that.apexrest(path, method, payload, paramMap, true, callback, error);
                     },
                     error);
                 } else {

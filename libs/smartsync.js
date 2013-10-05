@@ -100,6 +100,7 @@
         forcetkClient.filesInUsersGroups = promiser(innerForcetkClient, "filesInUsersGroups", "forcetkClient");
         forcetkClient.filesSharedWithUser = promiser(innerForcetkClient, "filesSharedWithUser", "forcetkClient");
         forcetkClient.fileDetails = promiser(innerForcetkClient, "fileDetails", "forcetkClient");
+        forcetkClient.apexrest = promiser(innerForcetkClient, "apexrest", "forcetkClient");
 
         // Exposing outside
         Force.forcetkClient = forcetkClient;
@@ -685,6 +686,65 @@
         case "read":   promise = serverRetrieve(); break;
         case "update": promise = serverUpdate(); break;
         case "delete": promise = serverDelete(); break; /* XXX on 404 (record already deleted) we should not fail otherwise cache won't get cleaned up */
+        }
+
+        return promise;
+
+    };
+
+    // Force.syncApexRestObjectWithServer
+    // ----------------------------------
+    // Helper method to do any single apex rest object CRUD operation against Salesforce server 
+    // * method:<create, read, delete or update>
+    // * path:<apex rest resource path relative to /services/apexrest>
+    // * idField:<id field>
+    // * id:<record id or null during create>
+    // * attributes:<map field name to value>  record attributes given by a map of field name to value
+    // * fieldlist:<fields>                    fields to fetch for read, fields to save for update or create (required)
+    //
+    // Returns a promise
+    //
+    Force.syncApexRestObjectWithServer = function(method, path, id, idField, attributes, fieldlist) {
+        console.log("---> In Force.syncApexRestObjectWithServer:method=" + method + " id=" + id);
+        var idMap = {};
+        idMap[idField] = id;
+
+        // Server actions helper
+        var serverCreate   = function() { 
+            var attributesToSave = _.pick(attributes, fieldlist);
+            return forcetkClient.apexrest(path, "POST", null, _.omit(attributesToSave, idField), false)
+                .then(function(resp) {
+                    idMap[idField] = resp[idField];
+                    return _.extend(attributes, idMap);
+                }) 
+        };
+
+        var serverRetrieve = function() { 
+            return forcetkClient.apexrest(path, "GET", null, idMap, false);
+        };
+
+        var serverUpdate   = function() { 
+            var params = _.extend(attributesToSave, idMap);
+            return forcetkClient.apexrest(path, "PATCH", null, params, false)
+                .then(function(resp) { 
+                    return attributes; 
+                }) 
+        };
+
+        var serverDelete   = function() { 
+            return forcetkClient.apexrest(path, "DELETE", null, idMap, false)
+                .then(function(resp) { 
+                    return null;
+                }) 
+        };
+
+        // Chaining promises that return either a promise or created/upated/read model attributes or null in the case of delete
+        var promise = null;
+        switch(method) {
+        case "create": promise = serverCreate(); break;
+        case "read":   promise = serverRetrieve(); break;
+        case "update": promise = serverUpdate(); break;
+        case "delete": promise = serverDelete(); break;
         }
 
         return promise;
