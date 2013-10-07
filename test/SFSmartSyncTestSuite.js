@@ -34,7 +34,7 @@ var SmartSyncTestSuite = function () {
     SFTestSuite.call(this, "SmartSyncTestSuite");
 
     // To run specific tests
-    this.testsToRun = ["testSyncApexRestObjectWithServer"];
+    this.testsToRun = ["testSyncApexRestObjectWithServerCreate", "testSyncApexRestObjectWithServerRead", "testSyncApexRestObjectWithServerUpdate", "testSyncApexRestObjectWithServerDelete"];
 };
 
 // We are sub-classing SFTestSuite
@@ -1971,34 +1971,35 @@ SmartSyncTestSuite.prototype.testSObjectDestroy = function() {
 
 @RestResource(urlMapping='/simpleAccount/*')
 global with sharing class SimpleAccountResource {
-    @HttpGet global static Account doGet() {
-        String id = getIdFromURI();
-        return [select Id, Name from Account where Id = :id];
-    }
-
     static String getIdFromURI() {
         RestRequest req = RestContext.request;
 		return req.requestURI.substring(req.requestURI.lastIndexOf('/')+1);
     }
     
-    @HttpPost global static Account doPost(String Name) {
-		Account acc = new Account(Name=Name);
-        insert acc;
-        return acc;
+    @HttpGet global static Map<String, String> doGet() {
+        String id = getIdFromURI();
+        Account acc = [select Id, Name from Account where Id = :id];
+        return new Map<String, String>{'accountId'=>acc.Id, 'accountName'=>acc.Name};
     }
 
-    @HttpPatch global static Account doPatch(String Name) {
+    @HttpPost global static Map<String, String> doPost(String accountName) {
+		Account acc = new Account(Name=accountName);
+        insert acc;
+        return new Map<String, String>{'accountId'=>acc.Id, 'accountName'=>acc.Name};
+    }
+
+    @HttpPatch global static Map<String, String> doPatch(String accountName) {
         String id = getIdFromURI();
         Account acc = [select Id from Account where Id = :id];
-        acc.Name = Name;
+        acc.Name = accountName;
         update acc;
-        return acc;
+        return new Map<String, String>{'accountId'=>acc.Id, 'accountName'=>acc.Name};
     }
 
     @HttpDelete global static void doDelete() {
         String id = getIdFromURI();
         Account acc = [select Id from Account where Id = :id];
-		delete acc;        
+		delete acc;
     }
 }
 */
@@ -2006,17 +2007,17 @@ global with sharing class SimpleAccountResource {
 /** 
  * TEST Force.syncApexRestObjectWithServer For create method
  */
-SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServer = function() {
-    console.log("# In SmartSyncTestSuite.syncApexRestObjectWithServer");
+SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerCreate = function() {
+    console.log("# In SmartSyncTestSuite.syncApexRestObjectWithServerCreate");
     var self = this;
     var id;
 
     console.log("## Trying create");
-    Force.syncApexRestObjectWithServer("create", "/simpleAccount", null, "Id", {Name:"TestAccount"}, ["Name"])
+    Force.syncApexRestObjectWithServer("create", "/simpleAccount", null, "accountId", {accountName:"TestAccount"}, ["accountName"])
     .then(function(data) {
         console.log("## Checking data returned by sync call");
-        id = data.Id;
-        assertContains(data, {Name:"TestAccount"});
+        id = data.accountId;
+        assertContains(data, {accountName:"TestAccount"});
 
         console.log("## Direct retrieve from server");
         return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
@@ -2031,6 +2032,95 @@ SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServer = function() {
     .then(function() {
         self.finalizeTest();
     });
+};
+
+
+/** 
+ * TEST Force.syncApexRestObjectWithServer for read method
+ */
+SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerRead = function() {
+    console.log("# In SmartSyncTestSuite.testSyncApexRestObjectWithServerRead");
+    var self = this;
+    var id;
+
+    console.log("## Direct creation against server");    
+    Force.forcetkClient.create("Account", {Name:"TestAccount"})
+        .then(function(resp) {
+            id = resp.id;
+
+            console.log("## Trying read call");
+            return Force.syncApexRestObjectWithServer("read", "/simpleAccount", id, "accountId", null, ["accountId", "accountName"]);
+        })
+        .then(function(data) {
+            console.log("## Checking data returned from sync call");
+            assertContains(data, {accountId:id, accountName:"TestAccount"});
+
+            console.log("## Cleaning up");
+            return Force.forcetkClient.del("account", id);
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
+/** 
+ * TEST Force.syncApexRestObjectWithServer for update method
+ */
+SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerUpdate = function() {
+    console.log("# In SmartSyncTestSuite.testSyncApexRestObjectWithServerUpdate");
+    var self = this;
+    var id;
+
+    console.log("## Direct creation against server");    
+    Force.forcetkClient.create("Account", {Name:"TestAccount"})
+        .then(function(resp) {
+            id = resp.id;
+
+            console.log("## Trying update call");
+            return Force.syncApexRestObjectWithServer("update", "/simpleAccount", id, "accountId", {accountName:"TestAccount2"}, ["accountName"]);
+        })
+        .then(function(data) {
+            console.log("## Checking data returned from sync call");
+            assertContains(data, {accountName:"TestAccount2"});
+
+            console.log("## Direct retrieve from server");
+            return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
+        })
+        .then(function(data) {
+            console.log("## Checking data returned from server");
+            assertContains(data, {Id:id, Name:"TestAccount2"});
+
+            console.log("## Cleaning up");
+            return Force.forcetkClient.del("account", id);
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
+/** 
+ * TEST Force.syncApexRestObjectWithServer for delete method
+ */
+SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerDelete = function() {
+    console.log("# In SmartSyncTestSuite.testSyncApexRestObjectWithServerDelete");
+    var self = this;
+    var id;
+
+    console.log("## Direct creation against server");    
+    Force.forcetkClient.create("Account", {Name:"TestAccount"})
+        .then(function(resp) {
+            id = resp.id;
+
+            console.log("## Trying delete call");
+            return Force.syncApexRestObjectWithServer("delete", "/simpleAccount", id, "accountId");
+        })
+        .then(function(data) {
+            QUnit.equals(data, null, "Expected null");
+            checkServer(id, null);
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
 };
 
 
