@@ -34,7 +34,7 @@ var SmartSyncTestSuite = function () {
     SFTestSuite.call(this, "SmartSyncTestSuite");
 
     // To run specific tests
-    // this.testsToRun = ["testSyncSObjectDetectConflictRetrieve"];
+    this.testsToRun = ["testSyncApexRestObjectWithServer"];
 };
 
 // We are sub-classing SFTestSuite
@@ -1965,6 +1965,74 @@ SmartSyncTestSuite.prototype.testSObjectDestroy = function() {
             self.finalizeTest();
         });
 };
+
+/*
+ For Apex rest tests, you need to create the following Apex Rest resource in your test organization
+
+@RestResource(urlMapping='/simpleAccount/*')
+global with sharing class SimpleAccountResource {
+    @HttpGet global static Account doGet() {
+        String id = getIdFromURI();
+        return [select Id, Name from Account where Id = :id];
+    }
+
+    static String getIdFromURI() {
+        RestRequest req = RestContext.request;
+		return req.requestURI.substring(req.requestURI.lastIndexOf('/')+1);
+    }
+    
+    @HttpPost global static Account doPost(String Name) {
+		Account acc = new Account(Name=Name);
+        insert acc;
+        return acc;
+    }
+
+    @HttpPatch global static Account doPatch(String Name) {
+        String id = getIdFromURI();
+        Account acc = [select Id from Account where Id = :id];
+        acc.Name = Name;
+        update acc;
+        return acc;
+    }
+
+    @HttpDelete global static void doDelete() {
+        String id = getIdFromURI();
+        Account acc = [select Id from Account where Id = :id];
+		delete acc;        
+    }
+}
+*/
+
+/** 
+ * TEST Force.syncApexRestObjectWithServer For create method
+ */
+SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServer = function() {
+    console.log("# In SmartSyncTestSuite.syncApexRestObjectWithServer");
+    var self = this;
+    var id;
+
+    console.log("## Trying create");
+    Force.syncApexRestObjectWithServer("create", "/simpleAccount", null, "Id", {Name:"TestAccount"}, ["Name"])
+    .then(function(data) {
+        console.log("## Checking data returned by sync call");
+        id = data.Id;
+        assertContains(data, {Name:"TestAccount"});
+
+        console.log("## Direct retrieve from server");
+        return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned from server");
+        assertContains(data, {Id:id, Name:"TestAccount"});
+
+        console.log("## Cleaning up");
+        return Force.forcetkClient.del("account", id);
+    })
+    .then(function() {
+        self.finalizeTest();
+    });
+};
+
 
 /** 
  * TEST Force.fetchSObjectsFromServer

@@ -694,7 +694,7 @@
 
     // Force.syncApexRestObjectWithServer
     // ----------------------------------
-    // Helper method to do any single apex rest object CRUD operation against Salesforce server 
+    // Helper method to do any single Apex Rest object CRUD operation against Salesforce server 
     // * method:<create, read, delete or update>
     // * path:<apex rest resource path relative to /services/apexrest>
     // * idField:<id field>
@@ -706,33 +706,33 @@
     //
     Force.syncApexRestObjectWithServer = function(method, path, id, idField, attributes, fieldlist) {
         console.log("---> In Force.syncApexRestObjectWithServer:method=" + method + " id=" + id);
-        var idMap = {};
-        idMap[idField] = id;
 
         // Server actions helper
         var serverCreate   = function() { 
             var attributesToSave = _.pick(attributes, fieldlist);
-            return forcetkClient.apexrest(path, "POST", null, _.omit(attributesToSave, idField), false)
+            return forcetkClient.apexrest(path, "POST", JSON.stringify(_.omit(attributesToSave, idField)), null, false)
                 .then(function(resp) {
+                    var idMap = {};
                     idMap[idField] = resp[idField];
                     return _.extend(attributes, idMap);
                 }) 
         };
 
         var serverRetrieve = function() { 
-            return forcetkClient.apexrest(path, "GET", null, idMap, false);
+            var fields = fieldlist ? '?fields=' + fieldlist : '';
+            return forcetkClient.apexrest(path + "/" + id + fields, "GET", null, null, false);
         };
 
         var serverUpdate   = function() { 
-            var params = _.extend(attributesToSave, idMap);
-            return forcetkClient.apexrest(path, "PATCH", null, params, false)
+            var attributesToSave = _.pick(attributes, fieldlist);
+            return forcetkClient.apexrest(path + "/" + id, "PATCH", JSON.stringify(attributesToSave), null, false)
                 .then(function(resp) { 
                     return attributes; 
                 }) 
         };
 
         var serverDelete   = function() { 
-            return forcetkClient.apexrest(path, "DELETE", null, idMap, false)
+            return forcetkClient.apexrest(path + "/" + id, "DELETE", null, null, false)
                 .then(function(resp) { 
                     return null;
                 }) 
@@ -1282,6 +1282,22 @@
 
             syncRemoteObjectWithServer: function(method, id, attributes, fieldlist) {
                 return Force.syncSObjectWithServer(method, this.sobjectType, id, attributes, fieldlist);
+            }
+        });
+
+        // Force.ApexRestObject
+        // --------------------
+        // Subclass of Force.RemoteObject to represent a Apex Rest on the client (fetch/save/delete update server through the Apex Rest API and or cache)
+        // 
+        Force.ApexRestObject = Force.RemoteObject.extend({
+            // apexRestPath is expected on every instance
+            apexRestPath:null,
+
+            // Id is the id attribute
+            idAttribute: 'Id',
+
+            syncRemoteObjectWithServer: function(method, id, attributes, fieldlist) {
+                return Force.syncApexRestObjectWithServer(method, this.apexRestPath, id, this.idAttribute, attributes, fieldlist);
             }
         });
 
