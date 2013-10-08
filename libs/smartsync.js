@@ -1440,7 +1440,6 @@
                 Force.fetchRemoteObjects(fetchFromServer, fetchFromCache, cacheMode, cache, cacheForOriginals)
                     .then(function(resp) {
                         that._fetchResponse = resp;
-                        that.set(resp.records);
                         if (config.closeCursorImmediate) that.closeCursor();
                         return resp.records;
                     })
