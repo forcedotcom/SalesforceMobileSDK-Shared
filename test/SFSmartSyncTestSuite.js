@@ -34,7 +34,7 @@ var SmartSyncTestSuite = function () {
     SFTestSuite.call(this, "SmartSyncTestSuite");
 
     // To run specific tests
-    this.testsToRun = ["testSyncApexRestObjectWithServerCreate", "testSyncApexRestObjectWithServerRead", "testSyncApexRestObjectWithServerUpdate", "testSyncApexRestObjectWithServerDelete"];
+    // this.testsToRun = ["testSyncApexRestObjectWithServerCreate", "testSyncApexRestObjectWithServerRead", "testSyncApexRestObjectWithServerUpdate", "testSyncApexRestObjectWithServerDelete"];
 };
 
 // We are sub-classing SFTestSuite
@@ -2000,6 +2000,7 @@ global with sharing class SimpleAccountResource {
         String id = getIdFromURI();
         Account acc = [select Id from Account where Id = :id];
 		delete acc;
+        RestContext.response.statusCode = 204;
     }
 }
 */
