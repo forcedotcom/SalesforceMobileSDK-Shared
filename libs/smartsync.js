@@ -710,7 +710,7 @@
         // Server actions helper
         var serverCreate   = function() { 
             var attributesToSave = _.pick(attributes, fieldlist);
-            return forcetkClient.apexrest(path, "POST", JSON.stringify(_.omit(attributesToSave, idField)), null, false)
+            return forcetkClient.apexrest(path, "POST", JSON.stringify(_.omit(attributesToSave, idField)), null)
                 .then(function(resp) {
                     var idMap = {};
                     idMap[idField] = resp[idField];
@@ -720,19 +720,19 @@
 
         var serverRetrieve = function() { 
             var fields = fieldlist ? '?fields=' + fieldlist : '';
-            return forcetkClient.apexrest(path + "/" + id + fields, "GET", null, null, false);
+            return forcetkClient.apexrest(path + "/" + id + fields, "GET", null, null);
         };
 
         var serverUpdate   = function() { 
             var attributesToSave = _.pick(attributes, fieldlist);
-            return forcetkClient.apexrest(path + "/" + id, "PATCH", JSON.stringify(attributesToSave), null, false)
+            return forcetkClient.apexrest(path + "/" + id, "PATCH", JSON.stringify(attributesToSave), null)
                 .then(function(resp) { 
                     return attributes; 
                 }) 
         };
 
         var serverDelete   = function() { 
-            return forcetkClient.apexrest(path + "/" + id, "DELETE", null, null, false)
+            return forcetkClient.apexrest(path + "/" + id, "DELETE", null, null)
                 .then(function(resp) { 
                     return null;
                 }) 
@@ -1123,6 +1123,60 @@
         return promise;
     };
 
+    // Force.fetchApexRestObjectsFromServer
+    // ------------------------------------
+    // Helper method to fetch a collection of Apex Rest objects from server
+    // * config: {apexRestPath:"<apex rest path>", params:<map of parameters for the query string>}
+    //
+    // The Apex Rest endpoint is expected to return a response of the form
+    // {
+    //   totalSize: <number of records returned>
+    //   records: <all fetched records>
+    //   nextRecordsUrl: <url to get next records or null>
+    //   
+    // }
+    //
+    // Return promise On resolve the promise returns the object 
+    // {
+    //   totalSize: "total size of matched records", 
+    //   records: "all the fetched records",
+    //   hasMore: "function to check if more records could be retrieved",
+    //   getMore: "function to fetch more records",
+    //   closeCursor: "function to close the open cursor and disable further fetch" 
+    // }
+    // 
+    Force.fetchApexRestObjectsFromServer = function(config) {
+        console.log("---> In Force.fetchApexRestObjectsFromServer:config=" + JSON.stringify(config));
+
+        // Server actions helper
+        var serverFetch = function(apexRestPath) { 
+            var path = apexRestPath + "?" + $.param(config.params);
+            return forcetkClient.apexrest(path, "GET", null, null)
+                .then(function(resp) { 
+                    var nextRecordsUrl = resp.nextRecordsUrl;
+                    return {
+                        totalSize: resp.totalSize,
+                        records: resp.records,
+                        hasMore: function() { return nextRecordsUrl != null; },
+                        getMore: function() {
+                            var that = this;
+                            if (!nextRecordsUrl) return null;
+                            return forcetkClient.queryMore(nextRecordsUrl).then(function(resp) {
+                                nextRecordsUrl = resp.nextRecordsUrl;
+                                that.records.pushObjects(resp.records);
+                                return resp.records;
+                            });
+                        },
+                        closeCursor: function() {
+                            return $.when(function() { nextRecordsUrl = null; });
+                        }
+                    };
+                });
+        };
+
+        return serverFetch(config.apexRestPath, config.params);
+    };
+
     // Force.fetchRemoteObjects
     // ------------------------
     // Helper method combining fetchFromServer and fetchFromCache (both passed in as arguments)
@@ -1287,7 +1341,7 @@
 
         // Force.ApexRestObject
         // --------------------
-        // Subclass of Force.RemoteObject to represent a Apex Rest on the client (fetch/save/delete update server through the Apex Rest API and or cache)
+        // Subclass of Force.RemoteObject to represent a Apex Rest object on the client (fetch/save/delete update server through the Apex Rest API and or cache)
         // 
         Force.ApexRestObject = Force.RemoteObject.extend({
             // apexRestPath is expected on every instance
@@ -1433,6 +1487,33 @@
                 });
             }
         });
+
+
+        // Force.ApexRestObjectCollection
+        // ------------------------------
+        // Subclass of Force.RemoteObjectCollection to represent a collection of Apex Rest object's on the client.
+        // Only fetch is supported (no create/update or delete).
+        // To define the set of Apex rRest's to fetch pass an options.config or set the config property on this collection object.
+        // Where the config is 
+        // config: {apexRestPath:"<apex rest path>", params:<map of parameters for the query string>}
+        //   or {type:"cache", cacheQuery:<cache query>[, closeCursorImmediate:<true|false(default)>]}
+        //
+        // The Apex Rest endpoint is expected to return a response of the form
+        // {
+        //   totalSize: <number of records returned>
+        //   records: <all fetched records>
+        //   nextRecordsUrl: <url to get next records or null>
+        //   
+        // }
+        // 
+        Force.ApexRestObjectCollection = Force.RemoteObjectCollection.extend({
+            model: Force.ApexRestObject,
+
+            fetchRemoteObjectsFromServer: function(config) {
+                return Force.fetchApexRestObjectsFromServer(config);
+            }
+        });
+
 
     } // if (!_.isUndefined(Backbone)) {
 })
