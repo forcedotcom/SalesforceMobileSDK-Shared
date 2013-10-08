@@ -290,15 +290,17 @@ if (forcetk.Client === undefined) {
 
     /*
      * Low level utility function to call the Salesforce endpoint.
-     * @param path resource path relative to /services/data
+     * @param path resource path relative to /services/data or fully qualified url (to Salesforce)
      * @param callback function to which response will be passed
      * @param [error=null] function to which jqXHR will be passed in case of error
      * @param [method="GET"] HTTP method for call
      * @param [payload=null] payload for POST/PATCH etc
+	 * @param [headerParams={}] parameters to send as header values for POST/PATCH etc
+     * @param rety true if we've already tried refresh token flow once
      */
-    forcetk.Client.prototype.ajax = function(path, callback, error, method, payload, retry) {
+    forcetk.Client.prototype.ajax = function(path, callback, error, method, payload, headerParams, retry) {
         var that = this;
-        var url = this.instanceUrl + '/services/data' + path;
+        var url = (path.indexOf(this.instanceUrl) == 0 ? path : this.instanceUrl + '/services/data' + path);
         return $j.ajax({
             type: method || "GET",
             async: this.asyncAjax,
@@ -311,7 +313,7 @@ if (forcetk.Client === undefined) {
             error: (!this.refreshToken || retry ) ? error : function(jqXHR, textStatus, errorThrown) {
                 if (jqXHR.status === 401) {
                     that.refreshAccessToken(function() {
-                        that.ajax(path, callback, error, method, payload, true);
+                        that.ajax(path, callback, error, method, payload, headerParams, true);
                     },
                     error);
                 } else {
@@ -323,6 +325,13 @@ if (forcetk.Client === undefined) {
                 if (that.proxyUrl !== null) {
                     xhr.setRequestHeader('SalesforceProxy-Endpoint', url);
                 }
+				//Add any custom headers
+				if (headerParams === null) {
+					headerParams = {};
+				}
+				for (paramName in headerParams) {
+					xhr.setRequestHeader(paramName, headerParams[paramName]);
+				}
                 xhr.setRequestHeader(that.authzHeader, "Bearer " + that.sessionId);
                 // See http://www.salesforce.com/us/developer/docs/chatterapi/Content/intro_requesting_bearer_token_url.htm#kanchor36
                 xhr.setRequestHeader("X-Connect-Bearer-Urls", true);
@@ -395,53 +404,12 @@ if (forcetk.Client === undefined) {
      * @param path resource path relative to /services/apexrest
      * @param [method="GET"] HTTP method for call
      * @param [payload=null] payload for POST/PATCH etc
-	 * @param [paramMap={}] parameters to send as header values for POST/PATCH etc
-	 * @param [retry] specifies whether to retry on error
+	 * @param [headerParams={}] parameters to send as header values for POST/PATCH etc
      * @param callback function to which response will be passed
      * @param [error=null] function to which jqXHR will be passed in case of error
      */
-    forcetk.Client.prototype.apexrest = function(path, method, payload, paramMap, retry, callback, error) {
-        var that = this;
-        var url = this.instanceUrl + '/services/apexrest' + path;
-        return $j.ajax({
-            type: method || "GET",
-            async: this.asyncAjax,
-            url: (this.proxyUrl !== null) ? this.proxyUrl: url,
-            contentType: 'application/json',
-            cache: false,
-            processData: false,
-            data: payload,
-            success: callback,
-            error: (!this.refreshToken || retry ) ? error : function(jqXHR, textStatus, errorThrown) {
-                if (jqXHR.status === 401) {
-                    that.refreshAccessToken(function() {
-                        that.apexrest(path, method, payload, paramMap, true, callback, error);
-                    },
-                    error);
-                } else {
-                    error(jqXHR, textStatus, errorThrown);
-                }
-            },
-            dataType: "json",
-            beforeSend: function(xhr) {
-                if (that.proxyUrl !== null) {
-                    xhr.setRequestHeader('SalesforceProxy-Endpoint', url);
-                }
-				//Add any custom headers
-				if (paramMap === null) {
-					paramMap = {};
-				}
-				for (paramName in paramMap) {
-					xhr.setRequestHeader(paramName, paramMap[paramName]);
-				}
-                xhr.setRequestHeader(that.authzHeader, "Bearer " + that.sessionId);
-                if (that.userAgentString !== null) {
-                    xhr.setRequestHeader('User-Agent', that.userAgentString);
-                    xhr.setRequestHeader('X-User-Agent', that.userAgentString);
-                }
-                xhr.setRequestHeader('Cache-Control', 'no-store');
-            }
-        });
+    forcetk.Client.prototype.apexrest = function(path, method, payload, headerParams, callback, error) {
+        return this.ajax(this.instanceUrl + '/services/apexrest' + path, callback, error, method, payload, headerParams);
     }
 
     /*
@@ -613,14 +581,6 @@ if (forcetk.Client === undefined) {
      * @param [error=null] function to which jqXHR will be passed in case of error
      */
     forcetk.Client.prototype.queryMore = function( url, callback, error ){
-        //-- ajax call adds on services/data to the url call, so only send the url after
-        var serviceData = "services/data";
-        var index = url.indexOf( serviceData );
-        if( index > -1 ){
-        	url = url.substr( index + serviceData.length );
-        } else {
-        	//-- leave alone
-        }
         return this.ajax( url, callback, error );
     }
 
