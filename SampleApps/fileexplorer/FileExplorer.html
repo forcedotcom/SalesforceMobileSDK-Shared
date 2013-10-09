@@ -119,12 +119,32 @@ app.models.FileCollection = Force.RemoteObjectCollection.extend({
     },
 
     fetchRemoteObjectsFromServer: function(config) {
-        return Force.forcetkClient[config.type](null, null) // hmm hmm
+        var fetchPromise;
+        switch(config.type) {
+            case "ownedFilesList": fetchPromise = Force.forcetkClient.ownedFilesList("me", 0); break;
+            case "filesInUsersGroups": fetchPromise = Force.forcetkClient.filesInUsersGroups("me", 0); break;
+            case "filesSharedWithUser": fetchPromise = Force.forcetkClient.filesSharedWithUser("me", 0); break;
+        };
+
+        return fetchPromise
             .then(function(resp) { 
+                var nextPageUrl = resp.nextPageUrl;
                 return {
                     totalSize: resp.files.length,
                     records: resp.files,
-                    hasMore: function() { return false; }
+                    hasMore: function() { return nextPageUrl != null; },
+                    getMore: function() {
+                        var that = this;
+                        if (!nextRecordsUrl) return null;
+                        return forcetkClient.queryMore(nextRecordsUrl).then(function(resp) {
+                            nextPageUrl = resp.nextPageUrl;
+                            that.records.pushObjects(resp.files);
+                            return resp.files;
+                        });
+                    },
+                    closeCursor: function() {
+                        return $.when(function() { nextPageUrl = null; });
+                    }
                 };
             });
     }
