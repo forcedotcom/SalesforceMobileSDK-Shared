@@ -34,12 +34,18 @@ var SmartSyncTestSuite = function () {
     SFTestSuite.call(this, "SmartSyncTestSuite");
 
     // To run specific tests
-    // this.testsToRun = ["testSyncSObjectDetectConflictRetrieve"];
+    // this.testsToRun = ["testFetchApexRestObjectsFromServer"];
 };
 
 // We are sub-classing SFTestSuite
 SmartSyncTestSuite.prototype = new SFTestSuite();
 SmartSyncTestSuite.prototype.constructor = SmartSyncTestSuite;
+
+//-------------------------------------------------------------------------------------------------------
+//
+// Tests for Force.StoreCache
+// 
+//-------------------------------------------------------------------------------------------------------
 
 /** 
  * TEST Force.StoreCache.init 
@@ -428,6 +434,12 @@ SmartSyncTestSuite.prototype.testStoreCacheAddLocalFields = function() {
     this.finalizeTest();
 }
 
+//-------------------------------------------------------------------------------------------------------
+//
+// Tests for Force.SObjectType
+// 
+//-------------------------------------------------------------------------------------------------------
+
 /** 
  * TEST Force.SObjectType.describe
  */
@@ -667,6 +679,12 @@ SmartSyncTestSuite.prototype.testSObjectTypeReset = function() {
     });
 
 }
+
+//-------------------------------------------------------------------------------------------------------
+//
+// Tests for Force.syncRemoteObjectWithCache
+// 
+//-------------------------------------------------------------------------------------------------------
 
 /** 
  * TEST Force.syncRemoteObjectWithCache for create method
@@ -975,6 +993,12 @@ SmartSyncTestSuite.prototype.testSyncRemoteObjectWithCacheDelete = function() {
     });
 }
 
+//-------------------------------------------------------------------------------------------------------
+//
+// Tests for Force.syncSObjectWithServer
+// 
+//-------------------------------------------------------------------------------------------------------
+
 /** 
  * TEST Force.syncSObjectWithServer for create method
  */
@@ -1094,6 +1118,13 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithServerDelete = function() {
         });
 };
 
+
+//-------------------------------------------------------------------------------------------------------
+//
+// Tests for Force.syncSObject
+// 
+//-------------------------------------------------------------------------------------------------------
+
 /** 
  * TEST Force.syncSObject for method create
  */
@@ -1148,7 +1179,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectCreate = function() {
  * TEST Force.syncSObject for method retrieve
  */
 SmartSyncTestSuite.prototype.testSyncSObjectRetrieve = function() {
-    console.log("# In SmartSyncTestSuite.syncSObjectRetrieve");
+    console.log("# In SmartSyncTestSuite.testSyncSObjectRetrieve");
     var self = this;
 
     var cache;
@@ -1230,7 +1261,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectRetrieve = function() {
  * TEST Force.syncSObject for method update
  */
 SmartSyncTestSuite.prototype.testSyncSObjectUpdate = function() {
-    console.log("# In SmartSyncTestSuite.syncSObjectUpdate");
+    console.log("# In SmartSyncTestSuite.testSyncSObjectUpdate");
     var self = this;
     var cache;
     var soupName = "syncSObjectUpdate";
@@ -1286,7 +1317,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectUpdate = function() {
  * TEST Force.syncSObject for method delete
  */
 SmartSyncTestSuite.prototype.testSyncSObjectDelete = function() {
-    console.log("# In SmartSyncTestSuite.syncSObjectDelete");
+    console.log("# In SmartSyncTestSuite.testSyncSObjectDelete");
     var self = this;
     var cache;
     var soupName = "syncSObjectDelete";
@@ -1342,11 +1373,17 @@ SmartSyncTestSuite.prototype.testSyncSObjectDelete = function() {
         });
 };
 
+//-------------------------------------------------------------------------------------------------------
+//
+// Tests for Force.syncSObjectDetectConflict
+// 
+//-------------------------------------------------------------------------------------------------------
+
 /** 
  * TEST Force.syncSObjectDetectConflict for method create
  */
 SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictCreate = function() {
-    console.log("# In SmartSyncTestSuite.syncSObjectDetectConflictCreate");
+    console.log("# In SmartSyncTestSuite.testSyncSObjectDetectConflictCreate");
     var self = this;
 
     var cache, cacheForOriginals;
@@ -1398,7 +1435,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictCreate = function() {
  * TEST Force.syncSObjectDetectConflict for method retrieve
  */
 SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictRetrieve = function() {
-    console.log("# In SmartSyncTestSuite.syncSObjectDetectConflictRetrieve");
+    console.log("# In SmartSyncTestSuite.testSyncSObjectDetectConflictRetrieve");
     var self = this;
 
     var cache, cacheForOriginals;
@@ -1482,7 +1519,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictRetrieve = function() 
  * TEST Force.syncSObjectDetectConflict for method update
  */
 SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() {
-    console.log("# In SmartSyncTestSuite.syncSObjectDetectConflictUpdate");
+    console.log("# In SmartSyncTestSuite.testSyncSObjectDetectConflictUpdate");
     var self = this;
     var cache, cacheForOriginals;
     var soupName = "testSyncSObjectDetectConflictUpdate";
@@ -1659,7 +1696,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() {
  * TEST Force.syncSObjectDetectConflict for method delete
  */
 SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() {
-    console.log("# In SmartSyncTestSuite.syncSObjectDetectConflictDelete");
+    console.log("# In SmartSyncTestSuite.testSyncSObjectDetectConflictDelete");
     var self = this;
     var cache, cacheForOriginals;
     var soupName = "testSyncSObjectDetectConflictDelete";
@@ -1837,6 +1874,12 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() {
         });
 };
 
+//-------------------------------------------------------------------------------------------------------
+//
+// Tests for Force.SObject
+// 
+//-------------------------------------------------------------------------------------------------------
+
 /** 
  * TEST Force.SObject.fetch
  */
@@ -1966,11 +2009,248 @@ SmartSyncTestSuite.prototype.testSObjectDestroy = function() {
         });
 };
 
+//-------------------------------------------------------------------------------------------------------
+//
+// Tests for Force.syncApexRestObjectWithServer
+//
+//  You need to create the following Apex Rest resource in your test organization
+//
+//  @RestResource(urlMapping='/simpleAccount/*')
+//  global with sharing class SimpleAccountResource {
+//      static String getIdFromURI() {
+//          RestRequest req = RestContext.request;
+//  		return req.requestURI.substring(req.requestURI.lastIndexOf('/')+1);
+//      }
+//      
+//      @HttpGet global static Map<String, String> doGet() {
+//          String id = getIdFromURI();
+//          Account acc = [select Id, Name from Account where Id = :id];
+//          return new Map<String, String>{'accountId'=>acc.Id, 'accountName'=>acc.Name};
+//      }
+//  
+//      @HttpPost global static Map<String, String> doPost(String accountName) {
+//  		Account acc = new Account(Name=accountName);
+//          insert acc;
+//          return new Map<String, String>{'accountId'=>acc.Id, 'accountName'=>acc.Name};
+//      }
+//  
+//      @HttpPatch global static Map<String, String> doPatch(String accountName) {
+//          String id = getIdFromURI();
+//          Account acc = [select Id from Account where Id = :id];
+//          acc.Name = accountName;
+//          update acc;
+//          return new Map<String, String>{'accountId'=>acc.Id, 'accountName'=>acc.Name};
+//      }
+//  
+//      @HttpDelete global static void doDelete() {
+//          String id = getIdFromURI();
+//          Account acc = [select Id from Account where Id = :id];
+//  		delete acc;
+//          RestContext.response.statusCode = 204;
+//      }
+//  }
+// 
+//-------------------------------------------------------------------------------------------------------
+
+/** 
+ * TEST Force.syncApexRestObjectWithServer For create method
+ */
+SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerCreate = function() {
+    console.log("# In SmartSyncTestSuite.testSyncApexRestObjectWithServerCreate");
+    var self = this;
+    var id;
+
+    console.log("## Trying create");
+    Force.syncApexRestObjectWithServer("create", "/simpleAccount", null, "accountId", {accountName:"TestAccount"}, ["accountName"])
+    .then(function(data) {
+        console.log("## Checking data returned by sync call");
+        id = data.accountId;
+        assertContains(data, {accountName:"TestAccount"});
+
+        console.log("## Direct retrieve from server");
+        return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
+    })
+    .then(function(data) {
+        console.log("## Checking data returned from server");
+        assertContains(data, {Id:id, Name:"TestAccount"});
+
+        console.log("## Cleaning up");
+        return Force.forcetkClient.del("account", id);
+    })
+    .then(function() {
+        self.finalizeTest();
+    });
+};
+
+
+/** 
+ * TEST Force.syncApexRestObjectWithServer for read method
+ */
+SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerRead = function() {
+    console.log("# In SmartSyncTestSuite.testSyncApexRestObjectWithServerRead");
+    var self = this;
+    var id;
+
+    console.log("## Direct creation against server");    
+    Force.forcetkClient.create("Account", {Name:"TestAccount"})
+        .then(function(resp) {
+            id = resp.id;
+
+            console.log("## Trying read call");
+            return Force.syncApexRestObjectWithServer("read", "/simpleAccount", id, "accountId", null, ["accountId", "accountName"]);
+        })
+        .then(function(data) {
+            console.log("## Checking data returned from sync call");
+            assertContains(data, {accountId:id, accountName:"TestAccount"});
+
+            console.log("## Cleaning up");
+            return Force.forcetkClient.del("account", id);
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
+/** 
+ * TEST Force.syncApexRestObjectWithServer for update method
+ */
+SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerUpdate = function() {
+    console.log("# In SmartSyncTestSuite.testSyncApexRestObjectWithServerUpdate");
+    var self = this;
+    var id;
+
+    console.log("## Direct creation against server");    
+    Force.forcetkClient.create("Account", {Name:"TestAccount"})
+        .then(function(resp) {
+            id = resp.id;
+
+            console.log("## Trying update call");
+            return Force.syncApexRestObjectWithServer("update", "/simpleAccount", id, "accountId", {accountName:"TestAccount2"}, ["accountName"]);
+        })
+        .then(function(data) {
+            console.log("## Checking data returned from sync call");
+            assertContains(data, {accountName:"TestAccount2"});
+
+            console.log("## Direct retrieve from server");
+            return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
+        })
+        .then(function(data) {
+            console.log("## Checking data returned from server");
+            assertContains(data, {Id:id, Name:"TestAccount2"});
+
+            console.log("## Cleaning up");
+            return Force.forcetkClient.del("account", id);
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
+/** 
+ * TEST Force.syncApexRestObjectWithServer for delete method
+ */
+SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerDelete = function() {
+    console.log("# In SmartSyncTestSuite.testSyncApexRestObjectWithServerDelete");
+    var self = this;
+    var id;
+
+    console.log("## Direct creation against server");    
+    Force.forcetkClient.create("Account", {Name:"TestAccount"})
+        .then(function(resp) {
+            id = resp.id;
+
+            console.log("## Trying delete call");
+            return Force.syncApexRestObjectWithServer("delete", "/simpleAccount", id, "accountId");
+        })
+        .then(function(data) {
+            QUnit.equals(data, null, "Expected null");
+            checkServer(id, null);
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
+//-------------------------------------------------------------------------------------------------------
+//
+// Test for Force.fetchApexRestObjectsFromServer
+// 
+// You need to create the following Apex Rest resource in your test organization
+// 
+// @RestResource(urlMapping='/simpleAccounts/*')
+// global with sharing class SimpleAccountsResource {
+//     @HttpGet global static SimpleAccountsList doGet() {
+//         String namePattern = RestContext.request.params.get('namePattern');
+//         List<SimpleAccount> records = new List<SimpleAccount>();
+//         for (SObject sobj : Database.query('select Id, Name from Account where Name like \'' + namePattern + '\'')) {  
+//             Account acc = (Account) sobj;
+// 	        records.add(new SimpleAccount(acc.Id, acc.Name));
+//         }
+//         return new SimpleAccountsList(records.size(), records);
+//     }
+//     
+//     global class SimpleAccountsList {
+//         global Integer totalSize;
+//         global List<SimpleAccount> records;
+//         
+//         global SimpleAccountsList(Integer totalSize, List<SimpleAccount> records) {
+//             this.totalSize = totalSize;
+//             this.records = records;
+//         }
+//     }
+//     
+//     global class SimpleAccount {
+//         global String accountId;
+//         global String accountName;
+//         
+//         global SimpleAccount(String accountId, String accountName) {
+//             this.accountId = accountId;
+//             this.accountName = accountName;
+//         }
+//     }
+// }
+//
+//-------------------------------------------------------------------------------------------------------
+
+/** 
+ * TEST Force.fetchApexRestObjectsFromServer
+ */
+SmartSyncTestSuite.prototype.testFetchApexRestObjectsFromServer = function() {
+    console.log("# In SmartSyncTestSuite.testFetchApexRestObjectsFromServer");
+    var self = this;
+    var idToName = {};
+
+    console.log("## Direct creation against server");    
+    createRecords(idToName, "testFetchApexRestObjectsFromServer", 3)
+        .then(function() {
+            console.log("## Trying fetch with apex rest end point");
+            var config = {apexRestPath: "/simpleAccounts", params: {namePattern:"testFetchApexRestObjectsFromServer%"}};
+            return Force.fetchApexRestObjectsFromServer(config);
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from fetch call");
+            QUnit.equals(result.totalSize, 3, "expected 3 results");
+            QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "accountName").sort(), "Wrong names");
+
+            console.log("## Cleaning up");
+            return deleteRecords(idToName)
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
+//-------------------------------------------------------------------------------------------------------
+//
+// Tests for Force.fetchSObjectsFromServer and Force.fetchSObjects and Force.SObjectCollection
+// 
+//-------------------------------------------------------------------------------------------------------
+
 /** 
  * TEST Force.fetchSObjectsFromServer
  */
 SmartSyncTestSuite.prototype.testFetchSObjectsFromServer = function() {
-    console.log("# In SmartSyncTestSuite.fetchSObjectsFromServer");
+    console.log("# In SmartSyncTestSuite.testFetchSObjectsFromServer");
     var self = this;
     var idToName = {};
 
@@ -2101,9 +2381,9 @@ SmartSyncTestSuite.prototype.testFetchSObjects = function() {
 };
 
 /** 
- * TEST Force.Collection.fetch
+ * TEST Force.SObjectCollection.fetch
  */
-SmartSyncTestSuite.prototype.testCollectionFetch = function() {
+SmartSyncTestSuite.prototype.testSObjectCollectionFetch = function() {
     console.log("# In SmartSyncTestSuite.testCollectionFetch");
     var self = this;
     var idToName = {};
@@ -2219,6 +2499,12 @@ SmartSyncTestSuite.prototype.testCollectionFetch = function() {
             self.finalizeTest();
         });
 };
+
+//-------------------------------------------------------------------------------------------------------
+//
+// Helper methods
+// 
+//-------------------------------------------------------------------------------------------------------
 
 /**
  * Helper method to check local flags
