@@ -6,5 +6,6 @@
     "startPage": "FileExplorer.html",
     "errorPage": "error.html",
     "shouldAuthenticate": true,
-    "attemptOfflineLoad": true
+    "attemptOfflineLoad": true,
+    "pushNotificationClientId": ""
 }
