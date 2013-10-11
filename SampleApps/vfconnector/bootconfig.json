@@ -7,5 +7,5 @@
     "errorPage": "error.html",
 	"shouldAuthenticate": true,
 	"attemptOfflineLoad": false,
-	"pushNotificationClientId": ""
+	"androidPushNotificationClientId": ""
 }
