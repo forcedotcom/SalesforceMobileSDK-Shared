@@ -1220,7 +1220,6 @@
                 Force.fetchSObjects(config, cache, cacheForOriginals)
                     .then(function(resp) {
                         that._fetchResponse = resp;
-                        that.set(resp.records);
                         if (config.closeCursorImmediate) that.closeCursor();
 
                         return resp.records;
