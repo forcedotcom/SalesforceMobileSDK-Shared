@@ -8,7 +8,7 @@
     // restored later on, if `noConflict` is used.
     var previousForce = root.Force;
 
-    // The top-level namespace. 
+    // The top-level namespace.
     var Force = this.Force = {};
 
     // Runs in *noConflict* mode, returning the `Force` variable
@@ -28,7 +28,7 @@
                 try {
                     d.resolve.apply(d, arguments);
                 }
-                catch (err) { 
+                catch (err) {
                     console.error("------> Error when calling successCB for " + objectName + ":" + methodName);
                     console.error(err.stack);
                 }
@@ -38,7 +38,7 @@
                 try {
                     d.reject.apply(d, arguments);
                 }
-                catch (err) { 
+                catch (err) {
                     console.error("------> Error when calling errorCB for " + objectName + ":" + methodName);
                     console.error(err.stack);
                 }
@@ -54,7 +54,7 @@
     var forcetkClient = null;
 
     // Private smartstore client with promise-wrapped methods
-    var smartstoreClient = null; 
+    var smartstoreClient = null;
 
     // Helper function to patch user agent
     var patchUserAgent = function(userAgent) {
@@ -64,7 +64,7 @@
         }
         else {
             // Not a SalesforceMobileSDK user agent, we leave it unchanged
-            return userAgent; 
+            return userAgent;
         }
     };
 
@@ -79,7 +79,7 @@
         }
 
         if(!innerForcetkClient || innerForcetkClient == null) {
-            innerForcetkClient = new forcetk.Client(creds.clientId, creds.loginUrl, creds.proxyUrl, reauth);
+            innerForcetkClient = new root.forcetk.Client(creds.clientId, creds.loginUrl, creds.proxyUrl, reauth);
             innerForcetkClient.setSessionToken(creds.accessToken, apiVersion, creds.instanceUrl);
             innerForcetkClient.setRefreshToken(creds.refreshToken);
             innerForcetkClient.setUserAgentString(patchUserAgent(creds.userAgent || innerForcetkClient.getUserAgentString()));
@@ -106,7 +106,7 @@
         Force.forcetkClient = forcetkClient;
         Force.innerForcetkClient = innerForcetkClient;
 
-        if (navigator.smartstore) 
+        if (navigator.smartstore)
         {
             smartstoreClient = new Object();
             smartstoreClient.registerSoup = promiser(navigator.smartstore, "registerSoup", "smartstoreClient");
@@ -130,7 +130,7 @@
     // Wrapper around rest errors or conflict errors
     // For rest errors, has fields: type with value RestError, xhr, status and details
     // For conflict errors, has fields: type with value ConflictError, base, theirs, yours, remoteChanges, localChanges, conflictingChanges (see syncRemoteObjectDetectConflict for details)
-    // 
+    //
     Force.Error = function(rawError) {
         // Rest error
         if (_.has(rawError, "responseText")) {
@@ -151,7 +151,7 @@
             try {
                 this.details = JSON.parse(rawError.responseText);
             }
-            catch (e) { 
+            catch (e) {
                 console.log("Could not parse responseText:" + e);
             }
 
@@ -180,7 +180,7 @@
         // Return promise which initializes backing soup
         init: function() {
             if (smartstoreClient == null) return;
-            var indexSpecs = _.union([{path:this.keyField, type:"string"}, {path:"__local__", type:"string"}], 
+            var indexSpecs = _.union([{path:this.keyField, type:"string"}, {path:"__local__", type:"string"}],
                                      this.additionalIndexSpecs);
             return smartstoreClient.registerSoup(this.soupName, indexSpecs);
         },
@@ -211,9 +211,9 @@
                     if (cursor.currentPageOrderedEntries.length == 1) record = cursor.currentPageOrderedEntries[0];
                     return smartstoreClient.closeCursor(cursor);
                 })
-                .then(function() { 
+                .then(function() {
                     // if the cached record doesn't have all the field we are interested in the return null
-                    if (record != null && fieldlist != null && _.any(fieldlist, function(field) { 
+                    if (record != null && fieldlist != null && _.any(fieldlist, function(field) {
                         return !hasFieldPath(record, field);
                     })) {
                         console.log("----> In StoreCache:retrieve " + that.soupName + ":" + key + ":in cache but missing some fields");
@@ -231,7 +231,7 @@
 
             var that = this;
 
-            var mergeIfRequested = function() { 
+            var mergeIfRequested = function() {
                 if (noMerge) {
                     return $.when(record);
                 }
@@ -270,8 +270,8 @@
                     }
 
                     var oldRecords = {};
-                    var smartSql = "SELECT {" + that.soupName + ":_soup} " 
-                        + "FROM {" + that.soupName + "} " 
+                    var smartSql = "SELECT {" + that.soupName + ":_soup} "
+                        + "FROM {" + that.soupName + "} "
                         + "WHERE {" + that.soupName + ":" + that.keyField + "} "
                         + "IN ('" + _.pluck(records, that.keyField).join("','") + "')";
 
@@ -300,28 +300,28 @@
                     records = _.map(records, function(record) {
                         return that.addLocalFields(record);
                     });
-                    
+
                     return smartstoreClient.upsertSoupEntriesWithExternalId(that.soupName, records, that.keyField);
                 });
         },
 
 
-        // Return promise On resolve the promise returns the object 
+        // Return promise On resolve the promise returns the object
         // {
         //   records: "all the fetched records",
         //   hasMore: "function to check if more records could be retrieved",
         //   getMore: "function to fetch more records",
-        //   closeCursor: "function to close the open cursor and disable further fetch" 
+        //   closeCursor: "function to close the open cursor and disable further fetch"
         // }
         // XXX we don't have totalSize
         find: function(querySpec) {
             var closeCursorIfNeeded = function(cursor) {
                 if ((cursor.currentPageIndex + 1) == cursor.totalPages) {
-                    return smartstoreClient.closeCursor(cursor).then(function() { 
-                        return cursor; 
+                    return smartstoreClient.closeCursor(cursor).then(function() {
+                        return cursor;
                     });
                 }
-                else { 
+                else {
                     return cursor;
                 }
             }
@@ -393,7 +393,7 @@
                     }
                     return null;
                 })
-                .then(function() { 
+                .then(function() {
                     return null;
                 });
         },
@@ -434,14 +434,14 @@
         // Cache actions helper
         // Check first if cache exists and if data exists in cache.
         // Then update the current instance with data from cache.
-        var cacheRetrieve = function(that) { 
+        var cacheRetrieve = function(that) {
             // Always fetch from the cache again so as to obtain the
             // changes done to the cache by other instances of this SObjectType.
             if (that.cache) {
                 return that.cache.retrieve(that.sobjectType)
                         .then(function(data) {
                             if (data) {
-                                that._cacheSynced = (data != null); 
+                                that._cacheSynced = (data != null);
                                 that._data = data;
                             }
                             return that;
@@ -461,7 +461,7 @@
             } else return that;
         };
 
-        // Check first if cache exists. If yes, then 
+        // Check first if cache exists. If yes, then
         // clear any data from the cache for this sobject type.
         var cacheClear = function(that) {
             if (that.cache) {
@@ -469,10 +469,10 @@
                             .then(function() { return that; });
             } else return that;
         };
-        
+
         // Server action helper
         // If no describe data exists on the instance, get it from server.
-        var serverDescribeUnlessCached = function(that) { 
+        var serverDescribeUnlessCached = function(that) {
             if(!that._data.describeResult) {
                 return forcetkClient.describe(that.sobjectType)
                         .then(function(describeResult) {
@@ -484,7 +484,7 @@
         };
 
         // If no metadata data exists on the instance, get it from server.
-        var serverMetadataUnlessCached = function(that) { 
+        var serverMetadataUnlessCached = function(that) {
             if(!that._data.metadataResult) {
                 return forcetkClient.metadata(that.sobjectType)
                         .then(function(metadataResult) {
@@ -495,9 +495,9 @@
             } else return that;
         };
 
-        // If no layout data exists for this record type on the instance, 
+        // If no layout data exists for this record type on the instance,
         // get it from server.
-        var serverDescribeLayoutUnlessCached = function(that, recordTypeId) { 
+        var serverDescribeLayoutUnlessCached = function(that, recordTypeId) {
             if(!that._data["layoutInfo_" + recordTypeId]) {
                 return forcetkClient.describeLayout(that.sobjectType, recordTypeId)
                         .then(function(layoutResult) {
@@ -510,7 +510,7 @@
 
         /*----- EXTERNAL METHODS ------*/
         return {
-            // Returns a promise, which once resolved 
+            // Returns a promise, which once resolved
             // returns describe data of the sobject.
             describe: function() {
                 var that = this;
@@ -522,8 +522,8 @@
                             return that._data.describeResult;
                         });
             },
-            // Returns a promise, which once resolved 
-            // returns metadata of the sobject. 
+            // Returns a promise, which once resolved
+            // returns metadata of the sobject.
             getMetadata: function() {
                 var that = this;
                 if (that._data.metadataResult) return $.when(that._data.metadataResult);
@@ -535,7 +535,7 @@
                         });
             },
             // Returns a promise, which once resolved
-            // returns layout information associated 
+            // returns layout information associated
             // to a particular record type.
             // @param recordTypeId (Default: 012000000000000AAA)
             describeLayout: function(recordTypeId) {
@@ -549,11 +549,11 @@
                 return $.when(cacheRetrieve(that), recordTypeId)
                         .then(serverDescribeLayoutUnlessCached)
                         .then(cacheSave)
-                        .then(function() { 
+                        .then(function() {
                             return that._data["layoutInfo_" + recordTypeId];
                         });
             },
-            // Returns a promise, which once resolved clears 
+            // Returns a promise, which once resolved clears
             // the cached data for the current sobject type.
             reset: function() {
                 var that = this;
@@ -572,7 +572,7 @@
     // * id:<record id or null during create>
     // * attributes:<map field name to value>  record attributes given by a map of field name to value
     // * fieldlist:<fields>                    fields to fetch for read  otherwise full record is fetched, fields to save for update or create (required)
-    // * cache:<cache object>                  cache into which  created/read/updated/deleted record are cached    
+    // * cache:<cache object>                  cache into which  created/read/updated/deleted record are cached
     // * localAction:true|false                pass true if the change is done against the cache only (and has not been done against the server)
     //
     // Returns a promise
@@ -586,25 +586,25 @@
 
         // Cache actions helper
         var cacheCreate = function() {
-            var data = _.extend(targetedAttributes, 
-                                {__locally_created__:localAction, 
-                                 __locally_updated__:false, 
+            var data = _.extend(targetedAttributes,
+                                {__locally_created__:localAction,
+                                 __locally_updated__:false,
                                  __locally_deleted__:false});
             data[cache.keyField] = (localAction ? cache.makeLocalId() : id);
             return cache.save(data);
         };
 
-        var cacheRead = function() { 
+        var cacheRead = function() {
             return cache.retrieve(id, fieldlist)
-                .then(function(data) { 
-                    return data; 
+                .then(function(data) {
+                    return data;
                 });
         };
-        
-        var cacheUpdate = function() { 
+
+        var cacheUpdate = function() {
             var data = _.extend(targetedAttributes,
-                                {__locally_created__: isLocalId, 
-                                 __locally_updated__: localAction, 
+                                {__locally_created__: isLocalId,
+                                 __locally_updated__: localAction,
                                  __locally_deleted__: false});
             data[cache.keyField] = id;
             return cache.save(data);
@@ -652,31 +652,31 @@
         console.log("---> In Force.syncSObjectWithServer:method=" + method + " id=" + id);
 
         // Server actions helper
-        var serverCreate   = function() { 
+        var serverCreate   = function() {
             var attributesToSave = _.pick(attributes, fieldlist);
             return forcetkClient.create(sobjectType, _.omit(attributesToSave, "Id"))
                 .then(function(resp) {
                     return _.extend(attributes, {Id: resp.id});
-                }) 
+                })
         };
 
-        var serverRetrieve = function() { 
+        var serverRetrieve = function() {
             return forcetkClient.retrieve(sobjectType, id, fieldlist);
         };
 
-        var serverUpdate   = function() { 
+        var serverUpdate   = function() {
             var attributesToSave = _.pick(attributes, fieldlist);
             return forcetkClient.update(sobjectType, id, _.omit(attributesToSave, "Id"))
-                .then(function(resp) { 
-                    return attributes; 
-                }) 
+                .then(function(resp) {
+                    return attributes;
+                })
         };
 
-        var serverDelete   = function() { 
+        var serverDelete   = function() {
             return forcetkClient.del(sobjectType, id)
-                .then(function(resp) { 
+                .then(function(resp) {
                     return null;
-                }) 
+                })
         };
 
         // Chaining promises that return either a promise or created/upated/read model attributes or null in the case of delete
@@ -694,7 +694,7 @@
 
     // Force.syncApexRestObjectWithServer
     // ----------------------------------
-    // Helper method to do any single Apex Rest object CRUD operation against Salesforce server 
+    // Helper method to do any single Apex Rest object CRUD operation against Salesforce server
     // * method:<create, read, delete or update>
     // * path:<apex rest resource path relative to /services/apexrest>
     // * idField:<id field>
@@ -708,34 +708,34 @@
         console.log("---> In Force.syncApexRestObjectWithServer:method=" + method + " id=" + id);
 
         // Server actions helper
-        var serverCreate   = function() { 
+        var serverCreate   = function() {
             var attributesToSave = _.pick(attributes, fieldlist);
             return forcetkClient.apexrest(path, "POST", JSON.stringify(_.omit(attributesToSave, idField)), null)
                 .then(function(resp) {
                     var idMap = {};
                     idMap[idField] = resp[idField];
                     return _.extend(attributes, idMap);
-                }) 
+                })
         };
 
-        var serverRetrieve = function() { 
+        var serverRetrieve = function() {
             var fields = fieldlist ? '?fields=' + fieldlist : '';
             return forcetkClient.apexrest(path + "/" + id + fields, "GET", null, null);
         };
 
-        var serverUpdate   = function() { 
+        var serverUpdate   = function() {
             var attributesToSave = _.pick(attributes, fieldlist);
             return forcetkClient.apexrest(path + "/" + id, "PATCH", JSON.stringify(attributesToSave), null)
-                .then(function(resp) { 
-                    return attributes; 
-                }) 
+                .then(function(resp) {
+                    return attributes;
+                })
         };
 
-        var serverDelete   = function() { 
+        var serverDelete   = function() {
             return forcetkClient.apexrest(path + "/" + id, "DELETE", null, null)
-                .then(function(resp) { 
+                .then(function(resp) {
                     return null;
-                }) 
+                })
         };
 
         // Chaining promises that return either a promise or created/upated/read model attributes or null in the case of delete
@@ -798,7 +798,7 @@
         if (cache != null && cacheMode == Force.CACHE_MODE.CACHE_ONLY) {
             return cacheSync(method, id, attributes, null, true);
         }
-        
+
         // Chaining promises that return either a promise or created/upated/reda model attributes or null in the case of delete
         var promise = null;
 
@@ -916,7 +916,7 @@
     //   localChanges:<fields changed between base and yours>
     //   conflictingChanges:<fields changed both in theirs and yours with different values>
     // }
-    // 
+    //
     Force.syncRemoteObjectDetectConflict = function(method, id, attributes, fieldlist, cache, cacheMode, cacheForOriginals, mergeMode, syncWithServer) {
         console.log("--> In Force.syncRemoteObjectDetectConflict:method=" + method + " id=" + id + " cacheMode=" + cacheMode + " mergeMode=" + mergeMode);
 
@@ -943,9 +943,9 @@
         };
 
         var cacheForOriginalsSave = function(data) {
-            return (cacheMode == Force.CACHE_MODE.CACHE_ONLY || data.__local__ /* locally changed: don't write to cacheForOriginals */ 
+            return (cacheMode == Force.CACHE_MODE.CACHE_ONLY || data.__local__ /* locally changed: don't write to cacheForOriginals */
                     || (method == "read" && cacheMode == Force.CACHE_MODE.CACHE_FIRST && info.wasReadFromCache) /* read from cache: don't write to cacheForOriginals */)
-                ? data 
+                ? data
                 : cacheForOriginals.save(data);
         };
 
@@ -967,13 +967,13 @@
             var originalAttributes;
 
             // Merge mode is overwrite or local action or locally created -- no conflict check needed
-            if (mergeMode == Force.MERGE_MODE.OVERWRITE || mergeMode == null /* no mergeMode specified means overwrite */ 
-                || cacheMode == Force.CACHE_MODE.CACHE_ONLY 
-                || (cache != null && cache.isLocalId(id))) 
+            if (mergeMode == Force.MERGE_MODE.OVERWRITE || mergeMode == null /* no mergeMode specified means overwrite */
+                || cacheMode == Force.CACHE_MODE.CACHE_ONLY
+                || (cache != null && cache.isLocalId(id)))
             {
                 return syncRemoteObject(attributes);
             }
-            
+
             // Otherwise get original copy, get latest server and compare
             return cacheForOriginalsRetrieve()
                 .then(function(data) {
@@ -987,7 +987,7 @@
                         return syncRemoteObject(attributes);
                     }
                     else {
-                        var localChanges = identifyChanges(originalAttributes, attributes); 
+                        var localChanges = identifyChanges(originalAttributes, attributes);
                         var localVsRemoteChanges = identifyChanges(attributes, remoteAttributes);
                         var remoteChanges = identifyChanges(originalAttributes, remoteAttributes);
                         var conflictingChanges = _.intersection(remoteChanges, localChanges, localVsRemoteChanges);
@@ -1015,7 +1015,7 @@
         case "create": promise = syncRemoteObject(attributes).then(cacheForOriginalsSave); break;
         case "read":   promise = syncRemoteObject(attributes).then(cacheForOriginalsSave); break;
         case "update": promise = checkConflictAndSync().then(cacheForOriginalsSave); break;
-        case "delete": promise = checkConflictAndSync().then(cacheForOriginalsRemove); break; 
+        case "delete": promise = checkConflictAndSync().then(cacheForOriginalsRemove); break;
         }
 
         // Done
@@ -1042,26 +1042,26 @@
     // Force.fetchSObjectsFromServer
     // -----------------------------
     // Helper method to fetch a collection of SObjects from server, using SOQL, SOSL or MRU
-    // * config: {type:"soql", query:"<soql query>"} 
-    //   or {type:"sosl", query:"<sosl query>"} 
+    // * config: {type:"soql", query:"<soql query>"}
+    //   or {type:"sosl", query:"<sosl query>"}
     //   or {type:"mru", sobjectType:"<sobject type>", fieldlist:"<fields to fetch>"[, orderBy:"<field to sort by>", orderDirection:"<ASC|DESC>"]}
     //
-    // Return promise On resolve the promise returns the object 
+    // Return promise On resolve the promise returns the object
     // {
-    //   totalSize: "total size of matched records", 
+    //   totalSize: "total size of matched records",
     //   records: "all the fetched records",
     //   hasMore: "function to check if more records could be retrieved",
     //   getMore: "function to fetch more records",
-    //   closeCursor: "function to close the open cursor and disable further fetch" 
+    //   closeCursor: "function to close the open cursor and disable further fetch"
     // }
-    // 
+    //
     Force.fetchSObjectsFromServer = function(config) {
         console.log("---> In Force.fetchSObjectsFromServer:config=" + JSON.stringify(config));
 
         // Server actions helper
-        var serverSoql = function(soql) { 
+        var serverSoql = function(soql) {
             return forcetkClient.query(soql)
-                .then(function(resp) { 
+                .then(function(resp) {
                     var nextRecordsUrl = resp.nextRecordsUrl;
                     return {
                         totalSize: resp.totalSize,
@@ -1098,14 +1098,14 @@
                 .then(function(resp) {
                     //Only do query if the fieldList is provided.
                     if (fieldlist) {
-                        var soql = "SELECT " + fieldlist.join(",") 
+                        var soql = "SELECT " + fieldlist.join(",")
                             + " FROM " + sobjectType
                             + " WHERE Id IN ('" + _.pluck(resp.recentItems, "Id").join("','") + "')"
                             + (orderBy ? " ORDER BY " + orderBy : "")
                             + (orderDirection ? " " + orderDirection : "");
                         return serverSoql(soql);
                     } else return {
-                        records: resp.recentItems, 
+                        records: resp.recentItems,
                         totalSize: resp.recentItems.length,
                         hasMore: function() { return false; }
                     };
@@ -1133,26 +1133,26 @@
     //   totalSize: <number of records returned>
     //   records: <all fetched records>
     //   nextRecordsUrl: <url to get next records or null>
-    //   
+    //
     // }
     //
-    // Return promise On resolve the promise returns the object 
+    // Return promise On resolve the promise returns the object
     // {
-    //   totalSize: "total size of matched records", 
+    //   totalSize: "total size of matched records",
     //   records: "all the fetched records",
     //   hasMore: "function to check if more records could be retrieved",
     //   getMore: "function to fetch more records",
-    //   closeCursor: "function to close the open cursor and disable further fetch" 
+    //   closeCursor: "function to close the open cursor and disable further fetch"
     // }
-    // 
+    //
     Force.fetchApexRestObjectsFromServer = function(config) {
         console.log("---> In Force.fetchApexRestObjectsFromServer:config=" + JSON.stringify(config));
 
         // Server actions helper
-        var serverFetch = function(apexRestPath) { 
+        var serverFetch = function(apexRestPath) {
             var path = apexRestPath + "?" + $.param(config.params);
             return forcetkClient.apexrest(path, "GET", null, null)
-                .then(function(resp) { 
+                .then(function(resp) {
                     var nextRecordsUrl = resp.nextRecordsUrl;
                     return {
                         totalSize: resp.totalSize,
@@ -1208,7 +1208,7 @@
                     fetchResult = resp;
                     return resp.records;
                 };
-                
+
                 var cacheSaveAll = function(records) {
                     return cache.saveAll(records);
                 };
@@ -1218,7 +1218,7 @@
                 };
 
                 var setupGetMore = function(records) {
-                    return _.extend(fetchResult, 
+                    return _.extend(fetchResult,
                                     {
                                         records: records,
                                         getMore: function() {
@@ -1267,16 +1267,16 @@
         // Force.RemoteObject
         // ------------------
         // Abstract subclass of Backbone.Model to represent a remote object on the client
-        // 
+        //
         Force.RemoteObject = Backbone.Model.extend({
             // Used if none is passed during sync call - can be a string or a function taking the method and returning a string
             fieldlist:null,
-            
-            // Used if none is passed during sync call - can be a string or a function taking the method and returning a string
-            cacheMode:null, 
 
             // Used if none is passed during sync call - can be a string or a function taking the method and returning a string
-            mergeMode:null, 
+            cacheMode:null,
+
+            // Used if none is passed during sync call - can be a string or a function taking the method and returning a string
+            mergeMode:null,
 
             // Used if none is passed during sync call - can be a cache object or a function returning a cache object
             cache: null,
@@ -1303,9 +1303,9 @@
                 var resolveOption = function(optionName) {
                     return options[optionName] || (_.isFunction(that[optionName]) ? that[optionName](method) : that[optionName]);
                 };
- 
+
                 console.log("-> In Force.RemoteObject:sync method=" + method + " model.id=" + model.id);
- 
+
                 var fieldlist         = resolveOption("fieldlist");
                 var cacheMode         = resolveOption("cacheMode");
                 var mergeMode         = resolveOption("mergeMode");
@@ -1326,7 +1326,7 @@
         // Force.SObject
         // --------------
         // Subclass of Force.RemoteObject to represent a SObject on the client (fetch/save/delete update server through the REST API and or cache)
-        // 
+        //
         Force.SObject = Force.RemoteObject.extend({
             // sobjectType is expected on every instance
             sobjectType:null,
@@ -1342,7 +1342,7 @@
         // Force.ApexRestObject
         // --------------------
         // Subclass of Force.RemoteObject to represent a Apex Rest object on the client (fetch/save/delete update server through the Apex Rest API and or cache)
-        // 
+        //
         Force.ApexRestObject = Force.RemoteObject.extend({
             // apexRestPath is expected on every instance
             apexRestPath:null,
@@ -1361,12 +1361,12 @@
         // Abstract subclass of Backbone.Collection to represent a collection of remote objects on the client.
         // Only fetch is supported (no create/update or delete).
         // To define the set of remote object to fetch, provide a implementation for the method fetchRemoteObjectFromServer
-        // Where the config is 
+        // Where the config is
         // config: {type:"cache", cacheQuery:<cache query>[, closeCursorImmediate:<true|false(default)>]} or something else understood by the fetchRemoteObjectFromServer method of your subclass
         Force.RemoteObjectCollection = Backbone.Collection.extend({
             // To be defined in concrete subclass
             model: null,
-            
+
             // Used if none is passed during sync call - can be a cache object or a function returning a cache object
             cache: null,
 
@@ -1391,7 +1391,7 @@
             // Method to fetch more records if there's an open cursor
             getMore: function() {
                 var that = this;
-                if (that.hasMore()) 
+                if (that.hasMore())
                     return that._fetchResponse.getMore()
                         .then(function(records) {
                             that.add(records);
@@ -1416,7 +1416,7 @@
                 if (method != "read") {
                     throw new Error("Method " + method  + " not supported");
                 }
-                
+
                 var config = options.config || _.result(this, "config");
                 var cache = options.cache   || _.result(this, "cache");
                 var cacheForOriginals = options.cacheForOriginals || _.result(this, "cacheForOriginals");
@@ -1462,12 +1462,12 @@
         // Subclass of Force.RemoteObjectCollection to represent a collection of SObject's on the client.
         // Only fetch is supported (no create/update or delete).
         // To define the set of SObject's to fetch pass an options.config or set the config property on this collection object.
-        // Where the config is 
-        // config: {type:"soql", query:"<soql query>"} 
-        //   or {type:"sosl", query:"<sosl query>"} 
+        // Where the config is
+        // config: {type:"soql", query:"<soql query>"}
+        //   or {type:"sosl", query:"<sosl query>"}
         //   or {type:"mru", sobjectType:"<sobject type>", fieldlist:"<fields to fetch>"[, orderBy:"<field to sort by>", orderDirection:"<ASC|DESC>"]}
         //   or {type:"cache", cacheQuery:<cache query>[, closeCursorImmediate:<true|false(default)>]}
-        // 
+        //
         Force.SObjectCollection = Force.RemoteObjectCollection.extend({
             model: Force.SObject,
 
@@ -1493,7 +1493,7 @@
         // Subclass of Force.RemoteObjectCollection to represent a collection of Apex Rest object's on the client.
         // Only fetch is supported (no create/update or delete).
         // To define the set of Apex rRest's to fetch pass an options.config or set the config property on this collection object.
-        // Where the config is 
+        // Where the config is
         // config: {apexRestPath:"<apex rest path>", params:<map of parameters for the query string>}
         //   or {type:"cache", cacheQuery:<cache query>[, closeCursorImmediate:<true|false(default)>]}
         //
@@ -1502,9 +1502,9 @@
         //   totalSize: <number of records returned>
         //   records: <all fetched records>
         //   nextRecordsUrl: <url to get next records or null>
-        //   
+        //
         // }
-        // 
+        //
         Force.ApexRestObjectCollection = Force.RemoteObjectCollection.extend({
             model: Force.ApexRestObject,
 
