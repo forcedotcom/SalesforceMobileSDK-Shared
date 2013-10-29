@@ -106,7 +106,7 @@ app.models.File = Force.RemoteObject.extend({
     // adding computed fields
     toJSON: function() {
         var that = this;
-        return _.extend(Backbone.Model.prototype.toJSON.call(this), {thumbnailUrl: Force.innerForcetkClient.instanceUrl + that.get('renditionUrl')});
+        return _.extend(Backbone.Model.prototype.toJSON.call(this), {thumbnailUrl: Force.forcetkClient.impl.instanceUrl + that.get('renditionUrl')});
     }
 });
 
