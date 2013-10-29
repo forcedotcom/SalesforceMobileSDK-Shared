@@ -1,6 +1,7 @@
-"use strict";
+(function($, _, Backbone, forcetk) {
 
-(function($, _, Backbone) {
+    "use strict";
+
     // Save a reference to the global object (`window` in the browser).
     var root = this;
 
@@ -79,7 +80,7 @@
         }
 
         if(!innerForcetkClient || innerForcetkClient == null) {
-            innerForcetkClient = new root.forcetk.Client(creds.clientId, creds.loginUrl, creds.proxyUrl, reauth);
+            innerForcetkClient = new forcetk.Client(creds.clientId, creds.loginUrl, creds.proxyUrl, reauth);
             innerForcetkClient.setSessionToken(creds.accessToken, apiVersion, creds.instanceUrl);
             innerForcetkClient.setRefreshToken(creds.refreshToken);
             innerForcetkClient.setUserAgentString(patchUserAgent(creds.userAgent || innerForcetkClient.getUserAgentString()));
@@ -1516,4 +1517,4 @@
 
     } // if (!_.isUndefined(Backbone)) {
 })
-.call(this, $, _, window.Backbone);
+.call(this, jQuery, _, Backbone, forcetk);
