@@ -736,5 +736,5 @@ if (forcetk.Client === undefined) {
     forcetk.Client.prototype.deleteFileShare = function(sharedId, callback, error) {
         return this.del("ContentDocumentLink", sharedId, callback, error);
     }
-})
+}})
 .call(this, jQuery);
