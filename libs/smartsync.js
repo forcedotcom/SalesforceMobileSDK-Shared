@@ -86,6 +86,7 @@
         }
 
         forcetkClient = new Object();
+        forcetkClient.impl = innerForcetkClient;
         forcetkClient.create = promiser(innerForcetkClient, "create", "forcetkClient");
         forcetkClient.retrieve = promiser(innerForcetkClient, "retrieve", "forcetkClient");
         forcetkClient.update = promiser(innerForcetkClient, "update", "forcetkClient");
@@ -104,7 +105,6 @@
 
         // Exposing outside
         Force.forcetkClient = forcetkClient;
-        Force.innerForcetkClient = innerForcetkClient;
 
         if (navigator.smartstore) 
         {
