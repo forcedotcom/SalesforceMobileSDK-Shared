@@ -79,17 +79,10 @@ if (forcetk.Client === undefined) {
         this.clientId = clientId;
         this.loginUrl = loginUrl || 'https://login.salesforce.com/';
         if (typeof proxyUrl === 'undefined' || proxyUrl === null) {
-            if (location.protocol === 'file:') {
-                // In Cordova
-                this.proxyUrl = null;
-            } else {
-                // In Visualforce
-                this.proxyUrl = location.protocol + "//" + location.hostname
-                    + "/services/proxy";
-            }
+            this.proxyUrl = null;
             this.authzHeader = "Authorization";
         } else {
-            // On a server outside VF
+            // On an external proxy service
             this.proxyUrl = proxyUrl;
             this.authzHeader = "X-Authorization";
         }
