@@ -24,39 +24,36 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+(function($j) {
+
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "2.1.0.unstable";
+this.SALESFORCE_MOBILE_SDK_VERSION = "2.1.0.unstable";
 
 /*
  * JavaScript library to wrap REST API on Visualforce. Leverages Ajax Proxy
  * (see http://bit.ly/sforce_ajax_proxy for details). Based on forcetk.js,
  * but customized for consumption from within the Mobile SDK.
  *
- * Note that you must add the REST endpoint hostname for your instance (i.e. 
+ * Note that you must add the REST endpoint hostname for your instance (i.e.
  * https://na1.salesforce.com/ or similar) as a remote site - in the admin
  * console, go to Your Name | Setup | Security Controls | Remote Site Settings
  */
 
-var forcetk = window.forcetk;
+var forcetk = this.forcetk;
 
 if (forcetk === undefined) {
-    forcetk = {};
+    forcetk = this.forcetk = {};
 }
 
 if (forcetk.Client === undefined) {
 
-    // We use $j rather than $ for jQuery so it works in Visualforce
-    if (window.$j === undefined) {
-        $j = $;
-    }
-
     /**
-     * The Client provides a convenient wrapper for the Force.com REST API, 
+     * The Client provides a convenient wrapper for the Force.com REST API,
      * allowing JavaScript in Visualforce pages to use the API via the Ajax
      * Proxy.
      * @param [clientId=null] 'Consumer Key' in the Remote Access app settings
      * @param [loginUrl='https://login.salesforce.com/'] Login endpoint
-     * @param [proxyUrl=null] Proxy URL. Omit if running on Visualforce or 
+     * @param [proxyUrl=null] Proxy URL. Omit if running on Visualforce or
      *                  Cordova etc
      * @constructor
      */
@@ -65,12 +62,12 @@ if (forcetk.Client === undefined) {
     }
 
     /**
-     * The Client provides a convenient wrapper for the Force.com REST API, 
+     * The Client provides a convenient wrapper for the Force.com REST API,
      * allowing JavaScript in Visualforce pages to use the API via the Ajax
      * Proxy.
      * @param [clientId=null] 'Consumer Key' in the Remote Access app settings
      * @param [loginUrl='https://login.salesforce.com/'] Login endpoint
-     * @param [proxyUrl=null] Proxy URL. Omit if running on Visualforce or 
+     * @param [proxyUrl=null] Proxy URL. Omit if running on Visualforce or
      *                  Cordova etc
      * @param authCallback Callback method to perform authentication when 401 is received.
      * @constructor
@@ -170,45 +167,45 @@ if (forcetk.Client === undefined) {
         var match = /(iPhone|iPad|iPod|Android|Windows Phone|Macintosh|Windows)/.exec(navigatorUserAgent);
         if (match != null && match.length == 2) {
             switch(match[1]) {
-            case "iPad":       
-                platform = "iPhone OS"; 
+            case "iPad":
+                platform = "iPhone OS";
                 platformVersion = getIPadVersion();
                 model = "iPad";
                 break;
 
-            case "iPhone":       
-            case "iPod":       
-                platform = "iPhone OS"; 
+            case "iPhone":
+            case "iPod":
+                platform = "iPhone OS";
                 platformVersion = getIPhoneVersion();
                 model = match[1];
                 break;
 
-            case "Android":      
-                platform = "android mobile"; 
-                platformVersion = getAndroidVersion(); 
-                model = getAndroidModel(); 
+            case "Android":
+                platform = "android mobile";
+                platformVersion = getAndroidVersion();
+                model = getAndroidModel();
                 break;
 
-            case "Windows Phone": 
-                platform = "Windows Phone"; 
-                platformVersion = getWindowsPhoneVersion(); 
+            case "Windows Phone":
+                platform = "Windows Phone";
+                platformVersion = getWindowsPhoneVersion();
                 model = getWindowsPhoneModel();
                 break;
 
-            case "Macintosh":    
-                platform = "Mac OS"; 
-                platformVersion = getMacOSVersion(); 
+            case "Macintosh":
+                platform = "Mac OS";
+                platformVersion = getMacOSVersion();
                 break;
 
-            case "Windows": 
-                platform = "Windows"; 
-                platformVersion = getWindowsVersion(); 
+            case "Windows":
+                platform = "Windows";
+                platformVersion = getWindowsVersion();
                 break;
             }
         }
 
         return "SalesforceMobileSDK/" + sdkVersion + " " + platform + "/" + platformVersion + " (" + model + ") " + appName + "/" + appVersion + " Web " + navigatorUserAgent;
-    }    
+    }
 
     /**
      * Set a refresh token in the client.
@@ -255,7 +252,7 @@ if (forcetk.Client === undefined) {
      * @param sessionId a salesforce.com session ID. In a Visualforce page,
      *                   use '{!$Api.sessionId}' to obtain a session ID.
      * @param [apiVersion="28.0"] Force.com API version
-     * @param [instanceUrl] Omit this if running on Visualforce; otherwise 
+     * @param [instanceUrl] Omit this if running on Visualforce; otherwise
      *                   use the value from the OAuth token.
      */
     forcetk.Client.prototype.setSessionToken = function(sessionId, apiVersion, instanceUrl) {
@@ -264,9 +261,9 @@ if (forcetk.Client === undefined) {
         ? 'v28.0': apiVersion;
         if (typeof instanceUrl === 'undefined' || instanceUrl == null) {
             // location.hostname can be of the form 'abc.na1.visual.force.com',
-            // 'na1.salesforce.com' or 'abc.my.salesforce.com' (custom domains). 
+            // 'na1.salesforce.com' or 'abc.my.salesforce.com' (custom domains).
             // Split on '.', and take the [1] or [0] element as appropriate
-            var elements = location.hostname.split(".");            
+            var elements = location.hostname.split(".");
             var instance = null;
             if(elements.length == 4 && elements[1] === 'my') {
                 instance = elements[0] + '.' + elements[1];
@@ -359,7 +356,7 @@ if (forcetk.Client === undefined) {
     /**
      * Utility function to query the Chatter API and download a file
      * Note, raw XMLHttpRequest because JQuery mangles the arraybuffer
-     * This should work on any browser that supports XMLHttpRequest 2 because arraybuffer is required. 
+     * This should work on any browser that supports XMLHttpRequest 2 because arraybuffer is required.
      * For mobile, that means iOS >= 5 and Android >= Honeycomb
      * @author Tom Gersic
      * @param path resource path relative to /services/data
@@ -425,7 +422,7 @@ if (forcetk.Client === undefined) {
     }
 
     /*
-     * Lists summary information about each Salesforce.com version currently 
+     * Lists summary information about each Salesforce.com version currently
      * available, including the version, label, and a link to each version's
      * root.
      * @param callback function to which response will be passed
@@ -436,7 +433,7 @@ if (forcetk.Client === undefined) {
     }
 
     /*
-     * Lists available resources for the client's API version, including 
+     * Lists available resources for the client's API version, including
      * resource name and URI.
      * @param callback function to which response will be passed
      * @param [error=null] function to which jqXHR will be passed in case of error
@@ -446,7 +443,7 @@ if (forcetk.Client === undefined) {
     }
 
     /*
-     * Lists the available objects and their metadata for your organization's 
+     * Lists the available objects and their metadata for your organization's
      * data.
      * @param callback function to which response will be passed
      * @param [error=null] function to which jqXHR will be passed in case of error
@@ -467,7 +464,7 @@ if (forcetk.Client === undefined) {
     }
 
     /*
-     * Completely describes the individual metadata at all levels for the 
+     * Completely describes the individual metadata at all levels for the
      * specified object.
      * @param objtype object type; e.g. "Account"
      * @param callback function to which response will be passed
@@ -494,8 +491,8 @@ if (forcetk.Client === undefined) {
     /*
      * Creates a new record of the given type.
      * @param objtype object type; e.g. "Account"
-     * @param fields an object containing initial field names and values for 
-     *               the record, e.g. {:Name "salesforce.com", :TickerSymbol 
+     * @param fields an object containing initial field names and values for
+     *               the record, e.g. {:Name "salesforce.com", :TickerSymbol
      *               "CRM"}
      * @param callback function to which response will be passed
      * @param [error=null] function to which jqXHR will be passed in case of error
@@ -509,7 +506,7 @@ if (forcetk.Client === undefined) {
      * Retrieves field values for a record of the given type.
      * @param objtype object type; e.g. "Account"
      * @param id the record's object ID
-     * @param [fields=null] optional comma-separated list of fields for which 
+     * @param [fields=null] optional comma-separated list of fields for which
      *               to return values; e.g. Name,Industry,TickerSymbol
      * @param callback function to which response will be passed
      * @param [error=null] function to which jqXHR will be passed in case of error
@@ -526,19 +523,19 @@ if (forcetk.Client === undefined) {
     }
 
     /*
-     * Upsert - creates or updates record of the given type, based on the 
+     * Upsert - creates or updates record of the given type, based on the
      * given external Id.
      * @param objtype object type; e.g. "Account"
      * @param externalIdField external ID field name; e.g. "accountMaster__c"
      * @param externalId the record's external ID value
-     * @param fields an object containing field names and values for 
-     *               the record, e.g. {:Name "salesforce.com", :TickerSymbol 
+     * @param fields an object containing field names and values for
+     *               the record, e.g. {:Name "salesforce.com", :TickerSymbol
      *               "CRM"}
      * @param callback function to which response will be passed
      * @param [error=null] function to which jqXHR will be passed in case of error
      */
     forcetk.Client.prototype.upsert = function(objtype, externalIdField, externalId, fields, callback, error) {
-        return this.ajax('/' + this.apiVersion + '/sobjects/' + objtype + '/' + externalIdField + '/' + externalId 
+        return this.ajax('/' + this.apiVersion + '/sobjects/' + objtype + '/' + externalIdField + '/' + externalId
         + '?_HttpMethod=PATCH', callback, error, "POST", JSON.stringify(fields));
     }
 
@@ -546,19 +543,19 @@ if (forcetk.Client === undefined) {
      * Updates field values on a record of the given type.
      * @param objtype object type; e.g. "Account"
      * @param id the record's object ID
-     * @param fields an object containing initial field names and values for 
-     *               the record, e.g. {:Name "salesforce.com", :TickerSymbol 
+     * @param fields an object containing initial field names and values for
+     *               the record, e.g. {:Name "salesforce.com", :TickerSymbol
      *               "CRM"}
      * @param callback function to which response will be passed
      * @param [error=null] function to which jqXHR will be passed in case of error
      */
     forcetk.Client.prototype.update = function(objtype, id, fields, callback, error) {
-        return this.ajax('/' + this.apiVersion + '/sobjects/' + objtype + '/' + id 
+        return this.ajax('/' + this.apiVersion + '/sobjects/' + objtype + '/' + id
         + '?_HttpMethod=PATCH', callback, error, "POST", JSON.stringify(fields));
     }
 
     /*
-     * Deletes a record of the given type. Unfortunately, 'delete' is a 
+     * Deletes a record of the given type. Unfortunately, 'delete' is a
      * reserved word in JavaScript.
      * @param objtype object type; e.g. "Account"
      * @param id the record's object ID
@@ -572,7 +569,7 @@ if (forcetk.Client === undefined) {
 
     /*
      * Executes the specified SOQL query.
-     * @param soql a string containing the query to execute - e.g. "SELECT Id, 
+     * @param soql a string containing the query to execute - e.g. "SELECT Id,
      *             Name from Account ORDER BY Name LIMIT 20"
      * @param callback function to which response will be passed
      * @param [error=null] function to which jqXHR will be passed in case of error
@@ -581,13 +578,13 @@ if (forcetk.Client === undefined) {
         return this.ajax('/' + this.apiVersion + '/query?q=' + encodeURI(soql)
         , callback, error);
     }
-    
+
     /*
      * Queries the next set of records based on pagination.
      * <p>This should be used if performing a query that retrieves more than can be returned
      * in accordance with http://www.salesforce.com/us/developer/docs/api_rest/Content/dome_query.htm</p>
      * <p>Ex: forcetkClient.queryMore( successResponse.nextRecordsUrl, successHandler, failureHandler )</p>
-     * 
+     *
      * @param url - the url retrieved from nextRecordsUrl or prevRecordsUrl
      * @param callback function to which response will be passed
      * @param [error=null] function to which jqXHR will be passed in case of error
@@ -598,7 +595,7 @@ if (forcetk.Client === undefined) {
 
     /*
      * Executes the specified SOSL search.
-     * @param sosl a string containing the search to execute - e.g. "FIND 
+     * @param sosl a string containing the search to execute - e.g. "FIND
      *             {needle}"
      * @param callback function to which response will be passed
      * @param [error=null] function to which jqXHR will be passed in case of error
@@ -718,7 +715,7 @@ if (forcetk.Client === undefined) {
 
     /**
      * Returns a page from the list of entities that this file is shared to
-     * 
+     *
      * @param fileId file's Id
      * @param page page number - when null fetches first page
      * @param callback function to which response will be passed
@@ -731,7 +728,7 @@ if (forcetk.Client === undefined) {
 
     /**
      * Adds a file share for the specified fileId to the specified entityId
-     * 
+     *
      * @param fileId file's Id
      * @param entityId Id of the entity to share the file to (e.g. a user or a group)
      * @param shareType the type of share (V - View, C - Collaboration)
@@ -751,4 +748,5 @@ if (forcetk.Client === undefined) {
     forcetk.Client.prototype.deleteFileShare = function(sharedId, callback, error) {
         return this.del("ContentDocumentLink", sharedId, callback, error);
     }
-}
+}})
+.call(this, jQuery);
