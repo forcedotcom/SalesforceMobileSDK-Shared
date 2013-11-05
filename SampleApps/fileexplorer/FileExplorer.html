@@ -135,8 +135,8 @@ app.models.FileCollection = Force.RemoteObjectCollection.extend({
                     hasMore: function() { return nextPageUrl != null; },
                     getMore: function() {
                         var that = this;
-                        if (!nextRecordsUrl) return null;
-                        return forcetkClient.queryMore(nextRecordsUrl).then(function(resp) {
+                        if (!nextPageUrl) return null;
+                        return forcetkClient.queryMore(nextPageUrl).then(function(resp) {
                             nextPageUrl = resp.nextPageUrl;
                             that.records.pushObjects(resp.files);
                             return resp.files;
