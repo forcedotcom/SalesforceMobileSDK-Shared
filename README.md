@@ -56,11 +56,15 @@ HTML/CSS/JavaScript used by ContactExplorer application.
 
 **smartstoreexplorer**
 
-HTML/CSS/JavaScript used by SmartStore Explorer application.
+HTML/CSS/JavaScript used by SmartStoreExplorer application.
 
 **vfconnector**
 
-Contains bootconfig.json for VF Connector application.
+Contains bootconfig.json for VFConnector application.
+
+**fileexplorer**
+
+HTML/CSS/JavaScript used by HybridFileExplorer application.
 
 # /test
 
