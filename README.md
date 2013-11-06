@@ -60,7 +60,7 @@ HTML/CSS/JavaScript used by SmartStoreExplorer application.
 
 **vfconnector**
 
-Contains bootconfig.json for VF Connector application.
+Contains bootconfig.json for VFConnector application.
 
 **fileexplorer**
 
