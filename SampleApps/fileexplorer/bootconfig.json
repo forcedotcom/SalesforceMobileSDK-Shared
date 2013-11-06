@@ -3,7 +3,7 @@
     "oauthRedirectURI": "testsfdc:///mobilesdk/detect/oauth/done",
     "oauthScopes": ["api","web"],
     "isLocal": true,
-    "startPage": "AccountEditor.html",
+    "startPage": "FileExplorer.html",
     "errorPage": "error.html",
     "shouldAuthenticate": true,
     "attemptOfflineLoad": true,

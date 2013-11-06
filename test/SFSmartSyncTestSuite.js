@@ -34,12 +34,18 @@ var SmartSyncTestSuite = function () {
     SFTestSuite.call(this, "SmartSyncTestSuite");
 
     // To run specific tests
-    // this.testsToRun = ["testSObjectDestroy"];
+    // this.testsToRun = ["testFetchApexRestObjectsFromServer"];
 };
 
 // We are sub-classing SFTestSuite
 SmartSyncTestSuite.prototype = new SFTestSuite();
 SmartSyncTestSuite.prototype.constructor = SmartSyncTestSuite;
+
+//-------------------------------------------------------------------------------------------------------
+//
+// Tests for Force.StoreCache
+// 
+//-------------------------------------------------------------------------------------------------------
 
 /** 
  * TEST Force.StoreCache.init 
@@ -428,6 +434,12 @@ SmartSyncTestSuite.prototype.testStoreCacheAddLocalFields = function() {
     this.finalizeTest();
 }
 
+//-------------------------------------------------------------------------------------------------------
+//
+// Tests for Force.SObjectType
+// 
+//-------------------------------------------------------------------------------------------------------
+
 /** 
  * TEST Force.SObjectType.describe
  */
@@ -668,13 +680,19 @@ SmartSyncTestSuite.prototype.testSObjectTypeReset = function() {
 
 }
 
+//-------------------------------------------------------------------------------------------------------
+//
+// Tests for Force.syncRemoteObjectWithCache
+// 
+//-------------------------------------------------------------------------------------------------------
+
 /** 
- * TEST Force.syncSObjectWithCache for create method
+ * TEST Force.syncRemoteObjectWithCache for create method
  */
-SmartSyncTestSuite.prototype.testSyncSObjectWithCacheCreate = function() {
-    console.log("# In SmartSyncTestSuite.testSyncSObjectWithCacheCreate");
+SmartSyncTestSuite.prototype.testSyncRemoteObjectWithCacheCreate = function() {
+    console.log("# In SmartSyncTestSuite.testSyncRemoteObjectWithCacheCreate");
     var self = this;
-    var soupName = "testSoupForSyncSObjectWithCache";
+    var soupName = "testSoupForSyncRemoteObjectWithCache";
     var cache;
 
     Force.smartstoreClient.removeSoup(soupName)
@@ -685,7 +703,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithCacheCreate = function() {
     })
     .then(function() {
         console.log("## Trying a create with localAction true");
-        return Force.syncSObjectWithCache("create", null, {Name:"JamesBond"}, ["Name"], cache, true);
+        return Force.syncRemoteObjectWithCache("create", null, {Name:"JamesBond"}, ["Name"], cache, true);
     })
     .then(function(data) {
         console.log("## Checking data returned by sync call");
@@ -702,7 +720,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithCacheCreate = function() {
         checkLocalFlags(data, true, true, false, false);
 
         console.log("## Trying a create with localAction false");
-        return Force.syncSObjectWithCache("create", "008", {Name:"JamesOther"}, ["Name"], cache, false);
+        return Force.syncRemoteObjectWithCache("create", "008", {Name:"JamesOther"}, ["Name"], cache, false);
     })
     .then(function(data) {
         console.log("## Checking data returned by sync call");
@@ -718,7 +736,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithCacheCreate = function() {
         checkLocalFlags(data, false, false, false, false);
 
         console.log("## Trying a create with fieldlist being a subset of attributes");
-        return Force.syncSObjectWithCache("create", "009", {Name:"JamesNine", Mission:"TopSecret", City:"London"}, ["Name", "City"], cache, false);
+        return Force.syncRemoteObjectWithCache("create", "009", {Name:"JamesNine", Mission:"TopSecret", City:"London"}, ["Name", "City"], cache, false);
     })
     .then(function(data) {
         console.log("## Checking data returned by sync call");
@@ -736,7 +754,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithCacheCreate = function() {
         checkLocalFlags(data, false, false, false, false);
 
         console.log("## Trying a create with null fieldlist");
-        return Force.syncSObjectWithCache("create", "010", {Name:"JamesTen", Mission:"TopSecret", City:"London"}, null, cache, false);
+        return Force.syncRemoteObjectWithCache("create", "010", {Name:"JamesTen", Mission:"TopSecret", City:"London"}, null, cache, false);
     })
     .then(function(data) {
         console.log("## Checking data returned by sync call");
@@ -761,12 +779,12 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithCacheCreate = function() {
 }
 
 /** 
- * TEST Force.syncSObjectWithCache for read method
+ * TEST Force.syncRemoteObjectWithCache for read method
  */
-SmartSyncTestSuite.prototype.testSyncSObjectWithCacheRead = function() {
-    console.log("# In SmartSyncTestSuite.testSyncSObjectWithCacheRead");
+SmartSyncTestSuite.prototype.testSyncRemoteObjectWithCacheRead = function() {
+    console.log("# In SmartSyncTestSuite.testSyncRemoteObjectWithCacheRead");
     var self = this;
-    var soupName = "testSoupForSyncSObjectWithCache";
+    var soupName = "testSoupForSyncRemoteObjectWithCache";
     var cache;
 
     Force.smartstoreClient.removeSoup(soupName)
@@ -782,28 +800,28 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithCacheRead = function() {
     })
     .then(function(records) {
         console.log("## Trying read for existing record");
-        return Force.syncSObjectWithCache("read", "007", null, ["Name"], cache);
+        return Force.syncRemoteObjectWithCache("read", "007", null, ["Name"], cache);
     })
     .then(function(data) {
         console.log("## Checking data returned by sync call");
         assertContains(data, {Id:"007", Name:"JamesBond"});
 
         console.log("## Trying read for non-existing record");
-        return Force.syncSObjectWithCache("read", "010", null, ["Name"], cache);
+        return Force.syncRemoteObjectWithCache("read", "010", null, ["Name"], cache);
     })
     .then(function(data) {
         console.log("## Checking data returned by sync call");
         QUnit.equals(data, null, "No data should have been returned");
 
         console.log("## Trying read for existing record but asking for missing fields");
-        return Force.syncSObjectWithCache("read", "007", null, ["Name", "Mission"], cache);
+        return Force.syncRemoteObjectWithCache("read", "007", null, ["Name", "Mission"], cache);
     })
     .then(function(data) {
         console.log("## Checking data returned by sync call");
         QUnit.equals(data, null, "No data should have been returned");
 
         console.log("## Trying read for existing record with null fieldlist");
-        return Force.syncSObjectWithCache("read", "007", null, null, cache);
+        return Force.syncRemoteObjectWithCache("read", "007", null, null, cache);
     })
     .then(function(data) {
         console.log("## Checking data returned by sync call");
@@ -818,12 +836,12 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithCacheRead = function() {
 }
 
 /** 
- * TEST Force.syncSObjectWithCache for update method
+ * TEST Force.syncRemoteObjectWithCache for update method
  */
-SmartSyncTestSuite.prototype.testSyncSObjectWithCacheUpdate = function() {
+SmartSyncTestSuite.prototype.testSyncRemoteObjectWithCacheUpdate = function() {
     console.log("# In SmartSyncTestSuite.testSyncSObjectWithUpdate");
     var self = this;
-    var soupName = "testSoupForSyncSObjectWithCache";
+    var soupName = "testSoupForSyncRemoteObjectWithCache";
     var cache;
 
     Force.smartstoreClient.removeSoup(soupName)
@@ -834,11 +852,11 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithCacheUpdate = function() {
     })
     .then(function() {
         console.log("## Trying a create with localAction true");
-        return Force.syncSObjectWithCache("create", null, {Name:"JamesBond"}, ["Name"], cache, true);
+        return Force.syncRemoteObjectWithCache("create", null, {Name:"JamesBond"}, ["Name"], cache, true);
     })
     .then(function(data) {
         console.log("## Trying an update with localAction true");
-        return Force.syncSObjectWithCache("update", data.Id, {Mission:"TopSecret"}, ["Mission"], cache, true);
+        return Force.syncRemoteObjectWithCache("update", data.Id, {Mission:"TopSecret"}, ["Mission"], cache, true);
     })
     .then(function(data) {
         console.log("## Checking data returned by sync call");
@@ -854,7 +872,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithCacheUpdate = function() {
         checkLocalFlags(data, true, true, true, false);
 
         console.log("## Trying an update with localAction false");
-        return Force.syncSObjectWithCache("update", "007", {Id:"007", Name:"JamesBond", Mission:"TopSecret2"}, ["Name", "Mission"], cache, false);
+        return Force.syncRemoteObjectWithCache("update", "007", {Id:"007", Name:"JamesBond", Mission:"TopSecret2"}, ["Name", "Mission"], cache, false);
     })
     .then(function(data) {
         console.log("## Checking data returned by sync call");
@@ -870,7 +888,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithCacheUpdate = function() {
         checkLocalFlags(data, false, false, false, false);
 
         console.log("## Trying an update with only a subset of existing attributes provided");
-        return Force.syncSObjectWithCache("update", "007", {Name:"JamesBond3", Mission:"TopSecret3"}, ["Mission"], cache, false);
+        return Force.syncRemoteObjectWithCache("update", "007", {Name:"JamesBond3", Mission:"TopSecret3"}, ["Mission"], cache, false);
     })
     .then(function(data) {
         console.log("## Checking data returned by sync call");
@@ -886,7 +904,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithCacheUpdate = function() {
         checkLocalFlags(data, false, false, false, false);
 
         console.log("## Trying an update with null fieldlist");
-        return Force.syncSObjectWithCache("update", "007", {Name:"JamesBond4", Mission:"TopSecret4"}, null, cache, false);
+        return Force.syncRemoteObjectWithCache("update", "007", {Name:"JamesBond4", Mission:"TopSecret4"}, null, cache, false);
     })
     .then(function(data) {
         console.log("## Checking data returned by sync call");
@@ -911,12 +929,12 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithCacheUpdate = function() {
 }
 
 /** 
- * TEST Force.syncSObjectWithCache for delete method
+ * TEST Force.syncRemoteObjectWithCache for delete method
  */
-SmartSyncTestSuite.prototype.testSyncSObjectWithCacheDelete = function() {
-    console.log("# In SmartSyncTestSuite.testSyncSObjectWithCacheDelete");
+SmartSyncTestSuite.prototype.testSyncRemoteObjectWithCacheDelete = function() {
+    console.log("# In SmartSyncTestSuite.testSyncRemoteObjectWithCacheDelete");
     var self = this;
-    var soupName = "testSoupForSyncSObjectWithCache";
+    var soupName = "testSoupForSyncRemoteObjectWithCache";
     var cache;
 
     Force.smartstoreClient.removeSoup(soupName)
@@ -932,7 +950,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithCacheDelete = function() {
     })
     .then(function(records) {
         console.log("## Trying delete for existing record");
-        return Force.syncSObjectWithCache("delete", "007", null, null, cache);
+        return Force.syncRemoteObjectWithCache("delete", "007", null, null, cache);
     })
     .then(function(data) {
         console.log("## Checking data returned by sync call");
@@ -946,7 +964,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithCacheDelete = function() {
         QUnit.equals(data, null, "No data should have been returned");
 
         console.log("## Trying local delete");
-        return Force.syncSObjectWithCache("delete", "008", null, null, cache, true);
+        return Force.syncRemoteObjectWithCache("delete", "008", null, null, cache, true);
     })
     .then(function(data) {
         console.log("## Checking data returned by sync call");
@@ -961,7 +979,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithCacheDelete = function() {
         checkLocalFlags(data, true, false, false, true);
 
         console.log("## Trying delete for non-existing record");
-        return Force.syncSObjectWithCache("delete", "010", null, null, cache);
+        return Force.syncRemoteObjectWithCache("delete", "010", null, null, cache);
     })
     .then(function(data) {
         console.log("## Checking data returned by sync call");
@@ -974,6 +992,12 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithCacheDelete = function() {
         self.finalizeTest();
     });
 }
+
+//-------------------------------------------------------------------------------------------------------
+//
+// Tests for Force.syncSObjectWithServer
+// 
+//-------------------------------------------------------------------------------------------------------
 
 /** 
  * TEST Force.syncSObjectWithServer for create method
@@ -1094,6 +1118,13 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithServerDelete = function() {
         });
 };
 
+
+//-------------------------------------------------------------------------------------------------------
+//
+// Tests for Force.syncSObject
+// 
+//-------------------------------------------------------------------------------------------------------
+
 /** 
  * TEST Force.syncSObject for method create
  */
@@ -1148,7 +1179,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectCreate = function() {
  * TEST Force.syncSObject for method retrieve
  */
 SmartSyncTestSuite.prototype.testSyncSObjectRetrieve = function() {
-    console.log("# In SmartSyncTestSuite.syncSObjectRetrieve");
+    console.log("# In SmartSyncTestSuite.testSyncSObjectRetrieve");
     var self = this;
 
     var cache;
@@ -1230,7 +1261,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectRetrieve = function() {
  * TEST Force.syncSObject for method update
  */
 SmartSyncTestSuite.prototype.testSyncSObjectUpdate = function() {
-    console.log("# In SmartSyncTestSuite.syncSObjectUpdate");
+    console.log("# In SmartSyncTestSuite.testSyncSObjectUpdate");
     var self = this;
     var cache;
     var soupName = "syncSObjectUpdate";
@@ -1286,7 +1317,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectUpdate = function() {
  * TEST Force.syncSObject for method delete
  */
 SmartSyncTestSuite.prototype.testSyncSObjectDelete = function() {
-    console.log("# In SmartSyncTestSuite.syncSObjectDelete");
+    console.log("# In SmartSyncTestSuite.testSyncSObjectDelete");
     var self = this;
     var cache;
     var soupName = "syncSObjectDelete";
@@ -1342,11 +1373,17 @@ SmartSyncTestSuite.prototype.testSyncSObjectDelete = function() {
         });
 };
 
+//-------------------------------------------------------------------------------------------------------
+//
+// Tests for Force.syncSObjectDetectConflict
+// 
+//-------------------------------------------------------------------------------------------------------
+
 /** 
  * TEST Force.syncSObjectDetectConflict for method create
  */
 SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictCreate = function() {
-    console.log("# In SmartSyncTestSuite.syncSObjectDetectConflictCreate");
+    console.log("# In SmartSyncTestSuite.testSyncSObjectDetectConflictCreate");
     var self = this;
 
     var cache, cacheForOriginals;
@@ -1398,7 +1435,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictCreate = function() {
  * TEST Force.syncSObjectDetectConflict for method retrieve
  */
 SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictRetrieve = function() {
-    console.log("# In SmartSyncTestSuite.syncSObjectDetectConflictRetrieve");
+    console.log("# In SmartSyncTestSuite.testSyncSObjectDetectConflictRetrieve");
     var self = this;
 
     var cache, cacheForOriginals;
@@ -1482,7 +1519,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictRetrieve = function() 
  * TEST Force.syncSObjectDetectConflict for method update
  */
 SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() {
-    console.log("# In SmartSyncTestSuite.syncSObjectDetectConflictUpdate");
+    console.log("# In SmartSyncTestSuite.testSyncSObjectDetectConflictUpdate");
     var self = this;
     var cache, cacheForOriginals;
     var soupName = "testSyncSObjectDetectConflictUpdate";
@@ -1659,7 +1696,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() {
  * TEST Force.syncSObjectDetectConflict for method delete
  */
 SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() {
-    console.log("# In SmartSyncTestSuite.syncSObjectDetectConflictDelete");
+    console.log("# In SmartSyncTestSuite.testSyncSObjectDetectConflictDelete");
     var self = this;
     var cache, cacheForOriginals;
     var soupName = "testSyncSObjectDetectConflictDelete";
@@ -1837,6 +1874,12 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() {
         });
 };
 
+//-------------------------------------------------------------------------------------------------------
+//
+// Tests for Force.SObject
+// 
+//-------------------------------------------------------------------------------------------------------
+
 /** 
  * TEST Force.SObject.fetch
  */
@@ -1966,81 +2009,248 @@ SmartSyncTestSuite.prototype.testSObjectDestroy = function() {
         });
 };
 
+//-------------------------------------------------------------------------------------------------------
+//
+// Tests for Force.syncApexRestObjectWithServer
+//
+//  You need to create the following Apex Rest resource in your test organization
+//
+//  @RestResource(urlMapping='/simpleAccount/*')
+//  global with sharing class SimpleAccountResource {
+//      static String getIdFromURI() {
+//          RestRequest req = RestContext.request;
+//  		return req.requestURI.substring(req.requestURI.lastIndexOf('/')+1);
+//      }
+//      
+//      @HttpGet global static Map<String, String> doGet() {
+//          String id = getIdFromURI();
+//          Account acc = [select Id, Name from Account where Id = :id];
+//          return new Map<String, String>{'accountId'=>acc.Id, 'accountName'=>acc.Name};
+//      }
+//  
+//      @HttpPost global static Map<String, String> doPost(String accountName) {
+//  		Account acc = new Account(Name=accountName);
+//          insert acc;
+//          return new Map<String, String>{'accountId'=>acc.Id, 'accountName'=>acc.Name};
+//      }
+//  
+//      @HttpPatch global static Map<String, String> doPatch(String accountName) {
+//          String id = getIdFromURI();
+//          Account acc = [select Id from Account where Id = :id];
+//          acc.Name = accountName;
+//          update acc;
+//          return new Map<String, String>{'accountId'=>acc.Id, 'accountName'=>acc.Name};
+//      }
+//  
+//      @HttpDelete global static void doDelete() {
+//          String id = getIdFromURI();
+//          Account acc = [select Id from Account where Id = :id];
+//  		delete acc;
+//          RestContext.response.statusCode = 204;
+//      }
+//  }
+// 
+//-------------------------------------------------------------------------------------------------------
+
 /** 
- * TEST Force.fetchSObjectsFromCache
+ * TEST Force.syncApexRestObjectWithServer For create method
  */
-SmartSyncTestSuite.prototype.testFetchSObjectsFromCache = function() {
-    console.log("# In SmartSyncTestSuite.fetchSObjectsFromCache");
+SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerCreate = function() {
+    console.log("# In SmartSyncTestSuite.testSyncApexRestObjectWithServerCreate");
     var self = this;
+    var id;
 
-    var cache;
-    var soupName = "testSoupForFetchSObjectsFromCache";
-    var resultSet;
+    console.log("## Trying create");
+    Force.syncApexRestObjectWithServer("create", "/simpleAccount", null, "accountId", {accountName:"TestAccount"}, ["accountName"])
+    .then(function(data) {
+        console.log("## Checking data returned by sync call");
+        id = data.accountId;
+        assertContains(data, {accountName:"TestAccount"});
 
-    Force.smartstoreClient.removeSoup(soupName)
-    .then(function() {
-        console.log("## Initialization of StoreCache");
-        cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
-        return cache.init();
+        console.log("## Direct retrieve from server");
+        return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
     })
-    .then(function() {
-        console.log("## Direct save to cache");
-        var records = [{Id:"007", Name:"JamesBond"},{Id:"008", Name:"Agent008"}, {Id:"009", Name:"JamesOther"}];
-        return cache.saveAll(records);
-    })
-    .then(function(records) {
-        console.log("## Doing a fetchSObjectsFromCache with an exact query spec");
-        return Force.fetchSObjectsFromCache(cache, {queryType:"exact", indexPath:"Name", matchKey:"Agent008", order:"ascending", pageSize:1});
-    })
-    .then(function(result) {
-        console.log("## Checking returned result");
-        QUnit.equals(result.records.length, 1, "one record should have been returned");
-        assertContains(result.records[0], {Id:"008"});
-        QUnit.equals(result.hasMore(), false, "there should not be more records");
-        console.log("## Doing a fetchSObjectsFromCache with like query spec");
-        return Force.fetchSObjectsFromCache(cache, {queryType:"like", indexPath:"Name", likeKey:"James%", order:"ascending", pageSize:2});
-    })
-    .then(function(result) {
-        console.log("## Checking returned result");
-        QUnit.equals(result.records.length, 2, "two records should have been returned");
-        assertContains(result.records[0], {Id:"007"});
-        assertContains(result.records[1], {Id:"009"});
-        QUnit.equals(result.hasMore(), false, "there should not be more records");
-        console.log("## Doing a fetchSObjectsFromCache with all query spec and a pageSize smaller than result set");
-        return Force.fetchSObjectsFromCache(cache, {queryType:"range", indexPath:"Id", order:"ascending", pageSize:2});
-    })
-    .then(function(result) {
-        resultSet = result;
-        console.log("## Checking returned result");
-        QUnit.equals(resultSet.records.length, 2, "two records should have been returned");
-        assertContains(resultSet.records[0], {Id:"007"});
-        assertContains(resultSet.records[1], {Id:"008"});
-        QUnit.equals(resultSet.hasMore(), true, "there should be more records");
-        console.log("## Getting the next page of records");
-        return resultSet.getMore();
-    })
-    .then(function(records) {
-        console.log("## Checking returned result");
-        QUnit.equals(records.length, 1, "one record should have been returned");
-        assertContains(records[0], {Id:"009"});
-        QUnit.equals(resultSet.hasMore(), false, "there should not be more records");
-        QUnit.equals(resultSet.records.length, 3, "three records should be in result set");
-        assertContains(resultSet.records[0], {Id:"007"});
-        assertContains(resultSet.records[1], {Id:"008"});
-        assertContains(resultSet.records[2], {Id:"009"});
+    .then(function(data) {
+        console.log("## Checking data returned from server");
+        assertContains(data, {Id:id, Name:"TestAccount"});
+
         console.log("## Cleaning up");
-        return Force.smartstoreClient.removeSoup(soupName);
+        return Force.forcetkClient.del("account", id);
     })
     .then(function() {
         self.finalizeTest();
     });
 };
 
+
+/** 
+ * TEST Force.syncApexRestObjectWithServer for read method
+ */
+SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerRead = function() {
+    console.log("# In SmartSyncTestSuite.testSyncApexRestObjectWithServerRead");
+    var self = this;
+    var id;
+
+    console.log("## Direct creation against server");    
+    Force.forcetkClient.create("Account", {Name:"TestAccount"})
+        .then(function(resp) {
+            id = resp.id;
+
+            console.log("## Trying read call");
+            return Force.syncApexRestObjectWithServer("read", "/simpleAccount", id, "accountId", null, ["accountId", "accountName"]);
+        })
+        .then(function(data) {
+            console.log("## Checking data returned from sync call");
+            assertContains(data, {accountId:id, accountName:"TestAccount"});
+
+            console.log("## Cleaning up");
+            return Force.forcetkClient.del("account", id);
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
+/** 
+ * TEST Force.syncApexRestObjectWithServer for update method
+ */
+SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerUpdate = function() {
+    console.log("# In SmartSyncTestSuite.testSyncApexRestObjectWithServerUpdate");
+    var self = this;
+    var id;
+
+    console.log("## Direct creation against server");    
+    Force.forcetkClient.create("Account", {Name:"TestAccount"})
+        .then(function(resp) {
+            id = resp.id;
+
+            console.log("## Trying update call");
+            return Force.syncApexRestObjectWithServer("update", "/simpleAccount", id, "accountId", {accountName:"TestAccount2"}, ["accountName"]);
+        })
+        .then(function(data) {
+            console.log("## Checking data returned from sync call");
+            assertContains(data, {accountName:"TestAccount2"});
+
+            console.log("## Direct retrieve from server");
+            return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
+        })
+        .then(function(data) {
+            console.log("## Checking data returned from server");
+            assertContains(data, {Id:id, Name:"TestAccount2"});
+
+            console.log("## Cleaning up");
+            return Force.forcetkClient.del("account", id);
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
+/** 
+ * TEST Force.syncApexRestObjectWithServer for delete method
+ */
+SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerDelete = function() {
+    console.log("# In SmartSyncTestSuite.testSyncApexRestObjectWithServerDelete");
+    var self = this;
+    var id;
+
+    console.log("## Direct creation against server");    
+    Force.forcetkClient.create("Account", {Name:"TestAccount"})
+        .then(function(resp) {
+            id = resp.id;
+
+            console.log("## Trying delete call");
+            return Force.syncApexRestObjectWithServer("delete", "/simpleAccount", id, "accountId");
+        })
+        .then(function(data) {
+            QUnit.equals(data, null, "Expected null");
+            checkServer(id, null);
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
+//-------------------------------------------------------------------------------------------------------
+//
+// Test for Force.fetchApexRestObjectsFromServer
+// 
+// You need to create the following Apex Rest resource in your test organization
+// 
+// @RestResource(urlMapping='/simpleAccounts/*')
+// global with sharing class SimpleAccountsResource {
+//     @HttpGet global static SimpleAccountsList doGet() {
+//         String namePattern = RestContext.request.params.get('namePattern');
+//         List<SimpleAccount> records = new List<SimpleAccount>();
+//         for (SObject sobj : Database.query('select Id, Name from Account where Name like \'' + namePattern + '\'')) {  
+//             Account acc = (Account) sobj;
+// 	        records.add(new SimpleAccount(acc.Id, acc.Name));
+//         }
+//         return new SimpleAccountsList(records.size(), records);
+//     }
+//     
+//     global class SimpleAccountsList {
+//         global Integer totalSize;
+//         global List<SimpleAccount> records;
+//         
+//         global SimpleAccountsList(Integer totalSize, List<SimpleAccount> records) {
+//             this.totalSize = totalSize;
+//             this.records = records;
+//         }
+//     }
+//     
+//     global class SimpleAccount {
+//         global String accountId;
+//         global String accountName;
+//         
+//         global SimpleAccount(String accountId, String accountName) {
+//             this.accountId = accountId;
+//             this.accountName = accountName;
+//         }
+//     }
+// }
+//
+//-------------------------------------------------------------------------------------------------------
+
+/** 
+ * TEST Force.fetchApexRestObjectsFromServer
+ */
+SmartSyncTestSuite.prototype.testFetchApexRestObjectsFromServer = function() {
+    console.log("# In SmartSyncTestSuite.testFetchApexRestObjectsFromServer");
+    var self = this;
+    var idToName = {};
+
+    console.log("## Direct creation against server");    
+    createRecords(idToName, "testFetchApexRestObjectsFromServer", 3)
+        .then(function() {
+            console.log("## Trying fetch with apex rest end point");
+            var config = {apexRestPath: "/simpleAccounts", params: {namePattern:"testFetchApexRestObjectsFromServer%"}};
+            return Force.fetchApexRestObjectsFromServer(config);
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from fetch call");
+            QUnit.equals(result.totalSize, 3, "expected 3 results");
+            QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "accountName").sort(), "Wrong names");
+
+            console.log("## Cleaning up");
+            return deleteRecords(idToName)
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
+//-------------------------------------------------------------------------------------------------------
+//
+// Tests for Force.fetchSObjectsFromServer and Force.fetchSObjects and Force.SObjectCollection
+// 
+//-------------------------------------------------------------------------------------------------------
+
 /** 
  * TEST Force.fetchSObjectsFromServer
  */
 SmartSyncTestSuite.prototype.testFetchSObjectsFromServer = function() {
-    console.log("# In SmartSyncTestSuite.fetchSObjectsFromServer");
+    console.log("# In SmartSyncTestSuite.testFetchSObjectsFromServer");
     var self = this;
     var idToName = {};
 
@@ -2171,9 +2381,9 @@ SmartSyncTestSuite.prototype.testFetchSObjects = function() {
 };
 
 /** 
- * TEST Force.Collection.fetch
+ * TEST Force.SObjectCollection.fetch
  */
-SmartSyncTestSuite.prototype.testCollectionFetch = function() {
+SmartSyncTestSuite.prototype.testSObjectCollectionFetch = function() {
     console.log("# In SmartSyncTestSuite.testCollectionFetch");
     var self = this;
     var idToName = {};
@@ -2289,6 +2499,12 @@ SmartSyncTestSuite.prototype.testCollectionFetch = function() {
             self.finalizeTest();
         });
 };
+
+//-------------------------------------------------------------------------------------------------------
+//
+// Helper methods
+// 
+//-------------------------------------------------------------------------------------------------------
 
 /**
  * Helper method to check local flags

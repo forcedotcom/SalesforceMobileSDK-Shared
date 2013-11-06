@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "2.0.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "2.1.0";
 
 /**
  * Utilify functions for logging
@@ -190,7 +190,7 @@ cordova.define("salesforce/util/exec", function(require, exports, module) {
             console.error(service + ":" + action + " failed");
         };
         successCB = typeof successCB !== "function" ? defaultSuccessCB : successCB;
-        error = typeof errorCB !== "function" ? defaultErrorCB : errorCB;
+        errorCB = typeof errorCB !== "function" ? defaultErrorCB : errorCB;
         args.unshift("pluginSDKVersion:" + pluginVersion);
         var cordovaExec = require('cordova/exec');
         return cordovaExec(successCB, errorCB, service, action, args);                  
