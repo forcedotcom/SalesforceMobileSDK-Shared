@@ -333,7 +333,7 @@ cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
             forcetkClient.setSessionToken(oauthResponseData.accessToken, null, oauthResponseData.instanceUrl);
             success();
         },
-        error);
+        fail);
     };
 
     /**
