@@ -56,5 +56,11 @@ module.exports = [
             "ContactOrganization"
         ]
     }
-]
+];
+module.exports.metadata = 
+// TOP OF METADATA
+{
+    "org.apache.cordova.contacts": "0.2.7"
+}
+// BOTTOM OF METADATA
 });
