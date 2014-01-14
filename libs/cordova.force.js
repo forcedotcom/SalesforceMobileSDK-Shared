@@ -30,7 +30,7 @@ var SALESFORCE_MOBILE_SDK_VERSION = "2.2.0.unstable";
 /**
  * Utilify functions for logging
  */
-cordova.define("salesforce/util/logger", function(require, exports, module) {
+cordova.define("com.salesforce.util.logger", function(require, exports, module) {
     var appStartTime = (new Date()).getTime();  // Used for debug timing measurements.
 
     /**
@@ -108,9 +108,9 @@ cordova.define("salesforce/util/logger", function(require, exports, module) {
     };
 });
 
-cordova.define("salesforce/util/event", function(require, exports, module) {
+cordova.define("com.salesforce.util.event", function(require, exports, module) {
 
-    var logger = require("salesforce/util/logger");
+    var logger = require("com.salesforce.util.logger");
 
     /**
      * Enumeration of event types.
@@ -145,9 +145,9 @@ cordova.define("salesforce/util/event", function(require, exports, module) {
 /**
  * Utility functions used at startup 
  */
-cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
+cordova.define("com.salesforce.utilbootstrap", function(require, exports, module) {
 
-    var logger = require("salesforce/util/logger");
+    var logger = require("com.salesforce.util.logger");
 
     /**
      * Determine whether the device is online.
@@ -181,7 +181,7 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
 /**
  * Helper function used to call the native side
  */
-cordova.define("salesforce/util/exec", function(require, exports, module) {
+cordova.define("com.salesforce.utilexec", function(require, exports, module) {
     var exec = function(pluginVersion, successCB, errorCB, service, action, args) {
         var defaultSuccessCB = function() {
             console.log(service + ":" + action + " succeeded");
@@ -204,10 +204,10 @@ cordova.define("salesforce/util/exec", function(require, exports, module) {
     };
 });
 
-cordova.define("salesforce/plugin/sdkinfo", function(require, exports, module) {
+cordova.define("com.salesforce.plugin.sdkinfo", function(require, exports, module) {
     var SERVICE = "com.salesforce.sdkinfo";
 
-    var exec = require("salesforce/util/exec").exec;
+    var exec = require("com.salesforce.utilexec").exec;
 
     /**
       * SDKInfo data structure
@@ -240,14 +240,14 @@ cordova.define("salesforce/plugin/sdkinfo", function(require, exports, module) {
 
 // For backward compatibility
 var SFHybridApp = {
-    logToConsole: cordova.require("salesforce/util/logger").logToConsole,
-    logError: cordova.require("salesforce/util/logger").logError
+    logToConsole: cordova.require("com.salesforce.util.logger").logToConsole,
+    logError: cordova.require("com.salesforce.util.logger").logError
 };
 
-cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
+cordova.define("com.salesforce.plugin.oauth", function (require, exports, module) {
     var SERVICE = "com.salesforce.oauth";
 
-    var exec = require("salesforce/util/exec").exec;
+    var exec = require("com.salesforce.utilexec").exec;
 
     /**
      * Whether or not logout has already been initiated.  Can only be initiated once
@@ -349,12 +349,12 @@ cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
 });
 
 // For backward compatibility
-var SalesforceOAuthPlugin = cordova.require("salesforce/plugin/oauth");
+var SalesforceOAuthPlugin = cordova.require("com.salesforce.plugin.oauth");
 
-cordova.define("salesforce/plugin/smartstore", function (require, exports, module) {
+cordova.define("com.salesforce.plugin.smartstore", function (require, exports, module) {
     var SERVICE = "com.salesforce.smartstore";
 
-    var exec = require("salesforce/util/exec").exec;
+    var exec = require("com.salesforce.utilexec").exec;
 
 
     /**
@@ -619,7 +619,7 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
 });
 
 // For backward compatibility
-navigator.smartstore = cordova.require("salesforce/plugin/smartstore");
+navigator.smartstore = cordova.require("com.salesforce.plugin.smartstore");
 var SoupIndexSpec = navigator.smartstore.SoupIndexSpec;
 var QuerySpec = navigator.smartstore.QuerySpec;
 var StoreCursor = navigator.smartstore.StoreCursor;
