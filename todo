@@ -1,0 +1,2 @@
+Update README.md (talk about the need to run 'bower install')
+Fix test/forcepluginstest/index.html (src includes)

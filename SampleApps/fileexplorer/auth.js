@@ -1,1 +1,0 @@
-../smartsync/auth.js
