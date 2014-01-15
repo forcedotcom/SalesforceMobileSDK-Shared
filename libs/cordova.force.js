@@ -145,7 +145,7 @@ cordova.define("com.salesforce.util.event", function(require, exports, module) {
 /**
  * Utility functions used at startup 
  */
-cordova.define("com.salesforce.utilbootstrap", function(require, exports, module) {
+cordova.define("com.salesforce.util.bootstrap", function(require, exports, module) {
 
     var logger = require("com.salesforce.util.logger");
 
