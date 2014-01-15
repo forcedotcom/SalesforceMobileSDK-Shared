@@ -36,7 +36,7 @@
 
     <script type="text/javascript" charset="utf-8">
     var debugMode = true;
-    var logToConsole = cordova.require("salesforce/util/logger").logToConsole;
+    var logToConsole = cordova.require("com.salesforce.util.logger").logToConsole;
 
     $(function() {
         //Add event listeners and so forth here
@@ -49,7 +49,7 @@
         
         logToConsole("onDeviceReady: Cordova ready");
         //Call getAuthCredentials to get the initial session credentials
-        cordova.require("salesforce/plugin/oauth").getAuthCredentials(salesforceSessionRefreshed, getAuthCredentialsError);
+        cordova.require("com.salesforce.plugin.oauth").getAuthCredentials(salesforceSessionRefreshed, getAuthCredentialsError);
     }
 
     function salesforceSessionRefreshed(creds) {
@@ -59,7 +59,7 @@
         Force.init(creds, null, null, null);
 
         // Now we are ready
-        cordova.require("salesforce/plugin/testrunner").onReadyForTests();
+        cordova.require("com.salesforce.plugin.testrunner").onReadyForTests();
     }
 
 

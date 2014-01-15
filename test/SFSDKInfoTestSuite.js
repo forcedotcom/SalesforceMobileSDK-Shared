@@ -45,7 +45,7 @@ SDKInfoTestSuite.prototype.constructor = SDKInfoTestSuite;
 /**
  * Helper method to do sdk info operations using promises
  */
-SDKInfoTestSuite.prototype.getInfo = promiser(cordova.require("salesforce/plugin/sdkinfo"), "getInfo");
+SDKInfoTestSuite.prototype.getInfo = promiser(cordova.require("com.salesforce.plugin.sdkinfo"), "getInfo");
 
 /** 
  * TEST getInfo
