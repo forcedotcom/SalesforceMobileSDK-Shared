@@ -181,7 +181,7 @@ cordova.define("com.salesforce.utilbootstrap", function(require, exports, module
 /**
  * Helper function used to call the native side
  */
-cordova.define("com.salesforce.utilexec", function(require, exports, module) {
+cordova.define("com.salesforce.util.exec", function(require, exports, module) {
     var exec = function(pluginVersion, successCB, errorCB, service, action, args) {
         var defaultSuccessCB = function() {
             console.log(service + ":" + action + " succeeded");
@@ -207,7 +207,7 @@ cordova.define("com.salesforce.utilexec", function(require, exports, module) {
 cordova.define("com.salesforce.plugin.sdkinfo", function(require, exports, module) {
     var SERVICE = "com.salesforce.sdkinfo";
 
-    var exec = require("com.salesforce.utilexec").exec;
+    var exec = require("com.salesforce.util.exec").exec;
 
     /**
       * SDKInfo data structure
@@ -247,7 +247,7 @@ var SFHybridApp = {
 cordova.define("com.salesforce.plugin.oauth", function (require, exports, module) {
     var SERVICE = "com.salesforce.oauth";
 
-    var exec = require("com.salesforce.utilexec").exec;
+    var exec = require("com.salesforce.util.exec").exec;
 
     /**
      * Whether or not logout has already been initiated.  Can only be initiated once
@@ -354,7 +354,7 @@ var SalesforceOAuthPlugin = cordova.require("com.salesforce.plugin.oauth");
 cordova.define("com.salesforce.plugin.smartstore", function (require, exports, module) {
     var SERVICE = "com.salesforce.smartstore";
 
-    var exec = require("com.salesforce.utilexec").exec;
+    var exec = require("com.salesforce.util.exec").exec;
 
 
     /**
