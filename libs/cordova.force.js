@@ -166,7 +166,7 @@ cordova.define("com.salesforce.util.bootstrap", function(require, exports, modul
             return (connType != null && connType != Connection.NONE && connType != Connection.UNKNOWN);
         } else {
             // Default to browser facility.
-    	    return navigator.onLine;
+            return navigator.onLine;
         }
     };
 
@@ -255,22 +255,22 @@ cordova.define("com.salesforce.plugin.oauth", function (require, exports, module
      */
     var logoutInitiated = false;
  
-	/**
-	 * Obtain authentication credentials, calling 'authenticate' only if necessary.
-	 * Most index.html authors can simply use this method to obtain auth credentials
-	 * after onDeviceReady.
+    /**
+     * Obtain authentication credentials, calling 'authenticate' only if necessary.
+     * Most index.html authors can simply use this method to obtain auth credentials
+     * after onDeviceReady.
      *   success - The success callback function to use.
      *   fail    - The failure/error callback function to use.
-	 * cordova returns a dictionary with:
-	 *     accessToken
-	 *     refreshToken
+     * cordova returns a dictionary with:
+     *     accessToken
+     *     refreshToken
      *  clientId
-	 *     userId
-	 *     orgId
+     *     userId
+     *     orgId
      *  loginUrl
-	 *     instanceUrl
-	 *     userAgent
-	 */
+     *     instanceUrl
+     *     userAgent
+     */
     var getAuthCredentials = function (success, fail) {
         exec(SALESFORCE_MOBILE_SDK_VERSION, success, fail, SERVICE, "getAuthCredentials", []);
     };
@@ -369,9 +369,9 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
      * QuerySpec constructor
      */
     var QuerySpec = function (path) {
-	    // the kind of query, one of: "exact","range", "like" or "smart":
-	    // "exact" uses matchKey, "range" uses beginKey and endKey, "like" uses likeKey, "smart" uses smartSql
-	    this.queryType = "exact";
+        // the kind of query, one of: "exact","range", "like" or "smart":
+        // "exact" uses matchKey, "range" uses beginKey and endKey, "like" uses likeKey, "smart" uses smartSql
+        this.queryType = "exact";
 
         //path for the original IndexSpec you wish to use for search: may be a compound path eg Account.Owner.Name
         this.indexPath = path;
@@ -501,7 +501,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
 
     var querySoup = function (soupName, querySpec, successCB, errorCB) {
         if (querySpec.queryType == "smart") throw new Error("Smart queries can only be run using runSmartQuery");
-    	console.log("SmartStore.querySoup: '" + soupName + "' indexPath: " + querySpec.indexPath);
+        console.log("SmartStore.querySoup: '" + soupName + "' indexPath: " + querySpec.indexPath);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgQuerySoup",
              [{"soupName": soupName, "querySpec": querySpec}]
@@ -510,7 +510,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
 
     var runSmartQuery = function (querySpec, successCB, errorCB) {
         if (querySpec.queryType != "smart") throw new Error("runSmartQuery can only run smart queries");
-    	console.log("SmartStore.runSmartQuery: smartSql: " + querySpec.smartSql);
+        console.log("SmartStore.runSmartQuery: smartSql: " + querySpec.smartSql);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgRunSmartQuery",
              [{"querySpec": querySpec}]
