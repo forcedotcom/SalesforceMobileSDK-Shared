@@ -190,7 +190,7 @@ cordova.define("com.salesforce.util.exec", function(require, exports, module) {
             console.error(service + ":" + action + " failed");
         };
         successCB = typeof successCB !== "function" ? defaultSuccessCB : successCB;
-        error = typeof errorCB !== "function" ? defaultErrorCB : errorCB;
+        errorCB = typeof errorCB !== "function" ? defaultErrorCB : errorCB;
         args.unshift("pluginSDKVersion:" + pluginVersion);
         var cordovaExec = require('cordova/exec');
         return cordovaExec(successCB, errorCB, service, action, args);                  
@@ -333,7 +333,7 @@ cordova.define("com.salesforce.plugin.oauth", function (require, exports, module
             forcetkClient.setSessionToken(oauthResponseData.accessToken, null, oauthResponseData.instanceUrl);
             success();
         },
-        error);
+        fail);
     };
 
     /**
