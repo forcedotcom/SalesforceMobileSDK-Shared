@@ -27,9 +27,9 @@
 // Version this js was shipped with
 var SALESFORCE_MOBILE_SDK_VERSION = "2.2.0.unstable";
 
-cordova.define("salesforce/plugin/testrunner", function(require, exports, module) {
+cordova.define("com.salesforce.plugin.testrunner", function(require, exports, module) {
     var SERVICE = "com.salesforce.testrunner";
-    var exec = require("salesforce/util/exec").exec;
+    var exec = require("com.salesforce.util.exec").exec;
 
     // Private
     var _testSuiteClassName = null;
@@ -83,4 +83,4 @@ cordova.define("salesforce/plugin/testrunner", function(require, exports, module
 });
 
 // For backward compatibility
-navigator.testrunner = cordova.require("salesforce/plugin/testrunner");
+navigator.testrunner = cordova.require("com.salesforce.plugin.testrunner");

@@ -34,7 +34,7 @@ var MockSDKInfo = (function(window) {
     // Constructor
     var module = function() {}; 
 
-    var SDKInfo = cordova.require("salesforce/plugin/sdkinfo").SDKInfo;
+    var SDKInfo = cordova.require("com.salesforce.plugin.sdkinfo").SDKInfo;
 
     // Prototype
     module.prototype = {
