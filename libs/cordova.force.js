@@ -333,7 +333,7 @@ cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
             forcetkClient.setSessionToken(oauthResponseData.accessToken, null, oauthResponseData.instanceUrl);
             success();
         },
-        error);
+        fail);
     };
 
     /**
@@ -348,7 +348,7 @@ cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
     };
 });
 
-//For backward compatibility
+// For backward compatibility
 var SalesforceOAuthPlugin = cordova.require("salesforce/plugin/oauth");
 
 cordova.define("salesforce/plugin/sfaccountmanager", function (require, exports, module) {
@@ -446,7 +446,7 @@ cordova.define("salesforce/plugin/sfaccountmanager", function (require, exports,
     };
 });
 
-//For backward compatibility.
+// For backward compatibility.
 var SFAccountManagerPlugin = cordova.require("salesforce/plugin/sfaccountmanager");
 
 cordova.define("salesforce/plugin/smartstore", function (require, exports, module) {
