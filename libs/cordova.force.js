@@ -356,11 +356,6 @@ cordova.define("salesforce/plugin/sfaccountmanager", function (require, exports,
 
     var exec = require("salesforce/util/exec").exec;
 
-    getUsers,
-    getCurrentUser,
-    logout,
-    switchToUser
-
     /**
      * Whether or not logout has already been initiated.
      * Can only be initiated once per page load.
