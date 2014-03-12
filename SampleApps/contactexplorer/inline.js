@@ -59,9 +59,7 @@ function regLinkClickHandlers() {
     $j('#link_switch_user').click(function() {
         logToConsole("link_switch_user clicked");
         var sfAccManagerPlugin = cordova.require("salesforce/plugin/sfaccountmanager");
-        sfAccManagerPlugin.switchToUser(function() {
-            logToConsole("Success callback");
-        }, null)
+        sfAccManagerPlugin.switchToUser();
     });
 
     $j('#link_get_all_users').click(function() {
