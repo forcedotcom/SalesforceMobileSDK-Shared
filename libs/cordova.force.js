@@ -375,7 +375,6 @@ cordova.define("salesforce/plugin/sfaccountmanager", function (require, exports,
      *     orgId
 	 *     userId
 	 *     username
-	 *     accountName
 	 *     clientId
 	 */
     var getUsers = function (success, fail) {
@@ -395,7 +394,6 @@ cordova.define("salesforce/plugin/sfaccountmanager", function (require, exports,
      *     orgId
 	 *     userId
 	 *     username
-	 *     accountName
 	 *     clientId
      */
     var getCurrentUser = function (success, fail) {

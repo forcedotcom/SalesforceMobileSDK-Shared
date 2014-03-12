@@ -51,7 +51,6 @@ function regLinkClickHandlers() {
             logToConsole("Org ID: " + user.orgId);
             logToConsole("User ID: " + user.userId);
             logToConsole("Username: " + user.username);
-            logToConsole("Account Name: " + user.accountName);
             logToConsole("Client ID: " + user.clientId);
         }, null)
     });
@@ -77,7 +76,6 @@ function regLinkClickHandlers() {
                 logToConsole("Org ID: " + user[i].orgId);
                 logToConsole("User ID: " + user[i].userId);
                 logToConsole("Username: " + user[i].username);
-                logToConsole("Account Name: " + user[i].accountName);
                 logToConsole("Client ID: " + user[i].clientId);
         	}
         }, null)
