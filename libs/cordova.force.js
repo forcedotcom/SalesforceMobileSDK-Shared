@@ -357,6 +357,21 @@ cordova.define("salesforce/plugin/sfaccountmanager", function (require, exports,
     var exec = require("salesforce/util/exec").exec;
 
     /**
+     * UserAccount data object, for account data operations.
+     */
+    var UserAccount = function(authToken, refreshToken, loginServer, idUrl, instanceServer, orgId, userId, username, clientId) {
+        this.authToken = authToken;
+        this.refreshToken = refreshToken;
+        this.loginServer = loginServer;
+        this.idUrl = idUrl;
+        this.instanceServer = instanceServer;
+        this.orgId = orgId;
+        this.userId = userId;
+        this.username = username;
+        this.clientId = clientId;
+    };
+
+    /**
      * Whether or not logout has already been initiated.
      * Can only be initiated once per page load.
      */
@@ -375,7 +390,6 @@ cordova.define("salesforce/plugin/sfaccountmanager", function (require, exports,
      *     orgId
 	 *     userId
 	 *     username
-	 *     accountName
 	 *     clientId
 	 */
     var getUsers = function (success, fail) {
@@ -395,7 +409,6 @@ cordova.define("salesforce/plugin/sfaccountmanager", function (require, exports,
      *     orgId
 	 *     userId
 	 *     username
-	 *     accountName
 	 *     clientId
      */
     var getCurrentUser = function (success, fail) {
@@ -434,6 +447,7 @@ cordova.define("salesforce/plugin/sfaccountmanager", function (require, exports,
      * Part of the module that is public.
      */
     module.exports = {
+        UserAccount: UserAccount,
     	getUsers: getUsers,
     	getCurrentUser: getCurrentUser,
         logout: logout,
