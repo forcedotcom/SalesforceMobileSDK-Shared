@@ -47,9 +47,9 @@ var SmartStoreLoadTestSuite = function () {
 	this.MAX_NUMBER_FIELDS = 2048;
 	this.MAX_FIELD_LENGTH = 65536;
     this.NUMBER_FIELDS_PER_ENTRY = 128;
-    this.NUMBER_ENTRIES_PER_BATCH = 64;
-    this.NUMBER_BATCHES = 128;
-    this.QUERY_PAGE_SIZE = 64;
+    this.NUMBER_ENTRIES_PER_BATCH = 8;
+    this.NUMBER_BATCHES = 32;
+    this.QUERY_PAGE_SIZE = 8;
 	this.testIndexPath = "key";
 };
 
@@ -62,7 +62,7 @@ SmartStoreLoadTestSuite.prototype.constructor = SmartStoreLoadTestSuite;
  * TEST: Upsert 1,2,...,MAX_NUMBER_ENTRIES entries (with just a couple of fields) into a soup
  */
 
-SmartStoreLoadTestSuite.prototype.upsertNextManyEntry = function(k) {
+SmartStoreLoadTestSuite.prototype.upsertNextEntries = function(k) {
 	console.log("upsertNextManyEntry " + k);
 	var self = this;
 	var entries = [];
@@ -84,7 +84,7 @@ SmartStoreLoadTestSuite.prototype.testUpsertManyEntries  = function() {
 	console.log("In testUpsertManyEntries");
 	var self = this;
     
-    self.upsertNextManyEntry(1)
+    self.upsertNextEntries(1)
         .done(function() {
             self.finalizeTest();
         });
