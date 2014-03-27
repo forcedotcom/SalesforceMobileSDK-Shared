@@ -63,7 +63,7 @@ SmartStoreLoadTestSuite.prototype.constructor = SmartStoreLoadTestSuite;
  */
 
 SmartStoreLoadTestSuite.prototype.upsertNextEntries = function(k) {
-	console.log("upsertNextManyEntry " + k);
+	console.log("upsertNextEntries " + k);
 	var self = this;
 	var entries = [];
 
@@ -74,7 +74,7 @@ SmartStoreLoadTestSuite.prototype.upsertNextEntries = function(k) {
 	return self.addEntriesToTestSoup(entries)
         .pipe(function(updatedEntries) {
 			if (updatedEntries.length < self.MAX_NUMBER_ENTRIES) {
-				return self.upsertNextManyEntry(k*2);
+				return self.upsertNextEntries(k*2);
 			}
 		});
 };
