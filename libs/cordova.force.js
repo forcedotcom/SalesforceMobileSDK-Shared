@@ -30,7 +30,7 @@ var SALESFORCE_MOBILE_SDK_VERSION = "2.2.0.unstable";
 /**
  * Utilify functions for logging
  */
-cordova.define("salesforce/util/logger", function(require, exports, module) {
+cordova.define("com.salesforce.util.logger", function(require, exports, module) {
     var appStartTime = (new Date()).getTime();  // Used for debug timing measurements.
 
     /**
@@ -108,9 +108,9 @@ cordova.define("salesforce/util/logger", function(require, exports, module) {
     };
 });
 
-cordova.define("salesforce/util/event", function(require, exports, module) {
+cordova.define("com.salesforce.util.event", function(require, exports, module) {
 
-    var logger = require("salesforce/util/logger");
+    var logger = require("com.salesforce.util.logger");
 
     /**
      * Enumeration of event types.
@@ -145,9 +145,9 @@ cordova.define("salesforce/util/event", function(require, exports, module) {
 /**
  * Utility functions used at startup 
  */
-cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
+cordova.define("com.salesforce.util.bootstrap", function(require, exports, module) {
 
-    var logger = require("salesforce/util/logger");
+    var logger = require("com.salesforce.util.logger");
 
     /**
      * Determine whether the device is online.
@@ -166,7 +166,7 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
             return (connType != null && connType != Connection.NONE && connType != Connection.UNKNOWN);
         } else {
             // Default to browser facility.
-    	    return navigator.onLine;
+            return navigator.onLine;
         }
     };
 
@@ -181,7 +181,7 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
 /**
  * Helper function used to call the native side
  */
-cordova.define("salesforce/util/exec", function(require, exports, module) {
+cordova.define("com.salesforce.util.exec", function(require, exports, module) {
     var exec = function(pluginVersion, successCB, errorCB, service, action, args) {
         var defaultSuccessCB = function() {
             console.log(service + ":" + action + " succeeded");
@@ -204,10 +204,10 @@ cordova.define("salesforce/util/exec", function(require, exports, module) {
     };
 });
 
-cordova.define("salesforce/plugin/sdkinfo", function(require, exports, module) {
+cordova.define("com.salesforce.plugin.sdkinfo", function(require, exports, module) {
     var SERVICE = "com.salesforce.sdkinfo";
 
-    var exec = require("salesforce/util/exec").exec;
+    var exec = require("com.salesforce.util.exec").exec;
 
     /**
       * SDKInfo data structure
@@ -240,14 +240,14 @@ cordova.define("salesforce/plugin/sdkinfo", function(require, exports, module) {
 
 // For backward compatibility
 var SFHybridApp = {
-    logToConsole: cordova.require("salesforce/util/logger").logToConsole,
-    logError: cordova.require("salesforce/util/logger").logError
+    logToConsole: cordova.require("com.salesforce.util.logger").logToConsole,
+    logError: cordova.require("com.salesforce.util.logger").logError
 };
 
-cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
+cordova.define("com.salesforce.plugin.oauth", function (require, exports, module) {
     var SERVICE = "com.salesforce.oauth";
 
-    var exec = require("salesforce/util/exec").exec;
+    var exec = require("com.salesforce.util.exec").exec;
 
     /**
      * Whether or not logout has already been initiated.  Can only be initiated once
@@ -255,22 +255,22 @@ cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
      */
     var logoutInitiated = false;
  
-	/**
-	 * Obtain authentication credentials, calling 'authenticate' only if necessary.
-	 * Most index.html authors can simply use this method to obtain auth credentials
-	 * after onDeviceReady.
+    /**
+     * Obtain authentication credentials, calling 'authenticate' only if necessary.
+     * Most index.html authors can simply use this method to obtain auth credentials
+     * after onDeviceReady.
      *   success - The success callback function to use.
      *   fail    - The failure/error callback function to use.
-	 * cordova returns a dictionary with:
-	 *     accessToken
-	 *     refreshToken
+     * cordova returns a dictionary with:
+     *     accessToken
+     *     refreshToken
      *  clientId
-	 *     userId
-	 *     orgId
+     *     userId
+     *     orgId
      *  loginUrl
-	 *     instanceUrl
-	 *     userAgent
-	 */
+     *     instanceUrl
+     *     userAgent
+     */
     var getAuthCredentials = function (success, fail) {
         exec(SALESFORCE_MOBILE_SDK_VERSION, success, fail, SERVICE, "getAuthCredentials", []);
     };
@@ -349,12 +349,119 @@ cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
 });
 
 // For backward compatibility
-var SalesforceOAuthPlugin = cordova.require("salesforce/plugin/oauth");
+var SalesforceOAuthPlugin = cordova.require("com.salesforce.plugin.oauth");
 
-cordova.define("salesforce/plugin/smartstore", function (require, exports, module) {
+cordova.define("com.salesforce.plugin.sfaccountmanager", function (require, exports, module) {
+    var SERVICE = "com.salesforce.sfaccountmanager";
+
+    var exec = require("com.salesforce.util.exec").exec;
+
+    /**
+     * UserAccount data object, for account data operations.
+     */
+    var UserAccount = function(authToken, refreshToken, loginServer, idUrl, instanceServer, orgId, userId, username, clientId) {
+        this.authToken = authToken;
+        this.refreshToken = refreshToken;
+        this.loginServer = loginServer;
+        this.idUrl = idUrl;
+        this.instanceServer = instanceServer;
+        this.orgId = orgId;
+        this.userId = userId;
+        this.username = username;
+        this.clientId = clientId;
+    };
+
+    /**
+     * Whether or not logout has already been initiated.
+     * Can only be initiated once per page load.
+     */
+    var logoutInitiated = false;
+ 
+	/**
+	 * Obtains the list of user accounts already logged in.
+     *   success - The success callback function to use.
+     *   fail    - The failure/error callback function to use.
+	 * cordova returns an array, each entry contains a dictionary with:
+	 *     authToken
+	 *     refreshToken
+     * 	   loginServer
+	 *     idUrl
+	 *     instanceServer
+     *     orgId
+	 *     userId
+	 *     username
+	 *     clientId
+	 */
+    var getUsers = function (success, fail) {
+        exec(SALESFORCE_MOBILE_SDK_VERSION, success, fail, SERVICE, "getUsers", []);
+    };
+
+    /**
+     * Obtains the current user account.
+     *   success         - The success callback function to use.
+     *   fail            - The failure/error callback function to use.
+     * cordova returns a dictionary with:
+	 *     authToken
+	 *     refreshToken
+     * 	   loginServer
+	 *     idUrl
+	 *     instanceServer
+     *     orgId
+	 *     userId
+	 *     username
+	 *     clientId
+     */
+    var getCurrentUser = function (success, fail) {
+        exec(SALESFORCE_MOBILE_SDK_VERSION, success, fail, SERVICE, "getCurrentUser", []);
+    };
+
+    /**
+     * Logs out the specified user, or the current user if not specified.
+     * This removes any current valid session token as well as any OAuth
+     * refresh token.  The user is forced to login again.
+     * This method does not call back with a success or failure callback, as 
+     * (1) this method must not fail and (2) in the success case, the current user
+     * will be logged out and asked to re-authenticate. Note also that this method can only
+     * be called once per page load. Initiating logout will ultimately redirect away from
+     * the given page (effectively resetting the logout flag), and calling this method again
+     * while it's currently processing will result in app state issues.
+     */
+    var logout = function (user) {
+        if (!logoutInitiated) {
+            logoutInitiated = true;
+            exec(SALESFORCE_MOBILE_SDK_VERSION, null, null, SERVICE, "logout", [user]);
+        }
+    };
+
+    /**
+     * Switches to the user specified, or new user, if not specified.
+     * This method does not call back with a success or failure callback, as
+     * (1) this method must not fail and (2) in the success case, the context
+     * will be switched to another user, or a new user.
+     */
+    var switchToUser = function (user) {
+        exec(SALESFORCE_MOBILE_SDK_VERSION, null, null, SERVICE, "switchToUser", [user]);
+    };
+
+    /**
+     * Part of the module that is public.
+     */
+    module.exports = {
+        UserAccount: UserAccount,
+    	getUsers: getUsers,
+    	getCurrentUser: getCurrentUser,
+        logout: logout,
+        switchToUser: switchToUser
+    };
+});
+
+// For backward compatibility.
+var SFAccountManagerPlugin = cordova.require("com.salesforce.plugin.sfaccountmanager");
+
+cordova.define("com.salesforce.plugin.smartstore", function (require, exports, module) {
     var SERVICE = "com.salesforce.smartstore";
 
-    var exec = require("salesforce/util/exec").exec;
+    var exec = require("com.salesforce.util.exec").exec;
 
 
     /**
@@ -369,9 +476,9 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
      * QuerySpec constructor
      */
     var QuerySpec = function (path) {
-	    // the kind of query, one of: "exact","range", "like" or "smart":
-	    // "exact" uses matchKey, "range" uses beginKey and endKey, "like" uses likeKey, "smart" uses smartSql
-	    this.queryType = "exact";
+        // the kind of query, one of: "exact","range", "like" or "smart":
+        // "exact" uses matchKey, "range" uses beginKey and endKey, "like" uses likeKey, "smart" uses smartSql
+        this.queryType = "exact";
 
         //path for the original IndexSpec you wish to use for search: may be a compound path eg Account.Owner.Name
         this.indexPath = path;
@@ -501,7 +608,7 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
 
     var querySoup = function (soupName, querySpec, successCB, errorCB) {
         if (querySpec.queryType == "smart") throw new Error("Smart queries can only be run using runSmartQuery");
-    	console.log("SmartStore.querySoup: '" + soupName + "' indexPath: " + querySpec.indexPath);
+        console.log("SmartStore.querySoup: '" + soupName + "' indexPath: " + querySpec.indexPath);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgQuerySoup",
              [{"soupName": soupName, "querySpec": querySpec}]
@@ -510,7 +617,7 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
 
     var runSmartQuery = function (querySpec, successCB, errorCB) {
         if (querySpec.queryType != "smart") throw new Error("runSmartQuery can only run smart queries");
-    	console.log("SmartStore.runSmartQuery: smartSql: " + querySpec.smartSql);
+        console.log("SmartStore.runSmartQuery: smartSql: " + querySpec.smartSql);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgRunSmartQuery",
              [{"querySpec": querySpec}]
@@ -619,7 +726,7 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
 });
 
 // For backward compatibility
-navigator.smartstore = cordova.require("salesforce/plugin/smartstore");
+navigator.smartstore = cordova.require("com.salesforce.plugin.smartstore");
 var SoupIndexSpec = navigator.smartstore.SoupIndexSpec;
 var QuerySpec = navigator.smartstore.QuerySpec;
 var StoreCursor = navigator.smartstore.StoreCursor;

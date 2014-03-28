@@ -45,7 +45,7 @@ SDKInfoTestSuite.prototype.constructor = SDKInfoTestSuite;
 /**
  * Helper method to do sdk info operations using promises
  */
-SDKInfoTestSuite.prototype.getInfo = promiser(cordova.require("salesforce/plugin/sdkinfo"), "getInfo");
+SDKInfoTestSuite.prototype.getInfo = promiser(cordova.require("com.salesforce.plugin.sdkinfo"), "getInfo");
 
 /** 
  * TEST getInfo
@@ -57,7 +57,7 @@ SDKInfoTestSuite.prototype.testGetInfo = function()  {
 
     self.getInfo()
         .done(function(sdkInfo) {
-        	QUnit.ok(sdkInfo.sdkVersion.indexOf("2.1") == 0, "expected different sdk version");
+        	QUnit.ok(sdkInfo.sdkVersion.indexOf("2.2") == 0, "expected different sdk version");
             QUnit.ok(sdkInfo.appName == "HybridPluginTestApp" || sdkInfo.appName == "ForcePluginsTest", "expected different app name");
             QUnit.equal(sdkInfo.appVersion, "1.0", "expected different app version");
             QUnit.equal(sdkInfo.forcePluginsAvailable.length, 4, "wrong force plugins");

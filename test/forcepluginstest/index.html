@@ -6,14 +6,12 @@
 
 
     <!-- external libs -->
-    <link rel="stylesheet" href="jquery/jquery.mobile-1.3.1.min.css" />
-    <script src="jquery/jquery-2.0.0.min.js"></script>
-    <script src="jquery/jquery.mobile-1.3.1.min.js"></script>
-    <script src="backbone/underscore-1.4.4.min.js"></script>
-    <script src="backbone/backbone-1.0.0.min.js"></script>
+    <script src="jquery/jquery.min.js"></script>
+    <script src="underscore/underscore-min.js"></script>
+    <script src="backbone/backbone-min.js"></script>
 
     <!-- cordova -->
-    <script src="cordova-2.3.0.js"></script>
+    <script src="cordova.js"></script>
 
     <!-- sfdc libs -->
     <script src="forcetk.mobilesdk.js"></script>
@@ -22,8 +20,8 @@
     <script src="smartsync.js"></script>
 
 	<!-- load qunit -->
-    <link rel="stylesheet" type="text/css" href="qunit/qunit.css" />
-    <script src="qunit/qunit.js"></script>
+    <link rel="stylesheet" type="text/css" href="qunit/qunit/qunit.css" />
+    <script src="qunit/qunit/qunit.js"></script>
 
 	<!-- we load all the test suite definitions here but do not run them until the native test runner tells us to -->
 	<script src="SFTestSuite.js"></script>
@@ -36,7 +34,7 @@
 
     <script type="text/javascript" charset="utf-8">
     var debugMode = true;
-    var logToConsole = cordova.require("salesforce/util/logger").logToConsole;
+    var logToConsole = cordova.require("com.salesforce.util.logger").logToConsole;
 
     $(function() {
         //Add event listeners and so forth here
@@ -49,7 +47,7 @@
         
         logToConsole("onDeviceReady: Cordova ready");
         //Call getAuthCredentials to get the initial session credentials
-        cordova.require("salesforce/plugin/oauth").getAuthCredentials(salesforceSessionRefreshed, getAuthCredentialsError);
+        cordova.require("com.salesforce.plugin.oauth").getAuthCredentials(salesforceSessionRefreshed, getAuthCredentialsError);
     }
 
     function salesforceSessionRefreshed(creds) {
@@ -59,7 +57,7 @@
         Force.init(creds, null, null, null);
 
         // Now we are ready
-        cordova.require("salesforce/plugin/testrunner").onReadyForTests();
+        cordova.require("com.salesforce.plugin.testrunner").onReadyForTests();
     }
 
 
