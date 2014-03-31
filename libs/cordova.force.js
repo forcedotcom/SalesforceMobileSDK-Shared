@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-13, salesforce.com, inc.
+ * Copyright (c) 2012-14, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -41,12 +41,10 @@ cordova.define("salesforce/util/logger", function(require, exports, module) {
     var log = function(section, txt) {
         console.log("jslog: " + txt);
         if ((typeof debugMode !== "undefined") && (debugMode === true)) {
-            var now = new Date();
-            var fullTxt = "<p><i><b>* At " + (now.getTime() - appStartTime) + "ms:</b></i> " + txt + "</p>";
             var sectionElt = document.getElementById(section);
             if (sectionElt) {
                 sectionElt.style.display = "block";
-                document.getElementById(section).innerHTML += fullTxt;
+                document.getElementById(section).innerHTML += ("<p><i><b>* At " + (new Date().getTime() - appStartTime) + "ms:</b></i> " + txt + "</p>");
             }
         }
     };
@@ -163,10 +161,10 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
         
         if (typeof connType !== 'undefined') {
             // Cordova's connection object.  May be more accurate?
-            return (connType != null && connType != Connection.NONE && connType != Connection.UNKNOWN);
+            return (connType && connType != Connection.NONE && connType != Connection.UNKNOWN);
         } else {
             // Default to browser facility.
-    	    return navigator.onLine;
+            return navigator.onLine;
         }
     };
 
@@ -369,9 +367,9 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
      * QuerySpec constructor
      */
     var QuerySpec = function (path) {
-	    // the kind of query, one of: "exact","range", "like" or "smart":
-	    // "exact" uses matchKey, "range" uses beginKey and endKey, "like" uses likeKey, "smart" uses smartSql
-	    this.queryType = "exact";
+        // the kind of query, one of: "exact","range", "like" or "smart":
+        // "exact" uses matchKey, "range" uses beginKey and endKey, "like" uses likeKey, "smart" uses smartSql
+        this.queryType = "exact";
 
         //path for the original IndexSpec you wish to use for search: may be a compound path eg Account.Owner.Name
         this.indexPath = path;
@@ -501,7 +499,7 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
 
     var querySoup = function (soupName, querySpec, successCB, errorCB) {
         if (querySpec.queryType == "smart") throw new Error("Smart queries can only be run using runSmartQuery");
-    	console.log("SmartStore.querySoup: '" + soupName + "' indexPath: " + querySpec.indexPath);
+        console.log("SmartStore.querySoup: '" + soupName + "' indexPath: " + querySpec.indexPath);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgQuerySoup",
              [{"soupName": soupName, "querySpec": querySpec}]
@@ -510,7 +508,7 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
 
     var runSmartQuery = function (querySpec, successCB, errorCB) {
         if (querySpec.queryType != "smart") throw new Error("runSmartQuery can only run smart queries");
-    	console.log("SmartStore.runSmartQuery: smartSql: " + querySpec.smartSql);
+        console.log("SmartStore.runSmartQuery: smartSql: " + querySpec.smartSql);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgRunSmartQuery",
              [{"querySpec": querySpec}]
