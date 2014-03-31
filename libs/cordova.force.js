@@ -596,6 +596,11 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
             );
     };
 
+    var showInspector = function() {
+        console.log("SmartStore.showInspector");
+        exec(SALESFORCE_MOBILE_SDK_VERSION, null, null, SERVICE, "pgShowInspector", []);
+    };
+
     var soupExists = function (soupName, successCB, errorCB) {
         console.log("SmartStore.soupExists: " + soupName);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
@@ -704,6 +709,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         buildSmartQuerySpec: buildSmartQuerySpec,
         registerSoup: registerSoup,
         removeSoup: removeSoup,
+        showInspector: showInspector,
         soupExists: soupExists,
         querySoup: querySoup,
         runSmartQuery: runSmartQuery,
