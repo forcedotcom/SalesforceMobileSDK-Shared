@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-13, salesforce.com, inc.
+ * Copyright (c) 2012-14, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -41,12 +41,10 @@ cordova.define("com.salesforce.util.logger", function(require, exports, module) 
     var log = function(section, txt) {
         console.log("jslog: " + txt);
         if ((typeof debugMode !== "undefined") && (debugMode === true)) {
-            var now = new Date();
-            var fullTxt = "<p><i><b>* At " + (now.getTime() - appStartTime) + "ms:</b></i> " + txt + "</p>";
             var sectionElt = document.getElementById(section);
             if (sectionElt) {
                 sectionElt.style.display = "block";
-                document.getElementById(section).innerHTML += fullTxt;
+                document.getElementById(section).innerHTML += ("<p><i><b>* At " + (new Date().getTime() - appStartTime) + "ms:</b></i> " + txt + "</p>");
             }
         }
     };
@@ -163,7 +161,7 @@ cordova.define("com.salesforce.util.bootstrap", function(require, exports, modul
         
         if (typeof connType !== 'undefined') {
             // Cordova's connection object.  May be more accurate?
-            return (connType != null && connType != Connection.NONE && connType != Connection.UNKNOWN);
+            return (connType && connType != Connection.NONE && connType != Connection.UNKNOWN);
         } else {
             // Default to browser facility.
             return navigator.onLine;
