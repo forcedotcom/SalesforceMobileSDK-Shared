@@ -52,21 +52,21 @@ var UserAccount = function(authToken, refreshToken, loginServer, idUrl, instance
  */
 var logoutInitiated = false;
 
-
-Obtains the list of user accounts already logged in.
+/**
+ * Obtains the list of user accounts already logged in.
  *   success - The success callback function to use.
  *   fail    - The failure/error callback function to use.
-cordova returns an array, each entry contains a dictionary with:
-    authToken
-    refreshToken
- * 	   loginServer
-    idUrl
-    instanceServer
+ * cordova returns an array, each entry contains a dictionary with:
+ *     authToken
+ *     refreshToken
+ *     loginServer
+ *     idUrl
+ *     instanceServer
  *     orgId
-    userId
-    username
-    clientId
-
+ *     userId
+ *     username
+ *     clientId
+ */
 var getUsers = function (success, fail) {
     exec(SALESFORCE_MOBILE_SDK_VERSION, success, fail, SERVICE, "getUsers", []);
 };
@@ -76,15 +76,15 @@ var getUsers = function (success, fail) {
  *   success         - The success callback function to use.
  *   fail            - The failure/error callback function to use.
  * cordova returns a dictionary with:
-    authToken
-    refreshToken
- * 	   loginServer
-    idUrl
-    instanceServer
+ *     authToken
+ *     refreshToken
+ *     loginServer
+ *     idUrl
+ *     instanceServer
  *     orgId
-    userId
-    username
-    clientId
+ *     userId
+ *     username
+ *     clientId
  */
 var getCurrentUser = function (success, fail) {
     exec(SALESFORCE_MOBILE_SDK_VERSION, success, fail, SERVICE, "getCurrentUser", []);
@@ -123,8 +123,8 @@ var switchToUser = function (user) {
  */
 module.exports = {
     UserAccount: UserAccount,
-	getUsers: getUsers,
-	getCurrentUser: getCurrentUser,
+    getUsers: getUsers,
+    getCurrentUser: getCurrentUser,
     logout: logout,
     switchToUser: switchToUser
 };
