@@ -10,7 +10,7 @@ module.exports = function (grunt) {
             install: {
                 options: {
                     targetDir: 'dependencies',
-                    cleanTargetDir: true
+                    cleanup: true
                 }
             }
         }
