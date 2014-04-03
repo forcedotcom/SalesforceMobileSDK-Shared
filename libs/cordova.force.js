@@ -440,7 +440,7 @@ cordova.define("salesforce/plugin/sfaccountmanager", function (require, exports,
      * will be switched to another user, or a new user.
      */
     var switchToUser = function (user) {
-        exec(SALESFORCE_MOBILE_SDK_VERSION, null, null, SERVICE, "switchToUser", [user]);
+        exec(SALESFORCE_MOBILE_SDK_VERSION, null, null, SERVICE, "switchToUser", (user ? [user] : []));
     };
 
     /**
