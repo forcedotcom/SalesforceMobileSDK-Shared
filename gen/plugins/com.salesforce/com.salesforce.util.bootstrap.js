@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, salesforce.com, inc.
+ * Copyright (c) 2012-14, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -24,39 +24,35 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+// Version this js was shipped with
+var SALESFORCE_MOBILE_SDK_VERSION = "2.3.0.unstable";
+
+var logger = require("com.salesforce.util.logger");
+
 /**
- * MockSDKInfo
- * Meant for development and testing only, the data is stored in SessionStorage, queries do full scans.
+ * Determine whether the device is online.
  */
+var deviceIsOnline = function() {
+    var connType;
+    if (navigator && navigator.connection) {
+        connType = navigator.connection.type;
+        logger.logToConsole("deviceIsOnline connType: " + connType);
+    } else {
+        logger.logToConsole("deviceIsOnline connType is undefined.");
+    }
+    
+    if (typeof connType !== 'undefined') {
+        // Cordova's connection object.  May be more accurate?
+        return (connType && connType != Connection.NONE && connType != Connection.UNKNOWN);
+    } else {
+        // Default to browser facility.
+        return navigator.onLine;
+    }
+};
 
-var MockSDKInfo = (function(window) {
-
-    // Constructor
-    var module = function() {}; 
-
-    var SDKInfo = cordova.require("com.salesforce.plugin.sdkinfo").SDKInfo;
-
-    // Prototype
-    module.prototype = {
-        constructor: module,
-
-        hookToCordova: function(cordova) {
-            var SDKINFO_SERVICE = "com.salesforce.sdkinfo";
-            var self = this;
-
-            cordova.interceptExec(SDKINFO_SERVICE, "getInfo", function (successCB, errorCB, args) {
-                successCB(new SDKInfo("2.3.0.unstable", 
-                                      ["com.salesforce.oauth", "com.salesforce.sdkinfo", "com.salesforce.testrunner", "com.salesforce.smartstore"], 
-                                      "ForcePluginsTest", "1.0"));
-            });
-        }
-
-    };
-
-    // Return module
-    return module;
-})(window);
-
-var mockSDKInfo = new MockSDKInfo();
-mockSDKInfo.hookToCordova(cordova);
-
+/**
+ * Part of the module that is public
+ */
+module.exports = {
+    deviceIsOnline: deviceIsOnline
+};
