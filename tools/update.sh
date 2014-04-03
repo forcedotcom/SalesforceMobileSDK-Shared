@@ -13,6 +13,8 @@ else
     grunt
     cd ..
     echo "Splitting cordova.force.js"
-    node tools/split.js libs/cordova.force.js gen/plugins/ false
-    node tools/split.js libs/cordova.force.js gen/plugins_with_define/ true
+    mkdir -p gen/plugins/com.salesforce
+    mkdir -p gen/plugins_with_define/com.salesforce
+    node tools/split.js libs/cordova.force.js gen/plugins/com.salesforce/ false
+    node tools/split.js libs/cordova.force.js gen/plugins_with_define/com.salesforce/ true
 fi
