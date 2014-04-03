@@ -9,7 +9,7 @@ module.exports = function (grunt) {
         bower: {
             install: {
                 options: {
-                    targetDir: 'dependencies',
+                    targetDir: '../dependencies',
                     cleanup: true
                 }
             }
