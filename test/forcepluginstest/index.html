@@ -6,31 +6,31 @@
 
 
     <!-- external libs -->
-    <script src="jquery/jquery.min.js"></script>
-    <script src="underscore/underscore-min.js"></script>
-    <script src="backbone/backbone-min.js"></script>
+    <script src="dependencies/jquery/jquery.min.js"></script>
+    <script src="dependencies/underscore/underscore-min.js"></script>
+    <script src="dependencies/backbone/backbone-min.js"></script>
 
     <!-- cordova -->
     <script src="cordova.js"></script>
 
     <!-- sfdc libs -->
-    <script src="forcetk.mobilesdk.js"></script>
-    <script src="cordova.force.js"></script>
-    <script src="SFTestRunnerPlugin.js"></script>
-    <script src="smartsync.js"></script>
+    <script src="libs/forcetk.mobilesdk.js"></script>
+    <script src="libs/cordova.force.js"></script>
+    <script src="test/SFTestRunnerPlugin.js"></script>
+    <script src="libs/smartsync.js"></script>
 
 	<!-- load qunit -->
-    <link rel="stylesheet" type="text/css" href="qunit/qunit/qunit.css" />
-    <script src="qunit/qunit/qunit.js"></script>
+    <link rel="stylesheet" type="text/css" href="dependencies/qunit/qunit.css" />
+    <script src="dependencies/qunit/qunit.js"></script>
 
 	<!-- we load all the test suite definitions here but do not run them until the native test runner tells us to -->
-	<script src="SFTestSuite.js"></script>
-    <script src="SFAbstractSmartStoreTestSuite.js"></script>
-    <script src="SFSmartStoreTestSuite.js"></script>
-    <script src="SFSmartStoreLoadTestSuite.js"></script>
-    <script src="SFSDKInfoTestSuite.js"></script>
-    <script src="SFSmartSyncTestSuite.js"></script>
-    <script src="SFForcetkTestSuite.js"></script>
+	<script src="test/SFTestSuite.js"></script>
+    <script src="test/SFAbstractSmartStoreTestSuite.js"></script>
+    <script src="test/SFSmartStoreTestSuite.js"></script>
+    <script src="test/SFSmartStoreLoadTestSuite.js"></script>
+    <script src="test/SFSDKInfoTestSuite.js"></script>
+    <script src="test/SFSmartSyncTestSuite.js"></script>
+    <script src="test/SFForcetkTestSuite.js"></script>
 
     <script type="text/javascript" charset="utf-8">
     var debugMode = true;
