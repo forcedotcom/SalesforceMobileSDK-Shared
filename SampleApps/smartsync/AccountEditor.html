@@ -51,6 +51,7 @@
   </header>
   <footer class="bar-footer">
     <span id="offlineStatus"></span>
+    <a class="button switchUser" >Switch User</a>
   </footer>
 
   <div class="bar-standard bar-header-secondary">
@@ -240,7 +241,9 @@ app.views.SearchPage = Backbone.View.extend({
     template: _.template($("#search-page").html()),
 
     events: {
-        "keyup .search-key": "search"
+        "keyup .search-key": "search",
+        "click .switchUser": "switchUser",
+        "click .inspectSmartstore": "inspectSmartstore"
     },
 
     initialize: function() {
@@ -259,6 +262,10 @@ app.views.SearchPage = Backbone.View.extend({
     search: function(event) {
         this.model.setCriteria($(".search-key", this.el).val());
         this.model.fetch();
+    },
+
+    switchUser: function(event) {
+        cordova.require("salesforce/plugin/sfaccountmanager").switchToUser();
     }
 });
 
