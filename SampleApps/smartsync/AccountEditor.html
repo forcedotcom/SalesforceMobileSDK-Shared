@@ -51,7 +51,8 @@
   </header>
   <footer class="bar-footer">
     <span id="offlineStatus"></span>
-    <a class="button switchUser" >Switch User</a>
+    <a class="button switchUser">Switch User</a>
+    <a class="button logoutUser">Logout User</a>
   </footer>
 
   <div class="bar-standard bar-header-secondary">
@@ -243,7 +244,7 @@ app.views.SearchPage = Backbone.View.extend({
     events: {
         "keyup .search-key": "search",
         "click .switchUser": "switchUser",
-        "click .inspectSmartstore": "inspectSmartstore"
+        "click .logoutUser": "logoutUser"
     },
 
     initialize: function() {
@@ -266,6 +267,10 @@ app.views.SearchPage = Backbone.View.extend({
 
     switchUser: function(event) {
         cordova.require("salesforce/plugin/sfaccountmanager").switchToUser();
+    },
+
+    logoutUser: function(event) {
+        cordova.require("salesforce/plugin/sfaccountmanager").logout();
     }
 });
 
