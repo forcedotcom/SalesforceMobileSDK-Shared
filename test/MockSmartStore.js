@@ -372,6 +372,10 @@ var MockSmartStore = (function(window) {
             var SMARTSTORE_SERVICE = "com.salesforce.smartstore";
             var self = this;
 
+            cordova.interceptExec(SMARTSTORE_SERVICE, "pgGetDatabaseSize", function (successCB, errorCB, args) {
+                successCB(self.toJSON().length);
+            });
+
             cordova.interceptExec(SMARTSTORE_SERVICE, "pgRegisterSoup", function (successCB, errorCB, args) {
                 var soupName = args[0].soupName;
                 var indexSpecs = args[0].indexes;

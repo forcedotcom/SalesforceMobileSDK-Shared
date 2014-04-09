@@ -61,6 +61,51 @@ SmartStoreTestSuite.prototype.stuffTestSoup = function() {
     return this.addEntriesToTestSoup(entries);
 };
 
+
+/** 
+ * TEST getDatabaseSize
+ */
+SmartStoreTestSuite.prototype.testGetDatabaseSize  = function() {
+    console.log("In SFSmartStoreTestSuite.testGetDatabaseSize");
+    var soupName = "soupForTestGetDatabaseSize";
+    var self = this;
+    var initialSize;
+
+    // Start clean
+    self.removeSoup(soupName)
+        .pipe(function() {
+            // Check soup does not exist
+            return self.soupExists(soupName);
+        })
+        .pipe(function(exists) {
+            QUnit.equals(exists, false, "soup should not already exist");
+            // Create soup
+            return self.registerSoup(soupName, self.defaultSoupIndexes);
+        })
+        .pipe(function(soupName2) {
+            QUnit.equals(soupName2,soupName,"registered soup OK");
+            // Check soup now exists
+            return self.soupExists(soupName);
+        })
+        .pipe(function(exists) {
+            QUnit.equals(exists, true, "soup should now exist");
+            return self.getDatabaseSize();
+        })
+        .pipe(function(size) {
+            QUnit.ok(size > 0,"check getDatabaseSize result");
+            initialSize = size;
+            return self.stuffTestSoup();
+        })
+        .pipe(function(entries) {
+            QUnit.equal(entries.length, 3,"check stuffTestSoup result");
+            return self.getDatabaseSize();
+        })
+        .pipe(function(size) {
+            QUnit.ok(size > initialSize,"check getDatabaseSize result");
+            self.finalizeTest();
+        });
+};
+
 /** 
  * TEST registerSoup / soupExists / removeSoup 
  */
@@ -829,7 +874,6 @@ SmartStoreTestSuite.prototype.testSmartQueryWithSpecialFields  = function() {
             self.finalizeTest();
         });
 };
-
 
 }
 

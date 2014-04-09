@@ -59,6 +59,7 @@ AbstractSmartStoreTestSuite.prototype.runTest= function (methName) {
 /**
  * Helper methods to do smartstore operations using promises
  */
+AbstractSmartStoreTestSuite.prototype.getDatabaseSize = promiser(navigator.smartstore, "getDatabaseSize");
 AbstractSmartStoreTestSuite.prototype.registerSoup = promiser(navigator.smartstore, "registerSoup");
 AbstractSmartStoreTestSuite.prototype.soupExists = promiser(navigator.smartstore, "soupExists");
 AbstractSmartStoreTestSuite.prototype.removeSoup = promiser(navigator.smartstore, "removeSoup");
