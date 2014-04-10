@@ -580,6 +580,11 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     };
     
     // ====== Soup manipulation ======
+    var getDatabaseSize = function(successCB, errorCB) {
+        console.log("SmartStore.getDatabaseSize");
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE, "pgGetDatabaseSize", []);
+    };
+
     var registerSoup = function (soupName, indexSpecs, successCB, errorCB) {
         console.log("SmartStore.registerSoup: '" + soupName + "' indexSpecs: " + JSON.stringify(indexSpecs));
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
@@ -707,6 +712,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         buildRangeQuerySpec: buildRangeQuerySpec,
         buildLikeQuerySpec: buildLikeQuerySpec,
         buildSmartQuerySpec: buildSmartQuerySpec,
+        getDatabaseSize: getDatabaseSize,
         registerSoup: registerSoup,
         removeSoup: removeSoup,
         showInspector: showInspector,

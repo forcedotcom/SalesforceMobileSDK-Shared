@@ -61,6 +61,32 @@ SmartStoreTestSuite.prototype.stuffTestSoup = function() {
     return this.addEntriesToTestSoup(entries);
 };
 
+
+/** 
+ * TEST getDatabaseSize
+ */
+SmartStoreTestSuite.prototype.testGetDatabaseSize  = function() {
+    console.log("In SFSmartStoreTestSuite.testGetDatabaseSize");
+    var self = this;
+    var initialSize;
+
+    // Start clean
+    self.getDatabaseSize()
+        .pipe(function(size) {
+            QUnit.ok(size > 0,"check getDatabaseSize result: " + size);
+            initialSize = size;
+            return self.addGeneratedEntriesToTestSoup(2000)
+        })
+        .pipe(function(entries) {
+            QUnit.equal(entries.length, 2000, "check addGeneratedEntriesToTestSoup result");
+            return self.getDatabaseSize();
+        })
+        .pipe(function(size) {
+            QUnit.ok(size > initialSize,"check getDatabaseSize result: " + size);
+            self.finalizeTest();
+        });
+};
+
 /** 
  * TEST registerSoup / soupExists / removeSoup 
  */
@@ -829,7 +855,6 @@ SmartStoreTestSuite.prototype.testSmartQueryWithSpecialFields  = function() {
             self.finalizeTest();
         });
 };
-
 
 }
 
