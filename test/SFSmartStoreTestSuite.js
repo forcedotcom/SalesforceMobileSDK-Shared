@@ -666,6 +666,9 @@ SmartStoreTestSuite.prototype.testQuerySpecFactories = function() {
     self.finalizeTest();
 };
 
+/**
+ * TEST like query starts with
+ */
 SmartStoreTestSuite.prototype.testLikeQuerySpecStartsWith  = function() {
     console.log("In SFSmartStoreTestSuite.testLikeQuerySpecStartsWith");
     var self = this;
@@ -687,6 +690,10 @@ SmartStoreTestSuite.prototype.testLikeQuerySpecStartsWith  = function() {
         });
 };
 
+
+/**
+ * TEST like query ends with
+ */
 SmartStoreTestSuite.prototype.testLikeQuerySpecEndsWith  = function() {
     console.log("In SFSmartStoreTestSuite.testLikeQuerySpecEndsWith");
     var self = this;
@@ -708,6 +715,9 @@ SmartStoreTestSuite.prototype.testLikeQuerySpecEndsWith  = function() {
         });
 };
 
+/**
+ * TEST like query inner text
+ */
 SmartStoreTestSuite.prototype.testLikeQueryInnerText  = function() {
     console.log("In SFSmartStoreTestSuite.testLikeQueryInnerText");
     var self = this;
@@ -729,6 +739,9 @@ SmartStoreTestSuite.prototype.testLikeQueryInnerText  = function() {
         });
 };
 
+/**
+ * TEST query with compound path
+ */
 SmartStoreTestSuite.prototype.testCompoundQueryPath  = function() {
     console.log("In SFSmartStoreTestSuite.testCompoundQueryPath");
     var self = this;
@@ -760,6 +773,9 @@ SmartStoreTestSuite.prototype.testCompoundQueryPath  = function() {
         });
 };
 
+/**
+ * TEST query with empty query spec
+ */
 SmartStoreTestSuite.prototype.testEmptyQuerySpec  = function() {
     console.log("In SFSmartStoreTestSuite.testEmptyQuerySpec");
     var self = this;
@@ -776,6 +792,9 @@ SmartStoreTestSuite.prototype.testEmptyQuerySpec  = function() {
 };
 
 
+/**
+ * TEST query against integer field
+ */
 SmartStoreTestSuite.prototype.testIntegerQuerySpec  = function() {
     console.log("In SFSmartStoreTestSuite.testIntegerQuerySpec");
     var self = this;
@@ -827,10 +846,20 @@ SmartStoreTestSuite.prototype.testSmartQueryWithCount  = function() {
         });
 };
 
+
+/**
+ * TEST query with special field
+ */
 SmartStoreTestSuite.prototype.testSmartQueryWithSpecialFields  = function() {
     console.log("In SFSmartStoreTestSuite.testSmartQueryWithSpecialFields");
     var self = this;
     var expectedEntry;
+
+    if (window.mockStore) {
+        // Mock smartstore doesn't support such queries
+        self.finalizeTest();
+        return;
+    }
     
     self.stuffTestSoup()
         .pipe(function(entries) {
@@ -856,5 +885,122 @@ SmartStoreTestSuite.prototype.testSmartQueryWithSpecialFields  = function() {
         });
 };
 
-}
 
+/**
+ * TEST getSoupIndexSpecs
+ */
+SmartStoreTestSuite.prototype.testGetSoupIndexSpecs  = function() {
+    var soupName = "soupForGetSoupIndexSpecs";
+    var self = this;
+
+    // Start clean
+    self.removeSoup(soupName)
+        .pipe(function() {
+            // Create soup
+            return self.registerSoupNoAssertion(soupName, self.defaultSoupIndexes);
+        })
+        .pipe(function(soupName2) {
+            QUnit.equals(soupName2,soupName,"registered soup OK");
+            // Checking soup indexes
+            return self.checkSoupIndexes(soupName, self.defaultSoupIndexes);
+        })
+        .done(function() {
+            self.finalizeTest();
+        });
+};
+
+
+/**
+ * TEST getSoupIndexSpecs with bogus soupName
+ */
+SmartStoreTestSuite.prototype.testGetSoupIndexSpecsWithBogusSoupName  = function() {
+    var soupName = "soupForGetSoupIndexSpecsWithBogusSoupName";
+    var self = this;
+
+    // Check soup does not exist
+    self.soupExists(soupName)
+        .pipe(function(exists) {
+            QUnit.equals(exists, false, "soup should not already exist");
+            return self.getSoupIndexSpecsNoAssertion(soupName);
+        })
+        .done(function(cursor) {
+            self.setAssertionFailed("getSoupIndexSpecs with bogus soupName should fail");
+        })
+        .fail(function() {            
+            QUnit.ok(true,"getSoupIndexSpecs should fail for bogus soupName");
+            self.finalizeTest();
+        });
+};
+
+
+/**
+ * TEST alterSoup
+ */
+SmartStoreTestSuite.prototype.testAlterSoup  = function() {
+    var soupName = "testAlterSoup";
+    var self = this;
+    var alteredIndexes = [{path:"Name2", type:"integer"}, {path:"Id2", type:"integer"}];
+
+    // Start clean
+    self.removeSoup(soupName)
+        .pipe(function() {
+            // Create soup
+            return self.registerSoupNoAssertion(soupName, self.defaultSoupIndexes);
+        })
+        .pipe(function(soupName2) {
+            QUnit.equals(soupName2,soupName,"registered soup OK");
+            // Checking soup indexes
+            return self.checkSoupIndexes(soupName, self.defaultSoupIndexes);
+        })
+        .pipe(function() {
+            // Alter soup
+            return self.alterSoup(soupName, alteredIndexes, true);
+        })
+        .pipe(function() {
+            // Checking altered soup indexes 
+            return self.checkSoupIndexes(soupName, alteredIndexes);
+        })
+        .done(function() {
+            self.finalizeTest();
+        });
+};
+
+
+/**
+ * TEST alterSoup with bogus soupName
+ */
+SmartStoreTestSuite.prototype.testAlterSoupWithBogusSoupName  = function() {
+    var soupName = "soupForGetSoupIndexSpecsWithBogusSoupName";
+    var self = this;
+
+    // Check soup does not exist
+    self.soupExists(soupName)
+        .pipe(function(exists) {
+            QUnit.equals(exists, false, "soup should not already exist");
+            return self.alterSoupNoAssertion(soupName, [{path:"key", type:"string"}], true);
+        })
+        .done(function(cursor) {
+            self.setAssertionFailed("alterSoup with bogus soupName should fail");
+        })
+        .fail(function() {            
+            QUnit.ok(true,"alterSoup should fail for bogus soupName");
+            self.finalizeTest();
+        });
+};
+
+/**
+ * Helper method checkSoupIndexes
+ */
+SmartStoreTestSuite.prototype.checkSoupIndexes = function(soupName, expectedIndexes) {
+    return this.getSoupIndexSpecs(soupName)
+        .done(function(soupIndexes) {
+            QUnit.equals(expectedIndexes.length, soupIndexes.length, "Wrong number of soup indices");
+            for (i = 0; i< expectedIndexes.length; i++) {
+                QUnit.equals(expectedIndexes[i].path, soupIndexes[i].path, "Wrong path");
+                QUnit.equals(expectedIndexes[i].type, soupIndexes[i].type, "Wrong type");
+            }
+        });
+};
+
+
+}

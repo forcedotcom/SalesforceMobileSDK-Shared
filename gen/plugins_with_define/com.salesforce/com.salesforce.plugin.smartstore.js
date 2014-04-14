@@ -150,6 +150,11 @@ var buildSmartQuerySpec = function (smartSql, pageSize) {
 };
 
 // ====== Soup manipulation ======
+var getDatabaseSize = function(successCB, errorCB) {
+    console.log("SmartStore.getDatabaseSize");
+    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE, "pgGetDatabaseSize", []);
+};
+
 var registerSoup = function (soupName, indexSpecs, successCB, errorCB) {
     console.log("SmartStore.registerSoup: '" + soupName + "' indexSpecs: " + JSON.stringify(indexSpecs));
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
@@ -163,6 +168,22 @@ var removeSoup = function (soupName, successCB, errorCB) {
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgRemoveSoup",
          [{"soupName": soupName}]
+        );
+};
+
+var getSoupIndexSpecs = function(soupName, successCB, errorCB) {
+    console.log("SmartStore.getSoupIndexSpecs: " + soupName);
+    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+         "pgGetSoupIndexSpecs",
+         [{"soupName": soupName}]
+        );
+};
+
+var alterSoup = function (soupName, indexSpecs, reIndexData, successCB, errorCB) {
+    console.log("SmartStore.alterSoup: '" + soupName + "' indexSpecs: " + JSON.stringify(indexSpecs));
+    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+         "pgAlterSoup",
+         [{"soupName": soupName, "indexes": indexSpecs, "reIndexData": reIndexData}]
         );
 };
 
@@ -270,27 +291,30 @@ var closeCursor = function (cursor, successCB, errorCB) {
  * Part of the module that is public
  */
 module.exports = {
-    getLogLevel: getLogLevel,
-    setLogLevel: setLogLevel,
+    alterSoup: alterSoup,
     buildAllQuerySpec: buildAllQuerySpec,
     buildExactQuerySpec: buildExactQuerySpec,
-    buildRangeQuerySpec: buildRangeQuerySpec,
     buildLikeQuerySpec: buildLikeQuerySpec,
+    buildRangeQuerySpec: buildRangeQuerySpec,
     buildSmartQuerySpec: buildSmartQuerySpec,
+    closeCursor: closeCursor,
+    getDatabaseSize: getDatabaseSize,
+    getLogLevel: getLogLevel,
+    getSoupIndexSpecs: getSoupIndexSpecs,
+    moveCursorToNextPage: moveCursorToNextPage,
+    moveCursorToPageIndex: moveCursorToPageIndex,
+    moveCursorToPreviousPage: moveCursorToPreviousPage,
+    querySoup: querySoup,
     registerSoup: registerSoup,
+    removeFromSoup: removeFromSoup,
     removeSoup: removeSoup,
+    retrieveSoupEntries: retrieveSoupEntries,
+    runSmartQuery: runSmartQuery,
+    setLogLevel: setLogLevel,
     showInspector: showInspector,
     soupExists: soupExists,
-    querySoup: querySoup,
-    runSmartQuery: runSmartQuery,
-    retrieveSoupEntries: retrieveSoupEntries,
     upsertSoupEntries: upsertSoupEntries,
     upsertSoupEntriesWithExternalId: upsertSoupEntriesWithExternalId,
-    removeFromSoup: removeFromSoup,
-    moveCursorToPageIndex: moveCursorToPageIndex,
-    moveCursorToNextPage: moveCursorToNextPage,
-    moveCursorToPreviousPage: moveCursorToPreviousPage,
-    closeCursor: closeCursor,
     
     // Constructors
     QuerySpec: QuerySpec,

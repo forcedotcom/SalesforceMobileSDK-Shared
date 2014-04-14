@@ -132,6 +132,18 @@ var MockSmartStore = (function(window) {
             delete _nextSoupEltIds[soupName];
         },
 
+        getSoupIndexSpecs: function(soupName) {
+            this.checkSoup(soupName); 
+            return _soupIndexSpecs[soupName];
+        },
+
+        alterSoup: function(soupName, indexSpecs, reIndexData) {
+            this.checkSoup(soupName); 
+            _soupIndexSpecs[soupName] = indexSpecs;
+            return true;
+            // XXX ignoring reIndexData
+        },
+
         upsertSoupEntries: function(soupName, entries, externalIdPath) {
             this.checkSoup(soupName); 
             if (externalIdPath != "_soupEntryId" && !this.indexExists(soupName, externalIdPath)) 
@@ -388,6 +400,20 @@ var MockSmartStore = (function(window) {
                 var soupName = args[0].soupName;
                 self.removeSoup(soupName);
                 successCB("OK");
+            });
+
+            cordova.interceptExec(SMARTSTORE_SERVICE, "pgGetSoupIndexSpecs", function (successCB, errorCB, args) {
+                var soupName = args[0].soupName;
+                if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
+                successCB(self.getSoupIndexSpecs(soupName));
+            });
+
+            cordova.interceptExec(SMARTSTORE_SERVICE, "pgAlterSoup", function (successCB, errorCB, args) {
+                var soupName = args[0].soupName;
+                var indexSpecs = args[0].indexes;
+                var reIndexData = args[0].reIndexData;
+                if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
+                successCB(self.alterSoup(soupName, indexSpecs, reIndexData));
             });
 
             cordova.interceptExec(SMARTSTORE_SERVICE, "pgSoupExists", function (successCB, errorCB, args) {
