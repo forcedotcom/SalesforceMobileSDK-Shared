@@ -854,7 +854,7 @@ SmartStoreTestSuite.prototype.testSmartQueryWithSpecialFields  = function() {
     console.log("In SFSmartStoreTestSuite.testSmartQueryWithSpecialFields");
     var self = this;
     var expectedEntry;
-
+    
     if (window.mockStore) {
         // Mock smartstore doesn't support such queries
         self.finalizeTest();
@@ -923,7 +923,7 @@ SmartStoreTestSuite.prototype.testGetSoupIndexSpecsWithBogusSoupName  = function
             QUnit.equals(exists, false, "soup should not already exist");
             return self.getSoupIndexSpecsNoAssertion(soupName);
         })
-        .done(function(cursor) {
+        .done(function() {
             self.setAssertionFailed("getSoupIndexSpecs with bogus soupName should fail");
         })
         .fail(function() {            
@@ -934,33 +934,57 @@ SmartStoreTestSuite.prototype.testGetSoupIndexSpecsWithBogusSoupName  = function
 
 
 /**
- * TEST alterSoup
+ * TEST alterSoupNoReIndexing
  */
-SmartStoreTestSuite.prototype.testAlterSoup  = function() {
-    var soupName = "testAlterSoup";
-    var self = this;
-    var alteredIndexes = [{path:"Name2", type:"integer"}, {path:"Id2", type:"integer"}];
+SmartStoreTestSuite.prototype.testAlterSoupNoReIndexing  = function() {
+    this.tryAlterSoup(false);
+};
 
-    // Start clean
-    self.removeSoup(soupName)
-        .pipe(function() {
-            // Create soup
-            return self.registerSoupNoAssertion(soupName, self.defaultSoupIndexes);
-        })
-        .pipe(function(soupName2) {
-            QUnit.equals(soupName2,soupName,"registered soup OK");
-            // Checking soup indexes
-            return self.checkSoupIndexes(soupName, self.defaultSoupIndexes);
-        })
-        .pipe(function() {
+/**
+ * TEST alterSoupWithReIndexing
+ */
+SmartStoreTestSuite.prototype.testAlterSoupWithReIndexing  = function() {
+    this.tryAlterSoup(true);
+};
+
+/**
+ * Helper method for alterSoup tests
+ */
+SmartStoreTestSuite.prototype.tryAlterSoup = function(reIndexData) {
+    var self = this;
+    var alteredIndexes = [{path:"Name", type:"string"}, {path:"attributes.type", type:"string"}];
+
+    // Populate soup
+    return self.stuffTestSoup()
+        .pipe(function(entries) {
+            QUnit.equal(entries.length, 3,"check stuffTestSoup result");
             // Alter soup
-            return self.alterSoup(soupName, alteredIndexes, true);
+            return self.alterSoup(self.defaultSoupName, alteredIndexes, reIndexData);
         })
         .pipe(function() {
             // Checking altered soup indexes 
-            return self.checkSoupIndexes(soupName, alteredIndexes);
+            return self.checkSoupIndexes(self.defaultSoupName, alteredIndexes);
         })
-        .done(function() {
+        .pipe(function() {
+            // Query by a new indexed field
+            var querySpec = navigator.smartstore.buildExactQuerySpec("attributes.type", "Contact", 3);
+            return self.querySoup(self.defaultSoupName, querySpec);
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(cursor.currentPageOrderedEntries.length, reIndexData ? 3 : 0, "check number of rows returned");
+            return self.closeCursor(cursor);
+        })
+        .pipe(function() {
+            // Query by a previously indexed field
+            var querySpec = navigator.smartstore.buildExactQuerySpec("Name", "Robot", 3);
+            return self.querySoup(self.defaultSoupName, querySpec);
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(cursor.currentPageOrderedEntries.length, 1, "check number of rows returned");
+            return self.closeCursor(cursor);
+        })
+        .done(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
             self.finalizeTest();
         });
 };
@@ -970,7 +994,7 @@ SmartStoreTestSuite.prototype.testAlterSoup  = function() {
  * TEST alterSoup with bogus soupName
  */
 SmartStoreTestSuite.prototype.testAlterSoupWithBogusSoupName  = function() {
-    var soupName = "soupForGetSoupIndexSpecsWithBogusSoupName";
+    var soupName = "soupForAlterSoupWithBogusSoupName";
     var self = this;
 
     // Check soup does not exist
@@ -979,7 +1003,7 @@ SmartStoreTestSuite.prototype.testAlterSoupWithBogusSoupName  = function() {
             QUnit.equals(exists, false, "soup should not already exist");
             return self.alterSoupNoAssertion(soupName, [{path:"key", type:"string"}], true);
         })
-        .done(function(cursor) {
+        .done(function() {
             self.setAssertionFailed("alterSoup with bogus soupName should fail");
         })
         .fail(function() {            
@@ -989,18 +1013,104 @@ SmartStoreTestSuite.prototype.testAlterSoupWithBogusSoupName  = function() {
 };
 
 /**
+ * TEST reIndexSoup
+ */
+SmartStoreTestSuite.prototype.testReIndexSoup = function(reIndexData) {
+    var self = this;
+    var alteredIndexes = [{path:"Name", type:"string"}, {path:"attributes.type", type:"string"}];
+
+    // Populate soup
+    return self.stuffTestSoup()
+        .pipe(function(entries) {
+            QUnit.equal(entries.length, 3,"check stuffTestSoup result");
+            // Alter soup
+            return self.alterSoup(self.defaultSoupName, alteredIndexes, false);
+        })
+        .pipe(function() {
+            // Checking altered soup indexes 
+            return self.checkSoupIndexes(self.defaultSoupName, alteredIndexes);
+        })
+        .pipe(function() {
+            // Query by a new indexed field
+            var querySpec = navigator.smartstore.buildExactQuerySpec("attributes.type", "Contact", 3);
+            return self.querySoup(self.defaultSoupName, querySpec);
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(cursor.currentPageOrderedEntries.length, 0, "check number of rows returned");
+            return self.closeCursor(cursor);
+        })
+        .pipe(function(cursor) {
+            // Re-index soup
+            return self.reIndexSoup(self.defaultSoupName, ["attributes.type"]);
+        })
+        .pipe(function() {
+            // Query by a new indexed field
+            var querySpec = navigator.smartstore.buildExactQuerySpec("attributes.type", "Contact", 3);
+            return self.querySoup(self.defaultSoupName, querySpec);
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(cursor.currentPageOrderedEntries.length, 3, "check number of rows returned");
+            return self.closeCursor(cursor);
+        })
+        .pipe(function() {
+            // Query by a previously indexed field
+            var querySpec = navigator.smartstore.buildExactQuerySpec("Name", "Robot", 3);
+            return self.querySoup(self.defaultSoupName, querySpec);
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(cursor.currentPageOrderedEntries.length, 1, "check number of rows returned");
+            return self.closeCursor(cursor);
+        })
+        .done(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            self.finalizeTest();
+        });
+};
+
+
+/**
  * Helper method checkSoupIndexes
  */
 SmartStoreTestSuite.prototype.checkSoupIndexes = function(soupName, expectedIndexes) {
     return this.getSoupIndexSpecs(soupName)
         .done(function(soupIndexes) {
-            QUnit.equals(expectedIndexes.length, soupIndexes.length, "Wrong number of soup indices");
+            QUnit.equals(expectedIndexes.length, soupIndexes.length, "Check number of soup indices");
             for (i = 0; i< expectedIndexes.length; i++) {
-                QUnit.equals(expectedIndexes[i].path, soupIndexes[i].path, "Wrong path");
-                QUnit.equals(expectedIndexes[i].type, soupIndexes[i].type, "Wrong type");
+                QUnit.equals(expectedIndexes[i].path, soupIndexes[i].path, "Check path");
+                QUnit.equals(expectedIndexes[i].type, soupIndexes[i].type, "Check type");
             }
         });
 };
 
 
+/**
+ * TEST clearSoup
+ */
+SmartStoreTestSuite.prototype.testClearSoup = function()  {
+    console.log("In SFSmartStoreTestSuite.testClearSoup");    
+    
+    var self = this; 
+    self.stuffTestSoup()
+        .pipe(function(entries) {
+            QUnit.equal(entries.length, 3);
+            return self.clearSoup(self.defaultSoupName);
+        })
+        .pipe(function(status) {
+            QUnit.equal(status, "OK", "clearSoup OK");
+            
+            var querySpec = navigator.smartstore.buildAllQuerySpec("Name");
+            return self.querySoup(self.defaultSoupName, querySpec);
+        })
+        .pipe(function(cursor) {
+            var nEntries = cursor.currentPageOrderedEntries.length;
+            QUnit.equal(nEntries, 0, "currentPageOrderedEntries correct");
+            return self.closeCursor(cursor);
+        })
+        .done(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            self.finalizeTest(); 
+        });
+};
+
 }
+

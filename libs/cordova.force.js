@@ -617,6 +617,22 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
             );
     };
 
+    var reIndexSoup = function (soupName, paths, successCB, errorCB) {
+        console.log("SmartStore.reIndexSoup: '" + soupName + "' paths: " + JSON.stringify(paths));
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgReIndexSoup",
+             [{"soupName": soupName, "paths": paths}]
+            );
+    };
+
+    var clearSoup = function (soupName, successCB, errorCB) {
+        console.log("SmartStore.clearSoup: '" + soupName + "'");
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgClearSoup",
+             [{"soupName": soupName}]
+            );
+    };
+
     var showInspector = function() {
         console.log("SmartStore.showInspector");
         exec(SALESFORCE_MOBILE_SDK_VERSION, null, null, SERVICE, "pgShowInspector", []);
@@ -727,6 +743,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         buildLikeQuerySpec: buildLikeQuerySpec,
         buildRangeQuerySpec: buildRangeQuerySpec,
         buildSmartQuerySpec: buildSmartQuerySpec,
+        clearSoup: clearSoup,
         closeCursor: closeCursor,
         getDatabaseSize: getDatabaseSize,
         getLogLevel: getLogLevel,
@@ -735,6 +752,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         moveCursorToPageIndex: moveCursorToPageIndex,
         moveCursorToPreviousPage: moveCursorToPreviousPage,
         querySoup: querySoup,
+        reIndexSoup: reIndexSoup,
         registerSoup: registerSoup,
         removeFromSoup: removeFromSoup,
         removeSoup: removeSoup,
@@ -745,7 +763,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         soupExists: soupExists,
         upsertSoupEntries: upsertSoupEntries,
         upsertSoupEntriesWithExternalId: upsertSoupEntriesWithExternalId,
-        
+
         // Constructors
         QuerySpec: QuerySpec,
         SoupIndexSpec: SoupIndexSpec,
