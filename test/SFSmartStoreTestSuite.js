@@ -1015,7 +1015,7 @@ SmartStoreTestSuite.prototype.testAlterSoupWithBogusSoupName  = function() {
 /**
  * TEST reIndexSoup
  */
-SmartStoreTestSuite.prototype.testReIndexSoup = function(reIndexData) {
+SmartStoreTestSuite.prototype.testReIndexSoup = function() {
     var self = this;
     var alteredIndexes = [{path:"Name", type:"string"}, {path:"attributes.type", type:"string"}];
 
