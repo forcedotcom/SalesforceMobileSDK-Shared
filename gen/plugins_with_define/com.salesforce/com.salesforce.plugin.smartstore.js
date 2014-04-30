@@ -187,6 +187,22 @@ var alterSoup = function (soupName, indexSpecs, reIndexData, successCB, errorCB)
         );
 };
 
+var reIndexSoup = function (soupName, paths, successCB, errorCB) {
+    console.log("SmartStore.reIndexSoup: '" + soupName + "' paths: " + JSON.stringify(paths));
+    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+         "pgReIndexSoup",
+         [{"soupName": soupName, "paths": paths}]
+        );
+};
+
+var clearSoup = function (soupName, successCB, errorCB) {
+    console.log("SmartStore.clearSoup: '" + soupName + "'");
+    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+         "pgClearSoup",
+         [{"soupName": soupName}]
+        );
+};
+
 var showInspector = function() {
     console.log("SmartStore.showInspector");
     exec(SALESFORCE_MOBILE_SDK_VERSION, null, null, SERVICE, "pgShowInspector", []);
@@ -297,6 +313,7 @@ module.exports = {
     buildLikeQuerySpec: buildLikeQuerySpec,
     buildRangeQuerySpec: buildRangeQuerySpec,
     buildSmartQuerySpec: buildSmartQuerySpec,
+    clearSoup: clearSoup,
     closeCursor: closeCursor,
     getDatabaseSize: getDatabaseSize,
     getLogLevel: getLogLevel,
@@ -305,6 +322,7 @@ module.exports = {
     moveCursorToPageIndex: moveCursorToPageIndex,
     moveCursorToPreviousPage: moveCursorToPreviousPage,
     querySoup: querySoup,
+    reIndexSoup: reIndexSoup,
     registerSoup: registerSoup,
     removeFromSoup: removeFromSoup,
     removeSoup: removeSoup,
@@ -315,7 +333,7 @@ module.exports = {
     soupExists: soupExists,
     upsertSoupEntries: upsertSoupEntries,
     upsertSoupEntriesWithExternalId: upsertSoupEntriesWithExternalId,
-    
+
     // Constructors
     QuerySpec: QuerySpec,
     SoupIndexSpec: SoupIndexSpec,
