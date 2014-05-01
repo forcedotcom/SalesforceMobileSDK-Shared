@@ -59,25 +59,33 @@ AbstractSmartStoreTestSuite.prototype.runTest= function (methName) {
 /**
  * Helper methods to do smartstore operations using promises
  */
-AbstractSmartStoreTestSuite.prototype.getDatabaseSize = promiser(navigator.smartstore, "getDatabaseSize");
-AbstractSmartStoreTestSuite.prototype.registerSoup = promiser(navigator.smartstore, "registerSoup");
-AbstractSmartStoreTestSuite.prototype.soupExists = promiser(navigator.smartstore, "soupExists");
-AbstractSmartStoreTestSuite.prototype.removeSoup = promiser(navigator.smartstore, "removeSoup");
-AbstractSmartStoreTestSuite.prototype.removeFromSoup = promiser(navigator.smartstore, "removeFromSoup");
-AbstractSmartStoreTestSuite.prototype.querySoup = promiser(navigator.smartstore, "querySoup");
-AbstractSmartStoreTestSuite.prototype.runSmartQuery = promiser(navigator.smartstore, "runSmartQuery");
-AbstractSmartStoreTestSuite.prototype.upsertSoupEntries = promiser(navigator.smartstore, "upsertSoupEntries");
-AbstractSmartStoreTestSuite.prototype.upsertEntriesToSoupWithExternalIdPath = promiser(navigator.smartstore, "upsertSoupEntriesWithExternalId");
-AbstractSmartStoreTestSuite.prototype.retrieveSoupEntries = promiser(navigator.smartstore, "retrieveSoupEntries");
+AbstractSmartStoreTestSuite.prototype.alterSoup = promiser(navigator.smartstore, "alterSoup");
+AbstractSmartStoreTestSuite.prototype.clearSoup = promiser(navigator.smartstore, "clearSoup");
 AbstractSmartStoreTestSuite.prototype.closeCursor = promiser(navigator.smartstore, "closeCursor");
+AbstractSmartStoreTestSuite.prototype.getDatabaseSize = promiser(navigator.smartstore, "getDatabaseSize");
+AbstractSmartStoreTestSuite.prototype.getSoupIndexSpecs = promiser(navigator.smartstore, "getSoupIndexSpecs");
 AbstractSmartStoreTestSuite.prototype.moveCursorToNextPage = promiser(navigator.smartstore, "moveCursorToNextPage");
 AbstractSmartStoreTestSuite.prototype.moveCursorToPreviousPage = promiser(navigator.smartstore, "moveCursorToPreviousPage");
+AbstractSmartStoreTestSuite.prototype.querySoup = promiser(navigator.smartstore, "querySoup");
+AbstractSmartStoreTestSuite.prototype.reIndexSoup = promiser(navigator.smartstore, "reIndexSoup");
+AbstractSmartStoreTestSuite.prototype.registerSoup = promiser(navigator.smartstore, "registerSoup");
+AbstractSmartStoreTestSuite.prototype.removeFromSoup = promiser(navigator.smartstore, "removeFromSoup");
+AbstractSmartStoreTestSuite.prototype.removeSoup = promiser(navigator.smartstore, "removeSoup");
+AbstractSmartStoreTestSuite.prototype.retrieveSoupEntries = promiser(navigator.smartstore, "retrieveSoupEntries");
+AbstractSmartStoreTestSuite.prototype.runSmartQuery = promiser(navigator.smartstore, "runSmartQuery");
+AbstractSmartStoreTestSuite.prototype.soupExists = promiser(navigator.smartstore, "soupExists");
+AbstractSmartStoreTestSuite.prototype.upsertEntriesToSoupWithExternalIdPath = promiser(navigator.smartstore, "upsertSoupEntriesWithExternalId");
+AbstractSmartStoreTestSuite.prototype.upsertSoupEntries = promiser(navigator.smartstore, "upsertSoupEntries");
 
-AbstractSmartStoreTestSuite.prototype.registerSoupNoAssertion = promiser(navigator.smartstore, "registerSoup", true);
-AbstractSmartStoreTestSuite.prototype.querySoupNoAssertion = promiser(navigator.smartstore, "querySoup", true);
-AbstractSmartStoreTestSuite.prototype.upsertSoupEntriesNoAssertion = promiser(navigator.smartstore, "upsertSoupEntries", true);
+AbstractSmartStoreTestSuite.prototype.alterSoupNoAssertion = promiser(navigator.smartstore, "alterSoup", true);
+AbstractSmartStoreTestSuite.prototype.clearSoupNoAssertion = promiser(navigator.smartstore, "clearSoup", true);
+AbstractSmartStoreTestSuite.prototype.getSoupIndexSpecsNoAssertion = promiser(navigator.smartstore, "getSoupIndexSpecs", true);
 AbstractSmartStoreTestSuite.prototype.moveCursorToNextPageNoAssertion = promiser(navigator.smartstore, "moveCursorToNextPage", true);
 AbstractSmartStoreTestSuite.prototype.moveCursorToPreviousPageNoAssertion = promiser(navigator.smartstore, "moveCursorToPreviousPage", true);
+AbstractSmartStoreTestSuite.prototype.querySoupNoAssertion = promiser(navigator.smartstore, "querySoup", true);
+AbstractSmartStoreTestSuite.prototype.reIndexSoupNoAssertion = promiser(navigator.smartstore, "reIndexSoup", true);
+AbstractSmartStoreTestSuite.prototype.registerSoupNoAssertion = promiser(navigator.smartstore, "registerSoup", true);
+AbstractSmartStoreTestSuite.prototype.upsertSoupEntriesNoAssertion = promiser(navigator.smartstore, "upsertSoupEntries", true);
 
 AbstractSmartStoreTestSuite.prototype.registerDefaultSoup = function() {
     return this.registerSoup(this.defaultSoupName, this.defaultSoupIndexes);

@@ -601,6 +601,38 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
             );
     };
 
+    var getSoupIndexSpecs = function(soupName, successCB, errorCB) {
+        console.log("SmartStore.getSoupIndexSpecs: " + soupName);
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgGetSoupIndexSpecs",
+             [{"soupName": soupName}]
+            );
+    };
+
+    var alterSoup = function (soupName, indexSpecs, reIndexData, successCB, errorCB) {
+        console.log("SmartStore.alterSoup: '" + soupName + "' indexSpecs: " + JSON.stringify(indexSpecs));
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgAlterSoup",
+             [{"soupName": soupName, "indexes": indexSpecs, "reIndexData": reIndexData}]
+            );
+    };
+
+    var reIndexSoup = function (soupName, paths, successCB, errorCB) {
+        console.log("SmartStore.reIndexSoup: '" + soupName + "' paths: " + JSON.stringify(paths));
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgReIndexSoup",
+             [{"soupName": soupName, "paths": paths}]
+            );
+    };
+
+    var clearSoup = function (soupName, successCB, errorCB) {
+        console.log("SmartStore.clearSoup: '" + soupName + "'");
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgClearSoup",
+             [{"soupName": soupName}]
+            );
+    };
+
     var showInspector = function() {
         console.log("SmartStore.showInspector");
         exec(SALESFORCE_MOBILE_SDK_VERSION, null, null, SERVICE, "pgShowInspector", []);
@@ -705,29 +737,33 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
      * Part of the module that is public
      */
     module.exports = {
-        getLogLevel: getLogLevel,
-        setLogLevel: setLogLevel,
+        alterSoup: alterSoup,
         buildAllQuerySpec: buildAllQuerySpec,
         buildExactQuerySpec: buildExactQuerySpec,
-        buildRangeQuerySpec: buildRangeQuerySpec,
         buildLikeQuerySpec: buildLikeQuerySpec,
+        buildRangeQuerySpec: buildRangeQuerySpec,
         buildSmartQuerySpec: buildSmartQuerySpec,
+        clearSoup: clearSoup,
+        closeCursor: closeCursor,
         getDatabaseSize: getDatabaseSize,
+        getLogLevel: getLogLevel,
+        getSoupIndexSpecs: getSoupIndexSpecs,
+        moveCursorToNextPage: moveCursorToNextPage,
+        moveCursorToPageIndex: moveCursorToPageIndex,
+        moveCursorToPreviousPage: moveCursorToPreviousPage,
+        querySoup: querySoup,
+        reIndexSoup: reIndexSoup,
         registerSoup: registerSoup,
+        removeFromSoup: removeFromSoup,
         removeSoup: removeSoup,
+        retrieveSoupEntries: retrieveSoupEntries,
+        runSmartQuery: runSmartQuery,
+        setLogLevel: setLogLevel,
         showInspector: showInspector,
         soupExists: soupExists,
-        querySoup: querySoup,
-        runSmartQuery: runSmartQuery,
-        retrieveSoupEntries: retrieveSoupEntries,
         upsertSoupEntries: upsertSoupEntries,
         upsertSoupEntriesWithExternalId: upsertSoupEntriesWithExternalId,
-        removeFromSoup: removeFromSoup,
-        moveCursorToPageIndex: moveCursorToPageIndex,
-        moveCursorToNextPage: moveCursorToNextPage,
-        moveCursorToPreviousPage: moveCursorToPreviousPage,
-        closeCursor: closeCursor,
-        
+
         // Constructors
         QuerySpec: QuerySpec,
         SoupIndexSpec: SoupIndexSpec,
