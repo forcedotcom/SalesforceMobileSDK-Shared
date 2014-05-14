@@ -1073,7 +1073,7 @@
                             if (!nextRecordsUrl) return null;
                             return forcetkClient.queryMore(nextRecordsUrl).then(function(resp) {
                                 nextRecordsUrl = resp.nextRecordsUrl;
-                                that.records.pushObjects(resp.records);
+                                that.records = _.union(that.records, resp.records);
                                 return resp.records;
                             });
                         },
@@ -1164,7 +1164,7 @@
                             if (!nextRecordsUrl) return null;
                             return forcetkClient.queryMore(nextRecordsUrl).then(function(resp) {
                                 nextRecordsUrl = resp.nextRecordsUrl;
-                                that.records.pushObjects(resp.records);
+                                that.records = _.union(that.records, resp.records);
                                 return resp.records;
                             });
                         },
