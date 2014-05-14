@@ -421,16 +421,15 @@
     // -----------------
     // Represent the meta-data of a SObject type on the client
     //
-    Force.SObjectType = function (sobjectType, cache) {
+    Force.SObjectType = function (sobjectType, cache, cacheMode) {
         this.sobjectType = sobjectType;
         this.cache = cache;
         this._data = {};
         this._cacheSynced = false;
+        this.cacheMode = cacheMode || Force.CACHE_MODE.SERVER_FIRST;
     };
 
     _.extend(Force.SObjectType.prototype, (function() {
-        //TBD: Should we support cache modes here too.
-
         /*----- INTERNAL METHODS ------*/
         // Cache actions helper
         // Check first if cache exists and if data exists in cache.
@@ -438,7 +437,9 @@
         var cacheRetrieve = function(that) {
             // Always fetch from the cache again so as to obtain the
             // changes done to the cache by other instances of this SObjectType.
-            if (that.cache) {
+            var cacheMode = _.result(that, 'cacheMode');
+            if (that.cache && (cacheMode == Force.CACHE_MODE.CACHE_ONLY ||
+                cacheMode == Force.CACHE_MODE.CACHE_FIRST)) {
                 return that.cache.retrieve(that.sobjectType)
                         .then(function(data) {
                             if (data) {
@@ -453,7 +454,8 @@
         // Check first if cache exists.
         // Then save the current instance data to cache.
         var cacheSave = function(that) {
-            if (!that._cacheSynced && that.cache) {
+            var cacheMode = _.result(that, 'cacheMode');
+            if (!that._cacheSynced && that.cache && cacheMode != Force.CACHE_MODE.SERVER_ONLY) {
                 that._data[that.cache.keyField] = that.sobjectType;
                 return that.cache.save(that._data).then(function(){
                     that._cacheSynced = true;
@@ -474,38 +476,47 @@
         // Server action helper
         // If no describe data exists on the instance, get it from server.
         var serverDescribeUnlessCached = function(that) {
-            if(!that._data.describeResult) {
-                return forcetkClient.describe(that.sobjectType)
+            var cacheMode = _.result(that, 'cacheMode');
+            if(!that._data.describeResult && cacheMode != Force.CACHE_MODE.CACHE_ONLY) {
+                that._data.describeResult =
+                        forcetkClient.describe(that.sobjectType)
                         .then(function(describeResult) {
                             that._data.describeResult = describeResult;
                             that._cacheSynced = false;
                             return that;
                         });
+                return that._data.describeResult;
             } else return that;
         };
 
         // If no metadata data exists on the instance, get it from server.
         var serverMetadataUnlessCached = function(that) {
-            if(!that._data.metadataResult) {
-                return forcetkClient.metadata(that.sobjectType)
+            var cacheMode = _.result(that, 'cacheMode');
+            if(!that._data.metadataResult && cacheMode != Force.CACHE_MODE.CACHE_ONLY) {
+                that._data.metadataResult =
+                        forcetkClient.metadata(that.sobjectType)
                         .then(function(metadataResult) {
                             that._data.metadataResult = metadataResult;
                             that._cacheSynced = false;
                             return that;
                         });
+                return that._data.metadataResult;
             } else return that;
         };
 
         // If no layout data exists for this record type on the instance,
         // get it from server.
         var serverDescribeLayoutUnlessCached = function(that, recordTypeId) {
-            if(!that._data["layoutInfo_" + recordTypeId]) {
-                return forcetkClient.describeLayout(that.sobjectType, recordTypeId)
+            var cacheMode = _.result(that, 'cacheMode');
+            if(!that._data["layoutInfo_" + recordTypeId] && cacheMode != Force.CACHE_MODE.CACHE_ONLY) {
+                that._data["layoutInfo_" + recordTypeId] =
+                        forcetkClient.describeLayout(that.sobjectType, recordTypeId)
                         .then(function(layoutResult) {
                             that._data["layoutInfo_" + recordTypeId] = layoutResult;
                             that._cacheSynced = false;
                             return that;
                         });
+                return that._data["layoutInfo_" + recordTypeId];
             } else return that;
         };
 
