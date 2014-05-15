@@ -425,7 +425,7 @@
         this.sobjectType = sobjectType;
         this.cache = cache;
         this._data = {};
-        this._cacheSynced = false;
+        this._cacheSynced = true;
         this.cacheMode = cacheMode || Force.CACHE_MODE.SERVER_FIRST;
     };
 
@@ -434,7 +434,7 @@
         // Cache actions helper
         // Check first if cache exists and if data exists in cache.
         // Then update the current instance with data from cache.
-        var cacheRetrieve = function(that) {
+        var cacheRetrieve = function(that, property) {
             // Always fetch from the cache again so as to obtain the
             // changes done to the cache by other instances of this SObjectType.
             var cacheMode = _.result(that, 'cacheMode');
@@ -442,10 +442,7 @@
                 cacheMode == Force.CACHE_MODE.CACHE_FIRST)) {
                 return that.cache.retrieve(that.sobjectType)
                         .then(function(data) {
-                            if (data) {
-                                that._cacheSynced = (data != null);
-                                that._data = data;
-                            }
+                            that._data[property] = data ? data[property] : null;
                             return that;
                         });
             } else return that;
@@ -478,14 +475,12 @@
         var serverDescribeUnlessCached = function(that) {
             var cacheMode = _.result(that, 'cacheMode');
             if(!that._data.describeResult && cacheMode != Force.CACHE_MODE.CACHE_ONLY) {
-                that._data.describeResult =
-                        forcetkClient.describe(that.sobjectType)
+                return forcetkClient.describe(that.sobjectType)
                         .then(function(describeResult) {
                             that._data.describeResult = describeResult;
                             that._cacheSynced = false;
                             return that;
                         });
-                return that._data.describeResult;
             } else return that;
         };
 
@@ -493,14 +488,12 @@
         var serverMetadataUnlessCached = function(that) {
             var cacheMode = _.result(that, 'cacheMode');
             if(!that._data.metadataResult && cacheMode != Force.CACHE_MODE.CACHE_ONLY) {
-                that._data.metadataResult =
-                        forcetkClient.metadata(that.sobjectType)
+                return forcetkClient.metadata(that.sobjectType)
                         .then(function(metadataResult) {
                             that._data.metadataResult = metadataResult;
                             that._cacheSynced = false;
                             return that;
                         });
-                return that._data.metadataResult;
             } else return that;
         };
 
@@ -509,14 +502,12 @@
         var serverDescribeLayoutUnlessCached = function(that, recordTypeId) {
             var cacheMode = _.result(that, 'cacheMode');
             if(!that._data["layoutInfo_" + recordTypeId] && cacheMode != Force.CACHE_MODE.CACHE_ONLY) {
-                that._data["layoutInfo_" + recordTypeId] =
-                        forcetkClient.describeLayout(that.sobjectType, recordTypeId)
+                return forcetkClient.describeLayout(that.sobjectType, recordTypeId)
                         .then(function(layoutResult) {
                             that._data["layoutInfo_" + recordTypeId] = layoutResult;
                             that._cacheSynced = false;
                             return that;
                         });
-                return that._data["layoutInfo_" + recordTypeId];
             } else return that;
         };
 
@@ -526,25 +517,29 @@
             // returns describe data of the sobject.
             describe: function() {
                 var that = this;
-                if (that._data.describeResult) return $.when(that._data.describeResult);
-                else return $.when(cacheRetrieve(that))
+                if (!that._data.describeResult) {
+                    that._data.describeResult =  $.when(cacheRetrieve(that, "describeResult"))
                         .then(serverDescribeUnlessCached)
                         .then(cacheSave)
                         .then(function() {
                             return that._data.describeResult;
                         });
+                }
+                return $.when(that._data.describeResult);
             },
             // Returns a promise, which once resolved
             // returns metadata of the sobject.
             getMetadata: function() {
                 var that = this;
-                if (that._data.metadataResult) return $.when(that._data.metadataResult);
-                else return $.when(cacheRetrieve(that))
+                if (!that._data.metadataResult) {
+                    that._data.metadataResult = $.when(cacheRetrieve(that, "metadataResult"))
                         .then(serverMetadataUnlessCached)
                         .then(cacheSave)
                         .then(function() {
                             return that._data.metadataResult;
                         });
+                }
+                return $.when(that._data.metadataResult);
             },
             // Returns a promise, which once resolved
             // returns layout information associated
@@ -554,22 +549,23 @@
                 var that = this;
                 // Defaults to Record type id of Master
                 if (!recordTypeId) recordTypeId = '012000000000000AAA';
-                if (that._data["layoutInfo_" + recordTypeId]) {
-                    return $.when(that._data["layoutInfo_" + recordTypeId]);
-                }
 
-                return $.when(cacheRetrieve(that), recordTypeId)
+                var layoutInfoId = "layoutInfo_" + recordTypeId;
+                if (!that._data[layoutInfoId]) {
+                    that._data[layoutInfoId] = $.when(cacheRetrieve(that, layoutInfoId), recordTypeId)
                         .then(serverDescribeLayoutUnlessCached)
                         .then(cacheSave)
                         .then(function() {
-                            return that._data["layoutInfo_" + recordTypeId];
+                            return that._data[layoutInfoId];
                         });
+                }
+                return $.when(that._data[layoutInfoId]);
             },
             // Returns a promise, which once resolved clears
             // the cached data for the current sobject type.
             reset: function() {
                 var that = this;
-                that._cacheSynced = false;
+                that._cacheSynced = true;
                 that._data = {};
                 return $.when(cacheClear(that));
             }
