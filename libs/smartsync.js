@@ -434,7 +434,7 @@
         // Cache actions helper
         // Check first if cache exists and if data exists in cache.
         // Then update the current instance with data from cache.
-        var cacheRetrieve = function(that) {
+        var cacheRetrieve = function(that, property) {
             // Always fetch from the cache again so as to obtain the
             // changes done to the cache by other instances of this SObjectType.
             var cacheMode = _.result(that, 'cacheMode');
@@ -442,10 +442,7 @@
                 cacheMode == Force.CACHE_MODE.CACHE_FIRST)) {
                 return that.cache.retrieve(that.sobjectType)
                         .then(function(data) {
-                            if (data) {
-                                that._cacheSynced = (data != null);
-                                that._data = data;
-                            }
+                            that._data[property] = data ? data[property] : null;
                             return that;
                         });
             } else return that;
@@ -521,7 +518,7 @@
             describe: function() {
                 var that = this;
                 if (!that._data.describeResult) {
-                    that._data.describeResult =  $.when(cacheRetrieve(that))
+                    that._data.describeResult =  $.when(cacheRetrieve(that, "describeResult"))
                         .then(serverDescribeUnlessCached)
                         .then(cacheSave)
                         .then(function() {
@@ -535,7 +532,7 @@
             getMetadata: function() {
                 var that = this;
                 if (!that._data.metadataResult) {
-                    that._data.metadataResult = $.when(cacheRetrieve(that))
+                    that._data.metadataResult = $.when(cacheRetrieve(that, "metadataResult"))
                         .then(serverMetadataUnlessCached)
                         .then(cacheSave)
                         .then(function() {
@@ -555,7 +552,7 @@
 
                 var layoutInfoId = "layoutInfo_" + recordTypeId;
                 if (!that._data[layoutInfoId]) {
-                    that._data[layoutInfoId] = $.when(cacheRetrieve(that), recordTypeId)
+                    that._data[layoutInfoId] = $.when(cacheRetrieve(that, layoutInfoId), recordTypeId)
                         .then(serverDescribeLayoutUnlessCached)
                         .then(cacheSave)
                         .then(function() {
