@@ -425,7 +425,7 @@
         this.sobjectType = sobjectType;
         this.cache = cache;
         this._data = {};
-        this._cacheSynced = false;
+        this._cacheSynced = true;
         this.cacheMode = cacheMode || Force.CACHE_MODE.SERVER_FIRST;
     };
 
@@ -565,7 +565,7 @@
             // the cached data for the current sobject type.
             reset: function() {
                 var that = this;
-                that._cacheSynced = false;
+                that._cacheSynced = true;
                 that._data = {};
                 return $.when(cacheClear(that));
             }
