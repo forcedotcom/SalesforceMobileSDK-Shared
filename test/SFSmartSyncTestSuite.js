@@ -555,6 +555,46 @@ SmartSyncTestSuite.prototype.testSObjectTypeDescribeLayout = function() {
     });
 }
 
+/**
+ * TEST Force.SObjectType cache merge by multiple instances
+ */
+SmartSyncTestSuite.prototype.testSObjectTypeCacheOnlyMode = function() {
+    console.log("# In SmartSyncTestSuite.testSObjectTypeCacheMerge");
+    var self = this;
+    var soupName = "testSoupForSObjectType";
+    var cache, data = {
+        describeResult: {name:"MockObject", keyPrefix:"00X"},
+        metadataResult: {objectDescribe: {name:"MockObject", keyPrefix:"00X"}},
+        layoutInfo_012000000000000AAA: {detailLayoutSections: []},
+        Id: 'MockObject'
+    };
+
+    Force.smartstoreClient.removeSoup(soupName)
+    .then(function() {
+        console.log("## Initialization of StoreCache");
+        cache = new Force.StoreCache(soupName);
+        return cache.init();
+    })
+    .then(function() {
+        return cache.save(data);
+    })
+    .then(function() {
+        console.log("## Calling describe layout");
+        var sobjectType = new Force.SObjectType("MockObject", cache, Force.CACHE_MODE.CACHE_ONLY);
+        return $.when(sobjectType.describe(), sobjectType.getMetadata(), sobjectType.describeLayout());
+    })
+    .then(function(descResult, metaResult, layoutResult) {
+        assertContains(descResult, data.describeResult);
+        assertContains(metaResult, data.metadataResult);
+        assertContains(layoutResult, data.layoutInfo_012000000000000AAA);
+        console.log("## Cleaning up");
+        return Force.smartstoreClient.removeSoup(soupName);
+    })
+    .then(function() {
+        self.finalizeTest();
+    });
+}
+
 /** 
  * TEST Force.SObjectType cache merge by multiple instances
  */
