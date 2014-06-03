@@ -31,12 +31,55 @@ function regLinkClickHandlers() {
                            $j("#div_sfdc_account_list").html("")
                            $j("#console").html("")
                            });
-                           
+                      
     $j('#link_logout').click(function() {
-             logToConsole("link_logout clicked");
-             var sfOAuthPlugin = cordova.require("salesforce/plugin/oauth");
-             sfOAuthPlugin.logout();
-             });
+    	logToConsole("link_logout clicked");
+        var sfAccManagerPlugin = cordova.require("salesforce/plugin/sfaccountmanager");
+        sfAccManagerPlugin.logout();
+    });
+
+    $j('#link_get_current_user').click(function() {
+        logToConsole("link_get_current_user clicked");
+        var sfAccManagerPlugin = cordova.require("salesforce/plugin/sfaccountmanager");
+        sfAccManagerPlugin.getCurrentUser(function(user) {
+            logToConsole("Success callback");
+            logToConsole("Auth Token: " + user.authToken);
+            logToConsole("Refresh Token: " + user.refreshToken);
+            logToConsole("Login Server: " + user.loginServer);
+            logToConsole("ID URL: " + user.idUrl);
+            logToConsole("Instance Server: " + user.instanceServer);
+            logToConsole("Org ID: " + user.orgId);
+            logToConsole("User ID: " + user.userId);
+            logToConsole("Username: " + user.username);
+            logToConsole("Client ID: " + user.clientId);
+        }, null)
+    });
+
+    $j('#link_switch_user').click(function() {
+        logToConsole("link_switch_user clicked");
+        var sfAccManagerPlugin = cordova.require("salesforce/plugin/sfaccountmanager");
+        sfAccManagerPlugin.switchToUser();
+    });
+
+    $j('#link_get_all_users').click(function() {
+        logToConsole("link_get_all_users clicked");
+        var sfAccManagerPlugin = cordova.require("salesforce/plugin/sfaccountmanager");
+        sfAccManagerPlugin.getUsers(function(user) {
+            logToConsole("Success callback");
+        	var size = user.length;
+        	for (var i = 0; i < size; i++) {
+                logToConsole("Auth Token: " + user[i].authToken);
+                logToConsole("Refresh Token: " + user[i].refreshToken);
+                logToConsole("Login Server: " + user[i].loginServer);
+                logToConsole("ID URL: " + user[i].idUrl);
+                logToConsole("Instance Server: " + user[i].instanceServer);
+                logToConsole("Org ID: " + user[i].orgId);
+                logToConsole("User ID: " + user[i].userId);
+                logToConsole("Username: " + user[i].username);
+                logToConsole("Client ID: " + user[i].clientId);
+        	}
+        }, null)
+    });
 }
 
 function onSuccessDevice(contacts) {

@@ -27,7 +27,7 @@
 (function($j) {
 
 // Version this js was shipped with
-this.SALESFORCE_MOBILE_SDK_VERSION = "2.1.0";
+this.SALESFORCE_MOBILE_SDK_VERSION = "2.2.0";
 
 /*
  * JavaScript library to wrap REST API on Visualforce. Leverages Ajax Proxy
