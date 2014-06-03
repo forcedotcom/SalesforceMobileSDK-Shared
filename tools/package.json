@@ -1,0 +1,15 @@
+{
+  "name": "salesforcemobilesdk-samples",
+  "version": "2.3.0",
+  "dependencies": {},
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-bower-task": "~0.3.2",
+    "grunt-exec": "~0.4.2",
+    "matchdep": "~0.1.2",
+    "time-grunt": "~0.1.0"
+  },
+  "engines": {
+    "node": ">=0.8.0"
+  }
+}

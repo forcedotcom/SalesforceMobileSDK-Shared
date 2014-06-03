@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, salesforce.com, inc.
+ * Copyright (c) 2012-14, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -24,39 +24,36 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+// Version this js was shipped with
+var SALESFORCE_MOBILE_SDK_VERSION = "2.3.0.unstable";
+
+var logger = require("com.salesforce.util.logger");
+
 /**
- * MockSDKInfo
- * Meant for development and testing only, the data is stored in SessionStorage, queries do full scans.
+ * Enumeration of event types.
  */
+var EventType = {
+    AUTHENTICATING: {code: 0, description: "Authenticating...", isError: false},
+    STARTING: {code: 1, description: "Loading application", isError: false},
+    OFFLINE: {code: 2, description: "Your device is offline. Can't continue.", isError: true}
+};
+       
+/**
+ * Dispatches event with current status text and success indicator.
+ */
+var sendStatusEvent = function(statusEvent) {
+    if (statusEvent.isError) {
+        logger.logError(statusEvent.description);
+    } else {
+        logger.logToConsole(statusEvent.description);
+    }
+    cordova.fireDocumentEvent('bootstrapStatusEvent', statusEvent);
+};
 
-var MockSDKInfo = (function(window) {
-
-    // Constructor
-    var module = function() {}; 
-
-    var SDKInfo = cordova.require("com.salesforce.plugin.sdkinfo").SDKInfo;
-
-    // Prototype
-    module.prototype = {
-        constructor: module,
-
-        hookToCordova: function(cordova) {
-            var SDKINFO_SERVICE = "com.salesforce.sdkinfo";
-            var self = this;
-
-            cordova.interceptExec(SDKINFO_SERVICE, "getInfo", function (successCB, errorCB, args) {
-                successCB(new SDKInfo("2.3.0.unstable", 
-                                      ["com.salesforce.oauth", "com.salesforce.sdkinfo", "com.salesforce.sfaccountmanager", "com.salesforce.testrunner", "com.salesforce.smartstore"], 
-                                      "ForcePluginsTest", "1.0"));
-            });
-        }
-
-    };
-
-    // Return module
-    return module;
-})(window);
-
-var mockSDKInfo = new MockSDKInfo();
-mockSDKInfo.hookToCordova(cordova);
-
+/**
+ * Part of the module that is public
+ */
+module.exports = {
+    EventType: EventType,
+    sendStatusEvent: sendStatusEvent
+};

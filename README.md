@@ -20,52 +20,6 @@ Library to do REST API calls from JavaScript.
 Contains the new SDK 2.0 SmartSync data library. 
 This library depends on forcetk.mobilesdk.js and cordova.force.js. It also requires jquery, underscore and backbone.
 
-
-# /external
-
-Contains all the external libraries used in sample apps or required by some of the libraries above:
-
-**backbone**
-
-Contains [backbone](http://backbonejs.org/) and [underscore](http://underscorejs.org/).
-
-**jquery**
-
-Contains [jquery](http://jquery.com/) and [jquery mobile](http://jquerymobile.com/).
-Required by SmartSync library and used in some of the sample apps.
-
-**qunit** 
-
-Contains [qunit](http://qunitjs.com/). A unit test library for JavaScript.
-
-
-# /SampleApps
-
-Contains all the SalesforceMobileSDK JavaScript sample applications.
-
-**smartsync**
-
-Contains sample applications demonstrating the use of the new SDK 2.0 SmartSync library:
-* UserAndGroupSearch.html: simplest sample app with a single search/list screen that allows searching for users or collaboration groups
-* UserSearch.html: another sample app that allows searching for users and has a basic user detail screen to the search/list screen
-* AccountEditor.html: most advanced sample app that allows searching for accounts, editing their details, creating new accounts or deleting existing accounts. It also works offline and detects conflicts when records have changed on the server.
-
-**contactexplorer**
-
-HTML/CSS/JavaScript used by ContactExplorer application.
-
-**smartstoreexplorer**
-
-HTML/CSS/JavaScript used by SmartStoreExplorer application.
-
-**vfconnector**
-
-Contains bootconfig.json for VFConnector application.
-
-**fileexplorer**
-
-HTML/CSS/JavaScript used by HybridFileExplorer application.
-
 # /test
 
 Contains all the tests for the SalesforceMobileSDK JavaScript libraries.
