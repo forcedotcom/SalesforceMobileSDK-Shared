@@ -1,5 +1,6 @@
+cordova.define("com.salesforce.util.exec", function(require, exports, module) {
 /*
- * Copyright (c) 2012, salesforce.com, inc.
+ * Copyright (c) 2012-14, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -24,39 +25,26 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * MockSDKInfo
- * Meant for development and testing only, the data is stored in SessionStorage, queries do full scans.
- */
-
-var MockSDKInfo = (function(window) {
-
-    // Constructor
-    var module = function() {}; 
-
-    var SDKInfo = cordova.require("com.salesforce.plugin.sdkinfo").SDKInfo;
-
-    // Prototype
-    module.prototype = {
-        constructor: module,
-
-        hookToCordova: function(cordova) {
-            var SDKINFO_SERVICE = "com.salesforce.sdkinfo";
-            var self = this;
-
-            cordova.interceptExec(SDKINFO_SERVICE, "getInfo", function (successCB, errorCB, args) {
-                successCB(new SDKInfo("2.3.0.unstable", 
-                                      ["com.salesforce.oauth", "com.salesforce.sdkinfo", "com.salesforce.sfaccountmanager", "com.salesforce.testrunner", "com.salesforce.smartstore"], 
-                                      "ForcePluginsTest", "1.0"));
-            });
-        }
-
+// Version this js was shipped with
+var SALESFORCE_MOBILE_SDK_VERSION = "2.3.0.unstable";
+var exec = function(pluginVersion, successCB, errorCB, service, action, args) {
+    var defaultSuccessCB = function() {
+        console.log(service + ":" + action + " succeeded");
     };
+    var defaultErrorCB = function() {
+        console.error(service + ":" + action + " failed");
+    };
+    successCB = typeof successCB !== "function" ? defaultSuccessCB : successCB;
+    errorCB = typeof errorCB !== "function" ? defaultErrorCB : errorCB;
+    args.unshift("pluginSDKVersion:" + pluginVersion);
+    var cordovaExec = require('cordova/exec');
+    return cordovaExec(successCB, errorCB, service, action, args);                  
+};
 
-    // Return module
-    return module;
-})(window);
-
-var mockSDKInfo = new MockSDKInfo();
-mockSDKInfo.hookToCordova(cordova);
-
+/**
+ * Part of the module that is public
+ */
+module.exports = {
+    exec: exec
+};
+});

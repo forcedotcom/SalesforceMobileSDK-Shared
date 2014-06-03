@@ -2424,7 +2424,7 @@ SmartSyncTestSuite.prototype.testFetchSObjects = function() {
  * TEST Force.SObjectCollection.fetch
  */
 SmartSyncTestSuite.prototype.testSObjectCollectionFetch = function() {
-    console.log("# In SmartSyncTestSuite.testCollectionFetch");
+    console.log("# In SmartSyncTestSuite.testSObjectCollectionFetch");
     var self = this;
     var idToName = {};
     var soupName = "testFetchSObjects";
