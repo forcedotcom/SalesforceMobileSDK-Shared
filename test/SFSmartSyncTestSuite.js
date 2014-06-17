@@ -1252,7 +1252,8 @@ SmartSyncTestSuite.prototype.testSyncSObjectRetrieve = function() {
         })
         .then(function() {
             console.log("## Trying retrieve cache-only");
-            return Force.syncSObject("read", "Account", id, null, ["Name"], cache, Force.CACHE_MODE.CACHE_ONLY);
+            /* Try fetching more fields than they are present in store cache. CACHE_ONLY mode should should return the result. */
+            return Force.syncSObject("read", "Account", id, null, ["Name", "Website"], cache, Force.CACHE_MODE.CACHE_ONLY);
         })
         .then(function(data) {
             return checkResultServerAndCaches(data, {Name:"TestAccount-local"}, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount-local"}, cache);
