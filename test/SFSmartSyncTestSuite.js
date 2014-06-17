@@ -1332,9 +1332,10 @@ SmartSyncTestSuite.prototype.testSyncSObjectUpdate = function() {
         })
         .then(function(data) {
             console.log("## Trying update cache-only");
-            return Force.syncSObject("update", "Account", id, {Name:"TestAccount-updated2"}, ["Name"], cache, Force.CACHE_MODE.CACHE_ONLY);
+            return Force.syncSObject("update", "Account", id, {Name:"TestAccount-updated2", Website:"www.account.com"}, ["Name"], cache, Force.CACHE_MODE.CACHE_ONLY);
         })
         .then(function(data) {
+             QUnit.equals(_.has(data, "Website"), false, "Should not contain field Website");
             return checkResultServerAndCaches(data, {Name:"TestAccount-updated2"}, id, {Id:id, Name:"TestAccount-updated"},  {Id:id, Name:"TestAccount-updated2"}, cache);
         })
         .then(function() {
