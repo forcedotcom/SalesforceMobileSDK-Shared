@@ -80,6 +80,8 @@ var StoreCursor = function () {
     this.cursorId = null;
     //the maximum number of entries returned per page 
     this.pageSize = 0;
+    // the total number of results
+    this.totalEntries = 0;
     //the total number of pages of results available
     this.totalPages = 0;
     //the current page index among all the pages available

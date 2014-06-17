@@ -432,7 +432,8 @@ var MockSmartStore = (function(window) {
                 pageSize: querySpec.pageSize,
                 currentPageIndex: 0,
                 currentPageOrderedEntries: results.slice(0, querySpec.pageSize),
-                totalPages: Math.ceil(results.length / querySpec.pageSize)
+                totalPages: Math.ceil(results.length / querySpec.pageSize),
+                totalEntries: results.length
             };
 
             _cursors[cursorId] = cursor;

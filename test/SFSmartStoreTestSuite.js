@@ -241,6 +241,7 @@ SmartStoreTestSuite.prototype.testUpsertSoupEntriesWithExternalId = function()  
             return self.querySoup(self.defaultSoupName, querySpec);
         })
         .pipe(function(cursor) {
+            QUnit.equal(cursor.totalEntries, 16, "Are totalEntries correct?");
             QUnit.equal(cursor.totalPages, 1, "Are totalPages correct?");
             var orderedEntries = cursor.currentPageOrderedEntries;
             var nEntries = orderedEntries.length;
@@ -361,6 +362,7 @@ SmartStoreTestSuite.prototype.testQuerySoup = function()  {
             return self.querySoup(self.defaultSoupName, querySpec);
         })
         .pipe(function(cursor) {
+            QUnit.equal(cursor.totalEntries, 1, "totalEntries correct");
             QUnit.equal(cursor.totalPages, 1, "totalPages correct");
             var nEntries = cursor.currentPageOrderedEntries.length;
             QUnit.equal(nEntries, 1, "currentPageOrderedEntries correct");
@@ -388,6 +390,7 @@ SmartStoreTestSuite.prototype.testQuerySoupDescending = function()  {
             return self.querySoup(self.defaultSoupName, querySpec);
         })
         .pipe(function(cursor) {
+            QUnit.equal(cursor.totalEntries, 3, "totalEntries correct");
             QUnit.equal(cursor.totalPages, 1, "totalPages correct");
             QUnit.equal(cursor.currentPageOrderedEntries.length, 3, "check currentPageOrderedEntries");
             QUnit.equal(cursor.currentPageOrderedEntries[0].Name,"Todd Stellanova","verify first entry");
@@ -498,6 +501,7 @@ SmartStoreTestSuite.prototype.testManipulateCursor = function()  {
       var expectedIdOfLastRowOnPage = "003" + self.padNumber(expectedPage*PAGE_SIZE+expectedPageSize-1, NUM_ENTRIES, "0");
 
       QUnit.equal(cursor.currentPageIndex, expectedPage, "currentPageIndex correct");
+      QUnit.equal(cursor.totalEntries, NUM_ENTRIES, "totalEntries correct");
       QUnit.equal(cursor.totalPages, NUM_PAGES, "totalPages correct");
       QUnit.equal(cursor.currentPageOrderedEntries.length, expectedPageSize, "pageSize correct");      
       QUnit.equal(cursor.currentPageOrderedEntries[0].Id, expectedIdOfFirstRowOnPage , "pageSize correct");      
