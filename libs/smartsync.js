@@ -803,8 +803,9 @@
         }
 
         // Cache only
+        // Set fieldlist to null for read operation on CACHE_ONLY mode. That way we won't hit a cache miss situation.
         if (cache != null && cacheMode == Force.CACHE_MODE.CACHE_ONLY) {
-            return cacheSync(method, id, attributes, null, true);
+            return cacheSync(method, id, attributes, (method == 'read') ? null : fieldlist, true);
         }
 
         // Chaining promises that return either a promise or created/upated/reda model attributes or null in the case of delete
