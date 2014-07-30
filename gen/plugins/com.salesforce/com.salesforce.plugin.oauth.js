@@ -118,6 +118,61 @@ var forcetkRefresh = function (forcetkClient, success, fail) {
 };
 
 /**
+ * Register push notification handler
+ */
+var registerPushNotificationHandler = function(notificationHandler, success, fail) {
+    if (typeof window.plugins.pushNotification === "undefined") {
+        console.err("PushPlugin not found");
+        fail("PushPlugin not found");
+        return;
+    }
+
+    var notificationHandlerName = "onNotification" + (Math.round(Math.random()*100000));
+    window[notificationHandlerName] = function(message) {
+        console.log("Received notification " + JSON.stringify(message));
+        notificationHandler(message);
+    };
+    
+    var registrationSuccess = function(result) {
+        console.log("Registration successful " + JSON.stringify(result));
+    };
+
+    var registrationFail = function(err) {
+        console.log("Registration failed " + JSON.stringify(err));
+        fail(err);
+    };
+
+    // Android
+    if (device.platform == 'android' || device.platform == 'Android' || device.platform == "amazon-fireos")
+    {
+        cordova.require("com.salesforce.plugin.sdkinfo").getInfo(function(info) {
+            var bootconfig = info.bootconfig;
+            window.plugins.pushNotification.register(
+                registrationSuccess,
+                registrationFail,
+                {
+                    "senderID": bootconfig.androidPushNotificationClientId,
+                    "ecb":notificationHandlerName
+                });
+        });
+    } 
+
+    // iOS
+    else 
+    {
+        window.plugins.pushNotification.register(
+            registrationSuccess,
+            registrationFail,
+            {
+                "badge":"true",
+                "sound":"true",
+                "alert":"true",
+                "ecb":notificationHandlerName
+            });
+    }
+};
+
+/**
  * Part of the module that is public
  */
 module.exports = {
@@ -125,5 +180,6 @@ module.exports = {
     authenticate: authenticate,
     logout: logout,
     getAppHomeUrl: getAppHomeUrl,
-    forcetkRefresh: forcetkRefresh
+    forcetkRefresh: forcetkRefresh,
+    registerPushNotificationHandler: registerPushNotificationHandler
 };
