@@ -812,7 +812,7 @@ cordova.define("com.salesforce.util.push", function(require, exports, module) {
         if (device.platform == 'android' || device.platform == 'Android' || device.platform == "amazon-fireos")
         {
             cordova.require("com.salesforce.plugin.sdkinfo").getInfo(function(info) {
-                var bootconfig = info.bootconfig;
+                var bootconfig = info.bootConfig;
                 window.plugins.pushNotification.register(
                     registrationSuccess,
                     registrationFail,
