@@ -335,61 +335,6 @@ cordova.define("com.salesforce.plugin.oauth", function (require, exports, module
     };
 
     /**
-     * Register push notification handler
-     */
-    var registerPushNotificationHandler = function(notificationHandler, fail) {
-        if (typeof window.plugins.pushNotification === "undefined") {
-            console.err("PushPlugin not found");
-            fail("PushPlugin not found");
-            return;
-        }
-
-        var notificationHandlerName = "onNotification" + (Math.round(Math.random()*100000));
-        window[notificationHandlerName] = function(message) {
-            console.log("Received notification " + JSON.stringify(message));
-            notificationHandler(message);
-        };
-        
-        var registrationSuccess = function(result) {
-            console.log("Registration successful " + JSON.stringify(result));
-        };
-
-        var registrationFail = function(err) {
-            console.log("Registration failed " + JSON.stringify(err));
-            fail(err);
-        };
-
-        // Android
-        if (device.platform == 'android' || device.platform == 'Android' || device.platform == "amazon-fireos")
-        {
-            cordova.require("com.salesforce.plugin.sdkinfo").getInfo(function(info) {
-                var bootconfig = info.bootconfig;
-                window.plugins.pushNotification.register(
-                    registrationSuccess,
-                    registrationFail,
-                    {
-                        "senderID": bootconfig.androidPushNotificationClientId,
-                        "ecb":notificationHandlerName
-                    });
-            });
-        } 
-
-        // iOS
-        else 
-        {
-            window.plugins.pushNotification.register(
-                registrationSuccess,
-                registrationFail,
-                {
-                    "badge":"true",
-                    "sound":"true",
-                    "alert":"true",
-                    "ecb":notificationHandlerName
-                });
-        }
-    };
-
-    /**
      * Part of the module that is public
      */
     module.exports = {
@@ -397,8 +342,7 @@ cordova.define("com.salesforce.plugin.oauth", function (require, exports, module
         authenticate: authenticate,
         logout: logout,
         getAppHomeUrl: getAppHomeUrl,
-        forcetkRefresh: forcetkRefresh,
-        registerPushNotificationHandler: registerPushNotificationHandler
+        forcetkRefresh: forcetkRefresh
     };
 });
 
@@ -834,4 +778,72 @@ navigator.smartstore = cordova.require("com.salesforce.plugin.smartstore");
 var SoupIndexSpec = navigator.smartstore.SoupIndexSpec;
 var QuerySpec = navigator.smartstore.QuerySpec;
 var StoreCursor = navigator.smartstore.StoreCursor;
+
+cordova.define("com.salesforce.util.push", function(require, exports, module) {
+
+    /**
+     * Register push notification handler
+     */
+    var registerPushNotificationHandler = function(notificationHandler, fail) {
+        if (typeof window.plugins.pushNotification === "undefined") {
+            console.err("PushPlugin not found");
+            fail("PushPlugin not found");
+            return;
+        }
+
+        var notificationHandlerName = "onNotification" + (Math.round(Math.random()*100000));
+        window[notificationHandlerName] = function(message) {
+            console.log("Received notification " + JSON.stringify(message));
+            if (message.event == "message") {
+                notificationHandler(message);
+            }
+        };
+        
+        var registrationSuccess = function(result) {
+            console.log("Registration successful " + JSON.stringify(result));
+        };
+
+        var registrationFail = function(err) {
+            console.log("Registration failed " + JSON.stringify(err));
+            fail(err);
+        };
+
+        // Android
+        if (device.platform == 'android' || device.platform == 'Android' || device.platform == "amazon-fireos")
+        {
+            cordova.require("com.salesforce.plugin.sdkinfo").getInfo(function(info) {
+                var bootconfig = info.bootconfig;
+                window.plugins.pushNotification.register(
+                    registrationSuccess,
+                    registrationFail,
+                    {
+                        "senderID": bootconfig.androidPushNotificationClientId,
+                        "ecb":notificationHandlerName
+                    });
+            });
+        } 
+
+        // iOS
+        else 
+        {
+            window.plugins.pushNotification.register(
+                registrationSuccess,
+                registrationFail,
+                {
+                    "badge":"true",
+                    "sound":"true",
+                    "alert":"true",
+                    "ecb":notificationHandlerName
+                });
+        }
+    };
+
+    /**
+     * Part of the module that is public
+     */
+    module.exports = {
+        registerPushNotificationHandler: registerPushNotificationHandler
+    };
+});
+
 
