@@ -37,10 +37,12 @@ var registerPushNotificationHandler = function(notificationHandler, fail) {
         return;
     }
 
+    var isAndroid  = device.platform == 'android' || device.platform == 'Android' || device.platform == "amazon-fireos";
+
     var notificationHandlerName = "onNotification" + (Math.round(Math.random()*100000));
     window[notificationHandlerName] = function(message) {
         console.log("Received notification " + JSON.stringify(message));
-        if (message.event == "message") {
+        if (message.event == "message" || !isAndroid) {
             notificationHandler(message);
         }
     };
@@ -50,13 +52,14 @@ var registerPushNotificationHandler = function(notificationHandler, fail) {
     };
 
     var registrationFail = function(err) {
-        console.log("Registration failed " + JSON.stringify(err));
+        console.err("Registration failed " + JSON.stringify(err));
         fail(err);
     };
 
     // Android
-    if (device.platform == 'android' || device.platform == 'Android' || device.platform == "amazon-fireos")
+    if (isAndroid)
     {
+        console.log("Registering for Android");
         cordova.require("com.salesforce.plugin.sdkinfo").getInfo(function(info) {
             var bootconfig = info.bootConfig;
             window.plugins.pushNotification.register(
@@ -72,6 +75,7 @@ var registerPushNotificationHandler = function(notificationHandler, fail) {
     // iOS
     else 
     {
+        console.log("Registering for ios");
         window.plugins.pushNotification.register(
             registrationSuccess,
             registrationFail,
