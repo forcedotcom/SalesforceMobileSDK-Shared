@@ -76,7 +76,14 @@ if (forcetk.Client === undefined) {
         this.clientId = clientId;
         this.loginUrl = loginUrl || 'https://login.salesforce.com/';
         if (typeof proxyUrl === 'undefined' || proxyUrl === null) {
-            this.proxyUrl = null;
+            if (location.protocol === 'file:') {
+                // In PhoneGap
+                this.proxyUrl = null;
+            } else {
+                // In Visualforce
+                this.proxyUrl = location.protocol + "//" + location.hostname
+                    + "/services/proxy";
+            }
             this.authzHeader = "Authorization";
         } else {
             // On an external proxy service
