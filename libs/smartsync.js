@@ -71,12 +71,12 @@
 
     // Init function
     // * creds: credentials returned by authenticate call
-    // * apiVersion: apiVersion to use, when null, v28.0 (Summer '13) is used
+    // * apiVersion: apiVersion to use, when null, v31.0 (Summer '14) is used
     // * innerForcetkClient: [Optional] A fully initialized forcetkClient to be re-used internally in the SmartSync library
     // * reauth: auth module for the refresh flow
     Force.init = function(creds, apiVersion, innerForcetkClient, reauth) {
         if (!apiVersion || apiVersion == null) {
-            apiVersion = "v28.0";
+            apiVersion = "v31.0";
         }
 
         if(!innerForcetkClient || innerForcetkClient == null) {

@@ -36,7 +36,7 @@ if (typeof ForcetkTestSuite === 'undefined') {
  */
 var ForcetkTestSuite = function () {
     SFTestSuite.call(this, "forcetk");
-    this.apiVersion = "v29.0";
+    this.apiVersion = "v31.0";
 };
 
 // We are sub-classing SFTestSuite

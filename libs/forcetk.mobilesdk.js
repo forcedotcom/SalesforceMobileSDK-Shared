@@ -251,30 +251,20 @@ if (forcetk.Client === undefined) {
      * Set a session token and the associated metadata in the client.
      * @param sessionId a salesforce.com session ID. In a Visualforce page,
      *                   use '{!$Api.sessionId}' to obtain a session ID.
-     * @param [apiVersion="28.0"] Force.com API version
+     * @param [apiVersion="31.0"] Force.com API version
      * @param [instanceUrl] Omit this if running on Visualforce; otherwise
      *                   use the value from the OAuth token.
      */
     forcetk.Client.prototype.setSessionToken = function(sessionId, apiVersion, instanceUrl) {
         this.sessionId = sessionId;
-        this.apiVersion = (typeof apiVersion === 'undefined' || apiVersion === null)
-        ? 'v28.0': apiVersion;
-        if (typeof instanceUrl === 'undefined' || instanceUrl == null) {
-            // location.hostname can be of the form 'abc.na1.visual.force.com',
-            // 'na1.salesforce.com' or 'abc.my.salesforce.com' (custom domains).
-            // Split on '.', and take the [1] or [0] element as appropriate
-            var elements = location.hostname.split(".");
-            var instance = null;
-            if(elements.length == 4 && elements[1] === 'my') {
-                instance = elements[0] + '.' + elements[1];
-            } else if(elements.length == 3){
-                instance = elements[0];
-            } else {
-                instance = elements[1];
-            }
-            this.instanceUrl = "https://" + instance + ".salesforce.com";
-        } else {
+        this.apiVersion = (typeof apiVersion === 'undefined' || apiVersion === null) ? 'v31.0': apiVersion;
+        // In PhoneGap OR outside
+        if (location.protocol === 'file:' || this.proxyUrl != null) {
             this.instanceUrl = instanceUrl;
+        } 
+        // In Visualforce
+        else {
+            this.instanceUrl = location.protocol + "//" + location.hostname;
         }
     }
 
