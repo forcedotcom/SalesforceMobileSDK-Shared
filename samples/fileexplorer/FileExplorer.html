@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Files</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
+<link rel="stylesheet" href="css/styles.css"/>
+<link rel="stylesheet" href="css/ratchet.css"/>
+</head>
+
+<body>
+
+<div id="content"></div>
+
+<!-- Scripts -->
+
+<!-- Local Testing 
+<script src="js/jquery.min.js"></script>
+<script src="js/underscore-min.js"></script>
+<script src="js/backbone-min.js"></script>
+<script src="js/forcetk.mobilesdk.js"></script>
+<script src="js/MockCordova.js"></script>
+<script src="js/cordova.force.js"></script>
+<script src="js/smartsync.js"></script>
+<script src="js/fastclick.js"></script>
+<script src="js/stackrouter.js"></script>
+<script src="js/auth_local.js"></script>
+<!-- End Local Testing -->
+
+<!-- Container -->
+<script src="js/jquery.min.js"></script>
+<script src="js/underscore-min.js"></script>
+<script src="js/backbone-min.js"></script>
+<script src="cordova.js"></script>
+<script src="js/forcetk.mobilesdk.js"></script>
+<script src="js/smartsync.js"></script>
+<script src="js/fastclick.js"></script>
+<script src="js/stackrouter.js"></script>
+<script src="js/auth.js"></script>
+<!-- End Container -->
+
+
+<!-- --------------------------------------- List page template ------------------------------------------------- -->
+<script id="list-page" type="text/template">
+  <header class="bar-title">
+    <h1 class="title">Files</h1>
+  </header>
+
+  <div class="bar-standard bar-header-secondary">
+      <a class="button ownedFiles">Owned</a>
+      <a class="button groupsFiles">In Groups</a>
+      <a class="button sharedFiles">Shared with Me</a>
+  </div>
+
+  <div class="content">
+    <ul class="list"></ul>
+  </div>
+</script>
+
+<!-- --------------------------------------- File list item template ---------------------------------------------- -->
+<script id="file-list-item" type="text/template">
+
+  <a href="#files/<%= id %>" class="pad-right">
+    <img src="<%= thumbnailUrl %>" class="small-img" />
+    <div class="details-short">
+      <b><%= title %></b><br>
+      <%= owner.name %>
+    </div>
+  </a>
+</script>
+
+<!-- --------------------------------------- File page template -------------------------------------------------- -->
+<script id="file-page" type="text/template">
+  <header class="bar-title">
+    <a href="#" class="button-prev">Back</a>
+    <h1 class="title">File</h1>
+  </header>
+
+  <footer class="bar-footer">
+    <span id="offlineStatus"></span>
+  </footer>
+
+  <div class="content">
+    <div class="content-padded">
+      <img src="<%= thumbnailUrl %>" class="large-img" /> 
+      <div class="details">
+        <b><%= title %></b><br/>
+        <%= owner.name %><br/>
+        <%= contentSize %> bytes<br/>
+        <%= fileType %><br/>
+      </div>
+    </div>
+  </div>
+</script>
+
+<script>
+// -------------------------------------------------- The Models ---------------------------------------------------- //
+// The File Model
+app.models.File = Force.RemoteObject.extend({
+    syncRemoteObjectWithServer: function(method, id) {
+        if (method != "read") throw "Method not supported " + method;
+        return Force.forcetkClient.fileDetails(id, null);
+    },
+
+    // adding computed fields
+    toJSON: function() {
+        var that = this;
+        return _.extend(Backbone.Model.prototype.toJSON.call(this), {thumbnailUrl: Force.forcetkClient.impl.instanceUrl + that.get('renditionUrl')});
+    }
+});
+
+// The FileCollection Model
+app.models.FileCollection = Force.RemoteObjectCollection.extend({
+    model: app.models.File,
+
+    setCriteria: function(key) {
+        this.config = {type:key};
+    },
+
+    fetchRemoteObjectsFromServer: function(config) {
+        var fetchPromise;
+        switch(config.type) {
+            case "ownedFilesList": fetchPromise = Force.forcetkClient.ownedFilesList("me", 0); break;
+            case "filesInUsersGroups": fetchPromise = Force.forcetkClient.filesInUsersGroups("me", 0); break;
+            case "filesSharedWithUser": fetchPromise = Force.forcetkClient.filesSharedWithUser("me", 0); break;
+        };
+
+        return fetchPromise
+            .then(function(resp) { 
+                var nextPageUrl = resp.nextPageUrl;
+                return {
+                    totalSize: resp.files.length,
+                    records: resp.files,
+                    hasMore: function() { return nextPageUrl != null; },
+                    getMore: function() {
+                        var that = this;
+                        if (!nextRecordsUrl) return null;
+                        return forcetkClient.queryMore(nextRecordsUrl).then(function(resp) {
+                            nextPageUrl = resp.nextPageUrl;
+                            that.records.pushObjects(resp.files);
+                            return resp.files;
+                        });
+                    },
+                    closeCursor: function() {
+                        return $.when(function() { nextPageUrl = null; });
+                    }
+                };
+            });
+    }
+});
+
+
+// -------------------------------------------------- The Views ---------------------------------------------------- //
+
+app.views.SearchPage = Backbone.View.extend({
+
+    template: _.template($("#list-page").html()),
+
+    events: {
+        "click .ownedFiles": "fetchOwnedFiles",
+        "click .groupsFiles": "fetchGroupsFiles",
+        "click .sharedFiles": "fetchSharedFiles"
+    },
+
+    initialize: function() {
+        this.listView = new app.views.FileListView({model: this.model});
+    },
+
+    render: function(eventName) {
+        $(this.el).html(this.template());
+        this.listView.setElement($("ul", this.el)).render();
+        return this;
+    },
+
+    fetchOwnedFiles: function(event) {
+        this.model.setCriteria("ownedFilesList");
+        this.model.fetch();
+    },
+
+    fetchGroupsFiles: function(event) {
+        this.model.setCriteria("filesInUsersGroups");
+        this.model.fetch();
+    },
+
+    fetchSharedFiles: function(event) {
+        this.model.setCriteria("filesSharedWithUser");
+        this.model.fetch();
+    }
+
+});
+
+app.views.FileListView = Backbone.View.extend({
+
+    listItemViews: [],
+
+    initialize: function() {
+        this.model.bind("reset", this.render, this);
+    },
+
+    render: function(eventName) {
+        _.each(this.listItemViews, function(itemView) { itemView.close(); });
+        this.listItemViews = _.map(this.model.models, function(model) { return new app.views.FileListItemView({model: model}); });
+        $(this.el).append(_.map(this.listItemViews, function(itemView) { return itemView.render().el;} ));
+        return this;
+    }
+
+});
+
+app.views.FileListItemView = Backbone.View.extend({
+
+    tagName: "li",
+    template: _.template($("#file-list-item").html()),
+
+    render: function(eventName) {
+        $(this.el).html(this.template(this.model.toJSON()));
+        return this;
+    },
+
+    close: function() {
+        this.remove();
+        this.off();
+    }
+});
+
+app.views.FilePage = Backbone.View.extend({
+
+    template: _.template($("#file-page").html()),
+
+    render: function(eventName) {
+        $(this.el).html(this.template(this.model.toJSON()));
+        return this;
+    }
+
+});
+
+
+// ----------------------------------------------- The Application Router ------------------------------------------ //
+
+app.Router = Backbone.StackRouter.extend({
+
+    routes: {
+        "": "list",
+        "list": "list",
+        "files/:id": "viewFile"
+    },
+                                         
+    initialize: function() {
+        Backbone.Router.prototype.initialize.call(this);
+
+        // Collection behind search screen
+        app.searchResults = new app.models.FileCollection();
+
+        // We keep a single instance of SearchPage and FilePage
+        app.searchPage = new app.views.SearchPage({model: app.searchResults});
+        app.filePage = new app.views.FilePage();
+    },
+
+    list: function() {
+        app.searchResults.fetch();
+        // Show page right away - list will redraw when data comes in
+        this.slidePage(app.searchPage);
+    },
+
+    viewFile: function(id) {
+        var that = this;
+        var file = new app.models.File();
+        file.id = id;
+        file.fetch({
+            success: function() {
+                app.filePage.model = file;
+                that.slidePage(app.filePage);
+            }
+        });
+    }
+});
+</script>
+</body>
+</html>
