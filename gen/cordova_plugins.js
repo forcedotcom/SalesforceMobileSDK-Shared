@@ -34,6 +34,10 @@ module.exports = [
     {
         "file": "plugins/com.salesforce/com.salesforce.util.logger.js",
         "id": "com.salesforce.util.logger"
+    },
+    {
+        "file": "plugins/com.salesforce/com.salesforce.util.push.js",
+        "id": "com.salesforce.util.push"
     }
 ];
 module.exports.metadata = 
