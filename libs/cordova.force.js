@@ -785,7 +785,7 @@ cordova.define("com.salesforce.util.push", function(require, exports, module) {
      * Register push notification handler
      */
     var registerPushNotificationHandler = function(notificationHandler, fail) {
-        if (typeof window.plugins.pushNotification === "undefined") {
+        if (window.plugins && window.plugins.pushNotification) {
             console.err("PushPlugin not found");
             fail("PushPlugin not found");
             return;

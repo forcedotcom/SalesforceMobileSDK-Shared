@@ -31,7 +31,7 @@ var SALESFORCE_MOBILE_SDK_VERSION = "2.3.0.unstable";
  * Register push notification handler
  */
 var registerPushNotificationHandler = function(notificationHandler, fail) {
-    if (typeof window.plugins.pushNotification === "undefined") {
+    if (window.plugins && window.plugins.pushNotification) {
         console.err("PushPlugin not found");
         fail("PushPlugin not found");
         return;
