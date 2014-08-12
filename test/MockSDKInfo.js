@@ -47,7 +47,19 @@ var MockSDKInfo = (function(window) {
             cordova.interceptExec(SDKINFO_SERVICE, "getInfo", function (successCB, errorCB, args) {
                 successCB(new SDKInfo("2.3.0.unstable", 
                                       ["com.salesforce.oauth", "com.salesforce.sdkinfo", "com.salesforce.sfaccountmanager", "com.salesforce.testrunner", "com.salesforce.smartstore"], 
-                                      "ForcePluginsTest", "1.0"));
+                                      "ForcePluginsTest", "1.0",
+                                      {
+                                          "remoteAccessConsumerKey": "3MVG92.uWdyphVj4bnolD7yuIpCQsNgddWtqRND3faxrv9uKnbj47H4RkwheHA2lKY4cBusvDVp0M6gdGE8hp",
+                                          "oauthRedirectURI": "sfdc:///axm/detect/oauth/done",
+                                          "oauthScopes": ["api"],
+                                          "isLocal": true,
+                                          "startPage": "index.html",
+                                          "errorPage": "error.html",
+                                          "shouldAuthenticate": true,
+                                          "attemptOfflineLoad": false,
+                                          "androidPushNotificationClientId": ""
+                                      }
+                                     ));
             });
         }
 
