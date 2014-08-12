@@ -34,11 +34,12 @@ var exec = require("com.salesforce.util.exec").exec;
 /**
   * SDKInfo data structure
   */
-var SDKInfo = function(sdkVersion, forcePluginsAvailable, appName, appVersion) {
+var SDKInfo = function(sdkVersion, forcePluginsAvailable, appName, appVersion, bootconfig) {
     this.sdkVersion = sdkVersion;
     this.forcePluginsAvailable = forcePluginsAvailable;
     this.appName = appName;
     this.appVersion = appVersion;
+    this.bootConfig = bootconfig;
 };
 
 /**
