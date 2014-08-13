@@ -77,10 +77,8 @@ SDKInfoTestSuite.prototype.testGetInfo = function()  {
             QUnit.ok(!sdkInfo.bootConfig.attemptOfflineLoad, "wrong bootConfig.attemptOfflineLoad");
             QUnit.equal(sdkInfo.bootConfig.startPage, "index.html", "wrong bootConfig.startPage");
             QUnit.equal(sdkInfo.bootConfig.errorPage, "error.html", "wrong bootConfig.errorPage");
-            QUnit.equal(sdkInfo.bootConfig.oauthRedirectURI, "sfdc:///axm/detect/oauth/done", "wrong bootConfig.oauthRedirectURI");
-            QUnit.equal(sdkInfo.bootConfig.oauthScopes.length, 1, "wrong bootConfig.oauthScopes.length");
-            QUnit.equal(sdkInfo.bootConfig.oauthScopes[0], "api", "wrong bootConfig.oauthScopes");
-            QUnit.equal(sdkInfo.bootConfig.androidPushNotificationClientId, "", "wrong bootConfig.androidPushNotificationClientId");
+            QUnit.ok(typeof sdkInfo.bootConfig.oauthRedirectURI === "string" && sdkInfo.bootConfig.oauthRedirectURI.length > 0, "wrong bootConfig.oauthRedirectURI"); // on iOS boot config coming from test_credentials.json
+            QUnit.ok(typeof sdkInfo.bootConfig.oauthScopes === "object" && sdkInfo.bootConfig.oauthScopes.length > 0, "wrong bootConfig.oauthScopes.length");    // on iOS boot config coming from test_credentials.json
             self.finalizeTest();
         });
 }; 
