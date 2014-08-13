@@ -17,4 +17,6 @@ else
     mkdir -p gen/plugins_with_define/com.salesforce
     node tools/split.js libs/cordova.force.js gen/plugins/com.salesforce/ false
     node tools/split.js libs/cordova.force.js gen/plugins_with_define/com.salesforce/ true
+    echo "Cleaning up"
+    rm -rf tools/node_modules
 fi
