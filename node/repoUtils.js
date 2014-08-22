@@ -29,6 +29,7 @@
 
 var fs = require('fs');
 var path = require('path');
+var exec = require('child_process').exec;
 
 var getSymLinkFiles = function(dir) {
 	var linkFileList = [];
@@ -46,4 +47,64 @@ var getSymLinkFiles = function(dir) {
 	return linkFileList;
 };
 
+var resolveSymLinks = function(symLinkFileEntries, callback) {
+	if (symLinkFileEntries.length === 0) {
+		return callback(true, 'Successfully copied symlink files.');
+	}
+
+	// Remove the destination link, then copy the source file or directory to the destination file.
+	var filesObj = symLinkFileEntries.shift();
+	try {
+		fs.unlinkSync(filesObj.destFile);
+	} catch (err) {
+		return callback(false, 'FATAL: Could not remove existing symlink file \'' + filesObj.destFile + '\'.');
+	}
+
+	console.log('Copying \'' + filesObj.sourceFile + '\' to \'' + filesObj.destFile + '\'.');
+	exec('cp -R "' + filesObj.sourceFile + '" "' + filesObj.destFile + '"', function (error, stdout, stderr) {
+		if (error) {
+			return callback(false, 'FATAL: Could not copy \'' + filesObj.sourceFile + '\' to \'' + filesObj.destFile + '\'.');
+		} else {
+			// Next!
+			resolveSymLinks(symLinkFileEntries, callback);
+		}
+	});
+};
+
+var revertSymLinks = function(symLinkEntries, repoRootPath, callback) {
+	if (symLinkEntries.length === 0) {  // We're done.
+		return callback();
+	}
+
+	process.chdir(repoRootPath);
+	var destFilePath = symLinkEntries.shift().destFile;
+	destFilePath = path.relative(repoRootPath, destFilePath);
+	var destFileDir = path.dirname(destFilePath);
+	var destFileName = path.basename(destFilePath);
+	exec('git checkout -- "' + destFileName + '"', { 'cwd': destFileDir }, function (error, stdout, stderr) {
+		if (error) {
+			console.log('WARNING: Could not revert file \'' + destFilePath + '\' in git: ' + error);
+		}
+		revertSymLinks(symLinkEntries, repoRootPath, callback);
+	});
+};
+
+var writeSymLinkOutput = function(symLinkEntries, outputPath) {
+	fs.writeFileSync(outputPath, JSON.stringify(symLinkEntries), { 'encoding': 'utf8' });
+};
+
+var readSymLinkInput = function(inputPath) {
+	if (!fs.existsSync(inputPath)) {
+		throw new Error('Input file at ' + inputPath + ' does not exist.');
+	}
+
+	var symLinkFilesString = fs.readFileSync(inputPath, { 'encoding': 'utf8' });
+	var symLinkFiles = JSON.parse(symLinkFilesString);
+	return symLinkFiles;
+};
+
 module.exports.getSymLinkFiles = getSymLinkFiles;
+module.exports.resolveSymLinks = resolveSymLinks;
+module.exports.revertSymLinks = revertSymLinks;
+module.exports.writeSymLinkOutput = writeSymLinkOutput;
+module.exports.readSymLinkInput = readSymLinkInput;
