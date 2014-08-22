@@ -1373,6 +1373,10 @@
         // Where the config is
         // config: {type:"cache", cacheQuery:<cache query>[, closeCursorImmediate:<true|false(default)>]} or something else understood by the fetchRemoteObjectFromServer method of your subclass
         Force.RemoteObjectCollection = Backbone.Collection.extend({
+            // To handle out of order fetching
+            lastRequestSent: 0,
+            lastResponseReceived: 0,
+
             // To be defined in concrete subclass
             model: null,
 
@@ -1434,9 +1438,27 @@
                     options.success([]);
                     return;
                 }
+                
+                // Out of order handling
+                this.lastRequestSent++;
+                var currentRequest = this.lastRequestSent;
+                var ignoreRequest = false;
+                // console.log("FETCH Sending " + currentRequest);
 
                 var fetchFromServer = function() {
-                    return that.fetchRemoteObjectsFromServer(config);
+                    return that.fetchRemoteObjectsFromServer(config)
+                        .then(function(resp) {
+                            // console.log("FETCH Receiving " + currentRequest);
+                            // console.log("FETCH Newest " + (currentRequest > that.lastResponseReceived));
+                            if (currentRequest > that.lastResponseReceived) {
+                                that.lastResponseReceived = currentRequest;
+                                return resp;
+                            }
+                            else {
+                                ignoreRequest = true;
+                                return $.Deferred().reject();
+                            }
+                    });
                 };
 
                 var fetchFromCache = function() {
@@ -1453,7 +1475,14 @@
                         return resp.records;
                     })
                     .done(options.success)
-                    .fail(options.error);
+                    .fail(function() {
+                        if (ignoreRequest) {
+                            // console.log("FETCH ignored " + currentRequest);
+                        }
+                        else {
+                            options.error.apply(null, arguments);
+                        }
+                    });
             },
 
             // Overriding Backbone parse method (responsible for parsing server response)
