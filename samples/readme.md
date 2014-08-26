@@ -3,6 +3,7 @@
 cordova create $appname com.salesforce.$template $appname
 cd $appname
 cordova plugin add org.apache.cordova.contacts                                          (contactexplorer only)
+cordova plugin add org.apache.cordova.statusbar                                         (contactexplorer only)
 cordova plugin add https://github.com/wmathurin/SalesforceMobileSDK-CordovaPlugin
 cordova platform add android                                                            (for android)
 node plugins/com.salesforce/postinstall-android.js 19 true                              (for android)
