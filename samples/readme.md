@@ -20,16 +20,8 @@ Where:
 - go to menu file -> import ..., choose "Existing Android  Code into Workspace" (in Android folder)
 - choose $appname as the root directory
 - pick the following projects: platforms/android, platforms/android/CordovaLib, plugins/com.salesforce/android/hybrid/SmartStore and plugins/com.salesforce/android/native/SalesforceSDK
-- for platforms/android, click on the project name, and change it to $appname
 - once everything is built, right-click on the $appname project and choose run as Android application
 
 ## To run the ios application:
 - start xcode and pick $appname/platforms/ios/$appname.xcodeproj
 - build and run
-
-## To run the application from the command line:
-<pre>
-cordova emulate ios                                                                    (for ios)
-cordova emulate android                                                                (for android) 
-</pre>
-
