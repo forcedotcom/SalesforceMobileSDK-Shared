@@ -26,7 +26,7 @@ cordova.define("com.salesforce.plugin.sfaccountmanager", function(require, expor
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "2.3.0.unstable";
+var SALESFORCE_MOBILE_SDK_VERSION = "2.3.0";
 var SERVICE = "com.salesforce.sfaccountmanager";
 
 var exec = require("com.salesforce.util.exec").exec;

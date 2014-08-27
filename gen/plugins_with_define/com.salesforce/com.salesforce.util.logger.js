@@ -26,7 +26,7 @@ cordova.define("com.salesforce.util.logger", function(require, exports, module) 
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "2.3.0.unstable";
+var SALESFORCE_MOBILE_SDK_VERSION = "2.3.0";
 var appStartTime = (new Date()).getTime();  // Used for debug timing measurements.
 
 /**

@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "2.3.0.unstable";
+var SALESFORCE_MOBILE_SDK_VERSION = "2.3.0";
 var exec = function(pluginVersion, successCB, errorCB, service, action, args) {
     var defaultSuccessCB = function() {
         console.log(service + ":" + action + " succeeded");
