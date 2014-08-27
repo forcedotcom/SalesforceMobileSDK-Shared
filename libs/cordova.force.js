@@ -25,12 +25,12 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "2.2.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "2.3.0";
 
 /**
  * Utilify functions for logging
  */
-cordova.define("salesforce/util/logger", function(require, exports, module) {
+cordova.define("com.salesforce.util.logger", function(require, exports, module) {
     var appStartTime = (new Date()).getTime();  // Used for debug timing measurements.
 
     /**
@@ -106,9 +106,9 @@ cordova.define("salesforce/util/logger", function(require, exports, module) {
     };
 });
 
-cordova.define("salesforce/util/event", function(require, exports, module) {
+cordova.define("com.salesforce.util.event", function(require, exports, module) {
 
-    var logger = require("salesforce/util/logger");
+    var logger = require("com.salesforce.util.logger");
 
     /**
      * Enumeration of event types.
@@ -143,9 +143,9 @@ cordova.define("salesforce/util/event", function(require, exports, module) {
 /**
  * Utility functions used at startup 
  */
-cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
+cordova.define("com.salesforce.util.bootstrap", function(require, exports, module) {
 
-    var logger = require("salesforce/util/logger");
+    var logger = require("com.salesforce.util.logger");
 
     /**
      * Determine whether the device is online.
@@ -179,7 +179,7 @@ cordova.define("salesforce/util/bootstrap", function(require, exports, module) {
 /**
  * Helper function used to call the native side
  */
-cordova.define("salesforce/util/exec", function(require, exports, module) {
+cordova.define("com.salesforce.util.exec", function(require, exports, module) {
     var exec = function(pluginVersion, successCB, errorCB, service, action, args) {
         var defaultSuccessCB = function() {
             console.log(service + ":" + action + " succeeded");
@@ -202,19 +202,20 @@ cordova.define("salesforce/util/exec", function(require, exports, module) {
     };
 });
 
-cordova.define("salesforce/plugin/sdkinfo", function(require, exports, module) {
+cordova.define("com.salesforce.plugin.sdkinfo", function(require, exports, module) {
     var SERVICE = "com.salesforce.sdkinfo";
 
-    var exec = require("salesforce/util/exec").exec;
+    var exec = require("com.salesforce.util.exec").exec;
 
     /**
       * SDKInfo data structure
       */
-    var SDKInfo = function(sdkVersion, forcePluginsAvailable, appName, appVersion) {
+    var SDKInfo = function(sdkVersion, forcePluginsAvailable, appName, appVersion, bootconfig) {
         this.sdkVersion = sdkVersion;
         this.forcePluginsAvailable = forcePluginsAvailable;
         this.appName = appName;
         this.appVersion = appVersion;
+        this.bootConfig = bootconfig;
     };
 
     /**
@@ -238,14 +239,14 @@ cordova.define("salesforce/plugin/sdkinfo", function(require, exports, module) {
 
 // For backward compatibility
 var SFHybridApp = {
-    logToConsole: cordova.require("salesforce/util/logger").logToConsole,
-    logError: cordova.require("salesforce/util/logger").logError
+    logToConsole: cordova.require("com.salesforce.util.logger").logToConsole,
+    logError: cordova.require("com.salesforce.util.logger").logError
 };
 
-cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
+cordova.define("com.salesforce.plugin.oauth", function (require, exports, module) {
     var SERVICE = "com.salesforce.oauth";
 
-    var exec = require("salesforce/util/exec").exec;
+    var exec = require("com.salesforce.util.exec").exec;
 
     /**
      * Whether or not logout has already been initiated.  Can only be initiated once
@@ -253,22 +254,22 @@ cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
      */
     var logoutInitiated = false;
  
-	/**
-	 * Obtain authentication credentials, calling 'authenticate' only if necessary.
-	 * Most index.html authors can simply use this method to obtain auth credentials
-	 * after onDeviceReady.
+    /**
+     * Obtain authentication credentials, calling 'authenticate' only if necessary.
+     * Most index.html authors can simply use this method to obtain auth credentials
+     * after onDeviceReady.
      *   success - The success callback function to use.
      *   fail    - The failure/error callback function to use.
-	 * cordova returns a dictionary with:
-	 *     accessToken
-	 *     refreshToken
+     * cordova returns a dictionary with:
+     *     accessToken
+     *     refreshToken
      *  clientId
-	 *     userId
-	 *     orgId
+     *     userId
+     *     orgId
      *  loginUrl
-	 *     instanceUrl
-	 *     userAgent
-	 */
+     *     instanceUrl
+     *     userAgent
+     */
     var getAuthCredentials = function (success, fail) {
         exec(SALESFORCE_MOBILE_SDK_VERSION, success, fail, SERVICE, "getAuthCredentials", []);
     };
@@ -347,12 +348,12 @@ cordova.define("salesforce/plugin/oauth", function (require, exports, module) {
 });
 
 // For backward compatibility
-var SalesforceOAuthPlugin = cordova.require("salesforce/plugin/oauth");
+var SalesforceOAuthPlugin = cordova.require("com.salesforce.plugin.oauth");
 
-cordova.define("salesforce/plugin/sfaccountmanager", function (require, exports, module) {
+cordova.define("com.salesforce.plugin.sfaccountmanager", function (require, exports, module) {
     var SERVICE = "com.salesforce.sfaccountmanager";
 
-    var exec = require("salesforce/util/exec").exec;
+    var exec = require("com.salesforce.util.exec").exec;
 
     /**
      * UserAccount data object, for account data operations.
@@ -375,21 +376,21 @@ cordova.define("salesforce/plugin/sfaccountmanager", function (require, exports,
      */
     var logoutInitiated = false;
  
-	/**
-	 * Obtains the list of user accounts already logged in.
+    /**
+     * Obtains the list of user accounts already logged in.
      *   success - The success callback function to use.
      *   fail    - The failure/error callback function to use.
-	 * cordova returns an array, each entry contains a dictionary with:
-	 *     authToken
-	 *     refreshToken
-     * 	   loginServer
-	 *     idUrl
-	 *     instanceServer
+     * cordova returns an array, each entry contains a dictionary with:
+     *     authToken
+     *     refreshToken
+     *     loginServer
+     *     idUrl
+     *     instanceServer
      *     orgId
-	 *     userId
-	 *     username
-	 *     clientId
-	 */
+     *     userId
+     *     username
+     *     clientId
+     */
     var getUsers = function (success, fail) {
         exec(SALESFORCE_MOBILE_SDK_VERSION, success, fail, SERVICE, "getUsers", []);
     };
@@ -399,15 +400,15 @@ cordova.define("salesforce/plugin/sfaccountmanager", function (require, exports,
      *   success         - The success callback function to use.
      *   fail            - The failure/error callback function to use.
      * cordova returns a dictionary with:
-	 *     authToken
-	 *     refreshToken
-     * 	   loginServer
-	 *     idUrl
-	 *     instanceServer
+     *     authToken
+     *     refreshToken
+     *     loginServer
+     *     idUrl
+     *     instanceServer
      *     orgId
-	 *     userId
-	 *     username
-	 *     clientId
+     *     userId
+     *     username
+     *     clientId
      */
     var getCurrentUser = function (success, fail) {
         exec(SALESFORCE_MOBILE_SDK_VERSION, success, fail, SERVICE, "getCurrentUser", []);
@@ -446,20 +447,20 @@ cordova.define("salesforce/plugin/sfaccountmanager", function (require, exports,
      */
     module.exports = {
         UserAccount: UserAccount,
-    	getUsers: getUsers,
-    	getCurrentUser: getCurrentUser,
+        getUsers: getUsers,
+        getCurrentUser: getCurrentUser,
         logout: logout,
         switchToUser: switchToUser
     };
 });
 
 // For backward compatibility.
-var SFAccountManagerPlugin = cordova.require("salesforce/plugin/sfaccountmanager");
+var SFAccountManagerPlugin = cordova.require("com.salesforce.plugin.sfaccountmanager");
 
-cordova.define("salesforce/plugin/smartstore", function (require, exports, module) {
+cordova.define("com.salesforce.plugin.smartstore", function (require, exports, module) {
     var SERVICE = "com.salesforce.smartstore";
 
-    var exec = require("salesforce/util/exec").exec;
+    var exec = require("com.salesforce.util.exec").exec;
 
 
     /**
@@ -511,6 +512,8 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
         this.cursorId = null;
         //the maximum number of entries returned per page 
         this.pageSize = 0;
+        // the total number of results
+        this.totalEntries = 0;
         //the total number of pages of results available
         this.totalPages = 0;
         //the current page index among all the pages available
@@ -580,6 +583,11 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
     };
     
     // ====== Soup manipulation ======
+    var getDatabaseSize = function(successCB, errorCB) {
+        console.log("SmartStore.getDatabaseSize");
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE, "pgGetDatabaseSize", []);
+    };
+
     var registerSoup = function (soupName, indexSpecs, successCB, errorCB) {
         console.log("SmartStore.registerSoup: '" + soupName + "' indexSpecs: " + JSON.stringify(indexSpecs));
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
@@ -594,6 +602,43 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
              "pgRemoveSoup",
              [{"soupName": soupName}]
             );
+    };
+
+    var getSoupIndexSpecs = function(soupName, successCB, errorCB) {
+        console.log("SmartStore.getSoupIndexSpecs: " + soupName);
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgGetSoupIndexSpecs",
+             [{"soupName": soupName}]
+            );
+    };
+
+    var alterSoup = function (soupName, indexSpecs, reIndexData, successCB, errorCB) {
+        console.log("SmartStore.alterSoup: '" + soupName + "' indexSpecs: " + JSON.stringify(indexSpecs));
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgAlterSoup",
+             [{"soupName": soupName, "indexes": indexSpecs, "reIndexData": reIndexData}]
+            );
+    };
+
+    var reIndexSoup = function (soupName, paths, successCB, errorCB) {
+        console.log("SmartStore.reIndexSoup: '" + soupName + "' paths: " + JSON.stringify(paths));
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgReIndexSoup",
+             [{"soupName": soupName, "paths": paths}]
+            );
+    };
+
+    var clearSoup = function (soupName, successCB, errorCB) {
+        console.log("SmartStore.clearSoup: '" + soupName + "'");
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgClearSoup",
+             [{"soupName": soupName}]
+            );
+    };
+
+    var showInspector = function() {
+        console.log("SmartStore.showInspector");
+        exec(SALESFORCE_MOBILE_SDK_VERSION, null, null, SERVICE, "pgShowInspector", []);
     };
 
     var soupExists = function (soupName, successCB, errorCB) {
@@ -695,27 +740,33 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
      * Part of the module that is public
      */
     module.exports = {
-        getLogLevel: getLogLevel,
-        setLogLevel: setLogLevel,
+        alterSoup: alterSoup,
         buildAllQuerySpec: buildAllQuerySpec,
         buildExactQuerySpec: buildExactQuerySpec,
-        buildRangeQuerySpec: buildRangeQuerySpec,
         buildLikeQuerySpec: buildLikeQuerySpec,
+        buildRangeQuerySpec: buildRangeQuerySpec,
         buildSmartQuerySpec: buildSmartQuerySpec,
-        registerSoup: registerSoup,
-        removeSoup: removeSoup,
-        soupExists: soupExists,
+        clearSoup: clearSoup,
+        closeCursor: closeCursor,
+        getDatabaseSize: getDatabaseSize,
+        getLogLevel: getLogLevel,
+        getSoupIndexSpecs: getSoupIndexSpecs,
+        moveCursorToNextPage: moveCursorToNextPage,
+        moveCursorToPageIndex: moveCursorToPageIndex,
+        moveCursorToPreviousPage: moveCursorToPreviousPage,
         querySoup: querySoup,
-        runSmartQuery: runSmartQuery,
+        reIndexSoup: reIndexSoup,
+        registerSoup: registerSoup,
+        removeFromSoup: removeFromSoup,
+        removeSoup: removeSoup,
         retrieveSoupEntries: retrieveSoupEntries,
+        runSmartQuery: runSmartQuery,
+        setLogLevel: setLogLevel,
+        showInspector: showInspector,
+        soupExists: soupExists,
         upsertSoupEntries: upsertSoupEntries,
         upsertSoupEntriesWithExternalId: upsertSoupEntriesWithExternalId,
-        removeFromSoup: removeFromSoup,
-        moveCursorToPageIndex: moveCursorToPageIndex,
-        moveCursorToNextPage: moveCursorToNextPage,
-        moveCursorToPreviousPage: moveCursorToPreviousPage,
-        closeCursor: closeCursor,
-        
+
         // Constructors
         QuerySpec: QuerySpec,
         SoupIndexSpec: SoupIndexSpec,
@@ -724,8 +775,80 @@ cordova.define("salesforce/plugin/smartstore", function (require, exports, modul
 });
 
 // For backward compatibility
-navigator.smartstore = cordova.require("salesforce/plugin/smartstore");
+navigator.smartstore = cordova.require("com.salesforce.plugin.smartstore");
 var SoupIndexSpec = navigator.smartstore.SoupIndexSpec;
 var QuerySpec = navigator.smartstore.QuerySpec;
 var StoreCursor = navigator.smartstore.StoreCursor;
+
+cordova.define("com.salesforce.util.push", function(require, exports, module) {
+
+    /**
+     * Register push notification handler
+     */
+    var registerPushNotificationHandler = function(notificationHandler, fail) {
+        if (window.plugins && window.plugins.pushNotification) {
+            console.err("PushPlugin not found");
+            fail("PushPlugin not found");
+            return;
+        }
+
+        var isAndroid  = device.platform == 'android' || device.platform == 'Android' || device.platform == "amazon-fireos";
+
+        var notificationHandlerName = "onNotification" + (Math.round(Math.random()*100000));
+        window[notificationHandlerName] = function(message) {
+            console.log("Received notification " + JSON.stringify(message));
+            if (message.event == "message" || !isAndroid) {
+                notificationHandler(message);
+            }
+        };
+        
+        var registrationSuccess = function(result) {
+            console.log("Registration successful " + JSON.stringify(result));
+        };
+
+        var registrationFail = function(err) {
+            console.err("Registration failed " + JSON.stringify(err));
+            fail(err);
+        };
+
+        // Android
+        if (isAndroid)
+        {
+            console.log("Registering for Android");
+            cordova.require("com.salesforce.plugin.sdkinfo").getInfo(function(info) {
+                var bootconfig = info.bootConfig;
+                window.plugins.pushNotification.register(
+                    registrationSuccess,
+                    registrationFail,
+                    {
+                        "senderID": bootconfig.androidPushNotificationClientId,
+                        "ecb":notificationHandlerName
+                    });
+            });
+        } 
+
+        // iOS
+        else 
+        {
+            console.log("Registering for ios");
+            window.plugins.pushNotification.register(
+                registrationSuccess,
+                registrationFail,
+                {
+                    "badge":"true",
+                    "sound":"true",
+                    "alert":"true",
+                    "ecb":notificationHandlerName
+                });
+        }
+    };
+
+    /**
+     * Part of the module that is public
+     */
+    module.exports = {
+        registerPushNotificationHandler: registerPushNotificationHandler
+    };
+});
+
 

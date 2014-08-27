@@ -71,12 +71,12 @@
 
     // Init function
     // * creds: credentials returned by authenticate call
-    // * apiVersion: apiVersion to use, when null, v28.0 (Summer '13) is used
+    // * apiVersion: apiVersion to use, when null, v31.0 (Summer '14) is used
     // * innerForcetkClient: [Optional] A fully initialized forcetkClient to be re-used internally in the SmartSync library
     // * reauth: auth module for the refresh flow
     Force.init = function(creds, apiVersion, innerForcetkClient, reauth) {
         if (!apiVersion || apiVersion == null) {
-            apiVersion = "v28.0";
+            apiVersion = "v31.0";
         }
 
         if(!innerForcetkClient || innerForcetkClient == null) {
@@ -803,8 +803,9 @@
         }
 
         // Cache only
+        // Set fieldlist to null for read operation on CACHE_ONLY mode. That way we won't hit a cache miss situation.
         if (cache != null && cacheMode == Force.CACHE_MODE.CACHE_ONLY) {
-            return cacheSync(method, id, attributes, null, true);
+            return cacheSync(method, id, attributes, (method == 'read') ? null : fieldlist, true);
         }
 
         // Chaining promises that return either a promise or created/upated/reda model attributes or null in the case of delete
@@ -1372,6 +1373,10 @@
         // Where the config is
         // config: {type:"cache", cacheQuery:<cache query>[, closeCursorImmediate:<true|false(default)>]} or something else understood by the fetchRemoteObjectFromServer method of your subclass
         Force.RemoteObjectCollection = Backbone.Collection.extend({
+            // To handle out of order fetching
+            lastRequestSent: 0,
+            lastResponseReceived: 0,
+
             // To be defined in concrete subclass
             model: null,
 
@@ -1433,9 +1438,27 @@
                     options.success([]);
                     return;
                 }
+                
+                // Out of order handling
+                this.lastRequestSent++;
+                var currentRequest = this.lastRequestSent;
+                var ignoreRequest = false;
+                // console.log("FETCH Sending " + currentRequest);
 
                 var fetchFromServer = function() {
-                    return that.fetchRemoteObjectsFromServer(config);
+                    return that.fetchRemoteObjectsFromServer(config)
+                        .then(function(resp) {
+                            // console.log("FETCH Receiving " + currentRequest);
+                            // console.log("FETCH Newest " + (currentRequest > that.lastResponseReceived));
+                            if (currentRequest > that.lastResponseReceived) {
+                                that.lastResponseReceived = currentRequest;
+                                return resp;
+                            }
+                            else {
+                                ignoreRequest = true;
+                                return $.Deferred().reject();
+                            }
+                    });
                 };
 
                 var fetchFromCache = function() {
@@ -1452,7 +1475,14 @@
                         return resp.records;
                     })
                     .done(options.success)
-                    .fail(options.error);
+                    .fail(function() {
+                        if (ignoreRequest) {
+                            // console.log("FETCH ignored " + currentRequest);
+                        }
+                        else {
+                            options.error.apply(null, arguments);
+                        }
+                    });
             },
 
             // Overriding Backbone parse method (responsible for parsing server response)

@@ -1252,7 +1252,8 @@ SmartSyncTestSuite.prototype.testSyncSObjectRetrieve = function() {
         })
         .then(function() {
             console.log("## Trying retrieve cache-only");
-            return Force.syncSObject("read", "Account", id, null, ["Name"], cache, Force.CACHE_MODE.CACHE_ONLY);
+            /* Try fetching more fields than they are present in store cache. CACHE_ONLY mode should should return the result. */
+            return Force.syncSObject("read", "Account", id, null, ["Name", "Website"], cache, Force.CACHE_MODE.CACHE_ONLY);
         })
         .then(function(data) {
             return checkResultServerAndCaches(data, {Name:"TestAccount-local"}, id, {Id:id, Name:"TestAccount"}, {Id:id, Name:"TestAccount-local"}, cache);
@@ -1332,9 +1333,10 @@ SmartSyncTestSuite.prototype.testSyncSObjectUpdate = function() {
         })
         .then(function(data) {
             console.log("## Trying update cache-only");
-            return Force.syncSObject("update", "Account", id, {Name:"TestAccount-updated2"}, ["Name"], cache, Force.CACHE_MODE.CACHE_ONLY);
+            return Force.syncSObject("update", "Account", id, {Name:"TestAccount-updated2", Website:"www.account.com"}, ["Name"], cache, Force.CACHE_MODE.CACHE_ONLY);
         })
         .then(function(data) {
+             QUnit.equals(_.has(data, "Website"), false, "Should not contain field Website");
             return checkResultServerAndCaches(data, {Name:"TestAccount-updated2"}, id, {Id:id, Name:"TestAccount-updated"},  {Id:id, Name:"TestAccount-updated2"}, cache);
         })
         .then(function() {
@@ -2424,7 +2426,7 @@ SmartSyncTestSuite.prototype.testFetchSObjects = function() {
  * TEST Force.SObjectCollection.fetch
  */
 SmartSyncTestSuite.prototype.testSObjectCollectionFetch = function() {
-    console.log("# In SmartSyncTestSuite.testCollectionFetch");
+    console.log("# In SmartSyncTestSuite.testSObjectCollectionFetch");
     var self = this;
     var idToName = {};
     var soupName = "testFetchSObjects";
