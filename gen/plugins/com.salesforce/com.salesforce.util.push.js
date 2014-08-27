@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "2.3.0.unstable";
+var SALESFORCE_MOBILE_SDK_VERSION = "3.0.0";
 
 /**
  * Register push notification handler

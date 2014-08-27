@@ -305,7 +305,7 @@ ForcetkTestSuite.prototype.testDeleteFileShare = function()  {
 ForcetkTestSuite.prototype.tryUserAgent = function(expectedPlatform, expectedPlatformVersion, expectedModel, userAgent) {
     var forcetkClient = new forcetk.Client();
     var webAppSdkAgent = forcetkClient.computeWebAppSdkAgent(userAgent);
-    var match = /SalesforceMobileSDK\/2.3.0.unstable ([^\/]*)\/([^\ ]*) \(([^\)]*)\) ([^\/]*)\/1.0 Web (.*)/.exec(webAppSdkAgent);
+    var match = /SalesforceMobileSDK\/3.0.0 ([^\/]*)\/([^\ ]*) \(([^\)]*)\) ([^\/]*)\/1.0 Web (.*)/.exec(webAppSdkAgent);
     if (match != null && match.length == 6) {
         QUnit.equals(match[1], expectedPlatform, "Wrong platform for user agent [" + userAgent + "]");
         QUnit.equals(match[2], expectedPlatformVersion, "Wrong platformVersion for user agent [" + userAgent + "]");

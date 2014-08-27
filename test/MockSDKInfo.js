@@ -45,7 +45,7 @@ var MockSDKInfo = (function(window) {
             var self = this;
 
             cordova.interceptExec(SDKINFO_SERVICE, "getInfo", function (successCB, errorCB, args) {
-                successCB(new SDKInfo("2.3.0.unstable", 
+                successCB(new SDKInfo("3.0.0", 
                                       ["com.salesforce.oauth", "com.salesforce.sdkinfo", "com.salesforce.sfaccountmanager", "com.salesforce.testrunner", "com.salesforce.smartstore"], 
                                       "ForcePluginsTest", "1.0",
                                       {

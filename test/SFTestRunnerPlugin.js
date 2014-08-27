@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "2.3.0.unstable";
+var SALESFORCE_MOBILE_SDK_VERSION = "3.0.0";
 
 cordova.define("com.salesforce.plugin.testrunner", function(require, exports, module) {
     var SERVICE = "com.salesforce.testrunner";
