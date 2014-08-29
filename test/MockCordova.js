@@ -80,7 +80,7 @@
         var exec = function(successCB, errorCB, service, action, args) {
             var version = (args.length > 0 && typeof args[0] == "string" && args[0].indexOf("pluginSDKVersion:") == 0 ? args[0].substring("pluginSDKVersion:".length) : null);
             if (version != null) { args.shift(); }
-            console.log("cordova.exec " + service + ":" + action + (version != null ? ":" + version : ""));
+            console.info("cordova.exec " + service + ":" + action + (version != null ? ":" + version : ""));
             var found = false;
             var req = service + ":" + action;
             for (var key in interceptors) {
@@ -100,7 +100,7 @@
             }
 
             if (!found) {
-                console.log("No mock for " + service + ":" + action);
+                console.warn("No mock for " + service + ":" + action);
                 return;
             }
         };
