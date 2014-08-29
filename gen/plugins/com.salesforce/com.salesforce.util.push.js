@@ -75,7 +75,7 @@ var registerPushNotificationHandler = function(notificationHandler, fail) {
     // iOS
     else 
     {
-        console.log("Registering for ios");
+        console.debug("Registering for ios");
         window.plugins.pushNotification.register(
             registrationSuccess,
             registrationFail,
