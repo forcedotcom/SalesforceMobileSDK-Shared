@@ -27,7 +27,7 @@
     Force.setLogLevel = function (level) {
         Force.console = {};
         var methods = ["error", "info", "warn", "debug"];
-        var levelAsInt = methods.indexOf(level);
+        var levelAsInt = methods.indexOf(level.toLowerCase());
         for (var i=0; i<methods.length; i++) {
             Force.console[methods[i]] = (i <= levelAsInt ? console[methods[i]].bind(console) : function() {});
         }
