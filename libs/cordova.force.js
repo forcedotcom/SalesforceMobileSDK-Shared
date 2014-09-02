@@ -181,17 +181,32 @@ cordova.define("com.salesforce.util.bootstrap", function(require, exports, modul
  */
 cordova.define("com.salesforce.util.exec", function(require, exports, module) {
     var exec = function(pluginVersion, successCB, errorCB, service, action, args) {
+        var tag = service + ":" + action;
+        console.time(tag);
+
         var defaultSuccessCB = function() {
             console.log(service + ":" + action + " succeeded");
         };
         var defaultErrorCB = function() {
-            console.error(service + ":" + action + " failed");
         };
         successCB = typeof successCB !== "function" ? defaultSuccessCB : successCB;
         errorCB = typeof errorCB !== "function" ? defaultErrorCB : errorCB;
+
+
         args.unshift("pluginSDKVersion:" + pluginVersion);
         var cordovaExec = require('cordova/exec');
-        return cordovaExec(successCB, errorCB, service, action, args);                  
+        return cordovaExec(
+            function() {
+                console.timeEnd(tag);
+                console.log(tag + " succeeded");
+                successCB.apply(null, arguments);
+            }, 
+            function() {
+                console.timeEnd(tag);
+                console.error(tag + " failed");
+                errorCB.apply(null, arguments);
+            }, 
+            service, action, args);                  
     };
 
     /**
