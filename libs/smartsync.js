@@ -1343,9 +1343,19 @@
                     return that.syncRemoteObjectWithServer(method, id, attributes, fieldlist);
                 };
 
+                // Timing
+                var tag = "TIMING Force.RemoteObjectCollection:sync:" + method + " (" + model.id + ")";
+                console.time(tag);
+
                 Force.syncRemoteObjectDetectConflict(method, model.id, model.attributes, fieldlist, cache, cacheMode, cacheForOriginals, mergeMode, syncWithServer)
-                    .done(options.success)
-                    .fail(options.error);
+                    .done(function() {
+                        console.timeEnd(tag);
+                        options.success.apply(null, arguments);
+                    })
+                    .fail(function() {
+                        console.timeEnd(tag);
+                        options.errors.apply(null, arguments);
+                    });
             }
         });
 
@@ -1463,6 +1473,10 @@
                 var ignoreRequest = false;
                 // Force.console.debug("FETCH Sending " + currentRequest);
 
+                // Timing
+                var tag = "TIMING Force.RemoteObjectCollection:sync (#" + currentRequest + ")";
+                console.time(tag);
+
                 var fetchFromServer = function() {
                     return that.fetchRemoteObjectsFromServer(config)
                         .then(function(resp) {
@@ -1492,8 +1506,12 @@
                         if (config.closeCursorImmediate) that.closeCursor();
                         return resp.records;
                     })
-                    .done(options.success)
+                    .done(function() {
+                        console.timeEnd(tag);
+                        options.success.apply(null, arguments);
+                    })
                     .fail(function() {
+                        console.timeEnd(tag);
                         if (ignoreRequest) {
                             // Force.console.debug("FETCH ignored " + currentRequest);
                         }

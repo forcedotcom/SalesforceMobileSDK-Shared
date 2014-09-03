@@ -292,7 +292,9 @@ if (forcetk.Client === undefined) {
      * @param [payload=null] payload for POST/PATCH etc
      * @param [headerParams={headerName:"headerValue",...}] parameters to send as header values for POST/PATCH etc
      */
+    var ajaxRequestId = 0;
     forcetk.Client.prototype.ajax = function(path, callback, error, method, payload, headerParams) {
+        var tag = "";
         var that = this;
         var retryCount = 0;
         var url = (path.indexOf(this.instanceUrl) == 0 ? path : this.instanceUrl + '/services/data' + path);
@@ -306,8 +308,12 @@ if (forcetk.Client === undefined) {
             dataType: "json",
             data: payload,
             headers: getRequestHeaders(this),
-            success: callback,
+            success: function() {
+                console.timeEnd(tag);
+                callback.apply(null, arguments);
+            },
             error: function(jqXHR, textStatus, errorThrown) {
+                console.timeEnd(tag);
                 var xhr = this;
                 var errorCallback = function() {
                     if (typeof error == 'function') {
@@ -322,6 +328,13 @@ if (forcetk.Client === undefined) {
                 } else errorCallback();
             },
             beforeSend: function(xhr) {
+                // Timing
+                ajaxRequestId++;
+                var a = document.createElement("a");
+                a.href = url;
+                tag = "TIMING " + a.pathname + "(#" + ajaxRequestId + ")";
+                console.time(tag);
+
                 if (that.proxyUrl !== null) {
                     xhr.setRequestHeader('SalesforceProxy-Endpoint', url);
                 }
