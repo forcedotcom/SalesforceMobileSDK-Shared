@@ -181,6 +181,11 @@ AbstractSmartStoreTestSuite.prototype.addEntriesToTestSoup = function(entries) {
     console.log("In addEntriesToTestSoup: entries.length=" + entries.length);
     return this.upsertSoupEntries(this.defaultSoupName,entries);
 };
+    
+AbstractSmartStoreTestSuite.prototype.addEntriesWithExternalIdToTestSoup = function(entries, externalIdPath) {
+    console.log("In addEntriesWithExternalIdToTestSoup: entries.length=" + entries.length);
+    return this.upsertEntriesToSoupWithExternalIdPath(this.defaultSoupName, entries, externalIdPath);
+};
 
 }
 
