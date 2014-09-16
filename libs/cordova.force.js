@@ -791,6 +791,34 @@ var SoupIndexSpec = navigator.smartstore.SoupIndexSpec;
 var QuerySpec = navigator.smartstore.QuerySpec;
 var StoreCursor = navigator.smartstore.StoreCursor;
 
+cordova.define("com.salesforce.plugin.smartsync", function (require, exports, module) {
+    var SERVICE = "com.salesforce.smartsync";
+
+    var exec = require("com.salesforce.util.exec").exec;
+
+    var syncDown = function(target, soupName, options, successCB, errorCB) {
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "syncDown",
+             [{"target": target, "soupName": soupName, "options": options}]
+            );        
+    };
+
+    var syncUp = function(target, soupName, options, successCB, errorCB) {
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "syncUp",
+             [{"target": target, "soupName": soupName, "options": options}]
+            );        
+    };
+
+    /**
+     * Part of the module that is public
+     */
+    module.exports = {
+        syncDown: syncDown,
+        syncUp: syncUp
+    };
+});
+
 cordova.define("com.salesforce.util.push", function(require, exports, module) {
 
     /**
