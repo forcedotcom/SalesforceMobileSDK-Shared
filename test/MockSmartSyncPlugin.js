@@ -40,12 +40,17 @@ var MockSmartSyncPlugin = (function(window) {
     module.prototype = {
         constructor: module,
 
-        sendUpdate: function(type, syncId, status) {
-          var event = new CustomEvent(type, {syncId: syncId, status:status});
+        sendUpdate: function(type, syncId, status, extras) {
+          var event = new CustomEvent(type, _.extend({syncId: syncId, status:status}, extras));
           document.dispatchEvent(event);
         },
 
         syncDown: function(target, soupName, options, successCB, errorCB) {
+          if (target.type === "cache") {
+            errorCB("Wrong target type: " + target.type);
+            return;
+          }
+
           var self = this;
           var syncId = lastSyncId++;
           var cache = new Force.StoreCache(soupName);
@@ -68,6 +73,51 @@ var MockSmartSyncPlugin = (function(window) {
         },
 
         syncUp: function(target, soupName, options, successCB, errorCB) {
+          if (target.type !== "cache") {
+            errorCB("Wrong target type: " + target.type);
+            return;
+          }
+
+          var self = this;
+          var syncId = lastSyncId++;
+          var cache = new Force.StoreCache(soupName);
+          var collection = new Force.SObjectCollection();
+          collection.cache = cache;
+          collection.config = target;
+
+          var sync = function() {
+            if (collection.length == 0) {
+              self.sendUpdate("syncUp", syncId, "done");
+              return;
+            }
+            
+            var record = collection.shift();
+            var options = {
+              mergeMode: Force.MERGE_MODE.OVERWRITE,
+              success: function() {
+                sync();
+              },
+              error: function() {
+                self.sendUpdate("syncUp", syncId, "failed", {recordId: record.id}); // or should we update the cached record with __sync_failed__ = true                  
+                sync();
+              }
+            };
+
+            return record.get("__locally_deleted__") ? record.destroy(options) : record.save(null, options);
+          };
+
+          cache.init().then(function() {
+            successCB({syncId: syncId, status:"started"});
+
+            collection.fetch({
+              sucess: function() {
+                sync();
+              },
+              error: function() {
+                self.sendUpdate("syncUp", syncId, "failed");
+              }
+            });
+          });        
         },
 
         hookToCordova: function(cordova) {
