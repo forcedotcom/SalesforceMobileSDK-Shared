@@ -50,6 +50,7 @@
 
   <footer class="bar-footer">
     <a class="button sync">Sync</a>
+    <a class="button cacheSize">Cache Size</a>
   </footer>
 </script>
 
@@ -57,7 +58,6 @@
 <script id="user-list-item" type="text/template">
 
   <a href="#users/<%= Id %>" class="pad-right">
-    <img src="<%= SmallPhotoUrl %>" class="small-img" />
     <div class="details-short">
       <b><%= FirstName %> <%= LastName %></b><br/>
       Title<%= Title %>
@@ -78,7 +78,6 @@
 
   <div class="content">
     <div class="content-padded">
-      <img id="employeePic" src="<%= SmallPhotoUrl %>" class="large-img" />
       <div class="details">
         <b><%= FirstName %> <%= LastName %></b><br/>
         <%= Id %><br/>
@@ -96,7 +95,7 @@
 // The User Model
 app.models.User = Force.SObject.extend({
     sobjectType: "User",
-    fieldlist: ["Id", "FirstName", "LastName", "SmallPhotoUrl", "Title", "Email", "MobilePhone","City"],
+    fieldlist: ["Id", "FirstName", "LastName", "Title", "Email", "MobilePhone","City"],
     cache: function() { return app.cache;},
     cacheMode: Force.CACHE_MODE.CACHE_ONLY
 });
@@ -133,7 +132,8 @@ app.views.SearchPage = Backbone.View.extend({
 
     events: {
         "keyup .search-key": "search",
-        "click .sync": "sync"
+        "click .sync": "sync",
+        "click .cacheSize": "cacheSize"
     },
 
     initialize: function() {
@@ -153,6 +153,13 @@ app.views.SearchPage = Backbone.View.extend({
     sync: function(event) {
         var soql = "SELECT " + app.models.User.prototype.fieldlist.join(",") + " FROM User LIMIT 25";
         cordova.require("com.salesforce.plugin.smartsync").syncDown({type:"soql", query:soql}, "users");
+    },
+
+    cacheSize: function() {
+        Force.smartstoreClient.runSmartQuery({queryType:"smart", smartSql:"SELECT count(*) from {users}", pageSize:1})
+            .done(function(result) {
+                alert("Number of entries in cache: " + result.currentPageOrderedEntries[0][0]);
+            });
     },
 
     search: function(event) {
