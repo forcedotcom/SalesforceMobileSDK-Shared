@@ -34,20 +34,52 @@ var MockSmartSyncPlugin = (function(window) {
     // Constructor
     var module = function() {}; 
 
+    var lastSyncId = 0;
+
     // Prototype
     module.prototype = {
         constructor: module,
+
+        sendUpdate: function(type, syncId, status) {
+          var event = new CustomEvent(type, {syncId: syncId, status:status});
+          document.dispatchEvent(event);
+        },
+
+        syncDown: function(target, soupName, options, successCB, errorCB) {
+          var self = this;
+          var syncId = lastSyncId++;
+          var cache = new Force.StoreCache(soupName);
+          var collection = new Force.SObjectCollection();
+          collection.cache = cache;
+          collection.config = target;
+
+          cache.init().then(function() {
+            successCB({syncId: syncId, status:"started"});
+
+            collection.fetch({
+              sucess: function() {
+                self.sendUpdate("syncUp", syncId, "done");
+              },
+              error: function() {
+                self.sendUpdate("syncUp", syncId, "failed");
+              }
+            });
+          });
+        },
+
+        syncUp: function(target, soupName, options, successCB, errorCB) {
+        },
 
         hookToCordova: function(cordova) {
             var SDKINFO_SERVICE = "com.salesforce.smartsync";
             var self = this;
 
             cordova.interceptExec(SDKINFO_SERVICE, "syncUp", function (successCB, errorCB, args) {
-                
+              self.syncUp(args[0].target, args[0].soupName, args[0].options, successCB, errorCB);
             });
 
             cordova.interceptExec(SDKINFO_SERVICE, "syncDown", function (successCB, errorCB, args) {
-                
+               self.syncDown(args[0].target, args[0].soupName, args[0].options, successCB, errorCB); 
             });
         }
 
