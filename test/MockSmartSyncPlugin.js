@@ -41,7 +41,7 @@ var MockSmartSyncPlugin = (function(window) {
         constructor: module,
 
         sendUpdate: function(type, syncId, status, extras) {
-          var event = new CustomEvent(type, _.extend({syncId: syncId, status:status}, extras));
+          var event = new CustomEvent(type, {detail: _.extend({syncId: syncId, status:status}, extras)});
           document.dispatchEvent(event);
         },
 
@@ -62,11 +62,11 @@ var MockSmartSyncPlugin = (function(window) {
             successCB({syncId: syncId, status:"started"});
 
             collection.fetch({
-              sucess: function() {
-                self.sendUpdate("syncUp", syncId, "done");
+              success: function() {
+                self.sendUpdate("syncDown", syncId, "done");
               },
               error: function() {
-                self.sendUpdate("syncUp", syncId, "failed");
+                self.sendUpdate("syncDown", syncId, "failed");
               }
             });
           });
@@ -110,7 +110,7 @@ var MockSmartSyncPlugin = (function(window) {
             successCB({syncId: syncId, status:"started"});
 
             collection.fetch({
-              sucess: function() {
+              success: function() {
                 sync();
               },
               error: function() {
