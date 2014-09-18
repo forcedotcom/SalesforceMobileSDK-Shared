@@ -92,7 +92,10 @@ var MockSmartSyncPlugin = (function(window) {
             }
             
             var record = collection.shift();
-            var options = {
+            var saveOptions = {
+              fieldlist: options.fieldlist,
+              cache: cache,
+              cacheMode: Force.CACHE_MODE.SERVER_FIRST,
               mergeMode: Force.MERGE_MODE.OVERWRITE,
               success: function() {
                 sync();
@@ -103,7 +106,7 @@ var MockSmartSyncPlugin = (function(window) {
               }
             };
 
-            return record.get("__locally_deleted__") ? record.destroy(options) : record.save(null, options);
+            return record.get("__locally_deleted__") ? record.destroy(saveOptions) : record.save(null, saveOptions);
           };
 
           cache.init().then(function() {
