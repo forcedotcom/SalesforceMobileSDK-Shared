@@ -49,7 +49,8 @@
   </div>
 
   <footer class="bar-footer">
-    <a class="button sync">Sync</a>
+    <a class="button syncdown">Sync Down</a>
+    <a class="button syncup">Sync Up</a>
     <a class="button cacheSize">Cache Size</a>
   </footer>
 </script>
@@ -60,7 +61,8 @@
   <a href="#users/<%= Id %>" class="pad-right">
     <div class="details-short">
       <b><%= FirstName %> <%= LastName %></b><br/>
-      Title<%= Title %>
+      <% if (Title) { %><%= Title %><br/><% } %>
+      <% if (__locally_updated__) { %><span class="count-main">modified</span><br/><% } %>
     </div>
   </a>
 </script>
@@ -70,6 +72,7 @@
   <header class="bar-title">
     <a href="#" class="button-prev">Back</a>
     <h1 class="title">User</h1>
+    <a class="button save">Save</a>
   </header>
 
   <footer class="bar-footer">
@@ -81,10 +84,11 @@
       <div class="details">
         <b><%= FirstName %> <%= LastName %></b><br/>
         <%= Id %><br/>
-        <% if (Title) { %><%= Title %><br/><% } %>
-        <% if (City) { %><%= City %><br/><% } %>
-        <% if (MobilePhone) { %> <a href="tel:<%= MobilePhone %>"><%= MobilePhone %></a><br/><% } %>
-        <% if (Email) { %><a href="mailto:<%= Email %>"><%= Email %></a><% } %>
+        <input placeholder="Title" type="text" name="Title" value="<%= Title %>" /><br/>
+        <input placeholder="City" type="text" name="City" value="<%= City %>" /><br/>
+        <input placeholder="Phone" type="text" name="MobilePhone" value="<%= MobilePhone %>" /><br/>
+        <input placeholder="Email" type="text" name="Email" value="<%= Email %>" />
+        <% if (__locally_updated__) { %>LOCALLY MODIFIED<br/><% } %>
       </div>
     </div>
   </div>
@@ -116,7 +120,7 @@ app.models.UserCollection = Force.SObjectCollection.extend({
                                    smartSql:"SELECT {users:_soup}"
                                    + " FROM {users}"
                                    + " WHERE {users:FirstName} like '" + key + "%'"
-                                   + " ORDER BY {users:FirstName} "
+                                   + " ORDER BY {users:LastName} "
                                    + " LIMIT 25 ", 
                                    pageSize:25}
                       };
@@ -132,15 +136,22 @@ app.views.SearchPage = Backbone.View.extend({
 
     events: {
         "keyup .search-key": "search",
-        "click .sync": "sync",
+        "click .syncdown": "syncDown",
+        "click .syncup": "syncUp",
         "click .cacheSize": "cacheSize"
     },
 
     initialize: function() {
+        var that = this;
+        this.fieldlist = app.models.User.prototype.fieldlist;
         this.listView = new app.views.UserListView({model: this.model});
-        document.addEventListener("syncDown", function(event) {
-            alert("Sync " + event.detail.status);
-        });
+        document.addEventListener("syncDown", this.handleSyncEvent.bind(this));
+        document.addEventListener("syncUp", this.handleSyncEvent.bind(this));
+    },
+
+    handleSyncEvent: function(event) {
+        alert(event.type + " " + event.detail.status);
+        if (event.detail.status === "done") { this.search(); }
     },
 
     render: function(eventName) {
@@ -150,9 +161,14 @@ app.views.SearchPage = Backbone.View.extend({
         return this;
     },
 
-    sync: function(event) {
-        var soql = "SELECT " + app.models.User.prototype.fieldlist.join(",") + " FROM User LIMIT 25";
+    syncDown: function(event) {
+        var soql = "SELECT " + this.fieldlist.join(",") + " FROM User ORDER BY LastName LIMIT 100";
         cordova.require("com.salesforce.plugin.smartsync").syncDown({type:"soql", query:soql}, "users");
+    },
+
+    syncUp: function(event) {
+        var target = {type:"cache", cacheQuery: {queryType:"exact", indexPath:"__local__", matchKey:true, order:"ascending", pageSize:100}};
+        cordova.require("com.salesforce.plugin.smartsync").syncUp(target, "users", {fieldlist: this.fieldlist});
     },
 
     cacheSize: function() {
@@ -205,9 +221,28 @@ app.views.UserPage = Backbone.View.extend({
 
     template: _.template($("#user-page").html()),
 
+    events: {
+        "change": "change",
+        "click .save": "save"
+    },
+
     render: function(eventName) {
         $(this.el).html(this.template(this.model.toJSON()));
         return this;
+    },
+
+    change: function(event) {
+        // apply change to model
+        var target = event.target;
+        this.model.set(target.name, target.value);
+    },
+
+    save: function() {
+        this.model.save(null, {
+            success: function() {
+                app.router.navigate("#", {trigger:true});
+            }
+        });
     }
 
 });
