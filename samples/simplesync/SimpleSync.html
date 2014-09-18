@@ -162,7 +162,7 @@ app.views.SearchPage = Backbone.View.extend({
     },
 
     syncDown: function(event) {
-        var soql = "SELECT " + this.fieldlist.join(",") + " FROM User ORDER BY LastName LIMIT 100";
+        var soql = "SELECT " + this.fieldlist.join(",") + " FROM User ORDER BY LastName LIMIT 2000";
         cordova.require("com.salesforce.plugin.smartsync").syncDown({type:"soql", query:soql}, "users");
     },
 
