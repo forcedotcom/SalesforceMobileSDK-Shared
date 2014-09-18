@@ -35,104 +35,122 @@ var MockSmartSyncPlugin = (function(window) {
     var module = function() {}; 
 
     var lastSyncId = 0;
+    var syncs = {};
 
     // Prototype
     module.prototype = {
         constructor: module,
 
-        sendUpdate: function(type, syncId, status, extras) {
-          var event = new CustomEvent(type, {detail: _.extend({syncId: syncId, status:status}, extras)});
-          document.dispatchEvent(event);
+        recordSync: function(type, target, soupName, options) {
+            var syncId = lastSyncId++;
+            var sync = {syncId: syncId, type:type, target:target, soupName:soupName, options: options, status: "started"};
+            syncs[syncId] = sync;
+            return syncId;
+        },
+
+        sendUpdate: function(syncId, status, extras) {
+            var sync = syncs[syncId];
+            sync.status = status;
+            var event = new CustomEvent(sync.type, {detail: _.extend(sync, extras)});
+            document.dispatchEvent(event);
+        },
+
+        getSyncStatus: function(syncId, successCB, errorCB) {
+            successCB(syncs[syncId]);
         },
 
         syncDown: function(target, soupName, options, successCB, errorCB) {
-          if (target.type === "cache") {
-            errorCB("Wrong target type: " + target.type);
-            return;
-          }
+            if (target.type === "cache") {
+                errorCB("Wrong target type: " + target.type);
+                return;
+            }
 
-          var self = this;
-          var syncId = lastSyncId++;
-          var cache = new Force.StoreCache(soupName);
-          var collection = new Force.SObjectCollection();
-          collection.cache = cache;
-          collection.config = target;
+            var self = this;
+            var syncId = self.recordSync("syncDown", target, soupName, options);
+            var cache = new Force.StoreCache(soupName);
+            var collection = new Force.SObjectCollection();
+            collection.cache = cache;
+            collection.config = target;
 
-          cache.init().then(function() {
-            successCB({syncId: syncId, status:"started"});
+            cache.init().then(function() {
+                successCB(syncs[syncId]);
 
-            collection.fetch({
-              success: function() {
-                self.sendUpdate("syncDown", syncId, "done");
-              },
-              error: function() {
-                self.sendUpdate("syncDown", syncId, "failed");
-              }
+                collection.fetch({
+                    success: function() {
+                        self.sendUpdate(syncId, "done");
+                    },
+                    error: function() {
+                        self.sendUpdate(syncId, "failed");
+                    }
+                });
             });
-          });
         },
 
         syncUp: function(target, soupName, options, successCB, errorCB) {
-          if (target.type !== "cache") {
-            errorCB("Wrong target type: " + target.type);
-            return;
-          }
-
-          var self = this;
-          var syncId = lastSyncId++;
-          var cache = new Force.StoreCache(soupName);
-          var collection = new Force.SObjectCollection();
-          collection.cache = cache;
-          collection.config = target;
-
-          var sync = function() {
-            if (collection.length == 0) {
-              self.sendUpdate("syncUp", syncId, "done");
-              return;
+            if (target.type !== "cache") {
+                errorCB("Wrong target type: " + target.type);
+                return;
             }
-            
-            var record = collection.shift();
-            var saveOptions = {
-              fieldlist: options.fieldlist,
-              cache: cache,
-              cacheMode: Force.CACHE_MODE.SERVER_FIRST,
-              mergeMode: Force.MERGE_MODE.OVERWRITE,
-              success: function() {
-                sync();
-              },
-              error: function() {
-                self.sendUpdate("syncUp", syncId, "failed", {recordId: record.id}); // or should we update the cached record with __sync_failed__ = true                  
-                sync();
-              }
+
+            var self = this;
+            var syncId = self.recordSync("syncUp", target, soupName, options);
+            var cache = new Force.StoreCache(soupName);
+            var collection = new Force.SObjectCollection();
+            collection.cache = cache;
+            collection.config = target;
+
+            var sync = function() {
+                if (collection.length == 0) {
+                    self.sendUpdate(syncId, "done");
+                    return;
+                }
+                
+                var record = collection.shift();
+                var saveOptions = {
+                    fieldlist: options.fieldlist,
+                    cache: cache,
+                    cacheMode: Force.CACHE_MODE.SERVER_FIRST,
+                    mergeMode: Force.MERGE_MODE.OVERWRITE,
+                    success: function() {
+                        sync();
+                    },
+                    error: function() {
+                        self.sendUpdate(syncId, "failed", {recordId: record.id}); // or should we update the cached record with __sync_failed__ = true                  
+                        sync();
+                    }
+                };
+
+                return record.get("__locally_deleted__") ? record.destroy(saveOptions) : record.save(null, saveOptions);
             };
 
-            return record.get("__locally_deleted__") ? record.destroy(saveOptions) : record.save(null, saveOptions);
-          };
+            cache.init().then(function() {
+                successCB(syncs[syncId]);
 
-          cache.init().then(function() {
-            successCB({syncId: syncId, status:"started"});
-
-            collection.fetch({
-              success: function() {
-                sync();
-              },
-              error: function() {
-                self.sendUpdate("syncUp", syncId, "failed");
-              }
-            });
-          });        
+                collection.fetch({
+                    success: function() {
+                        sync();
+                    },
+                    error: function() {
+                        self.sendUpdate(syncId, "failed");
+                    }
+                });
+            });        
         },
 
         hookToCordova: function(cordova) {
-            var SDKINFO_SERVICE = "com.salesforce.smartsync";
+            var SMARTSYNC_SERVICE = "com.salesforce.smartsync";
             var self = this;
 
-            cordova.interceptExec(SDKINFO_SERVICE, "syncUp", function (successCB, errorCB, args) {
-              self.syncUp(args[0].target, args[0].soupName, args[0].options, successCB, errorCB);
+            cordova.interceptExec(SMARTSYNC_SERVICE, "syncUp", function (successCB, errorCB, args) {
+                self.syncUp(args[0].target, args[0].soupName, args[0].options, successCB, errorCB);
             });
 
-            cordova.interceptExec(SDKINFO_SERVICE, "syncDown", function (successCB, errorCB, args) {
-               self.syncDown(args[0].target, args[0].soupName, args[0].options, successCB, errorCB); 
+            cordova.interceptExec(SMARTSYNC_SERVICE, "syncDown", function (successCB, errorCB, args) {
+                self.syncDown(args[0].target, args[0].soupName, args[0].options, successCB, errorCB); 
+            });
+
+            cordova.interceptExec(SMARTSYNC_SERVICE, "getSyncStatus", function (successCB, errorCB, args) {
+                self.getSyncStatus(args[0].syncId, successCB, errorCB); 
             });
         }
 

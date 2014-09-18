@@ -810,12 +810,20 @@ cordova.define("com.salesforce.plugin.smartsync", function (require, exports, mo
             );        
     };
 
+    var getSyncStatus = function(syncId, successCB, errorCB) {
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "getSyncStatus",
+             [{"syncId": syncId}]
+            );        
+    };
+
     /**
      * Part of the module that is public
      */
     module.exports = {
         syncDown: syncDown,
-        syncUp: syncUp
+        syncUp: syncUp,
+        getSyncStatus: getSyncStatus
     };
 });
 
