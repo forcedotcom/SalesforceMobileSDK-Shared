@@ -1344,7 +1344,7 @@
                 };
 
                 // Timing
-                var tag = "TIMING Force.RemoteObjectCollection:sync:" + method + " (" + model.id + ")";
+                var tag = "TIMING Force.RemoteObject:sync:" + method + " (" + model.id + ")";
                 console.time(tag);
 
                 Force.syncRemoteObjectDetectConflict(method, model.id, model.attributes, fieldlist, cache, cacheMode, cacheForOriginals, mergeMode, syncWithServer)
@@ -1471,17 +1471,19 @@
                 this.lastRequestSent++;
                 var currentRequest = this.lastRequestSent;
                 var ignoreRequest = false;
-                // Force.console.debug("FETCH Sending " + currentRequest);
 
                 // Timing
                 var tag = "TIMING Force.RemoteObjectCollection:sync (#" + currentRequest + ")";
                 console.time(tag);
+                var tagServer = tag + ":fetchRemoteObjectsFromServer";
+                console.time(tagServer);
+                var tagCache = tag + ":fetchFromCache";
+                console.time(tagCache);
 
                 var fetchFromServer = function() {
                     return that.fetchRemoteObjectsFromServer(config)
                         .then(function(resp) {
-                            // Force.console.debug("FETCH Receiving " + currentRequest);
-                            // Force.console.debug("FETCH Newest " + (currentRequest > that.lastResponseReceived));
+                            console.timeEnd(tagServer);
                             if (currentRequest > that.lastResponseReceived) {
                                 that.lastResponseReceived = currentRequest;
                                 return resp;
@@ -1494,7 +1496,11 @@
                 };
 
                 var fetchFromCache = function() {
-                    return that.fetchRemoteObjectsFromCache(cache, config.cacheQuery);
+                    return that.fetchRemoteObjectsFromCache(cache, config.cacheQuery)
+                        .then(function(resp) {
+                            console.timeEnd(tagCache);
+                            return resp;
+                        });
                 };
 
                 var cacheMode = (config.type == "cache" ? Force.CACHE_MODE.CACHE_ONLY : Force.CACHE_MODE.SERVER_FIRST);
