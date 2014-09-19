@@ -72,13 +72,21 @@ var MockSmartSyncPlugin = (function(window) {
             collection.cache = cache;
             collection.config = target;
 
+            var onFetch = function() {
+               if (collection.hasMore()) {
+                   collection.getMore().then(onFetch);
+               }
+                else {
+                    self.sendUpdate("syncDown", syncId, "done");                    
+                }
+            };
+
+
             cache.init().then(function() {
                 successCB(syncs[syncId]);
 
                 collection.fetch({
-                    success: function() {
-                        self.sendUpdate(syncId, "done");
-                    },
+                    success: onFetch,
                     error: function() {
                         self.sendUpdate(syncId, "failed");
                     }
