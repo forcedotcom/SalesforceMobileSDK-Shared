@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Users</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
+<link rel="stylesheet" href="css/styles.css"/>
+<link rel="stylesheet" href="css/ratchet.css"/>
+</head>
+
+<body>
+
+<div id="content"></div>
+
+<script src="js/jquery.min.js"></script>
+<script src="js/underscore-min.js"></script>
+<script src="js/backbone.js"></script>
+<script src="js/forcetk.mobilesdk.js"></script>
+
+<!-- Local Testing -->
+<script src="js/forcetk.ui.js"></script>
+<script src="js/MockCordova.js"></script>
+<script src="js/cordova.force.js"></script>
+<script src="js/MockSmartStore.js"></script>
+<script src="js/MockSmartSyncPlugin.js"></script>
+<!-- End Local Testing -->
+
+<!-- Container -/->
+<script src="cordova.js"></script>
+<!-- End Container -->
+
+<script src="js/smartsync.js"></script>
+<script src="js/fastclick.js"></script>
+<script src="js/stackrouter.js"></script>
+<script src="js/auth.js"></script>
+
+
+<!-- --------------------------------------- Search page template ------------------------------------------------- -->
+<script id="search-page" type="text/template">
+  <header class="bar-title">
+    <h1 class="title">Users</h1>
+  </header>
+
+  <div class="bar-standard bar-header-secondary">
+    <input type="search" class="search-key" placeholder="Search"/>
+  </div>
+
+  <div class="content">
+    <ul class="list"></ul>
+  </div>
+
+  <footer class="bar-footer">
+    <a class="button syncdown">Sync Down</a>
+    <a class="button syncup">Sync Up</a>
+    <a class="button cacheSize">Cache Size</a>
+  </footer>
+</script>
+
+<!-- --------------------------------------- User list item template ---------------------------------------------- -->
+<script id="user-list-item" type="text/template">
+
+  <a href="#users/<%= Id %>" class="pad-right">
+    <div class="details-short">
+      <b><%= FirstName %> <%= LastName %></b><br/>
+      <% if (Title) { %><%= Title %><% } %> <% if (CompanyName) { %><%= CompanyName %><% } %>
+      <% if (__locally_updated__) { %><span class="count-main">modified</span><br/><% } %>
+    </div>
+  </a>
+</script>
+
+<!-- --------------------------------------- User page template -------------------------------------------------- -->
+<script id="user-page" type="text/template">
+  <header class="bar-title">
+    <a href="#" class="button-prev">Back</a>
+    <h1 class="title">User</h1>
+    <a class="button save">Save</a>
+  </header>
+
+  <footer class="bar-footer">
+    <span id="offlineStatus"></span>
+  </footer>
+
+  <div class="content">
+    <div class="content-padded">
+      <div class="details">
+        <b><%= FirstName %> <%= LastName %></b><br/>
+        <%= Id %><br/>
+        <input placeholder="Title" type="text" name="Title" value="<%= Title %>" /><br/>
+        <input placeholder="CompanyName" type="text" name="CompanyName" value="<%= CompanyName %>" /><br/>
+        <input placeholder="City" type="text" name="City" value="<%= City %>" /><br/>
+        <input placeholder="Phone" type="text" name="MobilePhone" value="<%= MobilePhone %>" /><br/>
+        <input placeholder="Email" type="text" name="Email" value="<%= Email %>" />
+        <% if (__locally_updated__) { %>LOCALLY MODIFIED<br/><% } %>
+      </div>
+    </div>
+  </div>
+</script>
+
+<script>
+// -------------------------------------------------- The Models ---------------------------------------------------- //
+// The User Model
+app.models.User = Force.SObject.extend({
+    sobjectType: "User",
+    fieldlist: ["Id", "FirstName", "LastName", "Title", "CompanyName", "Email", "MobilePhone","City"],
+    cache: function() { return app.cache;},
+    cacheMode: Force.CACHE_MODE.CACHE_ONLY
+});
+
+// The UserCollection Model
+app.models.UserCollection = Force.SObjectCollection.extend({
+    model: app.models.User,
+    cache: function() { return app.cache;},
+
+    getCriteria: function() {
+        return this.key;
+    },
+
+    setCriteria: function(key) {
+        this.key = key;
+        this.config = {type:"cache", 
+                       cacheQuery:{queryType:"smart", 
+                                   smartSql:"SELECT {users:_soup}"
+                                   + " FROM {users}"
+                                   + " WHERE {users:FirstName} like '" + key + "%'"
+                                   + " ORDER BY {users:LastName} "
+                                   + " LIMIT 25 ", 
+                                   pageSize:25}
+                      };
+    }
+});
+
+
+// -------------------------------------------------- The Views ---------------------------------------------------- //
+
+app.views.SearchPage = Backbone.View.extend({
+
+    template: _.template($("#search-page").html()),
+
+    events: {
+        "keyup .search-key": "search",
+        "click .syncdown": "syncDown",
+        "click .syncup": "syncUp",
+        "click .cacheSize": "cacheSize"
+    },
+
+    initialize: function() {
+        var that = this;
+        this.fieldlist = app.models.User.prototype.fieldlist;
+        this.listView = new app.views.UserListView({model: this.model});
+        document.addEventListener("syncDown", this.handleSyncEvent.bind(this));
+        document.addEventListener("syncUp", this.handleSyncEvent.bind(this));
+    },
+
+    handleSyncEvent: function(event) {
+        alert(event.type + " " + event.detail.status);
+        if (event.detail.status === "done") { this.search(); }
+    },
+
+    render: function(eventName) {
+        $(this.el).html(this.template());
+        $(".search-key", this.el).val(this.model.getCriteria());
+        this.listView.setElement($("ul", this.el)).render();
+        return this;
+    },
+
+    syncDown: function(event) {
+        var soql = "SELECT " + this.fieldlist.join(",") + " FROM User WHERE CompanyName = 'salesforce.com' ORDER BY LastName LIMIT 10000";
+        cordova.require("com.salesforce.plugin.smartsync").syncDown({type:"soql", query:soql}, "users");
+    },
+
+    syncUp: function(event) {
+        var target = {type:"cache", cacheQuery: {queryType:"exact", indexPath:"__local__", matchKey:true, order:"ascending", pageSize:100}};
+        cordova.require("com.salesforce.plugin.smartsync").syncUp(target, "users", {fieldlist: this.fieldlist});
+    },
+
+    cacheSize: function() {
+        Force.smartstoreClient.runSmartQuery({queryType:"smart", smartSql:"SELECT count(*) from {users}", pageSize:1})
+            .done(function(result) {
+                alert("Number of entries in cache: " + result.currentPageOrderedEntries[0][0]);
+            });
+    },
+
+    search: function(event) {
+        this.model.setCriteria($(".search-key", this.el).val());
+        this.model.fetch();
+    }
+});
+
+app.views.UserListView = Backbone.View.extend({
+
+    listItemViews: [],
+
+    initialize: function() {
+        this.model.bind("reset", this.render, this);
+    },
+
+    render: function(eventName) {
+        _.each(this.listItemViews, function(itemView) { itemView.close(); });
+        this.listItemViews = _.map(this.model.models, function(model) { return new app.views.UserListItemView({model: model}); });
+        $(this.el).append(_.map(this.listItemViews, function(itemView) { return itemView.render().el;} ));
+        return this;
+    }
+
+});
+
+app.views.UserListItemView = Backbone.View.extend({
+
+    tagName: "li",
+    template: _.template($("#user-list-item").html()),
+
+    render: function(eventName) {
+        $(this.el).html(this.template(this.model.toJSON()));
+        return this;
+    },
+
+    close: function() {
+        this.remove();
+        this.off();
+    }
+});
+
+app.views.UserPage = Backbone.View.extend({
+
+    template: _.template($("#user-page").html()),
+
+    events: {
+        "change": "change",
+        "click .save": "save"
+    },
+
+    render: function(eventName) {
+        $(this.el).html(this.template(this.model.toJSON()));
+        return this;
+    },
+
+    change: function(event) {
+        // apply change to model
+        var target = event.target;
+        this.model.set(target.name, target.value);
+    },
+
+    save: function() {
+        this.model.save(null, {
+            success: function() {
+                app.router.navigate("#", {trigger:true});
+            }
+        });
+    }
+
+});
+
+
+// ----------------------------------------------- The Application Router ------------------------------------------ //
+
+app.Router = Backbone.StackRouter.extend({
+
+    routes: {
+        "": "list",
+        "list": "list",
+        "users/:id": "viewUser"
+    },
+
+    setupCaches: function() {
+        // Cache for offline support
+        app.cache = new Force.StoreCache("users", [ {path:"FirstName", type:"string"} ]);
+        app.cache.init();
+    },
+
+    initialize: function() {
+        Backbone.Router.prototype.initialize.call(this);
+
+        // Setup caches
+        this.setupCaches();
+
+        // Collection behind search screen
+        app.searchResults = new app.models.UserCollection();
+
+        // We keep a single instance of SearchPage and UserPage
+        app.searchPage = new app.views.SearchPage({model: app.searchResults});
+        app.userPage = new app.views.UserPage();
+    },
+
+    list: function() {
+        app.searchResults.fetch();
+        // Show page right away - list will redraw when data comes in
+        this.slidePage(app.searchPage);
+    },
+
+    viewUser: function(id) {
+        var that = this;
+        var user = new app.models.User({Id: id});
+        user.fetch({
+            success: function() {
+                app.userPage.model = user;
+                that.slidePage(app.userPage);
+            }
+        });
+    }
+});
+</script>
+</body>
+</html>

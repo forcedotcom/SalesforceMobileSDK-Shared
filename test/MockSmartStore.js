@@ -345,7 +345,7 @@ var MockSmartStore = (function(window) {
                 var results = [];
                 for (var soupEntryId in soup) {
                     var soupElt = soup[soupEntryId];
-                    var projection = soupIndexedData[soupEntryId][whereField];
+                    var projection = soupIndexedData[soupEntryId][whereField] || "";
                     if (projection.match(likeRegexp)) {
                         var row = [];
                         row.push(soupElt);
