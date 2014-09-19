@@ -77,7 +77,7 @@ var MockSmartSyncPlugin = (function(window) {
                    collection.getMore().then(onFetch);
                }
                 else {
-                    self.sendUpdate("syncDown", syncId, "done");                    
+                    self.sendUpdate(syncId, "done");                    
                 }
             };
 
