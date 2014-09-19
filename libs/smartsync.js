@@ -1231,8 +1231,10 @@
             if (cache != null) {
 
                 var fetchResult;
+                var originalGetMore;
                 var processResult = function(resp) {
                     fetchResult = resp;
+                    originalGetMore = fetchResult.getMore.bind(fetchResult);
                     return resp.records;
                 };
 
@@ -1249,7 +1251,7 @@
                                     {
                                         records: records,
                                         getMore: function() {
-                                            return fetchResult.getMore().then(cacheSaveAll).then(cacheForOriginalsSaveAll);
+                                            return originalGetMore().then(cacheSaveAll).then(cacheForOriginalsSaveAll);
                                         }
                                     });
                 };
