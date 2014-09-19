@@ -297,7 +297,7 @@ if (forcetk.Client === undefined) {
         var tag = "";
         var that = this;
         var retryCount = 0;
-        var url = (path.indexOf(this.instanceUrl) == 0 ? path : this.instanceUrl + '/services/data' + path);
+        var url = (path.indexOf(this.instanceUrl) == 0 ? path : this.instanceUrl + (path.indexOf('/services/data') == 0 ? path : '/services/data' + path));
         return $j.ajax({
             type: method || "GET",
             async: this.asyncAjax,
