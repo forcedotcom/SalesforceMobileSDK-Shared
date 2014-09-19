@@ -61,7 +61,7 @@
   <a href="#users/<%= Id %>" class="pad-right">
     <div class="details-short">
       <b><%= FirstName %> <%= LastName %></b><br/>
-      <% if (Title) { %><%= Title %><br/><% } %>
+      <% if (Title) { %><%= Title %><% } %> <% if (CompanyName) { %><%= CompanyName %><% } %>
       <% if (__locally_updated__) { %><span class="count-main">modified</span><br/><% } %>
     </div>
   </a>
@@ -85,6 +85,7 @@
         <b><%= FirstName %> <%= LastName %></b><br/>
         <%= Id %><br/>
         <input placeholder="Title" type="text" name="Title" value="<%= Title %>" /><br/>
+        <input placeholder="CompanyName" type="text" name="CompanyName" value="<%= CompanyName %>" /><br/>
         <input placeholder="City" type="text" name="City" value="<%= City %>" /><br/>
         <input placeholder="Phone" type="text" name="MobilePhone" value="<%= MobilePhone %>" /><br/>
         <input placeholder="Email" type="text" name="Email" value="<%= Email %>" />
@@ -99,7 +100,7 @@
 // The User Model
 app.models.User = Force.SObject.extend({
     sobjectType: "User",
-    fieldlist: ["Id", "FirstName", "LastName", "Title", "Email", "MobilePhone","City"],
+    fieldlist: ["Id", "FirstName", "LastName", "Title", "CompanyName", "Email", "MobilePhone","City"],
     cache: function() { return app.cache;},
     cacheMode: Force.CACHE_MODE.CACHE_ONLY
 });
@@ -162,7 +163,7 @@ app.views.SearchPage = Backbone.View.extend({
     },
 
     syncDown: function(event) {
-        var soql = "SELECT " + this.fieldlist.join(",") + " FROM User ORDER BY LastName LIMIT 2000";
+        var soql = "SELECT " + this.fieldlist.join(",") + " FROM User WHERE CompanyName = 'salesforce.com' ORDER BY LastName LIMIT 10000";
         cordova.require("com.salesforce.plugin.smartsync").syncDown({type:"soql", query:soql}, "users");
     },
 

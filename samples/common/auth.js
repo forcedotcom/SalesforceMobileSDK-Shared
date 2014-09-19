@@ -28,7 +28,7 @@ jQuery(document).ready(function() {
     }
     // Browser
     else {
-        var loginUrl = "https://test.salesforce.com/";
+        var loginUrl = "https://login.salesforce.com/";
         var consumerKey = "3MVG98dostKihXN53TYStBIiS8HkwJJ.hsRQPcdchz8X9k16IRCU4KpvmoRuPRgAsWhy2cwXyX0JUr21qQ.mX";
         var callbackUrl = "https://sfdc-sobject-editor.herokuapp.com/oauth/success";
 
