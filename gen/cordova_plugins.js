@@ -20,6 +20,10 @@ module.exports = [
         ]
     },
     {
+        "file": "plugins/com.salesforce/com.salesforce.plugin.smartsync.js",
+        "id": "com.salesforce.plugin.smartsync",
+    },
+    {
         "file": "plugins/com.salesforce/com.salesforce.util.bootstrap.js",
         "id": "com.salesforce.util.bootstrap"
     },
