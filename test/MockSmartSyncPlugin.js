@@ -99,18 +99,13 @@ var MockSmartSyncPlugin = (function(window) {
         },
 
         syncUp: function(target, soupName, options, successCB, errorCB) {
-            if (target.type !== "cache") {
-                errorCB("Wrong target type: " + target.type);
-                return;
-            }
-
             var self = this;
             var syncId = self.recordSync("syncUp", target, soupName, options);
             var cache = new Force.StoreCache(soupName);
             var collection = new Force.SObjectCollection();
             var numberRecords;
             collection.cache = cache;
-            collection.config = target;
+            collection.config = {type:"cache", cacheQuery:target};
 
             var sync = function() {
                 if (collection.length == 0) {
