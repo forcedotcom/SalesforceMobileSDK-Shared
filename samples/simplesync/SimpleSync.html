@@ -178,8 +178,7 @@ app.views.SearchPage = Backbone.View.extend({
     },
 
     syncUp: function(event) {
-        var target = {queryType:"exact", indexPath:"__local__", matchKey:true, order:"ascending", pageSize:10000};
-        cordova.require("com.salesforce.plugin.smartsync").syncUp(target, "users", {fieldlist: this.fieldlist}, this.handleSyncUpdate.bind(this));
+        cordova.require("com.salesforce.plugin.smartsync").syncUp("users", {fieldlist: this.fieldlist}, this.handleSyncUpdate.bind(this));
     },
 
     cacheSize: function() {
