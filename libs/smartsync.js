@@ -1561,9 +1561,9 @@
             parse: function(resp, options) {
                 var that = this;
                 return _.map(resp, function(result) {
-                    var sobjectType = result.attributes.type;
                     var sobject = new that.model(result);
-                    sobject.sobjectType = sobjectType;
+                    if (!sobject.sobjectType && result.attributes) 
+                        sobject.sobjectType = result.attributes.type;
                     return sobject;
                 });
             }
