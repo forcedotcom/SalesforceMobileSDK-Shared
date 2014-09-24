@@ -98,14 +98,14 @@ var MockSmartSyncPlugin = (function(window) {
             });
         },
 
-        syncUp: function(target, soupName, options, successCB, errorCB) {
+        syncUp: function(soupName, options, successCB, errorCB) {
             var self = this;
-            var syncId = self.recordSync("syncUp", target, soupName, options);
+            var syncId = self.recordSync("syncUp", null, soupName, options);
             var cache = new Force.StoreCache(soupName);
             var collection = new Force.SObjectCollection();
             var numberRecords;
             collection.cache = cache;
-            collection.config = {type:"cache", cacheQuery:target};
+            collection.config = {type:"cache", cacheQuery:{queryType:"exact", indexPath:"__local__", matchKey:true, order:"ascending", pageSize:10000}};
 
             var sync = function() {
                 if (collection.length == 0) {
@@ -152,7 +152,7 @@ var MockSmartSyncPlugin = (function(window) {
             var self = this;
 
             cordova.interceptExec(SMARTSYNC_SERVICE, "syncUp", function (successCB, errorCB, args) {
-                self.syncUp(args[0].target, args[0].soupName, args[0].options, successCB, errorCB);
+                self.syncUp(args[0].soupName, args[0].options, successCB, errorCB);
             });
 
             cordova.interceptExec(SMARTSYNC_SERVICE, "syncDown", function (successCB, errorCB, args) {

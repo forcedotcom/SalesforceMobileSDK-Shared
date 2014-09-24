@@ -803,10 +803,10 @@ cordova.define("com.salesforce.plugin.smartsync", function (require, exports, mo
             );        
     };
 
-    var syncUp = function(target, soupName, options, successCB, errorCB) {
+    var syncUp = function(soupName, options, successCB, errorCB) {
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "syncUp",
-             [{"target": target, "soupName": soupName, "options": options}]
+             [{"soupName": soupName, "options": options}]
             );        
     };
 
