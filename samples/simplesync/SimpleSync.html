@@ -148,17 +148,17 @@ app.views.SearchPage = Backbone.View.extend({
         var that = this;
         this.fieldlist = app.models.User.prototype.fieldlist;
         this.listView = new app.views.UserListView({model: this.model});
-        document.addEventListener("syncDown", this.handleSyncEvent.bind(this));
-        document.addEventListener("syncUp", this.handleSyncEvent.bind(this));
+        document.addEventListener("sync", this.handleSyncEvent.bind(this));
     },
 
     handleSyncEvent: function(event) {
-        if (event.type === "syncDown") {
-            var label = "Sync Down";
-            if (typeof event.detail.progress === "number" && event.detail.progress < 100) {
-                label += " (" + event.detail.progress + "%)";
-            }
-            $(".syncdown").html(label);
+        var progress =  (typeof event.detail.progress === "number" && event.detail.progress < 100) ? " (" + Math.round(event.detail.progress) + "%)" : "";
+
+        if (event.detail.type === "syncDown") {
+            $(".syncdown").html("Sync Down" + progress);
+        }
+        if (event.detail.type === "syncUp") {
+            $(".syncup").html("Sync Up" + progress);
         }
         if (event.detail.status === "DONE") { this.search(); }
     },
