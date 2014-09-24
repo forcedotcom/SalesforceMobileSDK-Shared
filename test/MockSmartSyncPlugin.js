@@ -52,7 +52,7 @@ var MockSmartSyncPlugin = (function(window) {
             var sync = syncs[syncId];
             sync.status = status;
             sync.progress = progress;
-            var event = new CustomEvent(sync.type, {detail: _.extend(sync, extras)});
+            var event = new CustomEvent("sync", {detail: _.extend(sync, extras)});
             document.dispatchEvent(event);
         },
 
@@ -75,7 +75,7 @@ var MockSmartSyncPlugin = (function(window) {
             collection.config = target;
 
             var onFetch = function() {
-                progress += 10; // bogus but we don't have the totalSize
+                progress += (100 - progress) / 2; // bogus but we don't have the totalSize
                 if (collection.hasMore()) {
                     collection.getMore().then(onFetch);
                     self.sendUpdate(syncId, "RUNNING", progress);
@@ -99,17 +99,13 @@ var MockSmartSyncPlugin = (function(window) {
         },
 
         syncUp: function(target, soupName, options, successCB, errorCB) {
-            if (target.type !== "cache") {
-                errorCB("Wrong target type: " + target.type);
-                return;
-            }
-
             var self = this;
             var syncId = self.recordSync("syncUp", target, soupName, options);
             var cache = new Force.StoreCache(soupName);
             var collection = new Force.SObjectCollection();
+            var numberRecords;
             collection.cache = cache;
-            collection.config = target;
+            collection.config = {type:"cache", cacheQuery:target};
 
             var sync = function() {
                 if (collection.length == 0) {
@@ -132,6 +128,7 @@ var MockSmartSyncPlugin = (function(window) {
                     }
                 };
 
+                self.sendUpdate(syncId, "RUNNING", 100 - (collection.length / numberRecords));
                 return record.get("__locally_deleted__") ? record.destroy(saveOptions) : record.save(null, saveOptions);
             };
 
@@ -140,6 +137,7 @@ var MockSmartSyncPlugin = (function(window) {
 
                 collection.fetch({
                     success: function() {
+                        numberRecords = collection.length;
                         sync();
                     },
                     error: function() {
