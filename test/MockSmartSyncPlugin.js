@@ -43,14 +43,15 @@ var MockSmartSyncPlugin = (function(window) {
 
         recordSync: function(type, target, soupName, options) {
             var syncId = lastSyncId++;
-            var sync = {syncId: syncId, type:type, target:target, soupName:soupName, options: options, status: "started"};
+            var sync = {syncId: syncId, type:type, target:target, soupName:soupName, options: options, status: "RUNNING", progress: 0};
             syncs[syncId] = sync;
             return syncId;
         },
 
-        sendUpdate: function(syncId, status, extras) {
+        sendUpdate: function(syncId, status, progress, extras) {
             var sync = syncs[syncId];
             sync.status = status;
+            sync.progress = progress;
             var event = new CustomEvent(sync.type, {detail: _.extend(sync, extras)});
             document.dispatchEvent(event);
         },
@@ -69,15 +70,18 @@ var MockSmartSyncPlugin = (function(window) {
             var syncId = self.recordSync("syncDown", target, soupName, options);
             var cache = new Force.StoreCache(soupName);
             var collection = new Force.SObjectCollection();
+            var progress = 0;
             collection.cache = cache;
             collection.config = target;
 
             var onFetch = function() {
-               if (collection.hasMore()) {
-                   collection.getMore().then(onFetch);
-               }
+                progress += 10; // bogus but we don't have the totalSize
+                if (collection.hasMore()) {
+                    collection.getMore().then(onFetch);
+                    self.sendUpdate(syncId, "RUNNING", progress);
+                }
                 else {
-                    self.sendUpdate(syncId, "done");                    
+                    self.sendUpdate(syncId, "DONE", 100);
                 }
             };
 
@@ -88,7 +92,7 @@ var MockSmartSyncPlugin = (function(window) {
                 collection.fetch({
                     success: onFetch,
                     error: function() {
-                        self.sendUpdate(syncId, "failed");
+                        self.sendUpdate(syncId, "FAILED", 0);
                     }
                 });
             });
@@ -109,7 +113,7 @@ var MockSmartSyncPlugin = (function(window) {
 
             var sync = function() {
                 if (collection.length == 0) {
-                    self.sendUpdate(syncId, "done");
+                    self.sendUpdate(syncId, "DONE", 100);
                     return;
                 }
                 
@@ -123,7 +127,7 @@ var MockSmartSyncPlugin = (function(window) {
                         sync();
                     },
                     error: function() {
-                        self.sendUpdate(syncId, "failed", {recordId: record.id}); // or should we update the cached record with __sync_failed__ = true                  
+                        self.sendUpdate(syncId, "FAILED", 0, {recordId: record.id}); // or should we update the cached record with __sync_failed__ = true                  
                         sync();
                     }
                 };
@@ -139,7 +143,7 @@ var MockSmartSyncPlugin = (function(window) {
                         sync();
                     },
                     error: function() {
-                        self.sendUpdate(syncId, "failed");
+                        self.sendUpdate(syncId, "FAILED", 0);
                     }
                 });
             });        
