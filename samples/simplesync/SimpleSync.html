@@ -153,8 +153,14 @@ app.views.SearchPage = Backbone.View.extend({
     },
 
     handleSyncEvent: function(event) {
-        alert(event.type + " " + event.detail.status);
-        if (event.detail.status === "done") { this.search(); }
+        if (event.type === "syncDown") {
+            var label = "Sync Down";
+            if (typeof event.detail.progress === "number" && event.detail.progress < 100) {
+                label += " (" + event.detail.progress + "%)";
+            }
+            $(".syncdown").html(label);
+        }
+        if (event.detail.status === "DONE") { this.search(); }
     },
 
     render: function(eventName) {
