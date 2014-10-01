@@ -403,6 +403,29 @@ SmartSyncTestSuite.prototype.testStoreCacheFind = function() {
         assertContains(result.records[2], {Id:"009", Name:"JamesOther", Mission:"EFG"});
         QUnit.equals(result.hasMore(), false, "there should not be more records");
 
+        console.log("## Doing a find with smart query spec and a pageSize smaller than result set");
+        return cache.find({queryType:"smart", smartSql:"SELECT {testSoupForStoreCache:_soup} FROM {testSoupForStoreCache} WHERE {testSoupForStoreCache:Name} LIKE '%' ORDER BY LOWER({testSoupForStoreCache:Mission})", pageSize:2});
+    })
+    .then(function(result) {
+        resultSet = result;
+        console.log("## Checking returned result");
+        QUnit.equals(resultSet.records.length, 2, "two records should have been returned");
+        assertContains(resultSet.records[0], {Id:"007"});
+        assertContains(resultSet.records[1], {Id:"008"});
+        QUnit.equals(resultSet.hasMore(), true, "there should be more records");
+        console.log("## Getting the next page of records");
+        return resultSet.getMore();
+    })
+    .then(function(records) {
+        console.log("## Checking returned result");
+        QUnit.equals(records.length, 1, "one record should have been returned");
+        assertContains(records[0], {Id:"009"});
+        QUnit.equals(resultSet.hasMore(), false, "there should not be more records");
+        QUnit.equals(resultSet.records.length, 3, "three records should be in result set");
+        assertContains(resultSet.records[0], {Id:"007"});
+        assertContains(resultSet.records[1], {Id:"008"});
+        assertContains(resultSet.records[2], {Id:"009"});
+
         console.log("## Cleaning up");
         return Force.smartstoreClient.removeSoup(soupName);
     })
