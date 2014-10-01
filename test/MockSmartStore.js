@@ -431,9 +431,9 @@ var MockSmartStore = (function(window) {
             var cursorId = _nextCursorId++;
             var cursor = {
                 cursorId: cursorId, 
+                pageSize: querySpec.pageSize,
                 soupName: soupName, 
                 querySpec: querySpec, 
-                pageSize: querySpec.pageSize,
                 currentPageIndex: 0,
                 currentPageOrderedEntries: results.slice(0, querySpec.pageSize),
                 totalPages: Math.ceil(results.length / querySpec.pageSize),
@@ -441,7 +441,9 @@ var MockSmartStore = (function(window) {
             };
 
             _cursors[cursorId] = cursor;
-            return cursor;
+            // Since original cursor from smarstore doesn't contain querySpec and soupName, 
+            // remove them here too before returning cursor to the user.
+            return _.omit(cursor, 'soupName', 'querySpec');
         },
 
         moveCursorToPage: function(cursorId, pageIndex) {
@@ -452,7 +454,9 @@ var MockSmartStore = (function(window) {
             cursor.currentPageIndex = pageIndex;
             cursor.currentPageOrderedEntries = results.slice(pageIndex*querySpec.pageSize, (pageIndex+1)*querySpec.pageSize);
 
-            return cursor;
+            // Since original cursor from smarstore doesn't contain querySpec and soupName, 
+            // remove them here too before returning cursor to the user.
+            return _.omit(cursor, 'soupName', 'querySpec');
         },
 
         closeCursor: function(cursorId) {
