@@ -363,7 +363,7 @@
                                 cursor = c;
                                 var newRecords = cursor.currentPageOrderedEntries;
                                 // Need to flatten the resultset if it was a smartsql, since smart query result will look like [[soupElt1], ...]
-                                if (cursor.querySpec.queryType === "smart") newRecords = _.flatten(newRecords);
+                                if (querySpec.queryType === "smart") newRecords = _.flatten(newRecords);
                                 that.records = _.union(that.records, newRecords);
                                 return newRecords;
                             });
