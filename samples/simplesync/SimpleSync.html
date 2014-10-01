@@ -3,8 +3,9 @@
 <head>
 <title>Users</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
-<link rel="stylesheet" href="css/styles.css"/>
 <link rel="stylesheet" href="css/ratchet.css"/>
+<link rel="stylesheet" href="css/ratchet-theme-ios.css"/> <!-- TODO import ratchet-theme.css instead and have ratchet-theme.css point to the theme for the platform -->
+<link rel="stylesheet" href="css/styles.css"/>
 </head>
 
 <body>
@@ -36,61 +37,54 @@
 
 <!-- --------------------------------------- Search page template ------------------------------------------------- -->
 <script id="search-page" type="text/template">
-  <header class="bar-title">
+  <header class="bar bar-nav">
     <h1 class="title">Users</h1>
   </header>
+  <footer class="bar bar-footer">
+    <a class="btn btn-nav btn-positive pull-left syncdown">Sync Down</a>
+    <a class="btn btn-nav btn-positive pull-left syncup">Sync Up</a>
+    <a class="btn btn-nav pull-right cachesize">Cache Size</a>
+    <a class="btn btn-nav pull-right inspect">DB</a>
+  </footer>
 
-  <div class="bar-standard bar-header-secondary">
+  <div class="bar bar-standard bar-header-secondary">
     <input type="search" class="search-key" placeholder="Search"/>
   </div>
 
   <div class="content">
-    <ul class="list"></ul>
+    <ul class="table-view"></ul>
   </div>
-
-  <footer class="bar-footer">
-    <a class="button syncdown">Sync Down</a>
-    <a class="button syncup">Sync Up</a>
-    <a class="button cachesize">Cache Size</a>
-    <a class="button inspect">DB</a>
-  </footer>
 </script>
 
 <!-- --------------------------------------- User list item template ---------------------------------------------- -->
 <script id="user-list-item" type="text/template">
 
-  <a href="#users/<%= Id %>" class="pad-right">
-    <div class="details-short">
-      <b><%= FirstName %> <%= LastName %></b><br/>
+  <a href="#users/<%= Id %>">
+    <div>
+      <span class="important"><%= FirstName %> <%= LastName %></span><br/>
       <% if (Title) { %><%= Title %><% } %> <% if (CompanyName) { %><%= CompanyName %><% } %>
-      <% if (__locally_updated__) { %><span class="count-main">modified</span><br/><% } %>
+      <% if (__locally_updated__) { %><span class="pull-right btn btn-negative">modified</span><br/><% } %>
     </div>
   </a>
 </script>
 
 <!-- --------------------------------------- User page template -------------------------------------------------- -->
 <script id="user-page" type="text/template">
-  <header class="bar-title">
-    <a href="#" class="button-prev">Back</a>
-    <h1 class="title">User</h1>
-    <a class="button save">Save</a>
+  <header class="bar bar-nav">
+    <a href="#" class="btn btn-nav pull-left back">Back</a>
+    <a class="btn btn-nav btn-positive pull-right save">Save</a>
+    <h1 class="title"><%= FirstName %> <%= LastName %></h1>
   </header>
-
-  <footer class="bar-footer">
-    <span id="offlineStatus"></span>
-  </footer>
 
   <div class="content">
     <div class="content-padded">
       <div class="details">
-        <b><%= FirstName %> <%= LastName %></b><br/>
-        <%= Id %><br/>
         <input placeholder="Title" type="text" name="Title" value="<%= Title %>" /><br/>
         <input placeholder="CompanyName" type="text" name="CompanyName" value="<%= CompanyName %>" /><br/>
         <input placeholder="City" type="text" name="City" value="<%= City %>" /><br/>
         <input placeholder="Phone" type="text" name="MobilePhone" value="<%= MobilePhone %>" /><br/>
         <input placeholder="Email" type="text" name="Email" value="<%= Email %>" />
-        <% if (__locally_updated__) { %>LOCALLY MODIFIED<br/><% } %>
+        <% if (__locally_updated__) { %><span class="btn btn-negative btn-block">Locally Modified</span><% } %>
       </div>
     </div>
   </div>
@@ -221,7 +215,7 @@ app.views.UserListItemView = Backbone.View.extend({
     template: _.template($("#user-list-item").html()),
 
     render: function(eventName) {
-        $(this.el).html(this.template(this.model.toJSON()));
+        $(this.el).addClass("table-view-cell").html(this.template(this.model.toJSON()));
         return this;
     },
 
