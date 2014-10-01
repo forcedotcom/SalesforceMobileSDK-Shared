@@ -431,8 +431,6 @@ var MockSmartStore = (function(window) {
             var cursorId = _nextCursorId++;
             var cursor = {
                 cursorId: cursorId, 
-                soupName: soupName, 
-                querySpec: querySpec, 
                 pageSize: querySpec.pageSize,
                 currentPageIndex: 0,
                 currentPageOrderedEntries: results.slice(0, querySpec.pageSize),
@@ -440,7 +438,7 @@ var MockSmartStore = (function(window) {
                 totalEntries: results.length
             };
 
-            _cursors[cursorId] = cursor;
+            _cursors[cursorId] = _.extend(cursor, {soupName: soupName, querySpec: querySpec});
             return cursor;
         },
 
@@ -452,7 +450,7 @@ var MockSmartStore = (function(window) {
             cursor.currentPageIndex = pageIndex;
             cursor.currentPageOrderedEntries = results.slice(pageIndex*querySpec.pageSize, (pageIndex+1)*querySpec.pageSize);
 
-            return cursor;
+            return _.omit(cursor, 'soupName', 'querySpec');
         },
 
         closeCursor: function(cursorId) {
