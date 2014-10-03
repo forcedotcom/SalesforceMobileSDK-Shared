@@ -60,11 +60,9 @@
 <script id="user-list-item" type="text/template">
 
   <a href="#users/<%= Id %>">
-    <div>
-      <span class="important"><%= FirstName %> <%= LastName %></span><br/>
-      <% if (Title) { %><%= Title %><% } %> <% if (CompanyName) { %><%= CompanyName %><% } %>
-      <% if (__locally_updated__) { %><span class="pull-right btn btn-negative">modified</span><br/><% } %>
-    </div>
+    <span class="important"><%= FirstName %> <%= LastName %></span><br/>
+    <% if (Title) { %><%= Title %><% } %> <% if (CompanyName) { %><%= CompanyName %><% } %>
+    <% if (__locally_updated__) { %><span class="pull-right btn btn-negative">modified</span><br/><% } %>
   </a>
 </script>
 
