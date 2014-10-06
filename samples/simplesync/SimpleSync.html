@@ -41,7 +41,9 @@
     <h1 class="title">Users</h1>
   </header>
   <footer class="bar bar-footer">
-    <a class="btn btn-nav btn-positive pull-left syncdown">Sync Down</a>
+    <a class="btn btn-nav btn-positive pull-left syncdownmru">Sync mru</a>
+    <a class="btn btn-nav btn-positive pull-left syncdownsoql">Sync soql</a>
+    <a class="btn btn-nav btn-positive pull-left syncdownsosl">Sync sosl</a>
     <a class="btn btn-nav btn-positive pull-left syncup">Sync Up</a>
     <a class="btn btn-nav pull-right cachesize">Cache Size</a>
     <a class="btn btn-nav pull-right inspect">DB</a>
@@ -130,7 +132,9 @@ app.views.SearchPage = Backbone.View.extend({
 
     events: {
         "keyup .search-key": "search",
-        "click .syncdown": "syncDown",
+        "click .syncdownmru": "syncDownMru",
+        "click .syncdownsoql": "syncDownSoql",
+        "click .syncdownsosl": "syncDownSosl",
         "click .syncup": "syncUp",
         "click .cachesize": "cacheSize",
         "click .inspect": "inspect"
@@ -149,7 +153,8 @@ app.views.SearchPage = Backbone.View.extend({
         var progress =  (typeof sync.progress === "number" && sync.progress < 100) ? " (" + Math.round(sync.progress) + "%)" : "";
 
         if (sync.type === "syncDown") {
-            $(".syncdown").html("Sync Down" + progress);
+            var syncType = sync.target.type.toLowerCase()
+            $(".syncdown" + syncType).html("Sync " + syncType + progress);
         }
         if (sync.type === "syncUp") {
             $(".syncup").html("Sync Up" + progress);
@@ -164,9 +169,20 @@ app.views.SearchPage = Backbone.View.extend({
         return this;
     },
 
-    syncDown: function(event) {
-        var soql = "SELECT " + this.fieldlist.join(",") + " FROM User WHERE CompanyName = 'salesforce.com' LIMIT 10000";
-        cordova.require("com.salesforce.plugin.smartsync").syncDown({type:"soql", query:soql}, "users", {}, this.handleSyncUpdate.bind(this));
+    syncDown: function(target) {
+        cordova.require("com.salesforce.plugin.smartsync").syncDown(target, "users", {}, this.handleSyncUpdate.bind(this));
+    },
+
+    syncDownMru: function(event) {
+        this.syncDown({type:"mru", sobjectType: "User", fieldlist: this.fieldlist});
+    },
+
+    syncDownSoql: function(event) {
+        this.syncDown({type:"soql", query:"SELECT " + this.fieldlist.join(",") + " FROM User WHERE CompanyName = 'salesforce.com' LIMIT 10000"});
+    },
+
+    syncDownSosl: function(event) {
+        this.syncDown({type:"sosl", query:"FIND {salesforce.com} RETURNING User (" + this.fieldlist.join(",") + ")"});
     },
 
     syncUp: function(event) {
