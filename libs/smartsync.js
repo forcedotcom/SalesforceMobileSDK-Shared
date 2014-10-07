@@ -1118,7 +1118,8 @@
                 return {
                     records: resp,
                     totalSize: resp.length,
-                    hasMore: function() { return false; }
+                    hasMore: function() { return false; },
+                    getMore: function() { return null; }
                 }
             })
         };
