@@ -34,12 +34,17 @@ var SmartSyncTestSuite = function () {
     SFTestSuite.call(this, "SmartSyncTestSuite");
 
     // To run specific tests
-    // this.testsToRun = ["testFetchApexRestObjectsFromServer"];
+    this.testsToRun = ["testSyncDown"];
 };
 
 // We are sub-classing SFTestSuite
 SmartSyncTestSuite.prototype = new SFTestSuite();
 SmartSyncTestSuite.prototype.constructor = SmartSyncTestSuite;
+
+// SmartSyncPlugin
+SmartSyncTestSuite.prototype.syncDown = promiser(cordova.require("com.salesforce.plugin.smartsync"), "syncDown");
+SmartSyncTestSuite.prototype.syncUp = promiser(cordova.require("com.salesforce.plugin.smartsync"), "syncUp");
+SmartSyncTestSuite.prototype.getSyncStatus = promiser(cordova.require("com.salesforce.plugin.smartsync"), "getSyncStatus");
 
 //-------------------------------------------------------------------------------------------------------
 //
@@ -2567,6 +2572,68 @@ SmartSyncTestSuite.prototype.testSObjectCollectionFetch = function() {
 
 //-------------------------------------------------------------------------------------------------------
 //
+// Tests for sync down
+// 
+//-------------------------------------------------------------------------------------------------------
+
+/** 
+ * TEST smartsyncplugin sync down
+ */
+SmartSyncTestSuite.prototype.testSyncDown = function() {
+    console.log("# In SmartSyncTestSuite.testSyncDown");
+    var self = this;
+    var idToName = {};
+    var target;
+    var soupName = "testSyncDown";
+    var cache;
+    var collection = new Force.SObjectCollection();
+    collection.config = function() {
+        return ;
+    };
+    var collectionFetch = optionsPromiser(collection, "fetch", "collection");
+
+    Force.smartstoreClient.removeSoup(soupName)
+        .then(function() {
+            console.log("## Initialization of StoreCache's");
+            cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
+            return $.when(cache.init());
+        })
+        .then(function() { 
+            console.log("## Direct creation against server");    
+            return createRecords(idToName, "testFetchSObjects", 3);
+        })
+        .then(function() {
+            console.log("## Calling sync down");
+            target = {type:"soql", query:"SELECT Id, Name FROM Account WHERE Id IN ('" +  _.keys(idToName).join("','") + "') ORDER BY Name"};
+            return self.syncDown(target, soupName, {});
+        })
+        .then(function(sync) {
+            console.log("## Checking sync");
+            assertContains(sync, {type:"syncDown", target: target, status:"RUNNING", progress:0, soupName: soupName});
+            return eventPromiser(document, "sync");
+        })
+        .then(function(event) {
+            console.log("## Checking event");
+            assertContains(event.detail, {type:"syncDown", target: target, status:"DONE", progress:100, soupName: soupName});
+
+            console.log("## Checking cache");
+            return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
+        })
+        .then(function(result) {
+            console.log("## Checking data retured from cache");
+            QUnit.equals(result.records.length, 3, "Expected 3 records");
+            QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
+
+            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
+
+//-------------------------------------------------------------------------------------------------------
+//
 // Helper methods
 // 
 //-------------------------------------------------------------------------------------------------------
@@ -2645,6 +2712,18 @@ var deleteRecords = function(idToName) {
     })));
 };
 
+/**
+ * Helper function turning event listener into promise
+ */
+var eventPromiser = function(object, eventName) {
+    var d = $.Deferred();
+    var listener = function(e) {
+        d.resolve(e);
+        object.removeEventListener(eventName, listener);
+    }
+    object.addEventListener(eventName, listener, false);
+    return d.promise();
+};
 
 /**
  * Helper function turning function taking success/error options into promise
