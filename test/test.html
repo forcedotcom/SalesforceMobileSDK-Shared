@@ -12,6 +12,7 @@
     <script src="MockCordova.js"></script>
 
     <!-- sfdc libs -->
+    <script src="../libs/forcetk.ui.js"></script>
     <script src="../libs/forcetk.mobilesdk.js"></script>
     <script src="../libs/cordova.force.js"></script>
     <script src="../libs/smartsync.js"></script>
@@ -37,14 +38,26 @@
     <script charset="utf-8">
     var debugMode = true;
 
-    var creds = {
-        accessToken: "--will-be-obtained-by-refresh--",
-        refreshToken: "5Aep861KIwKdekr90KlxVVUI47zdR6dX_VeBWZBgUZuRVDPRFxk1TKdhIU.JlBAdWR1isPBCbUaeuSt..EbEbkA",
-        clientId: "3MVG9Iu66FKeHhINkB1l7xt7kR8czFcCTUhgoA8Ol2Ltf1eYHOU4SqQRSEitYFDUpqRWcoQ2.dBv_a1Dyu5xa",
-        loginUrl: "https://test.salesforce.com",
-        instanceUrl: "https://cs1.salesforce.com"
-    };
-    Force.init(creds, null, null, null);
+    var loginUrl = "https://test.salesforce.com/";
+    var consumerKey = "3MVG98dostKihXN53TYStBIiS8HkwJJ.hsRQPcdchz8X9k16IRCU4KpvmoRuPRgAsWhy2cwXyX0JUr21qQ.mX";
+    var callbackUrl = "https://sfdc-sobject-editor.herokuapp.com/oauth/success";
+    
+    // Instantiating forcetk ClientUI
+    var oauthClient = new ForceOAuth(loginUrl, consumerKey, callbackUrl,
+                                     function forceOAuthUI_successHandler(forcetkClient) { // successCallback
+                                         console.log('OAuth success!');
+                                         creds = {
+                                             accessToken: oauthClient.oauthResponse.access_token,
+                                             instanceUrl: oauthClient.oauthResponse.instance_url
+                                         };
+                                         Force.init(creds, null, null, null);
+                                     },
+                                     function forceOAuthUI_errorHandler(error) { // errorCallback
+                                         console.log('OAuth error!');
+                                         if (confirm("Authentication Failed. Try again?")) oauthClient.login();
+                                     });
+    
+    oauthClient.login();
 
     window.addEventListener("load", function() {
         document.getElementById("link_sdkinfo_test_suite")
