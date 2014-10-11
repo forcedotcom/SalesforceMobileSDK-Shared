@@ -54,6 +54,7 @@ var MockSmartSyncPlugin = (function(window) {
             sync.progress = progress;
             var event = new CustomEvent("sync", {detail: _.extend(sync, extras)});
             document.dispatchEvent(event);
+            console.log("Sync type:" + sync.type + " id:" + syncId + " status:" + status + " progress:" + progress);
         },
 
         getSyncStatus: function(syncId, successCB, errorCB) {
@@ -86,6 +87,7 @@ var MockSmartSyncPlugin = (function(window) {
             };
 
 
+            self.sendUpdate(syncId, "RUNNING", 0);
             cache.init().then(function() {
                 successCB(syncs[syncId]);
 
@@ -108,8 +110,10 @@ var MockSmartSyncPlugin = (function(window) {
             collection.config = {type:"cache", cacheQuery:{queryType:"exact", indexPath:"__local__", matchKey:true, order:"ascending", pageSize:10000}};
 
             var sync = function() {
+                var progress = Math.floor((numberRecords - collection.length)*100/numberRecords);
+                self.sendUpdate(syncId, (progress < 100 ? "RUNNING" : "DONE"), progress);
+
                 if (collection.length == 0) {
-                    self.sendUpdate(syncId, "DONE", 100);
                     return;
                 }
                 
@@ -128,7 +132,7 @@ var MockSmartSyncPlugin = (function(window) {
                     }
                 };
 
-                self.sendUpdate(syncId, "RUNNING", 100 - (collection.length / numberRecords));
+
                 return record.get("__locally_deleted__") ? record.destroy(saveOptions) : record.save(null, saveOptions);
             };
 
