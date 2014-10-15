@@ -1602,4 +1602,4 @@
 
     } // if (!_.isUndefined(Backbone)) {
 })
-.call(this, jQuery, _, Backbone, forcetk);
+.call(this, jQuery, _, window.Backbone, forcetk);
