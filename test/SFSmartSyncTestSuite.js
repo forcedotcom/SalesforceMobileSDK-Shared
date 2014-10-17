@@ -34,7 +34,7 @@ var SmartSyncTestSuite = function () {
     SFTestSuite.call(this, "SmartSyncTestSuite");
 
     // To run specific tests
-    this.testsToRun = ["testSyncDown", "testSyncUpLocallyUpdated"];
+    this.testsToRun = ["testSyncDown", "testSyncUpLocallyUpdated", "testSyncUpLocallyDeleted"];
 };
 
 // We are sub-classing SFTestSuite
@@ -2723,6 +2723,109 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdated = function() {
             self.finalizeTest();
         });
 };
+
+/** 
+ * TEST smartsyncplugin sync up with locally deleted records
+ */
+SmartSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
+    console.log("# In SmartSyncTestSuite.testSyncUpLocallyDeleted");
+    var self = this;
+    var idToName = {};
+    var deletedRecords;
+    var target;
+    var options = {fieldlist: ["Name"]};
+    var soupName = "testSyncUpLocallyDeleted";
+    var cache;
+
+    Force.smartstoreClient.removeSoup(soupName)
+        .then(function() {
+            console.log("## Initialization of StoreCache's");
+            cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
+            return $.when(cache.init());
+        })
+        .then(function() { 
+            console.log("## Direct creation against server");    
+            return createRecords(idToName, "testFetchSObjects", 3);
+        })
+        .then(function() {
+            console.log("## Calling sync down");
+            target = {type:"soql", query:"SELECT Id, Name FROM Account WHERE Id IN ('" +  _.keys(idToName).join("','") + "') ORDER BY Name"};
+            return self.syncDown(target, soupName, {});
+        })
+        .then(function(sync) {
+            console.log("## Checking sync");
+            assertContains(sync, {type:"syncDown", target: target, status:"RUNNING", progress:0, soupName: soupName});
+            return eventPromiser(document, "sync");
+        })
+        .then(function(event) {
+            console.log("## Checking event");
+            assertContains(event.detail, {type:"syncDown", target: target, status:"DONE", progress:100, soupName: soupName});
+
+            console.log("## Checking cache");
+            return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
+        })
+        .then(function(result) {
+            console.log("## Checking data retured from cache");
+            QUnit.equals(result.records.length, 3, "Expected 3 records");
+            QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
+
+            console.log("## Deleted local records");
+            deletedRecords = [];
+            _.each(_.keys(idToName), function(id) {
+                deletedRecords.push({Id:id, __locally_deleted__:true});
+            });
+            return cache.saveAll(deletedRecords, false);
+        })
+        .then(function(records) {
+            console.log("## Calling sync up");
+            return self.syncUp(soupName, options);
+        })
+        .then(function(sync) {
+            console.log("## Checking sync");
+            assertContains(sync, {type:"syncUp", options: options, status:"RUNNING", progress:0, soupName: soupName});
+            return eventPromiser(document, "sync");
+        })
+        .then(function(event) {
+            console.log("## Checking event");
+            assertContains(event.detail, {type:"syncUp", options: options, status:"RUNNING", progress:0, soupName: soupName});
+            return eventPromiser(document, "sync");
+        })
+        .then(function(event) {
+            console.log("## Checking event");
+            assertContains(event.detail, {type:"syncUp", options: options, status:"RUNNING", progress:33, soupName: soupName});
+            return eventPromiser(document, "sync");
+        })
+        .then(function(event) {
+            console.log("## Checking event");
+            assertContains(event.detail, {type:"syncUp", options: options, status:"RUNNING", progress:66, soupName: soupName});
+            return eventPromiser(document, "sync");
+        })
+        .then(function(event) {
+            console.log("## Checking event");
+            assertContains(event.detail, {type:"syncUp", options: options, status:"DONE", progress:100, soupName: soupName});
+
+            console.log("## Checking cache");
+            return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
+        })
+        .then(function(result) {
+            console.log("## Checking data retured from cache");
+            QUnit.equals(result.records.length, 0, "Expected 0 records");
+
+            console.log("## Checking server");
+            return Force.forcetkClient.query("select Id from Account where Id in ('" + _.pluck(deletedRecords, "Id").join("','") + "')");
+        })
+        .then(function(resp) {
+            console.log("## Checking data returned from server");
+            QUnit.equals(resp.records.length, 0, "Expected 0 records");
+
+            // Cleanup
+            return $.when(Force.smartstoreClient.removeSoup(soupName));
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
 
 //-------------------------------------------------------------------------------------------------------
 //
