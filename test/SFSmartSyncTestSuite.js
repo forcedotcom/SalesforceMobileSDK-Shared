@@ -2599,26 +2599,9 @@ SmartSyncTestSuite.prototype.testSyncDown = function() {
         })
         .then(function() {
             console.log("## Calling sync down");
-            target = {type:"soql", query:"SELECT Id, Name FROM Account WHERE Id IN ('" +  _.keys(idToName).join("','") + "') ORDER BY Name"};
-            return self.syncDown(target, soupName, {});
+            return self.trySyncDown(cache, soupName, idToName);
         })
-        .then(function(sync) {
-            console.log("## Checking sync");
-            assertContains(sync, {type:"syncDown", target: target, status:"RUNNING", progress:0, soupName: soupName});
-            return eventPromiser(document, "sync");
-        })
-        .then(function(event) {
-            console.log("## Checking event");
-            assertContains(event.detail, {type:"syncDown", target: target, status:"DONE", progress:100, soupName: soupName});
-
-            console.log("## Checking cache");
-            return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
-        })
-        .then(function(result) {
-            console.log("## Checking data retured from cache");
-            QUnit.equals(result.records.length, 3, "Expected 3 records");
-            QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
-
+        .then(function() {
             return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
         })
         .then(function() {
@@ -2641,7 +2624,6 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdated = function() {
     var self = this;
     var idToName = {};
     var updatedRecords;
-    var target;
     var options = {fieldlist: ["Name"]};
     var soupName = "testSyncUpLocallyUpdated";
     var cache;
@@ -2658,26 +2640,9 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdated = function() {
         })
         .then(function() {
             console.log("## Calling sync down");
-            target = {type:"soql", query:"SELECT Id, Name FROM Account WHERE Id IN ('" +  _.keys(idToName).join("','") + "') ORDER BY Name"};
-            return self.syncDown(target, soupName, {});
+            return self.trySyncDown(cache, soupName, idToName);
         })
-        .then(function(sync) {
-            console.log("## Checking sync");
-            assertContains(sync, {type:"syncDown", target: target, status:"RUNNING", progress:0, soupName: soupName});
-            return eventPromiser(document, "sync");
-        })
-        .then(function(event) {
-            console.log("## Checking event");
-            assertContains(event.detail, {type:"syncDown", target: target, status:"DONE", progress:100, soupName: soupName});
-
-            console.log("## Checking cache");
-            return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
-        })
-        .then(function(result) {
-            console.log("## Checking data retured from cache");
-            QUnit.equals(result.records.length, 3, "Expected 3 records");
-            QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
-
+        .then(function() {
             console.log("## Updating local records");
             updatedRecords = [];
             _.each(_.keys(idToName), function(id) {
@@ -2687,32 +2652,9 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdated = function() {
         })
         .then(function(records) {
             console.log("## Calling sync up");
-            return self.syncUp(soupName, options);
+            return self.trySyncUpOfThree(soupName, options);
         })
-        .then(function(sync) {
-            console.log("## Checking sync");
-            assertContains(sync, {type:"syncUp", options: options, status:"RUNNING", progress:0, soupName: soupName});
-            return eventPromiser(document, "sync");
-        })
-        .then(function(event) {
-            console.log("## Checking event");
-            assertContains(event.detail, {type:"syncUp", options: options, status:"RUNNING", progress:0, soupName: soupName});
-            return eventPromiser(document, "sync");
-        })
-        .then(function(event) {
-            console.log("## Checking event");
-            assertContains(event.detail, {type:"syncUp", options: options, status:"RUNNING", progress:33, soupName: soupName});
-            return eventPromiser(document, "sync");
-        })
-        .then(function(event) {
-            console.log("## Checking event");
-            assertContains(event.detail, {type:"syncUp", options: options, status:"RUNNING", progress:66, soupName: soupName});
-            return eventPromiser(document, "sync");
-        })
-        .then(function(event) {
-            console.log("## Checking event");
-            assertContains(event.detail, {type:"syncUp", options: options, status:"DONE", progress:100, soupName: soupName});
-
+        .then(function() {
             console.log("## Checking server");
             return checkServerMultiple(_.map(updatedRecords, function(record) { return _.omit(record, "__locally_updated__");}));
         })
@@ -2732,7 +2674,6 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
     var self = this;
     var idToName = {};
     var deletedRecords;
-    var target;
     var options = {fieldlist: ["Name"]};
     var soupName = "testSyncUpLocallyDeleted";
     var cache;
@@ -2749,26 +2690,9 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
         })
         .then(function() {
             console.log("## Calling sync down");
-            target = {type:"soql", query:"SELECT Id, Name FROM Account WHERE Id IN ('" +  _.keys(idToName).join("','") + "') ORDER BY Name"};
-            return self.syncDown(target, soupName, {});
+            return self.trySyncDown(cache, soupName, idToName);
         })
-        .then(function(sync) {
-            console.log("## Checking sync");
-            assertContains(sync, {type:"syncDown", target: target, status:"RUNNING", progress:0, soupName: soupName});
-            return eventPromiser(document, "sync");
-        })
-        .then(function(event) {
-            console.log("## Checking event");
-            assertContains(event.detail, {type:"syncDown", target: target, status:"DONE", progress:100, soupName: soupName});
-
-            console.log("## Checking cache");
-            return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
-        })
-        .then(function(result) {
-            console.log("## Checking data retured from cache");
-            QUnit.equals(result.records.length, 3, "Expected 3 records");
-            QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
-
+        .then(function() {
             console.log("## Deleted local records");
             deletedRecords = [];
             _.each(_.keys(idToName), function(id) {
@@ -2778,32 +2702,9 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
         })
         .then(function(records) {
             console.log("## Calling sync up");
-            return self.syncUp(soupName, options);
+            return self.trySyncUpOfThree(soupName, options);
         })
-        .then(function(sync) {
-            console.log("## Checking sync");
-            assertContains(sync, {type:"syncUp", options: options, status:"RUNNING", progress:0, soupName: soupName});
-            return eventPromiser(document, "sync");
-        })
-        .then(function(event) {
-            console.log("## Checking event");
-            assertContains(event.detail, {type:"syncUp", options: options, status:"RUNNING", progress:0, soupName: soupName});
-            return eventPromiser(document, "sync");
-        })
-        .then(function(event) {
-            console.log("## Checking event");
-            assertContains(event.detail, {type:"syncUp", options: options, status:"RUNNING", progress:33, soupName: soupName});
-            return eventPromiser(document, "sync");
-        })
-        .then(function(event) {
-            console.log("## Checking event");
-            assertContains(event.detail, {type:"syncUp", options: options, status:"RUNNING", progress:66, soupName: soupName});
-            return eventPromiser(document, "sync");
-        })
-        .then(function(event) {
-            console.log("## Checking event");
-            assertContains(event.detail, {type:"syncUp", options: options, status:"DONE", progress:100, soupName: soupName});
-
+        .then(function() {
             console.log("## Checking cache");
             return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
         })
@@ -2825,7 +2726,6 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
             self.finalizeTest();
         });
 };
-
 
 //-------------------------------------------------------------------------------------------------------
 //
@@ -3049,3 +2949,64 @@ var tryConflictDetection = function(message, cache, cacheForOriginals, theirs, y
 };
 
 }
+
+
+/**
+ Helper function to run sync down and consume all status updates until done
+ */
+SmartSyncTestSuite.prototype.trySyncDown = function(cache, soupName, idToName) {
+    var target = {type:"soql", query:"SELECT Id, Name FROM Account WHERE Id IN ('" +  _.keys(idToName).join("','") + "') ORDER BY Name"};
+    var numberRecords = _.keys(idToName).length;
+    return this.syncDown(target, soupName, {})
+        .then(function(sync) {
+            console.log("## Checking sync");
+            assertContains(sync, {type:"syncDown", target: target, status:"RUNNING", progress:0, soupName: soupName});
+            return eventPromiser(document, "sync");
+        })
+        .then(function(event) {
+            console.log("## Checking event");
+            assertContains(event.detail, {type:"syncDown", target: target, status:"DONE", progress:100, soupName: soupName});
+
+            console.log("## Checking cache");
+            return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:numberRecords});
+        })
+        .then(function(result) {
+            console.log("## Checking data retured from cache");
+            QUnit.equals(result.records.length, numberRecords, "Expected " + numberRecords + " records");
+            QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
+        });
+};
+
+/**
+ Helper function to run sync up and consume all status updates until done
+ Expects 3 records to be updated
+ */
+SmartSyncTestSuite.prototype.trySyncUpOfThree = function(soupName, options) {
+    return this.syncUp(soupName, options)
+        .then(function(sync) {
+            console.log("## Checking sync");
+            assertContains(sync, {type:"syncUp", options: options, status:"RUNNING", progress:0, soupName: soupName});
+            return eventPromiser(document, "sync");
+        })
+        .then(function(event) {
+            console.log("## Checking event");
+            assertContains(event.detail, {type:"syncUp", options: options, status:"RUNNING", progress:0, soupName: soupName});
+            return eventPromiser(document, "sync");
+        })
+        .then(function(event) {
+            console.log("## Checking event");
+            assertContains(event.detail, {type:"syncUp", options: options, status:"RUNNING", progress:33, soupName: soupName});
+            return eventPromiser(document, "sync");
+        })
+        .then(function(event) {
+            console.log("## Checking event");
+            assertContains(event.detail, {type:"syncUp", options: options, status:"RUNNING", progress:66, soupName: soupName});
+            return eventPromiser(document, "sync");
+        })
+        .then(function(event) {
+            console.log("## Checking event");
+            assertContains(event.detail, {type:"syncUp", options: options, status:"DONE", progress:100, soupName: soupName});
+        });
+};
+
+
