@@ -2655,6 +2655,16 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdated = function() {
             return self.trySyncUpOfThree(soupName, options);
         })
         .then(function() {
+            console.log("## Checking cache");
+            return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
+        })
+        .then(function(result) {
+            console.log("## Checking data retured from cache");
+            _.each(result.records, function(record) {
+                QUnit.ok(!record.__local__, "Record should no longer marked as local");
+                QUnit.ok(!record.__locally_updated__, "Record should no longer marked as updated");
+            });
+
             console.log("## Checking server");
             return checkServerMultiple(_.map(updatedRecords, function(record) { return _.omit(record, "__locally_updated__");}));
         })
