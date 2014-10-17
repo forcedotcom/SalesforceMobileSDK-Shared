@@ -222,26 +222,32 @@ if (forcetk.Client === undefined) {
      */
     forcetk.Client.prototype.refreshAccessToken = function(callback, error) {
         var that = this;
-        if (this.authCallback == null && this.refreshToken) {
-            var url = this.loginUrl + '/services/oauth2/token';
-            return $j.ajax({
-                type: 'POST',
-                url: (this.proxyUrl !== null) ? this.proxyUrl: url,
-                cache: false,
-                processData: false,
-                data: 'grant_type=refresh_token&client_id=' + this.clientId + '&refresh_token=' + this.refreshToken,
-                success: function(response) {
-                    that.setSessionToken(response.access_token, null, response.instance_url);
-                    callback();
-                },
-                error: error,
-                dataType: "json",
-                beforeSend: function(xhr) {
-                    if (that.proxyUrl !== null) {
-                        xhr.setRequestHeader('SalesforceProxy-Endpoint', url);
+        if (typeof this.authCallback === 'undefined' || this.authCallback === null) {
+            if (this.refreshToken) {
+                var url = this.loginUrl + '/services/oauth2/token';
+                return $j.ajax({
+                    type: 'POST',
+                    url: (this.proxyUrl !== null) ? this.proxyUrl: url,
+                    cache: false,
+                    processData: false,
+                    data: 'grant_type=refresh_token&client_id=' + this.clientId + '&refresh_token=' + this.refreshToken,
+                    success: function(response) {
+                        that.setSessionToken(response.access_token, null, response.instance_url);
+                        callback();
+                    },
+                    error: error,
+                    dataType: "json",
+                    beforeSend: function(xhr) {
+                        if (that.proxyUrl !== null) {
+                            xhr.setRequestHeader('SalesforceProxy-Endpoint', url);
+                        }
                     }
-                }
-            });
+                });
+             } else {
+                 if (typeof error === 'function') {
+                     error();
+                 }
+             }
         } else {
             this.authCallback(that, callback, error);
         }

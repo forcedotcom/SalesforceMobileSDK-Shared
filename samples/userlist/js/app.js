@@ -29,8 +29,9 @@
             // Callback method when authentication succeeds.
             function (creds) {
                 // Create forcetk client instance for rest API calls
-                var forceClient = new forcetk.Client();
+                var forceClient = new forcetk.Client(creds.clientId, creds.loginUrl);
                 forceClient.setSessionToken(creds.accessToken, "v31.0", creds.instanceUrl);
+                forceClient.setRefreshToken(creds.refreshToken);
 
                 // Call success handler and handover the forcetkClient
                 successHandler(forceClient);
