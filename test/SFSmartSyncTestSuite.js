@@ -34,7 +34,7 @@ var SmartSyncTestSuite = function () {
     SFTestSuite.call(this, "SmartSyncTestSuite");
 
     // To run specific tests
-    this.testsToRun = ["testSyncDown", "testSyncUpLocallyUpdated", "testSyncUpLocallyDeleted"];
+    // this.testsToRun = ["testSyncDown", "testSyncUpLocallyUpdated", "testSyncUpLocallyDeleted", "testSyncUpLocallyCreated"];
 };
 
 // We are sub-classing SFTestSuite
@@ -2476,7 +2476,7 @@ SmartSyncTestSuite.prototype.testSObjectCollectionFetch = function() {
         })
         .then(function() { 
             console.log("## Direct creation against server");    
-            return createRecords(idToName, "testFetchSObjects", 3);
+            return createRecords(idToName, "testSObjectCollectionFetch", 3);
         })
         .then(function() {
             console.log("## Trying fetch with soql with no cache parameter");
@@ -2595,7 +2595,7 @@ SmartSyncTestSuite.prototype.testSyncDown = function() {
         })
         .then(function() { 
             console.log("## Direct creation against server");    
-            return createRecords(idToName, "testFetchSObjects", 3);
+            return createRecords(idToName, "testSyncDown", 3);
         })
         .then(function() {
             console.log("## Calling sync down");
@@ -2660,13 +2660,14 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdated = function() {
         })
         .then(function(result) {
             console.log("## Checking data retured from cache");
+            QUnit.equals(result.records.length, 3, "Expected 3 records");
             _.each(result.records, function(record) {
                 QUnit.ok(!record.__local__, "Record should no longer marked as local");
                 QUnit.ok(!record.__locally_updated__, "Record should no longer marked as updated");
             });
 
             console.log("## Checking server");
-            return checkServerMultiple(_.map(updatedRecords, function(record) { return _.omit(record, "__locally_updated__");}));
+            return checkServerMultiple(updatedRecords);
         })
         .then(function() {
             return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
@@ -2696,7 +2697,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
         })
         .then(function() { 
             console.log("## Direct creation against server");    
-            return createRecords(idToName, "testFetchSObjects", 3);
+            return createRecords(idToName, "testSyncUpLocallyDeleted", 3);
         })
         .then(function() {
             console.log("## Calling sync down");
@@ -2736,6 +2737,65 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
             self.finalizeTest();
         });
 };
+
+/** 
+ * TEST smartsyncplugin sync up with locally created records
+ */
+SmartSyncTestSuite.prototype.testSyncUpLocallyCreated = function() {
+    console.log("# In SmartSyncTestSuite.testSyncUpLocallyCreated");
+    var self = this;
+    var idToName = {};
+    var createdRecords;
+    var options = {fieldlist: ["Name"]};
+    var soupName = "testSyncUpLocallyCreated";
+    var cache;
+
+    Force.smartstoreClient.removeSoup(soupName)
+        .then(function() {
+            console.log("## Initialization of StoreCache's");
+            cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
+            return $.when(cache.init());
+        })
+        .then(function() { 
+            console.log("## Local creation");    
+            createdRecords = [];
+            for (var i=0; i<3; i++) {
+                createdRecords.push({Id:"local_" + i, Name:"testSyncUpLocallyCreated" + i, __locally_created__:true, attributes:{type:"Account"}});
+            }
+            return cache.saveAll(createdRecords, false);
+        })
+        .then(function(records) {
+            console.log("## Calling sync up");
+            return self.trySyncUpOfThree(soupName, options);
+        })
+        .then(function() {
+            console.log("## Checking cache");
+            return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
+        })
+        .then(function(result) {
+            console.log("## Checking data retured from cache");
+            QUnit.equals(result.records.length, 3, "Expected 3 records");
+            _.each(result.records, function(record) {
+                QUnit.ok(!record.__local__, "Record should no longer marked as local");
+                QUnit.ok(!record.__locally_created__, "Record should no longer marked as created");
+                QUnit.ok(record.Id.indexOf("local_") == -1, "Record's id should no longer be a local id");
+            });
+
+            _.each(result.records, function(record) {
+                idToName[record.Id] = record.Name;
+            });
+
+            console.log("## Checking server");
+            return checkServerMultiple(result.records);
+        })
+        .then(function() {
+            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
 
 //-------------------------------------------------------------------------------------------------------
 //
@@ -2908,7 +2968,8 @@ var checkServer = function(id, expectedServerRecord, caller) {
 var checkServerMultiple = function(records, caller) {
     if (caller == null) caller = getCaller();
     return $.when.apply(null, _.map(records, function(record) {
-        return checkServer(record.Id, record, caller);
+        var expectedServerRecord = _.omit(record, "__local__", "__locally_created__", "__locally_deleted__", "__locally_updated__", "attributes", "_soupEntryId", "_soupLastModifiedDate");
+        return checkServer(record.Id, expectedServerRecord, caller);
     }));
 };
 
