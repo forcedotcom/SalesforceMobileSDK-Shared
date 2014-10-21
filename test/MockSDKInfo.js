@@ -46,7 +46,7 @@ var MockSDKInfo = (function(window) {
 
             cordova.interceptExec(SDKINFO_SERVICE, "getInfo", function (successCB, errorCB, args) {
                 successCB(new SDKInfo("3.0.0", 
-                                      ["com.salesforce.oauth", "com.salesforce.sdkinfo", "com.salesforce.sfaccountmanager", "com.salesforce.testrunner", "com.salesforce.smartstore"], 
+                                      ["com.salesforce.oauth", "com.salesforce.sdkinfo", "com.salesforce.sfaccountmanager", "com.salesforce.testrunner", "com.salesforce.smartstore", "com.salesforce.smartsync"], 
                                       "ForcePluginsTest", "1.0",
                                       {
                                           "remoteAccessConsumerKey": "3MVG92.uWdyphVj4bnolD7yuIpCQsNgddWtqRND3faxrv9uKnbj47H4RkwheHA2lKY4cBusvDVp0M6gdGE8hp",
