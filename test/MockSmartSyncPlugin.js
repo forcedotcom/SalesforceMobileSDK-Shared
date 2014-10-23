@@ -87,6 +87,7 @@ var MockSmartSyncPlugin = (function(window) {
             };
 
 
+            self.sendUpdate(syncId, "RUNNING", 0);
             cache.init().then(function() {
                 successCB(syncs[syncId]);
 
