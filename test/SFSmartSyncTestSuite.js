@@ -1179,7 +1179,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithServerDelete = function() {
         })
         .then(function(data) {
             QUnit.equals(data, null, "Expected null");
-            checkServer(id, null);
+            return checkServer(id, null);
         })
         .then(function() {
             self.finalizeTest();
@@ -2234,7 +2234,7 @@ SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerDelete = function()
         })
         .then(function(data) {
             QUnit.equals(data, null, "Expected null");
-            checkServer(id, null);
+            return checkServer(id, null);
         })
         .then(function() {
             self.finalizeTest();
