@@ -217,6 +217,7 @@ SFTestSuite.prototype.runTest = function (methName) {
  */
 SFTestSuite.prototype.finalizeTest = function() {
 	var methName = this.module.currentTestName;
+	console.log("In finalizeTest: methName=" + methName);
 
 	var testStatus = this.module.testStatusCollection[methName];
 	testStatus.endTime = (new Date()).getTime();
