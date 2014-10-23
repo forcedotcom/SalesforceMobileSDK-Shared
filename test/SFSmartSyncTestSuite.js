@@ -34,7 +34,7 @@ var SmartSyncTestSuite = function () {
     SFTestSuite.call(this, "SmartSyncTestSuite");
 
     // To run specific tests
-    this.testsToRun = ["testSyncDown", "testSyncUpLocallyUpdated", "testSyncUpLocallyDeleted", "testSyncUpLocallyCreated"];
+    // this.testsToRun = ["testSyncDown", "testSyncUpLocallyUpdated", "testSyncUpLocallyDeleted", "testSyncUpLocallyCreated"];
 };
 
 // We are sub-classing SFTestSuite
@@ -2457,7 +2457,7 @@ SmartSyncTestSuite.prototype.testSObjectCollectionFetch = function() {
     console.log("# In SmartSyncTestSuite.testSObjectCollectionFetch");
     var self = this;
     var idToName = {};
-    var soupName = "testFetchSObjects";
+    var soupName = "testSObjectCollectionFetch";
     var soupNameForOriginals = "originalsFor" + soupName;
     var cache;
     var cacheForOriginals;
@@ -2488,7 +2488,7 @@ SmartSyncTestSuite.prototype.testSObjectCollectionFetch = function() {
             QUnit.deepEqual(_.values(idToName).sort(), collection.pluck("Name"), "Wrong names");
 
             console.log("## Trying fetch with sosl with no cache parameter");
-            return collectionFetch({config: {type:"sosl", query:"FIND {testFetchSObjects*} IN ALL FIELDS RETURNING Account(Id, Name) LIMIT 10"}} );
+            return collectionFetch({config: {type:"sosl", query:"FIND {testSObjectCollectionFetch*} IN ALL FIELDS RETURNING Account(Id, Name) LIMIT 10"}} );
         })
         .then(function(result) {
             console.log("## Checking data returned from fetch call");
@@ -2652,7 +2652,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdated = function() {
         })
         .then(function(records) {
             console.log("## Calling sync up");
-            return self.trySyncUpOfThree(soupName, options);
+            return self.trySyncUp(soupName, options);
         })
         .then(function() {
             console.log("## Checking cache");
@@ -2713,7 +2713,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
         })
         .then(function(records) {
             console.log("## Calling sync up");
-            return self.trySyncUpOfThree(soupName, options);
+            return self.trySyncUp(soupName, options);
         })
         .then(function() {
             console.log("## Checking cache");
@@ -2766,7 +2766,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyCreated = function() {
         })
         .then(function(records) {
             console.log("## Calling sync up");
-            return self.trySyncUpOfThree(soupName, options);
+            return self.trySyncUp(soupName, options);
         })
         .then(function() {
             console.log("## Checking cache");
@@ -2880,11 +2880,13 @@ var deleteRecords = function(idToName) {
 /**
  * Helper function turning event listener into promise
  */
-var eventPromiser = function(object, eventName) {
+var eventPromiser = function(object, eventName, filter) {
     var d = $.Deferred();
     var listener = function(e) {
-        d.resolve(e);
-        object.removeEventListener(eventName, listener);
+        if (filter(e)) {
+            d.resolve(e);
+            object.removeEventListener(eventName, listener);
+        }
     }
     object.addEventListener(eventName, listener, false);
     return d.promise();
@@ -3032,17 +3034,7 @@ SmartSyncTestSuite.prototype.trySyncDown = function(cache, soupName, idToName) {
         .then(function(sync) {
             console.log("## Checking sync");
             assertContains(sync, {type:"syncDown", target: target, status:"RUNNING", progress:0, soupName: soupName});
-            return eventPromiser(document, "sync");
-        })
-        .then(function(event) {
-            console.log("## Checking event");
-            assertContains(event.detail, {type:"syncDown", target: target, status:"RUNNING", progress:0, soupName: soupName});
-            return eventPromiser(document, "sync");
-        })
-        .then(function(event) {
-            console.log("## Checking event");
-            assertContains(event.detail, {type:"syncDown", target: target, status:"RUNNING", progress:0, soupName: soupName}); // would have size
-            return eventPromiser(document, "sync");
+            return eventPromiser(document, "sync", function(event) { return event.detail.status == "DONE";});
         })
         .then(function(event) {
             console.log("## Checking event");
@@ -3060,29 +3052,13 @@ SmartSyncTestSuite.prototype.trySyncDown = function(cache, soupName, idToName) {
 
 /**
  Helper function to run sync up and consume all status updates until done
- Expects 3 records to be updated
  */
-SmartSyncTestSuite.prototype.trySyncUpOfThree = function(soupName, options) {
+SmartSyncTestSuite.prototype.trySyncUp = function(soupName, options) {
     return this.syncUp(soupName, options)
         .then(function(sync) {
             console.log("## Checking sync");
             assertContains(sync, {type:"syncUp", options: options, status:"RUNNING", progress:0, soupName: soupName});
-            return eventPromiser(document, "sync");
-        })
-        .then(function(event) {
-            console.log("## Checking event");
-            assertContains(event.detail, {type:"syncUp", options: options, status:"RUNNING", progress:0, soupName: soupName});
-            return eventPromiser(document, "sync");
-        })
-        .then(function(event) {
-            console.log("## Checking event");
-            assertContains(event.detail, {type:"syncUp", options: options, status:"RUNNING", progress:33, soupName: soupName});
-            return eventPromiser(document, "sync");
-        })
-        .then(function(event) {
-            console.log("## Checking event");
-            assertContains(event.detail, {type:"syncUp", options: options, status:"RUNNING", progress:66, soupName: soupName});
-            return eventPromiser(document, "sync");
+            return eventPromiser(document, "sync", function(event) { return event.detail.status == "DONE";});
         })
         .then(function(event) {
             console.log("## Checking event");
