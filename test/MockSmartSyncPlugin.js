@@ -67,6 +67,7 @@ var MockSmartSyncPlugin = (function(window) {
                 return;
             }
 
+            self.sendUpdate(syncId, "RUNNING", 0);
             var self = this;
             var syncId = self.recordSync("syncDown", target, soupName, options);
             var cache = new Force.StoreCache(soupName);
@@ -92,7 +93,10 @@ var MockSmartSyncPlugin = (function(window) {
                 successCB(syncs[syncId]);
 
                 collection.fetch({
-                    success: onFetch,
+                    success: function() {
+                        self.sendUpdate(syncId, "RUNNING", 0); // would have total size
+                        onFetch();
+                    },
                     error: function() {
                         self.sendUpdate(syncId, "FAILED", 0);
                     }

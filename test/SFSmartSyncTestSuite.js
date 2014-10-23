@@ -34,7 +34,7 @@ var SmartSyncTestSuite = function () {
     SFTestSuite.call(this, "SmartSyncTestSuite");
 
     // To run specific tests
-    // this.testsToRun = ["testSyncDown", "testSyncUpLocallyUpdated", "testSyncUpLocallyDeleted", "testSyncUpLocallyCreated"];
+    this.testsToRun = ["testSyncDown", "testSyncUpLocallyUpdated", "testSyncUpLocallyDeleted", "testSyncUpLocallyCreated"];
 };
 
 // We are sub-classing SFTestSuite
@@ -3032,6 +3032,16 @@ SmartSyncTestSuite.prototype.trySyncDown = function(cache, soupName, idToName) {
         .then(function(sync) {
             console.log("## Checking sync");
             assertContains(sync, {type:"syncDown", target: target, status:"RUNNING", progress:0, soupName: soupName});
+            return eventPromiser(document, "sync");
+        })
+        .then(function(event) {
+            console.log("## Checking event");
+            assertContains(event.detail, {type:"syncDown", target: target, status:"RUNNING", progress:0, soupName: soupName});
+            return eventPromiser(document, "sync");
+        })
+        .then(function(event) {
+            console.log("## Checking event");
+            assertContains(event.detail, {type:"syncDown", target: target, status:"RUNNING", progress:0, soupName: soupName}); // would have size
             return eventPromiser(document, "sync");
         })
         .then(function(event) {
