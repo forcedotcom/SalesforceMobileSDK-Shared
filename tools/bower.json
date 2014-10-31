@@ -8,7 +8,8 @@
         "qunit": "v1.2.0",
         "ratchet": "1.0.2",
         "ratchet2": "twbs/ratchet#v2.0.2",
-        "fastclick": "0.6.2"
+        "fastclick": "0.6.2",
+        "react":"v0.12.0"
     },
     "exportsOverride": {
         "jquery": {
@@ -41,6 +42,9 @@
         },
         "fastclick": {
             ".": "lib/fastclick.js"
+        },
+        "react": {
+            ".": "*.js"
         }
     }
 }
