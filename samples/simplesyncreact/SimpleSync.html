@@ -92,7 +92,7 @@
   </div>
 </script>
 
-<script>
+<script type="text/jsx">
 // -------------------------------------------------- The Models ---------------------------------------------------- //
 // The User Model
 app.models.User = Force.SObject.extend({
@@ -128,14 +128,7 @@ app.models.UserCollection = Force.SObjectCollection.extend({
 
 // -------------------------------------------------- The Views ---------------------------------------------------- //
 
-/*
-app.views.SearchPage = React.createClass({
-    render: 
-
-});
-*/
-
-Backbone.View.extend({
+app.views.SearchPage = Backbone.View.extend({
 
     template: _.template($("#search-page").html()),
 
@@ -248,7 +241,37 @@ app.views.UserListItemView = Backbone.View.extend({
     }
 });
 
-app.views.UserPage = Backbone.View.extend({
+app.views.UserPage = React.createClass({
+    render: function() {
+        return (
+                <div>
+                    <header class="bar bar-nav">
+                        <a href="#" class="btn btn-nav pull-left back">Back</a>
+                        <a class="btn btn-nav btn-positive pull-right save">Save</a>
+                        <h1 class="title">{this.props.model.FirstName} {this.props.model.LastName}</h1>
+                    </header>
+                    <div class="content">
+                        <div class="content-padded">
+                            <div class="details">
+                                <input placeholder="Title" type="text" name="Title" value={this.props.model.Title} /><br/>
+                                <input placeholder="CompanyName" type="text" name="CompanyName" value={this.props.model.CompanyName} /><br/>
+                                <input placeholder="City" type="text" name="City" value={this.props.model.City} /><br/>
+                                <input placeholder="Phone" type="text" name="MobilePhone" value={this.props.model.MobilePhone} /><br/>
+                                <input placeholder="Email" type="text" name="Email" value={this.props.model.Email} />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                );
+//                                 {if (this.props.model.__locally_updated__) <span class="btn btn-negative btn-block">Locally Modified</span>}
+
+    }
+});  
+
+/*
+
+
+Backbone.View.extend({
 
     template: _.template($("#user-page").html()),
 
@@ -278,6 +301,7 @@ app.views.UserPage = Backbone.View.extend({
 
 });
 
+*/
 
 // ----------------------------------------------- The Application Router ------------------------------------------ //
 
@@ -306,7 +330,6 @@ app.Router = Backbone.StackRouter.extend({
 
         // We keep a single instance of SearchPage and UserPage
         app.searchPage = new app.views.SearchPage({model: app.searchResults});
-        app.userPage = new app.views.UserPage();
     },
 
     list: function() {
