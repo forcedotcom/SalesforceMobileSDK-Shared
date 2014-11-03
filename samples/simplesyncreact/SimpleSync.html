@@ -56,39 +56,7 @@
   </div>
 
   <div class="content">
-    <ul class="table-view"></ul>
-  </div>
-</script>
-
-<!-- --------------------------------------- User list item template ---------------------------------------------- -->
-<script id="user-list-item" type="text/template">
-
-  <a href="#users/<%= Id %>">
-    <span class="important"><%= FirstName %> <%= LastName %></span><br/>
-    <% if (Title) { %><%= Title %><% } %> <% if (CompanyName) { %><%= CompanyName %><% } %>
-    <% if (__locally_updated__) { %><span class="pull-right btn btn-negative">modified</span><br/><% } %>
-  </a>
-</script>
-
-<!-- --------------------------------------- User page template -------------------------------------------------- -->
-<script id="user-page" type="text/template">
-  <header class="bar bar-nav">
-    <a href="#" class="btn btn-nav pull-left back">Back</a>
-    <a class="btn btn-nav btn-positive pull-right save">Save</a>
-    <h1 class="title"><%= FirstName %> <%= LastName %></h1>
-  </header>
-
-  <div class="content">
-    <div class="content-padded">
-      <div class="details">
-        <input placeholder="Title" type="text" name="Title" value="<%= Title %>" /><br/>
-        <input placeholder="CompanyName" type="text" name="CompanyName" value="<%= CompanyName %>" /><br/>
-        <input placeholder="City" type="text" name="City" value="<%= City %>" /><br/>
-        <input placeholder="Phone" type="text" name="MobilePhone" value="<%= MobilePhone %>" /><br/>
-        <input placeholder="Email" type="text" name="Email" value="<%= Email %>" />
-        <% if (__locally_updated__) { %><span class="btn btn-negative btn-block">Locally Modified</span><% } %>
-      </div>
-    </div>
+    <span id="list"></span>
   </div>
 </script>
 
@@ -145,7 +113,6 @@ app.views.SearchPage = Backbone.View.extend({
     initialize: function() {
         var that = this;
         this.fieldlist = app.models.User.prototype.fieldlist;
-        this.listView = new app.views.UserListView({model: this.model});
         document.addEventListener("sync", function() { 
             that.handleSyncUpdate(event.detail);
         });
@@ -167,7 +134,8 @@ app.views.SearchPage = Backbone.View.extend({
     render: function(eventName) {
         $(this.el).html(this.template());
         $(".search-key", this.el).val(this.model.getCriteria());
-        this.listView.setElement($("ul", this.el)).render();
+        var model = this.model;
+        React.render(<UserListViewReact model={model}/>, $("#list", this.el).get(0));
         return this;
     },
 
@@ -208,41 +176,45 @@ app.views.SearchPage = Backbone.View.extend({
     }
 });
 
-app.views.UserListView = Backbone.View.extend({
+var UserListViewReact = React.createClass({
+    render: function() {
+        this.props.model.bind("reset", function() { this.forceUpdate();}, this);
 
-    listItemViews: [],
-
-    initialize: function() {
-        this.model.bind("reset", this.render, this);
-    },
-
-    render: function(eventName) {
-        _.each(this.listItemViews, function(itemView) { itemView.close(); });
-        this.listItemViews = _.map(this.model.models, function(model) { return new app.views.UserListItemView({model: model}); });
-        $(this.el).append(_.map(this.listItemViews, function(itemView) { return itemView.render().el;} ));
-        return this;
+        var userListItems = this.props.model.models.map(function(model) {
+            return (
+                <UserListItemViewReact model={model} />
+            );
+        });
+        return (
+                <ul className="table-view">
+                  {userListItems}
+                </ul>            
+        );
     }
-
 });
 
-app.views.UserListItemView = Backbone.View.extend({
+var UserListItemViewReact = React.createClass({
+    render: function() {
+        var attrs = this.props.model.attributes;
+        var updated = attrs.__locally_updated__ 
+            ? <span><span className="pull-right btn btn-negative">modified</span><br/></span>
+            : <span></span>;
 
-    tagName: "li",
-    template: _.template($("#user-list-item").html()),
-
-    render: function(eventName) {
-        $(this.el).addClass("table-view-cell").html(this.template(this.model.toJSON()));
-        return this;
-    },
-
-    close: function() {
-        this.remove();
-        this.off();
+        return (
+            <li className="table-view-cell">
+              <a href={"#users/" + attrs.Id}>
+                <span className="important">{attrs.FirstName} {attrs.LastName}</span><br/>
+                {attrs.Title} {attrs.CompanyName}
+                {updated}
+              </a>
+            </li>
+        );
     }
 });
 
 var UserPageReact = React.createClass({
     render: function() {
+        this.props.model.bind("change", function() { this.forceUpdate();}, this);
         var attrs = this.props.model.attributes;
         var updated = attrs.__locally_updated__ 
             ? <span className="btn btn-negative btn-block">Locally Modified</span> 
@@ -275,7 +247,6 @@ var UserPageReact = React.createClass({
         // apply change to model
         var target = event.target;
         this.props.model.set(target.name, target.value);
-        this.forceUpdate(); // XXX change on model not detected by React
     },
 
     save: function() {
