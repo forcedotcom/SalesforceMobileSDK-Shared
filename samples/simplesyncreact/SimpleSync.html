@@ -241,23 +241,24 @@ app.views.UserListItemView = Backbone.View.extend({
     }
 });
 
-app.views.UserPage = React.createClass({
+var UserPageReact = React.createClass({
     render: function() {
+        var attrs = this.props.model.attributes;
         return (
                 <div>
                     <header class="bar bar-nav">
                         <a href="#" class="btn btn-nav pull-left back">Back</a>
                         <a class="btn btn-nav btn-positive pull-right save">Save</a>
-                        <h1 class="title">{this.props.model.FirstName} {this.props.model.LastName}</h1>
+                        <h1 class="title">{attrs.FirstName} {attrs.LastName}</h1>
                     </header>
                     <div class="content">
                         <div class="content-padded">
                             <div class="details">
-                                <input placeholder="Title" type="text" name="Title" value={this.props.model.Title} /><br/>
-                                <input placeholder="CompanyName" type="text" name="CompanyName" value={this.props.model.CompanyName} /><br/>
-                                <input placeholder="City" type="text" name="City" value={this.props.model.City} /><br/>
-                                <input placeholder="Phone" type="text" name="MobilePhone" value={this.props.model.MobilePhone} /><br/>
-                                <input placeholder="Email" type="text" name="Email" value={this.props.model.Email} />
+                                <input placeholder="Title" type="text" name="Title" value={attrs.Title} /><br/>
+                                <input placeholder="CompanyName" type="text" name="CompanyName" value={attrs.CompanyName} /><br/>
+                                <input placeholder="City" type="text" name="City" value={attrs.City} /><br/>
+                                <input placeholder="Phone" type="text" name="MobilePhone" value={attrs.MobilePhone} /><br/>
+                                <input placeholder="Email" type="text" name="Email" value={attrs.Email} />
                             </div>
                         </div>
                     </div>
@@ -267,6 +268,14 @@ app.views.UserPage = React.createClass({
 
     }
 });  
+
+app.views.UserPage = Backbone.View.extend({
+    render: function(eventName) {
+        var model = this.model;
+        React.render(<UserPageReact model={model}/>, this.el);
+        return this;
+    }
+});
 
 /*
 
@@ -330,6 +339,7 @@ app.Router = Backbone.StackRouter.extend({
 
         // We keep a single instance of SearchPage and UserPage
         app.searchPage = new app.views.SearchPage({model: app.searchResults});
+        app.userPage = new app.views.UserPage();
     },
 
     list: function() {
