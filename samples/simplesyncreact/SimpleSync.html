@@ -244,29 +244,48 @@ app.views.UserListItemView = Backbone.View.extend({
 var UserPageReact = React.createClass({
     render: function() {
         var attrs = this.props.model.attributes;
+        var updated = attrs.__locally_updated__ 
+            ? <span className="btn btn-negative btn-block">Locally Modified</span> 
+            : <span></span>;
+
         return (
-                <div>
-                    <header class="bar bar-nav">
-                        <a href="#" class="btn btn-nav pull-left back">Back</a>
-                        <a class="btn btn-nav btn-positive pull-right save">Save</a>
-                        <h1 class="title">{attrs.FirstName} {attrs.LastName}</h1>
-                    </header>
-                    <div class="content">
-                        <div class="content-padded">
-                            <div class="details">
-                                <input placeholder="Title" type="text" name="Title" value={attrs.Title} /><br/>
-                                <input placeholder="CompanyName" type="text" name="CompanyName" value={attrs.CompanyName} /><br/>
-                                <input placeholder="City" type="text" name="City" value={attrs.City} /><br/>
-                                <input placeholder="Phone" type="text" name="MobilePhone" value={attrs.MobilePhone} /><br/>
-                                <input placeholder="Email" type="text" name="Email" value={attrs.Email} />
-                            </div>
+            <div>
+                <header className="bar bar-nav">
+                    <a href="#" className="btn btn-nav pull-left back">Back</a>
+                    <a className="btn btn-nav btn-positive pull-right save" onClick={this.save}>Save</a>
+                    <h1 className="title">{attrs.FirstName} {attrs.LastName}</h1>
+                </header>
+                <div className="content">
+                    <div className="content-padded">
+                        <div className="details">
+                            <input onChange={this.change} placeholder="Title" type="text" name="Title" value={attrs.Title} /><br/>
+                            <input onChange={this.change} placeholder="CompanyName" type="text" name="CompanyName" value={attrs.CompanyName} /><br/>
+                            <input onChange={this.change} placeholder="City" type="text" name="City" value={attrs.City} /><br/>
+                            <input onChange={this.change} placeholder="Phone" type="text" name="MobilePhone" value={attrs.MobilePhone} /><br/>
+                            <input onChange={this.change} placeholder="Email" type="text" name="Email" value={attrs.Email} />
+                            {updated}
                         </div>
                     </div>
                 </div>
-                );
-//                                 {if (this.props.model.__locally_updated__) <span class="btn btn-negative btn-block">Locally Modified</span>}
+            </div>
+            );
+    },
 
+    change: function(event) {
+        // apply change to model
+        var target = event.target;
+        this.props.model.set(target.name, target.value);
+        this.forceUpdate(); // XXX change on model not detected by React
+    },
+
+    save: function() {
+        this.props.model.save(null, {
+            success: function() {
+                app.router.navigate("#", {trigger:true});
+            }
+        });
     }
+
 });  
 
 app.views.UserPage = Backbone.View.extend({
@@ -277,40 +296,6 @@ app.views.UserPage = Backbone.View.extend({
     }
 });
 
-/*
-
-
-Backbone.View.extend({
-
-    template: _.template($("#user-page").html()),
-
-    events: {
-        "change": "change",
-        "click .save": "save"
-    },
-
-    render: function(eventName) {
-        $(this.el).html(this.template(this.model.toJSON()));
-        return this;
-    },
-
-    change: function(event) {
-        // apply change to model
-        var target = event.target;
-        this.model.set(target.name, target.value);
-    },
-
-    save: function() {
-        this.model.save(null, {
-            success: function() {
-                app.router.navigate("#", {trigger:true});
-            }
-        });
-    }
-
-});
-
-*/
 
 // ----------------------------------------------- The Application Router ------------------------------------------ //
 
