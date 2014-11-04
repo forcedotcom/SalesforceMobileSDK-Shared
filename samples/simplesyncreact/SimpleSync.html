@@ -71,17 +71,16 @@ app.models.UserCollection = Force.SObjectCollection.extend({
 });
 
 // -------------------------------------------------- REACT components ---------------------------------------------------- //
-var SearchPageReact = React.createClass({
-    render: function() {
-        var that = this;
-        document.addEventListener("sync", function() { 
-            that.handleSyncUpdate(event.detail);
-        });
 
+var SearchPageReact = React.createClass({
+    componentDidMount: function() {
+        document.addEventListener("sync", (function(event)  { this.handleSyncUpdate(event.detail); }).bind(this));;
+    },
+
+    render: function() {
+        console.log("Rendering SearchPageReact");
         this.fieldlist = app.models.User.prototype.fieldlist;
         var model = this.props.model;
-        var criteria = (model != null ? model.getCriteria() : "");
-
         return (
             <div>
                 <header className="bar bar-nav">
@@ -97,7 +96,7 @@ var SearchPageReact = React.createClass({
                 </footer>
               
                 <div className="bar bar-standard bar-header-secondary">
-                  <input type="search" ref="search" placeholder="Search" onKeyUp={this.search} value={criteria}/>
+                  <input type="search" ref="search" placeholder="Search" onChange={this.search} value={this.props.criteria}/>
                 </div>
               
                 <div className="content">
@@ -152,15 +151,25 @@ var SearchPageReact = React.createClass({
     },
 
     search: function(event) {
-        this.props.model.setCriteria($(this.refs.search.getDOMNode()).val());
+        var newCriteria = $(this.refs.search.getDOMNode()).val();
+        this.props.model.setCriteria(newCriteria);
+        this.setProps({"criteria": newCriteria});
         this.props.model.fetch();
     }
 
 });
 
 var UserListViewReact = React.createClass({
+    componentDidMount: function() {
+        this.props.model.on("reset", function() { this.forceUpdate();}, this);
+    },
+
+    componentWillUnmount: function() {
+        this.props.model.off();
+    },
+
     render: function() {
-        this.props.model.bind("reset", function() { this.forceUpdate();}, this);
+        console.log("Rendering UserListViewReact");
 
         var userListItems = this.props.model.models.map(function(model) {
             return (
@@ -177,6 +186,7 @@ var UserListViewReact = React.createClass({
 
 var UserListItemViewReact = React.createClass({
     render: function() {
+        console.log("Rendering UserListItemViewReact");
         var attrs = this.props.model.attributes;
         var updated = attrs.__locally_updated__ 
             ? <span><span className="pull-right btn btn-negative">modified</span><br/></span>
@@ -196,7 +206,7 @@ var UserListItemViewReact = React.createClass({
 
 var UserPageReact = React.createClass({
     render: function() {
-        this.props.model.bind("change", function() { this.forceUpdate();}, this);
+        console.log("Rendering UserPageReact");
         var attrs = this.props.model.attributes;
         var updated = attrs.__locally_updated__ 
             ? <span className="btn btn-negative btn-block">Locally Modified</span> 
@@ -229,6 +239,7 @@ var UserPageReact = React.createClass({
         // apply change to model
         var target = event.target;
         this.props.model.set(target.name, target.value);
+        this.setProps({"model": this.props.model});
     },
 
     save: function() {
@@ -245,7 +256,7 @@ var UserPageReact = React.createClass({
 app.views.SearchPage = Backbone.View.extend({
     render: function(eventName) {
         var model = this.model;
-        React.render(<SearchPageReact model={model}/>, this.el);
+        React.render(<SearchPageReact model={model} criteria={model.getCriteria()}/>, this.el);
         return this;
     }
 });
@@ -277,6 +288,7 @@ app.Router = Backbone.StackRouter.extend({
     },
 
     initialize: function() {
+        // Init router
         Backbone.Router.prototype.initialize.call(this);
 
         // Setup caches
