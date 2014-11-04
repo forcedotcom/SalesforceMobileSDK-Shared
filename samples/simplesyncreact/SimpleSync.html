@@ -37,29 +37,6 @@
 <script src="js/auth.js"></script>
 
 
-<!-- --------------------------------------- Search page template ------------------------------------------------- -->
-<script id="search-page" type="text/template">
-  <header class="bar bar-nav">
-    <h1 class="title">Users</h1>
-  </header>
-  <footer class="bar bar-footer">
-    <a class="btn btn-nav btn-positive pull-left syncdownmru">Sync mru</a>
-    <a class="btn btn-nav btn-positive pull-left syncdownsoql">Sync soql</a>
-    <a class="btn btn-nav btn-positive pull-left syncdownsosl">Sync sosl</a>
-    <a class="btn btn-nav btn-positive pull-left syncup">Sync Up</a>
-    <a class="btn btn-nav pull-right cachesize">Cache Size</a>
-    <a class="btn btn-nav pull-right inspect">DB</a>
-  </footer>
-
-  <div class="bar bar-standard bar-header-secondary">
-    <input type="search" class="search-key" placeholder="Search"/>
-  </div>
-
-  <div class="content">
-    <span id="list"></span>
-  </div>
-</script>
-
 <script type="text/jsx">
 // -------------------------------------------------- The Models ---------------------------------------------------- //
 // The User Model
@@ -93,50 +70,54 @@ app.models.UserCollection = Force.SObjectCollection.extend({
     }
 });
 
-
-// -------------------------------------------------- The Views ---------------------------------------------------- //
-
-app.views.SearchPage = Backbone.View.extend({
-
-    template: _.template($("#search-page").html()),
-
-    events: {
-        "keyup .search-key": "search",
-        "click .syncdownmru": "syncDownMru",
-        "click .syncdownsoql": "syncDownSoql",
-        "click .syncdownsosl": "syncDownSosl",
-        "click .syncup": "syncUp",
-        "click .cachesize": "cacheSize",
-        "click .inspect": "inspect"
-    },
-
-    initialize: function() {
+// -------------------------------------------------- REACT components ---------------------------------------------------- //
+var SearchPageReact = React.createClass({
+    render: function() {
         var that = this;
-        this.fieldlist = app.models.User.prototype.fieldlist;
         document.addEventListener("sync", function() { 
             that.handleSyncUpdate(event.detail);
         });
+
+        this.fieldlist = app.models.User.prototype.fieldlist;
+        var model = this.props.model;
+        var criteria = (model != null ? model.getCriteria() : "");
+
+        return (
+            <div>
+                <header className="bar bar-nav">
+                  <h1 className="title">Users</h1>
+                </header>
+                <footer className="bar bar-footer">
+                  <a ref="syncdownmru"  className="btn btn-nav btn-positive pull-left" onClick={this.syncDownMru}>Sync mru</a>
+                  <a ref="syncdownsoql" className="btn btn-nav btn-positive pull-left" onClick={this.syncDownSoql}>Sync soql</a>
+                  <a ref="syncdownsosl" className="btn btn-nav btn-positive pull-left" onClick={this.syncDownSosl}>Sync sosl</a>
+                  <a ref="syncup"       className="btn btn-nav btn-positive pull-left" onClick={this.syncUp}>Sync Up</a>
+                  <a className="btn btn-nav pull-right cachesize"   onClick={this.cacheSize}>Cache Size</a>
+                  <a className="btn btn-nav pull-right inspect"     onClick={this.inspect}>DB</a>
+                </footer>
+              
+                <div className="bar bar-standard bar-header-secondary">
+                  <input type="search" ref="search" placeholder="Search" onKeyUp={this.search} value={criteria}/>
+                </div>
+              
+                <div className="content">
+                  <UserListViewReact model={model}/>
+                </div>
+            </div>
+        );
     },
 
     handleSyncUpdate: function(sync) {
         var progress =  (typeof sync.progress === "number" && sync.progress < 100) ? " (" + Math.round(sync.progress) + "%)" : "";
 
         if (sync.type === "syncDown") {
-            var syncType = sync.target.type.toLowerCase()
-            $(".syncdown" + syncType).html("Sync " + syncType + progress);
+            var syncType = sync.target.type.toLowerCase();
+            $(this.refs["syncdown" + syncType].getDOMNode()).html("Sync " + syncType + progress);
         }
         if (sync.type === "syncUp") {
-            $(".syncup").html("Sync Up" + progress);
+            $(this.refs["syncup"].getDOMNode()).html("Sync Up" + progress);
         }
         if (sync.status === "DONE") { this.search(); }
-    },
-
-    render: function(eventName) {
-        $(this.el).html(this.template());
-        $(".search-key", this.el).val(this.model.getCriteria());
-        var model = this.model;
-        React.render(<UserListViewReact model={model}/>, $("#list", this.el).get(0));
-        return this;
     },
 
     syncDown: function(target) {
@@ -171,9 +152,10 @@ app.views.SearchPage = Backbone.View.extend({
     },
 
     search: function(event) {
-        this.model.setCriteria($(".search-key", this.el).val());
-        this.model.fetch();
+        this.props.model.setCriteria($(this.refs.search.getDOMNode()).val());
+        this.props.model.fetch();
     }
+
 });
 
 var UserListViewReact = React.createClass({
@@ -182,7 +164,7 @@ var UserListViewReact = React.createClass({
 
         var userListItems = this.props.model.models.map(function(model) {
             return (
-                <UserListItemViewReact model={model} />
+                <UserListItemViewReact key={model.id} model={model} />
             );
         });
         return (
@@ -259,6 +241,17 @@ var UserPageReact = React.createClass({
 
 });  
 
+// -------------------------------------------------- The Views ---------------------------------------------------- //
+app.views.SearchPage = Backbone.View.extend({
+    render: function(eventName) {
+        var model = this.model;
+        React.render(<SearchPageReact model={model}/>, this.el);
+        return this;
+    }
+});
+
+
+
 app.views.UserPage = Backbone.View.extend({
     render: function(eventName) {
         var model = this.model;
@@ -266,7 +259,6 @@ app.views.UserPage = Backbone.View.extend({
         return this;
     }
 });
-
 
 // ----------------------------------------------- The Application Router ------------------------------------------ //
 
