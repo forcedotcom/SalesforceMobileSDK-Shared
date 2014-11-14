@@ -587,7 +587,7 @@ SmartSyncTestSuite.prototype.testSObjectTypeDescribeLayout = function() {
  * TEST Force.SObjectType cache merge by multiple instances
  */
 SmartSyncTestSuite.prototype.testSObjectTypeCacheOnlyMode = function() {
-    console.log("# In SmartSyncTestSuite.testSObjectTypeCacheMerge");
+    console.log("# In SmartSyncTestSuite.testSObjectTypeCacheOnlyMode");
     var self = this;
     var soupName = "testSoupForSObjectType";
     var cache, data = {
