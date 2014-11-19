@@ -159,7 +159,8 @@ cordova.define("com.salesforce.util.bootstrap", function(require, exports, modul
             logger.logToConsole("deviceIsOnline connType is undefined.");
         }
         
-        if (typeof connType !== 'undefined') {
+        // Android Chrome has navigator.connection but not window.Connection, which is cordova object.
+        if (typeof connType !== 'undefined' && window.Connection) {
             // Cordova's connection object.  May be more accurate?
             return (connType && connType != Connection.NONE && connType != Connection.UNKNOWN);
         } else {
