@@ -240,6 +240,9 @@ var MockSmartStore = (function(window) {
                     _nextSoupEltIds[soupName] = (soupName in _nextSoupEltIds ? _nextSoupEltIds[soupName]+1 : 1);
                     entry._soupEntryId = _nextSoupEltIds[soupName];
                 }
+
+                // last modified date
+                entry._soupLastModifiedDate = (new Date()).getTime();
                 
                 // update/insert into soup
                 soup[entry._soupEntryId] = entry;
@@ -345,7 +348,7 @@ var MockSmartStore = (function(window) {
                 var results = [];
                 for (var soupEntryId in soup) {
                     var soupElt = soup[soupEntryId];
-                    var projection = soupIndexedData[soupEntryId][whereField];
+                    var projection = soupIndexedData[soupEntryId][whereField] || "";
                     if (projection.match(likeRegexp)) {
                         var row = [];
                         row.push(soupElt);

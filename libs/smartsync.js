@@ -18,6 +18,24 @@
         root.Force = previousForce;
         return this;
     };
+     
+    // Enable/disable logging - level should be "error", "info", "warn", "debug"
+    // Passing anything else will cause all error, info, warn, and debug messages to be suppressed
+    // Passing error will cause only error messages to be printed out
+    // Passing info will cause only error and info messages to be printed out
+    // etc
+    Force.setLogLevel = function (level) {
+        Force.console = {};
+        var methods = ["error", "info", "warn", "debug"];
+        var levelAsInt = methods.indexOf(level.toLowerCase());
+        for (var i=0; i<methods.length; i++) {
+            Force.console[methods[i]] = (i <= levelAsInt ? console[methods[i]].bind(console) : function() {});
+        }
+    };
+
+    // Default log level: info
+    Force.setLogLevel("info");
+
 
     // Utility Function to turn methods with callbacks into jQuery promises
     var promiser = function(object, methodName, objectName) {
@@ -25,26 +43,26 @@
             var args = $.makeArray(arguments);
             var d = $.Deferred();
             args.push(function() {
-                console.log("------> Calling successCB for " + objectName + ":" + methodName);
+                Force.console.debug("------> Calling successCB for " + objectName + ":" + methodName);
                 try {
                     d.resolve.apply(d, arguments);
                 }
                 catch (err) {
-                    console.error("------> Error when calling successCB for " + objectName + ":" + methodName);
-                    console.error(err.stack);
+                    Force.console.error("------> Error when calling successCB for " + objectName + ":" + methodName);
+                    Force.console.error(err.stack);
                 }
             });
             args.push(function() {
-                console.log("------> Calling errorCB for " + objectName + ":" + methodName);
+                Force.console.debug("------> Calling errorCB for " + objectName + ":" + methodName);
                 try {
                     d.reject.apply(d, arguments);
                 }
                 catch (err) {
-                    console.error("------> Error when calling errorCB for " + objectName + ":" + methodName);
-                    console.error(err.stack);
+                    Force.console.error("------> Error when calling errorCB for " + objectName + ":" + methodName);
+                    Force.console.error(err.stack);
                 }
             });
-            console.log("-----> Calling " + objectName + ":" + methodName);
+            Force.console.debug("-----> Calling " + objectName + ":" + methodName);
             object[methodName].apply(object, args);
             return d.promise();
         };
@@ -153,7 +171,7 @@
                 this.details = JSON.parse(rawError.responseText);
             }
             catch (e) {
-                console.log("Could not parse responseText:" + e);
+                Force.console.error("Could not parse responseText:" + e);
             }
 
         }
@@ -217,10 +235,10 @@
                     if (record != null && fieldlist != null && _.any(fieldlist, function(field) {
                         return !hasFieldPath(record, field);
                     })) {
-                        console.log("----> In StoreCache:retrieve " + that.soupName + ":" + key + ":in cache but missing some fields");
+                        Force.console.debug("----> In StoreCache:retrieve " + that.soupName + ":" + key + ":in cache but missing some fields");
                         record = null;
                     }
-                    console.log("----> In StoreCache:retrieve " + that.soupName + ":" + key + ":" + (record == null ? "miss" : "hit"));
+                    Force.console.debug("----> In StoreCache:retrieve " + that.soupName + ":" + key + ":" + (record == null ? "miss" : "hit"));
                     return record;
                 });
         },
@@ -228,7 +246,7 @@
         // Return promise which stores a record in cache
         save: function(record, noMerge) {
             if (this.soupName == null) return;
-            console.log("----> In StoreCache:save " + this.soupName + ":" + record[this.keyField] + " noMerge:" + (noMerge == true));
+            Force.console.debug("----> In StoreCache:save " + this.soupName + ":" + record[this.keyField] + " noMerge:" + (noMerge == true));
 
             var that = this;
 
@@ -257,7 +275,7 @@
         // Return promise which stores several records in cache (NB: records are merged with existing records if any)
         saveAll: function(records, noMerge) {
             if (this.soupName == null) return;
-            console.log("----> In StoreCache:saveAll records.length=" + records.length + " noMerge:" + (noMerge == true));
+            Force.console.debug("----> In StoreCache:saveAll records.length=" + records.length + " noMerge:" + (noMerge == true));
 
             var that = this;
 
@@ -380,7 +398,7 @@
         // Return promise which deletes record from cache
         remove: function(key) {
             if (this.soupName == null) return;
-            console.log("----> In StoreCache:remove " + this.soupName + ":" + key);
+            Force.console.debug("----> In StoreCache:remove " + this.soupName + ":" + key);
             var that = this;
             var querySpec = navigator.smartstore.buildExactQuerySpec(this.keyField, key);
             var soupEntryId = null;
@@ -589,7 +607,7 @@
     // Returns a promise
     //
     Force.syncRemoteObjectWithCache = function(method, id, attributes, fieldlist, cache, localAction) {
-        console.log("---> In Force.syncRemoteObjectWithCache:method=" + method + " id=" + id);
+        Force.console.debug("---> In Force.syncRemoteObjectWithCache:method=" + method + " id=" + id);
 
         localAction = localAction || false;
         var isLocalId = cache.isLocalId(id);
@@ -660,7 +678,7 @@
     // Returns a promise
     //
     Force.syncSObjectWithServer = function(method, sobjectType, id, attributes, fieldlist) {
-        console.log("---> In Force.syncSObjectWithServer:method=" + method + " id=" + id);
+        Force.console.debug("---> In Force.syncSObjectWithServer:method=" + method + " id=" + id);
 
         // Server actions helper
         var serverCreate   = function() {
@@ -716,7 +734,7 @@
     // Returns a promise
     //
     Force.syncApexRestObjectWithServer = function(method, path, id, idField, attributes, fieldlist) {
-        console.log("---> In Force.syncApexRestObjectWithServer:method=" + method + " id=" + id);
+        Force.console.debug("---> In Force.syncApexRestObjectWithServer:method=" + method + " id=" + id);
 
         // Server actions helper
         var serverCreate   = function() {
@@ -790,7 +808,7 @@
     //
     //
     Force.syncRemoteObject = function(method, id, attributes, fieldlist, cache, cacheMode, info, syncWithServer) {
-        console.log("--> In Force.syncRemoteObject:method=" + method + " id=" + id + " cacheMode=" + cacheMode);
+        Force.console.info("--> In Force.syncRemoteObject:method=" + method + " id=" + id + " cacheMode=" + cacheMode);
 
         var cacheSync = function(method, id, attributes, fieldlist, localAction) {
             return Force.syncRemoteObjectWithCache(method, id, attributes, fieldlist, cache, localAction);
@@ -879,7 +897,7 @@
     //
     //
     Force.syncSObject = function(method, sobjectType, id, attributes, fieldlist, cache, cacheMode, info) {
-        console.log("--> In Force.syncSObject:method=" + method + " id=" + id + " cacheMode=" + cacheMode);
+        Force.console.info("--> In Force.syncSObject:method=" + method + " id=" + id + " cacheMode=" + cacheMode);
 
         var syncWithServer = function(method, id, attributes, fieldlist) {
             return Force.syncSObjectWithServer(method, sobjectType, id, attributes, fieldlist);
@@ -930,7 +948,7 @@
     // }
     //
     Force.syncRemoteObjectDetectConflict = function(method, id, attributes, fieldlist, cache, cacheMode, cacheForOriginals, mergeMode, syncWithServer) {
-        console.log("--> In Force.syncRemoteObjectDetectConflict:method=" + method + " id=" + id + " cacheMode=" + cacheMode + " mergeMode=" + mergeMode);
+        Force.console.info("--> In Force.syncRemoteObjectDetectConflict:method=" + method + " id=" + id + " cacheMode=" + cacheMode + " mergeMode=" + mergeMode);
 
         // To keep track of whether data was read from cache or not
         var info = {};
@@ -1042,7 +1060,7 @@
     //
     //
     Force.syncSObjectDetectConflict = function(method, sobjectType, id, attributes, fieldlist, cache, cacheMode, cacheForOriginals, mergeMode) {
-        console.log("--> In Force.syncSyncSObjectDetectConflict:method=" + method + " id=" + id + " cacheMode=" + cacheMode + " mergeMode=" + mergeMode);
+        Force.console.info("--> In Force.syncSyncSObjectDetectConflict:method=" + method + " id=" + id + " cacheMode=" + cacheMode + " mergeMode=" + mergeMode);
 
         var syncWithServer = function(method, id, attributes, fieldlist) {
             return Force.syncSObjectWithServer(method, sobjectType, id, attributes, fieldlist);
@@ -1068,7 +1086,7 @@
     // }
     //
     Force.fetchSObjectsFromServer = function(config) {
-        console.log("---> In Force.fetchSObjectsFromServer:config=" + JSON.stringify(config));
+        Force.console.debug("---> In Force.fetchSObjectsFromServer:config=" + JSON.stringify(config));
 
         // Server actions helper
         var serverSoql = function(soql) {
@@ -1100,7 +1118,8 @@
                 return {
                     records: resp,
                     totalSize: resp.length,
-                    hasMore: function() { return false; }
+                    hasMore: function() { return false; },
+                    getMore: function() { return null; }
                 }
             })
         };
@@ -1158,7 +1177,7 @@
     // }
     //
     Force.fetchApexRestObjectsFromServer = function(config) {
-        console.log("---> In Force.fetchApexRestObjectsFromServer:config=" + JSON.stringify(config));
+        Force.console.debug("---> In Force.fetchApexRestObjectsFromServer:config=" + JSON.stringify(config));
 
         // Server actions helper
         var serverFetch = function(apexRestPath) {
@@ -1202,7 +1221,7 @@
     // Returns a promise
     //
     Force.fetchRemoteObjects = function(fetchFromServer, fetchFromCache, cacheMode, cache, cacheForOriginals) {
-        console.log("--> In Force.fetchRemoteObjects:cacheMode=" + cacheMode);
+        Force.console.info("--> In Force.fetchRemoteObjects:cacheMode=" + cacheMode);
 
         var promise;
 
@@ -1216,8 +1235,10 @@
             if (cache != null) {
 
                 var fetchResult;
+                var originalGetMore;
                 var processResult = function(resp) {
                     fetchResult = resp;
+                    originalGetMore = fetchResult.getMore.bind(fetchResult);
                     return resp.records;
                 };
 
@@ -1234,7 +1255,7 @@
                                     {
                                         records: records,
                                         getMore: function() {
-                                            return fetchResult.getMore().then(cacheSaveAll).then(cacheForOriginalsSaveAll);
+                                            return originalGetMore().then(cacheSaveAll).then(cacheForOriginalsSaveAll);
                                         }
                                     });
                 };
@@ -1258,7 +1279,7 @@
     // Returns a promise
     //
     Force.fetchSObjects = function(config, cache, cacheForOriginals) {
-        console.log("--> In Force.fetchSObjects:config.type=" + config.type);
+        Force.console.info("--> In Force.fetchSObjects:config.type=" + config.type);
 
         var fetchFromServer = function() {
             return Force.fetchSObjectsFromServer(config);
@@ -1316,7 +1337,7 @@
                     return options[optionName] || (_.isFunction(that[optionName]) ? that[optionName](method) : that[optionName]);
                 };
 
-                console.log("-> In Force.RemoteObject:sync method=" + method + " model.id=" + model.id);
+                Force.console.debug("-> In Force.RemoteObject:sync method=" + method + " model.id=" + model.id);
 
                 var fieldlist         = resolveOption("fieldlist");
                 var cacheMode         = resolveOption("cacheMode");
@@ -1328,9 +1349,19 @@
                     return that.syncRemoteObjectWithServer(method, id, attributes, fieldlist);
                 };
 
+                // Timing
+                var tag = "TIMING Force.RemoteObject:sync:" + method + " (" + model.id + ")";
+                console.time(tag);
+
                 Force.syncRemoteObjectDetectConflict(method, model.id, model.attributes, fieldlist, cache, cacheMode, cacheForOriginals, mergeMode, syncWithServer)
-                    .done(options.success)
-                    .fail(options.error);
+                    .done(function() {
+                        console.timeEnd(tag);
+                        options.success.apply(null, arguments);
+                    })
+                    .fail(function() {
+                        console.timeEnd(tag);
+                        options.error.apply(null, arguments);
+                    });
             }
         });
 
@@ -1426,7 +1457,7 @@
             // * config:<see above for details>
             // * cache:<cache object>
             sync: function(method, model, options) {
-                console.log("-> In Force.RemoteObjectCollection:sync method=" + method);
+                Force.console.debug("-> In Force.RemoteObjectCollection:sync method=" + method);
                 var that = this;
 
                 if (method != "read") {
@@ -1446,13 +1477,19 @@
                 this.lastRequestSent++;
                 var currentRequest = this.lastRequestSent;
                 var ignoreRequest = false;
-                // console.log("FETCH Sending " + currentRequest);
+
+                // Timing
+                var tag = "TIMING Force.RemoteObjectCollection:sync (#" + currentRequest + ")";
+                console.time(tag);
+                var tagServer = tag + ":fetchRemoteObjectsFromServer";
+                console.time(tagServer);
+                var tagCache = tag + ":fetchFromCache";
+                console.time(tagCache);
 
                 var fetchFromServer = function() {
                     return that.fetchRemoteObjectsFromServer(config)
                         .then(function(resp) {
-                            // console.log("FETCH Receiving " + currentRequest);
-                            // console.log("FETCH Newest " + (currentRequest > that.lastResponseReceived));
+                            console.timeEnd(tagServer);
                             if (currentRequest > that.lastResponseReceived) {
                                 that.lastResponseReceived = currentRequest;
                                 return resp;
@@ -1465,7 +1502,11 @@
                 };
 
                 var fetchFromCache = function() {
-                    return that.fetchRemoteObjectsFromCache(cache, config.cacheQuery);
+                    return that.fetchRemoteObjectsFromCache(cache, config.cacheQuery)
+                        .then(function(resp) {
+                            console.timeEnd(tagCache);
+                            return resp;
+                        });
                 };
 
                 var cacheMode = (config.type == "cache" ? Force.CACHE_MODE.CACHE_ONLY : Force.CACHE_MODE.SERVER_FIRST);
@@ -1477,10 +1518,14 @@
                         if (config.closeCursorImmediate) that.closeCursor();
                         return resp.records;
                     })
-                    .done(options.success)
+                    .done(function() {
+                        console.timeEnd(tag);
+                        options.success.apply(null, arguments);
+                    })
                     .fail(function() {
+                        console.timeEnd(tag);
                         if (ignoreRequest) {
-                            // console.log("FETCH ignored " + currentRequest);
+                            // Force.console.debug("FETCH ignored " + currentRequest);
                         }
                         else {
                             options.error.apply(null, arguments);
@@ -1557,4 +1602,4 @@
 
     } // if (!_.isUndefined(Backbone)) {
 })
-.call(this, jQuery, _, Backbone, forcetk);
+.call(this, jQuery, _, window.Backbone, forcetk);

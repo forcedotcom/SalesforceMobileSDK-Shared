@@ -225,8 +225,100 @@ SmartStoreLoadTestSuite.prototype.testUpsertAndQueryEntries  = function() {
         });
 };
     
+SmartStoreLoadTestSuite.prototype.upsertEntriesSaveResults = function(saveResultsList, numEntriesInBatch) {
+    var self = this;
     
+    var entries = [];
+    for (var i = 0; i < numEntriesInBatch; i++) {
+        var entry = { key: 'k_' + i, value: 'x' + i };
+        for (var j = 0; j < self.NUMBER_FIELDS_PER_ENTRY; j++) {
+            var randomValue = Math.floor((Math.random() * 1000000000) + 1);
+            entry['v' + j] = "value_" + randomValue;
+        }
+        entries.push(entry);
+    }
+    
+    return self.addEntriesWithExternalIdToTestSoup(entries, 'key')
+        .pipe(function(updatedEntries) {
+              saveResultsList.push(updatedEntries);
+        });
+};
+    
+SmartStoreLoadTestSuite.prototype.getLastUpsertBatch = function(batchUpsertResultList) {
+    var maxLastModDate = 0;
+    var maxLastModDateBatchIndex = -1;
+    
+    // Get the smallest _lastModifiedDate of each batch, which should represent the time that
+    // the particular batch started upserting.  The largest of these values should be the last
+    // batch in.
+    for (var i = 0; i < batchUpsertResultList.length; i++) {
+        var objectList = batchUpsertResultList[i];
+        var minBatchModifiedDate = Number.MAX_VALUE;
+        for (var j = 0; j < objectList.length; j++) {
+            var obj = objectList[j];
+            var lastModDate = obj['_soupLastModifiedDate'];
+            QUnit.strictEqual((typeof lastModDate), 'number', 'Upserted objects should have a numeric "_soupLastModifiedDate" field.');
+            if (lastModDate < minBatchModifiedDate) {
+                minBatchModifiedDate = lastModDate;
+            }
+        }
 
+        if (minBatchModifiedDate > maxLastModDate) {
+            maxLastModDate = minBatchModifiedDate;
+            maxLastModDateBatchIndex = i;
+        }
+    }
     
+    return batchUpsertResultList[maxLastModDateBatchIndex];
+};
+    
+SmartStoreLoadTestSuite.prototype.compareRetrievedEntriesWithLastEntryBatch = function(retrievedEntries, lastEntryBatch) {
+    for (var i = 0; i < retrievedEntries.length; i++) {
+        var retrievedEntry = retrievedEntries[i];
+        var retrievedEntryKey = retrievedEntry['key'];
+        QUnit.strictEqual((typeof retrievedEntryKey), 'string', 'Retrieved entry should have a string key property.');
+        var lastBatchEntry = null;
+        for (var j = 0; j < lastEntryBatch.length; j++) {
+            var entry = lastEntryBatch[j];
+            if (entry['key'] === retrievedEntryKey) {
+                lastBatchEntry = entry;
+                break;
+            }
+        }
+        QUnit.notStrictEqual(lastBatchEntry, null, 'Could not find last batch entry matching key "' + retrievedEntryKey + '".');
+        for (retrievedEntryProp in retrievedEntry) {
+            var retrievedEntryPropVal = retrievedEntry[retrievedEntryProp];
+            var lastBatchEntryPropVal = lastBatchEntry[retrievedEntryProp];
+            QUnit.equal(retrievedEntryPropVal, lastBatchEntryPropVal, 'Retrieved entry property should be the same as last batch entry property.');
+        }
+    }
+};
+    
+SmartStoreLoadTestSuite.prototype.testUpsertConcurrentEntries = function() {
+    var numInsertIterations = 100;
+    var numEntriesInBatch = 20;
+    var deferreds = [];
+    var upsertResults = [];
+    var self = this;
+    
+    for (var i = 0; i < numInsertIterations; i++) {
+        deferreds.push(self.upsertEntriesSaveResults(upsertResults, numEntriesInBatch));
+    }
+    $.when.apply($, deferreds).done(function() {
+        QUnit.equal(upsertResults.length, numInsertIterations, 'Invalid number of upsert results.');
+        var lastEntryBatch = self.getLastUpsertBatch(upsertResults);
+                                    
+        var querySpec = navigator.smartstore.buildAllQuerySpec("key", null, upsertResults.length);
+        self.querySoup(self.defaultSoupName, querySpec)
+            .then(function(cursor) {
+                self.compareRetrievedEntriesWithLastEntryBatch(cursor.currentPageOrderedEntries, lastEntryBatch);
+                return self.closeCursor(cursor);
+            })
+            .done(function() {
+                self.finalizeTest();
+            });
+    });
+};
+
 }
 

@@ -20,6 +20,10 @@ module.exports = [
         ]
     },
     {
+        "file": "plugins/com.salesforce/com.salesforce.plugin.smartsync.js",
+        "id": "com.salesforce.plugin.smartsync",
+    },
+    {
         "file": "plugins/com.salesforce/com.salesforce.util.bootstrap.js",
         "id": "com.salesforce.util.bootstrap"
     },
@@ -43,7 +47,7 @@ module.exports = [
 module.exports.metadata = 
 // TOP OF METADATA
 {
-    "com.salesforce": "2.3.0"
+    "com.salesforce": "3.0.0"
 }
 // BOTTOM OF METADATA
 });

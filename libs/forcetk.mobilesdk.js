@@ -27,7 +27,7 @@
 (function($j) {
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "2.3.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "3.0.0";
 
 /*
  * JavaScript library to wrap REST API on Visualforce. Leverages Ajax Proxy
@@ -222,26 +222,32 @@ if (forcetk.Client === undefined) {
      */
     forcetk.Client.prototype.refreshAccessToken = function(callback, error) {
         var that = this;
-        if (this.authCallback == null && this.refreshToken) {
-            var url = this.loginUrl + '/services/oauth2/token';
-            return $j.ajax({
-                type: 'POST',
-                url: (this.proxyUrl !== null) ? this.proxyUrl: url,
-                cache: false,
-                processData: false,
-                data: 'grant_type=refresh_token&client_id=' + this.clientId + '&refresh_token=' + this.refreshToken,
-                success: function(response) {
-                    that.setSessionToken(response.access_token, null, response.instance_url);
-                    callback();
-                },
-                error: error,
-                dataType: "json",
-                beforeSend: function(xhr) {
-                    if (that.proxyUrl !== null) {
-                        xhr.setRequestHeader('SalesforceProxy-Endpoint', url);
+        if (typeof this.authCallback === 'undefined' || this.authCallback === null) {
+            if (this.refreshToken) {
+                var url = this.loginUrl + '/services/oauth2/token';
+                return $j.ajax({
+                    type: 'POST',
+                    url: (this.proxyUrl !== null) ? this.proxyUrl: url,
+                    cache: false,
+                    processData: false,
+                    data: 'grant_type=refresh_token&client_id=' + this.clientId + '&refresh_token=' + this.refreshToken,
+                    success: function(response) {
+                        that.setSessionToken(response.access_token, null, response.instance_url);
+                        callback();
+                    },
+                    error: error,
+                    dataType: "json",
+                    beforeSend: function(xhr) {
+                        if (that.proxyUrl !== null) {
+                            xhr.setRequestHeader('SalesforceProxy-Endpoint', url);
+                        }
                     }
-                }
-            });
+                });
+             } else {
+                 if (typeof error === 'function') {
+                     error();
+                 }
+             }
         } else {
             this.authCallback(that, callback, error);
         }
@@ -292,10 +298,12 @@ if (forcetk.Client === undefined) {
      * @param [payload=null] payload for POST/PATCH etc
      * @param [headerParams={headerName:"headerValue",...}] parameters to send as header values for POST/PATCH etc
      */
+    var ajaxRequestId = 0;
     forcetk.Client.prototype.ajax = function(path, callback, error, method, payload, headerParams) {
+        var tag = "";
         var that = this;
         var retryCount = 0;
-        var url = (path.indexOf(this.instanceUrl) == 0 ? path : this.instanceUrl + '/services/data' + path);
+        var url = (path.indexOf(this.instanceUrl) == 0 ? path : this.instanceUrl + (path.indexOf('/services/data') == 0 ? path : '/services/data' + path));
         return $j.ajax({
             type: method || "GET",
             async: this.asyncAjax,
@@ -306,8 +314,12 @@ if (forcetk.Client === undefined) {
             dataType: "json",
             data: payload,
             headers: getRequestHeaders(this),
-            success: callback,
+            success: function() {
+                console.timeEnd(tag);
+                callback.apply(null, arguments);
+            },
             error: function(jqXHR, textStatus, errorThrown) {
+                console.timeEnd(tag);
                 var xhr = this;
                 var errorCallback = function() {
                     if (typeof error == 'function') {
@@ -322,6 +334,13 @@ if (forcetk.Client === undefined) {
                 } else errorCallback();
             },
             beforeSend: function(xhr) {
+                // Timing
+                ajaxRequestId++;
+                var a = document.createElement("a");
+                a.href = url;
+                tag = "TIMING " + a.pathname + "(#" + ajaxRequestId + ")";
+                console.time(tag);
+
                 if (that.proxyUrl !== null) {
                     xhr.setRequestHeader('SalesforceProxy-Endpoint', url);
                 }

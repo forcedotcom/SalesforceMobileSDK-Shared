@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "2.3.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "3.0.0";
 
 /**
  * Register push notification handler
@@ -75,7 +75,7 @@ var registerPushNotificationHandler = function(notificationHandler, fail) {
     // iOS
     else 
     {
-        console.log("Registering for ios");
+        console.debug("Registering for ios");
         window.plugins.pushNotification.register(
             registrationSuccess,
             registrationFail,

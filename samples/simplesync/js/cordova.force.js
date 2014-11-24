@@ -1,0 +1,1 @@
+../../../libs/cordova.force.js

@@ -1,0 +1,1 @@
+../../../dependencies/react/JSXTransformer.js
