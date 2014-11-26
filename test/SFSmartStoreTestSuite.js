@@ -850,6 +850,126 @@ SmartStoreTestSuite.prototype.testSmartQueryWithCount  = function() {
         });
 };
 
+/**
+ * TEST smartQuery with a WHERE x LIKE y clause.
+ */
+SmartStoreTestSuite.prototype.testSmartQueryWithWhereLikeClause  = function() {
+    console.log("In SFSmartStoreTestSuite.testSmartQueryWithCount");
+    var self = this;
+    var testEntries;
+    
+    self.stuffTestSoup()
+        .pipe(function(entries) {
+            testEntries = entries;
+            QUnit.equal(entries.length, 3, "check stuffTestSoup result");
+            var querySpec = navigator.smartstore.buildSmartQuerySpec("SELECT {myPeopleSoup:_soup} FROM {myPeopleSoup} WHERE {myPeopleSoup:Name} LIKE '%bo%'", 10);
+            return self.runSmartQuery(querySpec);
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(2, cursor.currentPageOrderedEntries.length, "check number of rows returned");
+
+            // Should return 2nd and 3rd entries.
+            QUnit.equal(JSON.stringify([testEntries[1]]), JSON.stringify(cursor.currentPageOrderedEntries[0]), "check currentPageOrderedEntries[0]");
+            QUnit.equal(JSON.stringify([testEntries[2]]), JSON.stringify(cursor.currentPageOrderedEntries[1]), "check currentPageOrderedEntries[1]");
+            return self.closeCursor(cursor);
+        })
+        .done(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            self.finalizeTest();
+        });
+};
+
+/**
+ * TEST smartQuery with a WHERE x LIKE y ORDER BY LOWER({z}) clause.
+ */
+SmartStoreTestSuite.prototype.testSmartQueryWithWhereLikeClauseOrdered  = function() {
+    console.log("In SFSmartStoreTestSuite.testSmartQueryWithCount");
+    var self = this;
+    var testEntries;
+    
+    self.stuffTestSoup()
+        .pipe(function(entries) {
+            testEntries = entries;
+            QUnit.equal(entries.length, 3, "check stuffTestSoup result");
+            var querySpec = navigator.smartstore.buildSmartQuerySpec("SELECT {myPeopleSoup:_soup} FROM {myPeopleSoup} WHERE {myPeopleSoup:Name} LIKE '%o%' ORDER BY LOWER({myPeopleSoup:Name})", 10);
+            return self.runSmartQuery(querySpec);
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(3, cursor.currentPageOrderedEntries.length, "check number of rows returned");
+
+            // Should return all entries but not in the default order.
+            QUnit.equal(JSON.stringify([testEntries[1]]), JSON.stringify(cursor.currentPageOrderedEntries[0]), "check currentPageOrderedEntries[0]");
+            QUnit.equal(JSON.stringify([testEntries[2]]), JSON.stringify(cursor.currentPageOrderedEntries[1]), "check currentPageOrderedEntries[1]");
+            QUnit.equal(JSON.stringify([testEntries[0]]), JSON.stringify(cursor.currentPageOrderedEntries[2]), "check currentPageOrderedEntries[2]");
+            return self.closeCursor(cursor);
+        })
+        .done(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            self.finalizeTest();
+        });
+};
+
+/**
+ * TEST smartQuery SELECT a FROM c WHERE d IN (values) type clause.
+ */
+SmartStoreTestSuite.prototype.testSmartQueryWithSingleFieldAndWhereInClause  = function() {
+    console.log("In SFSmartStoreTestSuite.testSmartQueryWithCount");
+    var self = this;
+    var testEntries;
+    
+    self.stuffTestSoup()
+        .pipe(function(entries) {
+            testEntries = entries;
+            QUnit.equal(entries.length, 3, "check stuffTestSoup result");
+            var querySpec = navigator.smartstore.buildSmartQuerySpec("SELECT {myPeopleSoup:Name} FROM {myPeopleSoup} WHERE {myPeopleSoup:Id} IN ('00300A', '00300B')", 10);
+            return self.runSmartQuery(querySpec);
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(2, cursor.currentPageOrderedEntries.length, "check number of rows returned");
+            QUnit.equal(1, cursor.currentPageOrderedEntries[0].length, "check number of fields returned");
+
+            // Should return 1st and 2nd entries.
+            QUnit.equal(JSON.stringify([testEntries[0].Name]), JSON.stringify(cursor.currentPageOrderedEntries[0]), "check currentPageOrderedEntries[0]");
+            QUnit.equal(JSON.stringify([testEntries[1].Name]), JSON.stringify(cursor.currentPageOrderedEntries[1]), "check currentPageOrderedEntries[1]");
+            return self.closeCursor(cursor);
+        })
+        .done(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            self.finalizeTest();
+        });
+};
+
+/**
+ * TEST smartQuery SELECT a, b FROM c WHERE d IN (values) type clause.
+ */
+SmartStoreTestSuite.prototype.testSmartQueryWithMultipleFieldsAndWhereInClause  = function() {
+    console.log("In SFSmartStoreTestSuite.testSmartQueryWithCount");
+    var self = this;
+    var testEntries;
+    
+    self.stuffTestSoup()
+        .pipe(function(entries) {
+            testEntries = entries;
+            QUnit.equal(entries.length, 3, "check stuffTestSoup result");
+            var querySpec = navigator.smartstore.buildSmartQuerySpec("SELECT {myPeopleSoup:Name}, {myPeopleSoup:Id} FROM {myPeopleSoup} WHERE {myPeopleSoup:Id} IN ('00300A', '00300C')", 10);
+            return self.runSmartQuery(querySpec);
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(2, cursor.currentPageOrderedEntries.length, "check number of rows returned");
+            QUnit.equal(2, cursor.currentPageOrderedEntries[0].length, "check number of fields returned");
+
+            // Should return 1st and 3rd entries.
+            QUnit.equal(JSON.stringify([testEntries[0].Name, testEntries[0].Id]), 
+                JSON.stringify(cursor.currentPageOrderedEntries[0]), "check currentPageOrderedEntries[0]");
+            QUnit.equal(JSON.stringify([testEntries[2].Name, testEntries[2].Id]), 
+                JSON.stringify(cursor.currentPageOrderedEntries[1]), "check currentPageOrderedEntries[1]");
+            return self.closeCursor(cursor);
+        })
+        .done(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            self.finalizeTest();
+        });
+};
 
 /**
  * TEST query with special field
