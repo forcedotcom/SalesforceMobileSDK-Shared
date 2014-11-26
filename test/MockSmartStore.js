@@ -291,53 +291,92 @@ var MockSmartStore = (function(window) {
             return o;
         },
 
-        smartQuerySoupFull: function(querySpec) {
+        _supportedQueries : function() {
             // NB we don't have full support evidently
-
-            var smartSql = querySpec.smartSql;
-
-            // SELECT {soupName:selectField} FROM {soupName} WHERE {soupName:whereField} IN (values)
-            var m = smartSql.match(/SELECT {(.*):(.*)} FROM {(.*)} WHERE {(.*):(.*)} IN \((.*)\)/i);
-            if (m != null && m[1] == m[3] && m[1] == m[4]) {
-                var soupName = m[1];
-                var selectField = m[2]
-                var whereField = m[5];
-
-                var values = m[6].split(",");
-                for (var i=0; i<values.length; i++) {
-                    values[i] = values[i].split("'")[1]; // getting rid of surrounding '
+            return [
+                { 
+                    name: "Query with variable select fields and where clause {soup:field} IN list of values", 
+                    example: "SELECT {soupName:selectField1}, {soupName:selectField2} FROM {soupName} WHERE {soupName:whereField} IN (values)", 
+                    // NOTE: This regex is designed to capture the SELECT clause (e.g. "{soup:field1}, {soup:field2}") in one of the matches.
+                    // In JS, the regex engine doesn't like to give you a variable number of groups in a single pass, so you have to use a 
+                    // RegExp object and execute in a loop. This should support an indefinite number of selected fields. It uses backreferences
+                    // to ensure that the soupName is the consistent.
+                    pattern: /SELECT ({([\.\w]*):[\.\w]*}((?:\s*?,\s*?){\2:[\.\w]*})*) FROM {\2} WHERE {\2:(.*)} IN \((.*)\)/i, 
+                    processor: this._smartQuerySoupIn 
+                },
+                { 
+                    name: "Query with where clause {soup:field} like 'value' with optional order by", 
+                    example: "SELECT {soupName:_soup} FROM {soupName} WHERE {soupName:whereField} LIKE 'value' ORDER BY LOWER({soupName:orderByField})", 
+                    pattern: /SELECT {(.*):_soup} FROM {(.*)} WHERE {(.*):(.*)} LIKE '(.*)'(?: ORDER BY LOWER\({(.*):(.*)}\))?/i, 
+                    processor: this._smartQuerySoupLikeOrdered 
+                },
+                { 
+                    name: "Count of soup items", 
+                    example: "SELECT count(*) FROM {soupName}", 
+                    pattern: /SELECT count\(\*\) FROM {(.*)}/i, 
+                    processor: this._smartQuerySoupCount 
                 }
 
-                this.checkSoup(soupName); 
-                this.checkIndex(soupName, selectField);
-                this.checkIndex(soupName, whereField);
-                var soup = _soups[soupName];
-                var soupIndexedData = _soupIndexedData[soupName];
+            ];
+        },
 
-                var results = [];
-                for (var soupEntryId in soup) {
-                    var soupElt = soup[soupEntryId];
-                    var value = (whereField == "_soupEntryId" ? soupEntryId : soupIndexedData[soupEntryId][whereField]);
-                    if (values.indexOf(value) >= 0) {
-                        var row = [];
-                        row.push(selectField == "_soup" ? soupElt : (selectField == "_soupEntryId" ? soupEntryId : soupIndexedData[soupEntryId][selectField]));
-                        results.push(row);
-                    }
-                }
+        _smartQuerySoupIn : function(queryDesc, matches, smartSql) {
+            // Note: No need to check that the soupName is consistent throughout.  
+            // queryDesc.pattern has backreferences that should take care of that.
 
-                return results;
+            // Setup Regex for the SELECT colums.
+            // Looks for (example): {soupName:field1}, {soupName:field2}, {soupName:field3}
+            var selectPattern = /{([\.\w]*?):([\.\w]*?)}[\s,]*/ig;
+            var selectRegex = new RegExp(selectPattern);
+            var fieldMatch, selectFields = [];
+
+            // Gather the parameters.
+            var soupName = matches[2];
+            while (fieldMatch = selectRegex.exec(matches[1])) {
+                selectFields.push(fieldMatch[2]);
+            }
+            var whereField = matches[4];
+            var values = matches[5].split(",");
+
+            var i;
+            for (i = 0; i < values.length; i++) {
+                values[i] = values[i].split("'")[1]; // getting rid of surrounding '
             }
 
-            // Query with where clause {soup:field} like 'value'
-            // SELECT {soupName:_soup} FROM {soupName} WHERE {soupName:whereField} LIKE 'value'
-            // Case-insensitive sorted like query
-            // SELECT {soupName:_soup} FROM {soupName} WHERE {soupName:whereField} LIKE 'value' ORDER BY LOWER({soupName:orderByField})
-            var m = smartSql.match(/SELECT {(.*):_soup} FROM {(.*)} WHERE {(.*):(.*)} LIKE '(.*)'(?: ORDER BY LOWER\({(.*):(.*)}\))?/i);
-            if (m != null && m[1] == m[2] && m[1] == m[3] && (!m[6] || m[1] == m[6])) {
-                var soupName = m[1];
-                var whereField = m[4];
-                var likeRegexp = new RegExp("^" + m[5].replace(/%/g, ".*"), "i");
-                var orderField = m[6] ? m[7] : null;
+            // Make sure the soup has all the appropriate fields.
+            this.checkSoup(soupName);
+            for (i = 0; i < selectFields.length; i++) {
+                this.checkIndex(soupName, selectFields[i]);
+            }
+            this.checkIndex(soupName, whereField);
+
+            var soup = _soups[soupName];
+            var soupIndexedData = _soupIndexedData[soupName];
+
+            // Pull results out from soup iteratively.
+            var results = [];
+            for (var soupEntryId in soup) {
+                var soupElt = soup[soupEntryId];
+                var value = (whereField === "_soupEntryId" ? soupEntryId : soupIndexedData[soupEntryId][whereField]);
+                if (values.indexOf(value) >= 0) {
+                    var self = this;
+                    var row = [];
+                    selectFields.forEach(function(selectField) {
+                        row.push(selectField === "_soup" ? soupElt : (selectField === "_soupEntryId" ? soupEntryId : soupIndexedData[soupEntryId][selectField]));
+                    })
+                    results.push(row);
+                }
+            }
+
+            return results;
+        },
+
+        _smartQuerySoupLikeOrdered : function(queryDesc, matches, smartSql) {
+            if (matches[1] === matches[2] && matches[1] === matches[3] && (!matches[6] || matches[1] === matches[6])) {
+                var soupName = matches[1];
+                var whereField = matches[4];
+                var likeRegexp = new RegExp("^" + matches[5].replace(/%/g, ".*"), "i");
+                var orderField = matches[6] ? matches[7] : null;
 
                 this.checkSoup(soupName); 
                 this.checkIndex(soupName, whereField);
@@ -360,27 +399,47 @@ var MockSmartStore = (function(window) {
                     results = results.sort(function(row1, row2) {
                         var p1 = row1[0][orderField].toLowerCase();
                         var p2 = row2[0][orderField].toLowerCase();
-                        return ( p1 > p2 ? 1 : (p1 == p2 ? 0 : -1));
+                        return ( p1 > p2 ? 1 : (p1 === p2 ? 0 : -1));
                     });
                 }
 
                 return results;
             }
 
-            // SELECT count(*) FROM {soupName}
-            var m = smartSql.match(/SELECT count\(\*\) FROM {(.*)}/i);
-            if (m != null) {
-                var soupName = m[1];
-                this.checkSoup(soupName); 
-                var soup = _soups[soupName];
-                var count = 0;
-                for (var soupEntryId in soup) {
-                    count++;
+            throw new Error("SmartQuery for \"" + queryDesc.name + "\" not supported by MockSmartStore: " + smartSql);
+        },
+
+        _smartQuerySoupCount : function(queryDesc, matches, smartSql) {
+            var soupName = matches[1];
+            this.checkSoup(soupName); 
+            var soup = _soups[soupName];
+            var count = 0;
+            for (var soupEntryId in soup) {
+                count++;
+            }
+            return [[count]];
+        },
+
+        smartQuerySoupFull: function(querySpec) {
+            // Match the query against the supported queries in test and then execute.
+
+            var smartSql = querySpec.smartSql;
+            var supportedQueries = this._supportedQueries();
+
+            for (var i = 0; i < supportedQueries.length; i++) {
+                queryDesc = supportedQueries[i];
+                var matches = smartSql.match(queryDesc.pattern);
+                if (matches !== null) {
+                    try {
+                        return queryDesc.processor.call(this, queryDesc, matches, smartSql);
+                    }
+                    catch(err) {
+                        throw new Error("SmartQuery for \"" + queryDesc.name + "\" (Example: " +
+                            queryDesc.example + ") had an error executing: " + err.message);
+                    }
                 }
-                return [[count]];
             }
 
-            // If we get here, it means we don't support that query in the mock smartstore
             throw new Error("SmartQuery not supported by MockSmartStore:" + smartSql);
         },
 
