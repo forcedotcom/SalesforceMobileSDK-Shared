@@ -542,8 +542,8 @@
                     that._data.describeResult =  $.when(cacheRetrieve(that, "describeResult"))
                         .then(serverDescribeUnlessCached)
                         .then(cacheSave)
-                        .then(function() {
-                            return that._data.describeResult;
+                        .then(function(cacheRow) {
+                            return cacheRow._data.describeResult;
                         });
                 }
                 return $.when(that._data.describeResult);
@@ -556,8 +556,8 @@
                     that._data.metadataResult = $.when(cacheRetrieve(that, "metadataResult"))
                         .then(serverMetadataUnlessCached)
                         .then(cacheSave)
-                        .then(function() {
-                            return that._data.metadataResult;
+                        .then(function(cacheRow) {
+                            return cacheRow._data.metadataResult;
                         });
                 }
                 return $.when(that._data.metadataResult);
@@ -576,8 +576,8 @@
                     that._data[layoutInfoId] = $.when(cacheRetrieve(that, layoutInfoId), recordTypeId)
                         .then(serverDescribeLayoutUnlessCached)
                         .then(cacheSave)
-                        .then(function() {
-                            return that._data[layoutInfoId];
+                        .then(function(cacheRow) {
+                            return cacheRow._data[layoutInfoId];
                         });
                 }
                 return $.when(that._data[layoutInfoId]);
