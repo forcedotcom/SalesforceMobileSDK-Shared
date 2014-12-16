@@ -631,6 +631,7 @@ SmartSyncTestSuite.prototype.testSObjectTypeCacheMerge = function() {
     var self = this;
     var soupName = "testSoupForSObjectType";
     var cache, describeResult, metadataResult;
+    var sobjectType1, sobjectType2;
 
     Force.smartstoreClient.removeSoup(soupName)
     .then(function() {
@@ -640,18 +641,21 @@ SmartSyncTestSuite.prototype.testSObjectTypeCacheMerge = function() {
     })
     .then(function() { 
         console.log("## Calling describe layout");
-        var sobjectType1 = new Force.SObjectType("Account", cache);
-        var sobjectType2 = new Force.SObjectType("Account", cache);
-        return $.when(sobjectType1.describe(), sobjectType2.getMetadata());
+        sobjectType1 = new Force.SObjectType("Account", cache);
+        sobjectType2 = new Force.SObjectType("Account", cache);
+        return sobjectType1.describe();
     })
     .then(function(data1, data2) {
         describeResult = data1;
+        return sobjectType2.getMetadata();
+    })
+    .then(function(data2) {
         metadataResult = data2;
         // Fetch the cache row to check if both describeResult and metadata Result are saved.
         console.log("## Checking underlying cache");
         return cache.retrieve("Account");
     })
-    .then(function(cacheRow) {    
+    .then(function(cacheRow) {
         assertContains(describeResult, cacheRow.describeResult);
         assertContains(metadataResult, cacheRow.metadataResult);
         console.log("## Cleaning up");
