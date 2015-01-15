@@ -180,7 +180,7 @@ SmartSyncTestSuite.prototype.testStoreCacheSave = function() {
         assertContains(records[0], {Id:"007", Name:"JamesBond", Mission:"TopSecret2", Organization:"MI6"});
 
         console.log("## Saving partial record to cache with noMerge flag");
-        return cache.save({Id:"007", Mission:"TopSecret3"}, true);
+        return cache.save({Id:"007", Mission:"TopSecret3"}, Force.MERGE_MODE_DOWNLOAD.OVERWRITE);
     })
     .then(function(record) {
         console.log("## Direct retrieve from underlying cache");
@@ -249,7 +249,7 @@ SmartSyncTestSuite.prototype.testStoreCacheSaveAll = function() {
 
         console.log("## Saving partial records to cache with noMerge flag");
         var partialRecords = [{Id:"007", Mission:"TopSecret"},{Id:"008", Team:"Team"}, {Id:"009", Organization:"Org"}];        
-        return cache.saveAll(partialRecords, true);
+        return cache.saveAll(partialRecords, Force.MERGE_MODE_DOWNLOAD.OVERWRITE);
     })
     .then(function(records) {
         console.log("## Direct retrieve from underlying cache");
@@ -2652,7 +2652,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdated = function() {
             _.each(_.keys(idToName), function(id) {
                 updatedRecords.push({Id:id, Name:idToName[id]+"Updated", __locally_updated__:true});
             });
-            return cache.saveAll(updatedRecords, false);
+            return cache.saveAll(updatedRecords);
         })
         .then(function(records) {
             console.log("## Calling sync up");
@@ -2713,7 +2713,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
             _.each(_.keys(idToName), function(id) {
                 deletedRecords.push({Id:id, __locally_deleted__:true});
             });
-            return cache.saveAll(deletedRecords, false);
+            return cache.saveAll(deletedRecords);
         })
         .then(function(records) {
             console.log("## Calling sync up");
@@ -2766,7 +2766,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyCreated = function() {
             for (var i=0; i<3; i++) {
                 createdRecords.push({Id:"local_" + i, Name:"testSyncUpLocallyCreated" + i, __locally_created__:true, attributes:{type:"Account"}});
             }
-            return cache.saveAll(createdRecords, false);
+            return cache.saveAll(createdRecords);
         })
         .then(function(records) {
             console.log("## Calling sync up");

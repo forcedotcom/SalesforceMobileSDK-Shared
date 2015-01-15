@@ -244,17 +244,19 @@
         },
 
         // Return promise which stores a record in cache
-        save: function(record, noMerge) {
+        save: function(record, mergeMode) {
             if (this.soupName == null) return;
-            Force.console.debug("----> In StoreCache:save " + this.soupName + ":" + record[this.keyField] + " noMerge:" + (noMerge == true));
+            Force.console.debug("----> In StoreCache:save " + this.soupName + ":" + record[this.keyField] + " mergeMode:" + mergeMode);
 
             var that = this;
 
+            if(_.isUndefined(mergeMode)) mergeMode = Force.MERGE_MODE_DOWNLOAD.MERGE_ACCEPT_THEIRS;
+
             var mergeIfRequested = function() {
-                if (noMerge) {
+                if (mergeMode == Force.MERGE_MODE_DOWNLOAD.OVERWRITE) {
                     return $.when(record);
                 }
-                else {
+                else if (mergeMode == Force.MERGE_MODE_DOWNLOAD.MERGE_ACCEPT_THEIRS) {
                     return that.retrieve(record[that.keyField])
                         .then(function(oldRecord) {
                             return _.extend(oldRecord || {}, record);
@@ -272,18 +274,21 @@
                 });
         },
 
-        // Return promise which stores several records in cache (NB: records are merged with existing records if any)
-        saveAll: function(records, noMerge) {
+        // Return promise which stores several records in cache
+        saveAll: function(records, mergeMode) {
             if (this.soupName == null) return;
-            Force.console.debug("----> In StoreCache:saveAll records.length=" + records.length + " noMerge:" + (noMerge == true));
+            Force.console.debug("----> In StoreCache:saveAll records.length=" + records.length + " mergeMode:" + mergeMode);
+
+
+            if(_.isUndefined(mergeMode)) mergeMode = Force.MERGE_MODE_DOWNLOAD.MERGE_ACCEPT_THEIRS;
 
             var that = this;
 
             var mergeIfRequested = function() {
-                if (noMerge) {
+                if (mergeMode == Force.MERGE_MODE_DOWNLOAD.OVERWRITE) {
                     return $.when(records);
                 }
-                else {
+                else if (mergeMode == Force.MERGE_MODE_DOWNLOAD.MERGE_ACCEPT_THEIRS) {
                     if (_.any(records, function(record) { return !_.has(record, that.keyField); })) {
                         throw new Error("Can't merge without " + that.keyField);
                     }
@@ -920,6 +925,21 @@
         MERGE_FAIL_IF_CONFLICT: "merge-fail-if-conflict",
         MERGE_FAIL_IF_CHANGED: "merge-fail-if-changed"
     };
+
+    // Force.MERGE_MODE_DOWNLOAD
+    // -------------------------
+    //   Merge mode when downloading records from server into cache
+    //   If we call "theirs" the downloaded server record, "yours" the local record (might not exist)
+    //   - OVERWRITE              write "theirs" to cache -- replacing "yours" if present
+    //   - MERGE_ACCEPT_THEIRS    merge "theirs" with "yours" -- if the same field is present in both, the value from "theirs" is kept
+    //   - LEAVE_IF_CHANGED       keep "yours" if it has local changes -- replace "yours" otherwise with "theirs"
+    //
+    Force.MERGE_MODE_DOWNLOAD = {
+        OVERWRITE: "overwrite",
+        MERGE_ACCEPT_THEIRS: "merge-accept-theirs",
+        LEAVE_IF_CHANGED: "leave-if-changed"
+    };
+
 
     // Force.syncRemoteObjectDetectConflict
     // ------------------------------------
