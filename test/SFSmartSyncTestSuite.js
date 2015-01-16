@@ -2638,7 +2638,7 @@ SmartSyncTestSuite.prototype.testSyncDownWithNoOverwrite = function() {
         })
         .then(function() {
             console.log("## Calling sync down");
-            return self.trySyncDown(cache, soupName, idToName);
+            return self.trySyncDown(cache, soupName, idToName, Force.MERGE_MODE_DOWNLOAD.OVERWRITE);
         })
         .then(function() {
             console.log("## Updating local records");
