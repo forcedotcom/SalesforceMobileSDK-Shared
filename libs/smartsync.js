@@ -942,9 +942,9 @@
     //   - LEAVE_IF_CHANGED       keep "yours" if it has local changes -- replace "yours" otherwise with "theirs"
     //
     Force.MERGE_MODE_DOWNLOAD = {
-        OVERWRITE: "overwrite",
-        MERGE_ACCEPT_THEIRS: "merge-accept-theirs",
-        LEAVE_IF_CHANGED: "leave-if-changed"
+        OVERWRITE: "OVERWRITE",
+        MERGE_ACCEPT_THEIRS: "MERGE_ACCEPT_THEIRS",
+        LEAVE_IF_CHANGED: "LEAVE_IF_CHANGED"
     };
 
 
