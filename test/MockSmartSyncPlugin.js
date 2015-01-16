@@ -95,7 +95,8 @@ var MockSmartSyncPlugin = (function(window) {
                     success: onFetch,
                     error: function() {
                         self.sendUpdate(syncId, "FAILED", 0);
-                    }
+                    },
+                    mergeMode: options.mergeMode
                 });
             });
         },
