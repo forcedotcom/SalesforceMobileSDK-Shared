@@ -2410,7 +2410,7 @@ SmartSyncTestSuite.prototype.testFetchSObjects = function() {
             return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
         })
         .then(function(result) {
-            console.log("## Checking data retured from cache");
+            console.log("## Checking data returned from cache");
             QUnit.equals(result.records.length, 3, "Expected 3 records");
             QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
 
@@ -2434,7 +2434,7 @@ SmartSyncTestSuite.prototype.testFetchSObjects = function() {
             return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
         })
         .then(function(result) {
-            console.log("## Checking data retured from cache");
+            console.log("## Checking data returned from cache");
             QUnit.equals(result.records.length, 3, "Expected 3 records");
             QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
 
@@ -2442,7 +2442,7 @@ SmartSyncTestSuite.prototype.testFetchSObjects = function() {
             return cacheForOriginals.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
         })
         .then(function(result) {
-            console.log("## Checking data retured from cacheForOriginals");
+            console.log("## Checking data returned from cacheForOriginals");
             QUnit.equals(result.records.length, 3, "Expected 3 records");
             QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
 
@@ -2521,7 +2521,7 @@ SmartSyncTestSuite.prototype.testSObjectCollectionFetch = function() {
             return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
         })
         .then(function(result) {
-            console.log("## Checking data retured from cache");
+            console.log("## Checking data returned from cache");
             QUnit.equals(result.records.length, 3, "Expected 3 records");
             QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
 
@@ -2554,7 +2554,7 @@ SmartSyncTestSuite.prototype.testSObjectCollectionFetch = function() {
             return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
         })
         .then(function(result) {
-            console.log("## Checking data retured from cache");
+            console.log("## Checking data returned from cache");
             QUnit.equals(result.records.length, 3, "Expected 3 records");
             QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
 
@@ -2562,7 +2562,7 @@ SmartSyncTestSuite.prototype.testSObjectCollectionFetch = function() {
             return cacheForOriginals.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
         })
         .then(function(result) {
-            console.log("## Checking data retured from cacheForOriginals");
+            console.log("## Checking data returned from cacheForOriginals");
             QUnit.equals(result.records.length, 3, "Expected 3 records");
             QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
 
@@ -2658,12 +2658,12 @@ SmartSyncTestSuite.prototype.testSyncDownWithNoOverwrite = function() {
             return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
         })
         .then(function(result) {
-            console.log("## Checking data retured from cache");
+            console.log("## Checking data returned from cache");
             QUnit.equals(result.records.length, 3, "Expected 3 records");
             _.each(result.records, function(record) {
                 QUnit.ok(record.__local__, "Record should still be marked as local");
                 QUnit.ok(record.__locally_updated__, "Record should still be marked as updated");
-                QUnit.ok(record.Name.endsWith("Updated"), "Record name should still have update");                
+                QUnit.ok(record.Name.indexOf("Updated") > -1, "Record name should still have update");                
             });
 
             console.log("## Calling sync down with mergeMode overwrite");
@@ -2674,12 +2674,12 @@ SmartSyncTestSuite.prototype.testSyncDownWithNoOverwrite = function() {
             return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
         })
         .then(function(result) {
-            console.log("## Checking data retured from cache");
+            console.log("## Checking data returned from cache");
             QUnit.equals(result.records.length, 3, "Expected 3 records");
             _.each(result.records, function(record) {
                 QUnit.ok(!record.__local__, "Record should no longer be marked as local");
                 QUnit.ok(!record.__locally_updated__, "Record should no longer be marked as updated");
-                QUnit.ok(!record.Name.endsWith("Updated"), "Record name should no longer have update");                
+                QUnit.ok(record.Name.indexOf("Updated") == -1, "Record name should no longer have update");                
             });
 
             return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
@@ -2740,7 +2740,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdated = function() {
             return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
         })
         .then(function(result) {
-            console.log("## Checking data retured from cache");
+            console.log("## Checking data returned from cache");
             QUnit.equals(result.records.length, 3, "Expected 3 records");
             _.each(result.records, function(record) {
                 QUnit.ok(!record.__local__, "Record should no longer marked as local");
@@ -2801,7 +2801,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
             return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
         })
         .then(function(result) {
-            console.log("## Checking data retured from cache");
+            console.log("## Checking data returned from cache");
             QUnit.equals(result.records.length, 0, "Expected 0 records");
 
             console.log("## Checking server");
@@ -2854,7 +2854,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyCreated = function() {
             return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
         })
         .then(function(result) {
-            console.log("## Checking data retured from cache");
+            console.log("## Checking data returned from cache");
             QUnit.equals(result.records.length, 3, "Expected 3 records");
             _.each(result.records, function(record) {
                 QUnit.ok(!record.__local__, "Record should no longer marked as local");
@@ -3126,7 +3126,7 @@ SmartSyncTestSuite.prototype.trySyncDown = function(cache, soupName, idToName, m
             return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:numberRecords});
         })
         .then(function(result) {
-            console.log("## Checking data retured from cache");
+            console.log("## Checking data returned from cache");
             QUnit.equals(result.records.length, numberRecords, "Expected " + numberRecords + " records");
             QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
         });
