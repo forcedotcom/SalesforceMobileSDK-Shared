@@ -244,20 +244,25 @@
         },
 
         // Return promise which stores a record in cache
-        save: function(record, noMerge) {
+        save: function(record, mergeMode) {
             if (this.soupName == null) return;
-            Force.console.debug("----> In StoreCache:save " + this.soupName + ":" + record[this.keyField] + " noMerge:" + (noMerge == true));
+            Force.console.debug("----> In StoreCache:save " + this.soupName + ":" + record[this.keyField] + " mergeMode:" + mergeMode);
 
             var that = this;
 
+            if(!mergeMode || mergeMode == null) mergeMode = Force.MERGE_MODE_DOWNLOAD.MERGE_ACCEPT_THEIRS;
+
             var mergeIfRequested = function() {
-                if (noMerge) {
+                if (mergeMode == Force.MERGE_MODE_DOWNLOAD.OVERWRITE) {
                     return $.when(record);
                 }
-                else {
+                else if (mergeMode == Force.MERGE_MODE_DOWNLOAD.MERGE_ACCEPT_THEIRS) {
                     return that.retrieve(record[that.keyField])
                         .then(function(oldRecord) {
-                            return _.extend(oldRecord || {}, record);
+                            if (mergeMode == Force.MERGE_MODE_DOWNLOAD.MERGE_ACCEPT_THEIRS)
+                                return _.extend(oldRecord || {}, record);
+                            else if (mergeMode == Force.MERGE_MODE_DOWNLOAD.LEAVE_IF_CHANGED)
+                                return (oldRecord && oldRecord.__local__ ? oldRecord : record);
                         });
                 }
             };
@@ -272,15 +277,18 @@
                 });
         },
 
-        // Return promise which stores several records in cache (NB: records are merged with existing records if any)
-        saveAll: function(records, noMerge) {
+        // Return promise which stores several records in cache
+        saveAll: function(records, mergeMode) {
             if (this.soupName == null) return;
-            Force.console.debug("----> In StoreCache:saveAll records.length=" + records.length + " noMerge:" + (noMerge == true));
+            Force.console.debug("----> In StoreCache:saveAll records.length=" + records.length + " mergeMode:" + mergeMode);
+
+
+            if(!mergeMode || mergeMode == null) mergeMode = Force.MERGE_MODE_DOWNLOAD.MERGE_ACCEPT_THEIRS;
 
             var that = this;
 
             var mergeIfRequested = function() {
-                if (noMerge) {
+                if (mergeMode == Force.MERGE_MODE_DOWNLOAD.OVERWRITE) {
                     return $.when(records);
                 }
                 else {
@@ -308,7 +316,11 @@
                         .then(function() {
                             return _.map(records, function(record) {
                                 var oldRecord = oldRecords[record[that.keyField]];
-                                return _.extend(oldRecord || {}, record)
+
+                                if (mergeMode == Force.MERGE_MODE_DOWNLOAD.MERGE_ACCEPT_THEIRS)
+                                    return _.extend(oldRecord || {}, record);
+                                else if (mergeMode == Force.MERGE_MODE_DOWNLOAD.LEAVE_IF_CHANGED)
+                                    return (oldRecord && oldRecord.__local__ ? oldRecord : record);
                             });
                         });
                 }
@@ -921,6 +933,21 @@
         MERGE_FAIL_IF_CHANGED: "merge-fail-if-changed"
     };
 
+    // Force.MERGE_MODE_DOWNLOAD
+    // -------------------------
+    //   Merge mode when downloading records from server into cache
+    //   If we call "theirs" the downloaded server record, "yours" the local record (might not exist)
+    //   - OVERWRITE              write "theirs" to cache -- replacing "yours" if present
+    //   - MERGE_ACCEPT_THEIRS    merge "theirs" with "yours" -- if the same field is present in both, the value from "theirs" is kept
+    //   - LEAVE_IF_CHANGED       keep "yours" if it has local changes -- replace "yours" otherwise with "theirs"
+    //
+    Force.MERGE_MODE_DOWNLOAD = {
+        OVERWRITE: "overwrite",
+        MERGE_ACCEPT_THEIRS: "merge-accept-theirs",
+        LEAVE_IF_CHANGED: "leave-if-changed"
+    };
+
+
     // Force.syncRemoteObjectDetectConflict
     // ------------------------------------
     //
@@ -1220,8 +1247,8 @@
     //
     // Returns a promise
     //
-    Force.fetchRemoteObjects = function(fetchFromServer, fetchFromCache, cacheMode, cache, cacheForOriginals) {
-        Force.console.info("--> In Force.fetchRemoteObjects:cacheMode=" + cacheMode);
+    Force.fetchRemoteObjects = function(fetchFromServer, fetchFromCache, cacheMode, cache, cacheForOriginals, mergeMode) {
+        Force.console.info("--> In Force.fetchRemoteObjects:cacheMode=" + cacheMode + ":mergeMode=" + mergeMode);
 
         var promise;
 
@@ -1243,11 +1270,11 @@
                 };
 
                 var cacheSaveAll = function(records) {
-                    return cache.saveAll(records);
+                    return cache.saveAll(records, mergeMode);
                 };
 
                 var cacheForOriginalsSaveAll = function(records) {
-                    return cacheForOriginals != null ? cacheForOriginals.saveAll(records) : records;
+                    return cacheForOriginals != null ? cacheForOriginals.saveAll(records, mergeMode) : records;
                 };
 
                 var setupGetMore = function(records) {
@@ -1278,7 +1305,7 @@
     //
     // Returns a promise
     //
-    Force.fetchSObjects = function(config, cache, cacheForOriginals) {
+    Force.fetchSObjects = function(config, cache, cacheForOriginals, mergeMode) {
         Force.console.info("--> In Force.fetchSObjects:config.type=" + config.type);
 
         var fetchFromServer = function() {
@@ -1291,7 +1318,7 @@
 
         var cacheMode = (config.type == "cache" ? Force.CACHE_MODE.CACHE_ONLY : Force.CACHE_MODE.SERVER_FIRST);
 
-        return Force.fetchRemoteObjects(fetchFromServer, fetchFromCache, cacheMode, cache, cacheForOriginals);
+        return Force.fetchRemoteObjects(fetchFromServer, fetchFromCache, cacheMode, cache, cacheForOriginals, mergeMode);
     };
 
     if (!_.isUndefined(Backbone)) {
@@ -1420,6 +1447,9 @@
             // Used if none is passed during sync call - can be a cache object or a function returning a cache object
             cacheForOriginals: null,
 
+            // Used if none is passed during sync call - can be Fore.MERGE_MODE_DOWNLOAD or a function returning a cache object
+            mergeMode: null,
+
             // To be defined in concrete subclass
             fetchRemoteObjectFromServer: function(config) {
                 return $.when([]);
@@ -1456,6 +1486,7 @@
             // Extra options (can also be defined as properties of the model object)
             // * config:<see above for details>
             // * cache:<cache object>
+            // * mergeMode:<any Force.MERGE_MODE_DOWNLOAD values>
             sync: function(method, model, options) {
                 Force.console.debug("-> In Force.RemoteObjectCollection:sync method=" + method);
                 var that = this;
@@ -1467,6 +1498,7 @@
                 var config = options.config || _.result(this, "config");
                 var cache = options.cache   || _.result(this, "cache");
                 var cacheForOriginals = options.cacheForOriginals || _.result(this, "cacheForOriginals");
+                var mergeMode = options.mergeMode || _.result(this, "mergeMode");
 
                 if (config == null) {
                     options.success([]);
@@ -1512,7 +1544,7 @@
                 var cacheMode = (config.type == "cache" ? Force.CACHE_MODE.CACHE_ONLY : Force.CACHE_MODE.SERVER_FIRST);
 
                 options.reset = true;
-                Force.fetchRemoteObjects(fetchFromServer, fetchFromCache, cacheMode, cache, cacheForOriginals)
+                Force.fetchRemoteObjects(fetchFromServer, fetchFromCache, cacheMode, cache, cacheForOriginals, mergeMode)
                     .then(function(resp) {
                         that._fetchResponse = resp;
                         if (config.closeCursorImmediate) that.closeCursor();
