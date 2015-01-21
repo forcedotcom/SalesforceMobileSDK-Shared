@@ -67,13 +67,30 @@ var MockSmartSyncPlugin = (function(window) {
                 return;
             }
 
+            var syncId = this.recordSync("syncDown", target, soupName, options);
+            this.actualSyncDown(syncId, successCB, errorCB);
+        },
+
+        actualSyncDown: function(syncId, successCB, errorCB) {
             var self = this;
-            var syncId = self.recordSync("syncDown", target, soupName, options);
+            var sync = syncs[syncId];
+            var syncId = sync.syncId;
+            var target = sync.target;
+            var soupName = sync.soupName;
+            var options = sync.options;
             var cache = new Force.StoreCache(soupName);
             var collection = new Force.SObjectCollection();
             var progress = 0;
             collection.cache = cache;
-            collection.config = target;
+
+            // Resync?
+            var maxTimeStamp = sync.maxTimeStamp;
+            if (target.type == "soql" && _.isNumber(maxTimeStamp)) {
+                collection.config = {type:"soql", query: self.addFilterForReSync(target.query, maxTimeStamp)};
+            }
+            else {
+                collection.config = target;
+            }
 
             var onFetch = function() {
                 progress += (100 - progress) / 2; // bogus but we don't have the totalSize
@@ -82,6 +99,9 @@ var MockSmartSyncPlugin = (function(window) {
                     self.sendUpdate(syncId, "RUNNING", progress);
                 }
                 else {
+                    if (target.type == "soql") {
+                        sync.maxTimeStamp = _.max(_.map(_.pluck(_.pluck(collection.models, "attributes"), "SystemModstamp"), function(d) { return (new Date(d)).getTime(); }));
+                    }
                     self.sendUpdate(syncId, "DONE", 100);
                 }
             };
@@ -89,7 +109,7 @@ var MockSmartSyncPlugin = (function(window) {
 
             self.sendUpdate(syncId, "RUNNING", 0);
             cache.init().then(function() {
-                successCB(syncs[syncId]);
+                successCB(sync);
 
                 collection.fetch({
                     success: onFetch,
@@ -99,6 +119,18 @@ var MockSmartSyncPlugin = (function(window) {
                     mergeMode: options.mergeMode
                 });
             });
+        },
+
+        reSync: function(syncId, successCB, errorCB) {
+            this.actualSyncDown(syncId, successCB, errorCB);
+        },
+
+        addFilterForReSync: function(query, maxTimeStamp) {
+            var extraPredicate = "SystemModstamp > " + (new Date(maxTimeStamp)).toISOString();
+            var modifiedQuery = query.toLowerCase().indexOf(" where ") > 0
+                ? query.replace(/( [wW][hH][eE][rR][eE] )/, "$1" + extraPredicate + " and ")
+                : query.replace(/( [fF][rR][oO][mM][ ]+[^ ]*)/, "$1 where " + extraPredicate);
+            return modifiedQuery;
         },
 
         syncUp: function(soupName, options, successCB, errorCB) {
@@ -166,6 +198,10 @@ var MockSmartSyncPlugin = (function(window) {
 
             cordova.interceptExec(SMARTSYNC_SERVICE, "getSyncStatus", function (successCB, errorCB, args) {
                 self.getSyncStatus(args[0].syncId, successCB, errorCB); 
+            });
+
+            cordova.interceptExec(SMARTSYNC_SERVICE, "reSync", function (successCB, errorCB, args) {
+                self.reSync(args[0].syncId, successCB, errorCB); 
             });
         }
 
