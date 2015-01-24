@@ -85,7 +85,7 @@ var MockSmartSyncPlugin = (function(window) {
 
             // Resync?
             var maxTimeStamp = sync.maxTimeStamp;
-            if (target.type == "soql" && _.isNumber(maxTimeStamp)) {
+            if (target.type == "soql" && _.isNumber(maxTimeStamp) && maxTimeStamp > 0) {
                 collection.config = {type:"soql", query: self.addFilterForReSync(target.query, maxTimeStamp)};
             }
             else {
@@ -102,6 +102,7 @@ var MockSmartSyncPlugin = (function(window) {
                     if (target.type == "soql") {
                         sync.maxTimeStamp = _.max(_.map(_.pluck(_.pluck(collection.models, "attributes"), "SystemModstamp"), function(d) { return (new Date(d)).getTime(); }));
                     }
+                    sync.totalSize = collection.models.length;
                     self.sendUpdate(syncId, "DONE", 100);
                 }
             };

@@ -34,7 +34,7 @@ var SmartSyncTestSuite = function () {
     SFTestSuite.call(this, "SmartSyncTestSuite");
 
     // To run specific tests
-    // this.testsToRun = ["testSyncDown", "testSyncUpLocallyUpdated", "testSyncUpLocallyDeleted", "testSyncUpLocallyCreated"];
+    // this.testsToRun = ["testReSync"];
 };
 
 // We are sub-classing SFTestSuite
@@ -42,6 +42,7 @@ SmartSyncTestSuite.prototype = new SFTestSuite();
 SmartSyncTestSuite.prototype.constructor = SmartSyncTestSuite;
 
 // SmartSyncPlugin
+SmartSyncTestSuite.prototype.reSync = promiser(cordova.require("com.salesforce.plugin.smartsync"), "reSync");
 SmartSyncTestSuite.prototype.syncDown = promiser(cordova.require("com.salesforce.plugin.smartsync"), "syncDown");
 SmartSyncTestSuite.prototype.syncUp = promiser(cordova.require("com.salesforce.plugin.smartsync"), "syncUp");
 SmartSyncTestSuite.prototype.getSyncStatus = promiser(cordova.require("com.salesforce.plugin.smartsync"), "getSyncStatus");
@@ -2587,7 +2588,6 @@ SmartSyncTestSuite.prototype.testSyncDown = function() {
     console.log("# In SmartSyncTestSuite.testSyncDown");
     var self = this;
     var idToName = {};
-    var target;
     var soupName = "testSyncDown";
     var cache;
 
@@ -2689,6 +2689,55 @@ SmartSyncTestSuite.prototype.testSyncDownWithNoOverwrite = function() {
         });
 };
 
+/** 
+ * TEST smartsyncplugin reSync
+ */
+SmartSyncTestSuite.prototype.testReSync = function() {
+    console.log("# In SmartSyncTestSuite.testReSync");
+    var self = this;
+    var idToName = {};
+    var idToUpdatedName = {};
+    var soupName = "testReSync";
+    var cache;
+    var syncDownId;
+
+    Force.smartstoreClient.removeSoup(soupName)
+        .then(function() {
+            console.log("## Initialization of StoreCache's");
+            cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
+            return $.when(cache.init());
+        })
+        .then(function() { 
+            console.log("## Direct creation against server");    
+            return createRecords(idToName, "testSyncDown", 3);
+        })
+        .then(function() {
+            console.log("## Calling sync down");
+            return self.trySyncDown(cache, soupName, idToName, Force.MERGE_MODE_DOWNLOAD.OVERWRITE);
+        })
+        .then(function(syncId) {
+            syncDownId = syncId;
+
+            console.log("## Updating records on server");
+            idToUpdatedName = {};
+            var ids = [_.keys(idToName)[0], _.keys(idToName)[2]];
+            _.each(ids, function(id) {
+                idToUpdatedName[id] = idToName[id] + "Updated";
+            });
+            return updateRecords(idToUpdatedName);
+        })
+        .then(function() {
+            console.log("## Calling reSync");
+            idToName = _.extend(idToName, idToUpdatedName)
+            return self.tryReSync(cache, soupName, idToName, syncDownId, _.keys(idToUpdatedName).length);
+        })
+        .then(function() {
+            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -2945,6 +2994,20 @@ var createRecords = function(idToName, prefix, count) {
 };
 
 /**
+ * Helper method to update several records on server
+ */
+var updateRecords = function(idToUpdatedName) {
+    return $.when.apply(null, (_.map(_.keys(idToUpdatedName), function(id) {
+        var updatedName = idToUpdatedName[id];
+        console.log("Updating " + updatedName);
+        return Force.forcetkClient.update("Account", id, {Name:updatedName})
+            .then(function(resp) {
+                console.log("Updated " + updatedName);
+            });
+    })));
+};
+
+/**
  * Helper method to delete several records on server
  */
 var deleteRecords = function(idToName) {
@@ -3110,17 +3173,19 @@ var tryConflictDetection = function(message, cache, cacheForOriginals, theirs, y
  */
 SmartSyncTestSuite.prototype.trySyncDown = function(cache, soupName, idToName, mergeMode) {
     var options = {mergeMode: mergeMode};
-    var target = {type:"soql", query:"SELECT Id, Name FROM Account WHERE Id IN ('" +  _.keys(idToName).join("','") + "') ORDER BY Name"};
+    var target = {type:"soql", query:"SELECT Id, Name, SystemModstamp FROM Account WHERE Id IN ('" +  _.keys(idToName).join("','") + "') ORDER BY Name"};
     var numberRecords = _.keys(idToName).length;
+    var syncDownId;
     return this.syncDown(target, soupName, options)
         .then(function(sync) {
             console.log("## Checking sync");
+            syncDownId = sync.syncId;
             assertContains(sync, {type:"syncDown", target: target, status:"RUNNING", progress:0, soupName: soupName, options:options});
             return eventPromiser(document, "sync", function(event) { return event.detail.status == "DONE";});
         })
         .then(function(event) {
             console.log("## Checking event");
-            assertContains(event.detail, {type:"syncDown", target: target, status:"DONE", progress:100, soupName: soupName, options:options});
+            assertContains(event.detail, {type:"syncDown", target: target, status:"DONE", progress:100, totalSize: numberRecords, soupName: soupName, options:options});
 
             console.log("## Checking cache");
             return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:numberRecords});
@@ -3129,8 +3194,36 @@ SmartSyncTestSuite.prototype.trySyncDown = function(cache, soupName, idToName, m
             console.log("## Checking data returned from cache");
             QUnit.equals(result.records.length, numberRecords, "Expected " + numberRecords + " records");
             QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
+            return syncDownId;
         });
 };
+
+/**
+ Helper function to run reSync and consume all status updates until done
+ */
+SmartSyncTestSuite.prototype.tryReSync = function(cache, soupName, idToName, syncDownId, updatedCount) {
+    var numberRecords = _.keys(idToName).length;
+    return this.reSync(syncDownId)
+        .then(function(sync) {
+            console.log("## Checking sync");
+            assertContains(sync, {syncId:syncDownId, type:"syncDown", status:"RUNNING", progress:0, soupName: soupName});
+            return eventPromiser(document, "sync", function(event) { return event.detail.status == "DONE";});
+        })
+        .then(function(event) {
+            console.log("## Checking event");
+            assertContains(event.detail, {syncId: syncDownId, type:"syncDown", status:"DONE", progress:100, totalSize: updatedCount, soupName: soupName});
+
+            console.log("## Checking cache");
+            return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:numberRecords});
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from cache");
+            QUnit.equals(result.records.length, numberRecords, "Expected " + numberRecords + " records");
+            QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
+            return syncDownId;
+        });
+};
+
 
 /**
  Helper function to run sync up and consume all status updates until done
