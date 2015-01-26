@@ -58,7 +58,7 @@ SDKInfoTestSuite.prototype.testGetInfo = function()  {
     self.getInfo()
         .done(function(sdkInfo) {
             // sdkVersion
-        	QUnit.ok(sdkInfo.sdkVersion.indexOf("3.1") == 0, "expected different sdk version");
+        	QUnit.ok(sdkInfo.sdkVersion.indexOf("3.2") == 0, "expected different sdk version");
             // appName
             QUnit.ok(sdkInfo.appName == "HybridPluginTestApp" || sdkInfo.appName == "ForcePluginsTest", "expected different app name");
             // appVersion
