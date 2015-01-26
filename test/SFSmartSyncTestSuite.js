@@ -180,7 +180,7 @@ SmartSyncTestSuite.prototype.testStoreCacheSave = function() {
         assertContains(records[0], {Id:"007", Name:"JamesBond", Mission:"TopSecret2", Organization:"MI6"});
 
         console.log("## Saving partial record to cache with noMerge flag");
-        return cache.save({Id:"007", Mission:"TopSecret3"}, true);
+        return cache.save({Id:"007", Mission:"TopSecret3"}, Force.MERGE_MODE_DOWNLOAD.OVERWRITE);
     })
     .then(function(record) {
         console.log("## Direct retrieve from underlying cache");
@@ -249,7 +249,7 @@ SmartSyncTestSuite.prototype.testStoreCacheSaveAll = function() {
 
         console.log("## Saving partial records to cache with noMerge flag");
         var partialRecords = [{Id:"007", Mission:"TopSecret"},{Id:"008", Team:"Team"}, {Id:"009", Organization:"Org"}];        
-        return cache.saveAll(partialRecords, true);
+        return cache.saveAll(partialRecords, Force.MERGE_MODE_DOWNLOAD.OVERWRITE);
     })
     .then(function(records) {
         console.log("## Direct retrieve from underlying cache");
@@ -631,6 +631,7 @@ SmartSyncTestSuite.prototype.testSObjectTypeCacheMerge = function() {
     var self = this;
     var soupName = "testSoupForSObjectType";
     var cache, describeResult, metadataResult;
+    var sobjectType1, sobjectType2;
 
     Force.smartstoreClient.removeSoup(soupName)
     .then(function() {
@@ -640,18 +641,21 @@ SmartSyncTestSuite.prototype.testSObjectTypeCacheMerge = function() {
     })
     .then(function() { 
         console.log("## Calling describe layout");
-        var sobjectType1 = new Force.SObjectType("Account", cache);
-        var sobjectType2 = new Force.SObjectType("Account", cache);
-        return $.when(sobjectType1.describe(), sobjectType2.getMetadata());
+        sobjectType1 = new Force.SObjectType("Account", cache);
+        sobjectType2 = new Force.SObjectType("Account", cache);
+        return sobjectType1.describe();
     })
     .then(function(data1, data2) {
         describeResult = data1;
+        return sobjectType2.getMetadata();
+    })
+    .then(function(data2) {
         metadataResult = data2;
         // Fetch the cache row to check if both describeResult and metadata Result are saved.
         console.log("## Checking underlying cache");
         return cache.retrieve("Account");
     })
-    .then(function(cacheRow) {    
+    .then(function(cacheRow) {
         assertContains(describeResult, cacheRow.describeResult);
         assertContains(metadataResult, cacheRow.metadataResult);
         console.log("## Cleaning up");
@@ -2406,7 +2410,7 @@ SmartSyncTestSuite.prototype.testFetchSObjects = function() {
             return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
         })
         .then(function(result) {
-            console.log("## Checking data retured from cache");
+            console.log("## Checking data returned from cache");
             QUnit.equals(result.records.length, 3, "Expected 3 records");
             QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
 
@@ -2430,7 +2434,7 @@ SmartSyncTestSuite.prototype.testFetchSObjects = function() {
             return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
         })
         .then(function(result) {
-            console.log("## Checking data retured from cache");
+            console.log("## Checking data returned from cache");
             QUnit.equals(result.records.length, 3, "Expected 3 records");
             QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
 
@@ -2438,7 +2442,7 @@ SmartSyncTestSuite.prototype.testFetchSObjects = function() {
             return cacheForOriginals.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
         })
         .then(function(result) {
-            console.log("## Checking data retured from cacheForOriginals");
+            console.log("## Checking data returned from cacheForOriginals");
             QUnit.equals(result.records.length, 3, "Expected 3 records");
             QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
 
@@ -2517,7 +2521,7 @@ SmartSyncTestSuite.prototype.testSObjectCollectionFetch = function() {
             return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
         })
         .then(function(result) {
-            console.log("## Checking data retured from cache");
+            console.log("## Checking data returned from cache");
             QUnit.equals(result.records.length, 3, "Expected 3 records");
             QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
 
@@ -2550,7 +2554,7 @@ SmartSyncTestSuite.prototype.testSObjectCollectionFetch = function() {
             return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
         })
         .then(function(result) {
-            console.log("## Checking data retured from cache");
+            console.log("## Checking data returned from cache");
             QUnit.equals(result.records.length, 3, "Expected 3 records");
             QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
 
@@ -2558,7 +2562,7 @@ SmartSyncTestSuite.prototype.testSObjectCollectionFetch = function() {
             return cacheForOriginals.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
         })
         .then(function(result) {
-            console.log("## Checking data retured from cacheForOriginals");
+            console.log("## Checking data returned from cacheForOriginals");
             QUnit.equals(result.records.length, 3, "Expected 3 records");
             QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
 
@@ -2599,7 +2603,7 @@ SmartSyncTestSuite.prototype.testSyncDown = function() {
         })
         .then(function() {
             console.log("## Calling sync down");
-            return self.trySyncDown(cache, soupName, idToName);
+            return self.trySyncDown(cache, soupName, idToName, Force.MERGE_MODE_DOWNLOAD.OVERWRITE);
         })
         .then(function() {
             return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
@@ -2608,6 +2612,83 @@ SmartSyncTestSuite.prototype.testSyncDown = function() {
             self.finalizeTest();
         });
 };
+
+/** 
+ * TEST smartsyncplugin sync down with merge mode leave-if-changed
+ */
+SmartSyncTestSuite.prototype.testSyncDownWithNoOverwrite = function() {
+    console.log("# In SmartSyncTestSuite.testSyncDownWithNoOverwrite");
+    var self = this;
+    var idToName = {};
+    var idToUpdatedName = {};
+    var updatedRecords;
+    var options = {fieldlist: ["Name"]};
+    var soupName = "testSyncDownWithNoOverwrite";
+    var cache;
+
+    Force.smartstoreClient.removeSoup(soupName)
+        .then(function() {
+            console.log("## Initialization of StoreCache's");
+            cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
+            return $.when(cache.init());
+        })
+        .then(function() { 
+            console.log("## Direct creation against server");    
+            return createRecords(idToName, "testFetchSObjects", 3);
+        })
+        .then(function() {
+            console.log("## Calling sync down");
+            return self.trySyncDown(cache, soupName, idToName, Force.MERGE_MODE_DOWNLOAD.OVERWRITE);
+        })
+        .then(function() {
+            console.log("## Updating local records");
+            updatedRecords = [];
+            _.each(_.keys(idToName), function(id) {
+                idToUpdatedName[id] = idToName[id]+"Updated";
+                updatedRecords.push({Id:id, Name:idToUpdatedName[id], __locally_updated__:true});
+            });
+            return cache.saveAll(updatedRecords);
+        })
+        .then(function() {
+            console.log("## Calling sync down with mergeMode leave-if-changed");
+            return self.trySyncDown(cache, soupName, idToUpdatedName, Force.MERGE_MODE_DOWNLOAD.LEAVE_IF_CHANGED);
+        })
+        .then(function() {
+            console.log("## Checking cache");
+            return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from cache");
+            QUnit.equals(result.records.length, 3, "Expected 3 records");
+            _.each(result.records, function(record) {
+                QUnit.ok(record.__local__, "Record should still be marked as local");
+                QUnit.ok(record.__locally_updated__, "Record should still be marked as updated");
+                QUnit.ok(record.Name.indexOf("Updated") > -1, "Record name should still have update");                
+            });
+
+            console.log("## Calling sync down with mergeMode overwrite");
+            return self.trySyncDown(cache, soupName, idToName, Force.MERGE_MODE_DOWNLOAD.OVERWRITE);
+        })
+        .then(function() {
+            console.log("## Checking cache");
+            return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from cache");
+            QUnit.equals(result.records.length, 3, "Expected 3 records");
+            _.each(result.records, function(record) {
+                QUnit.ok(!record.__local__, "Record should no longer be marked as local");
+                QUnit.ok(!record.__locally_updated__, "Record should no longer be marked as updated");
+                QUnit.ok(record.Name.indexOf("Updated") == -1, "Record name should no longer have update");                
+            });
+
+            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -2640,7 +2721,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdated = function() {
         })
         .then(function() {
             console.log("## Calling sync down");
-            return self.trySyncDown(cache, soupName, idToName);
+            return self.trySyncDown(cache, soupName, idToName, Force.MERGE_MODE_DOWNLOAD.OVERWRITE);
         })
         .then(function() {
             console.log("## Updating local records");
@@ -2648,7 +2729,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdated = function() {
             _.each(_.keys(idToName), function(id) {
                 updatedRecords.push({Id:id, Name:idToName[id]+"Updated", __locally_updated__:true});
             });
-            return cache.saveAll(updatedRecords, false);
+            return cache.saveAll(updatedRecords);
         })
         .then(function(records) {
             console.log("## Calling sync up");
@@ -2659,7 +2740,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdated = function() {
             return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
         })
         .then(function(result) {
-            console.log("## Checking data retured from cache");
+            console.log("## Checking data returned from cache");
             QUnit.equals(result.records.length, 3, "Expected 3 records");
             _.each(result.records, function(record) {
                 QUnit.ok(!record.__local__, "Record should no longer marked as local");
@@ -2701,7 +2782,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
         })
         .then(function() {
             console.log("## Calling sync down");
-            return self.trySyncDown(cache, soupName, idToName);
+            return self.trySyncDown(cache, soupName, idToName, Force.MERGE_MODE_DOWNLOAD.OVERWRITE);
         })
         .then(function() {
             console.log("## Deleted local records");
@@ -2709,7 +2790,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
             _.each(_.keys(idToName), function(id) {
                 deletedRecords.push({Id:id, __locally_deleted__:true});
             });
-            return cache.saveAll(deletedRecords, false);
+            return cache.saveAll(deletedRecords);
         })
         .then(function(records) {
             console.log("## Calling sync up");
@@ -2720,7 +2801,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
             return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
         })
         .then(function(result) {
-            console.log("## Checking data retured from cache");
+            console.log("## Checking data returned from cache");
             QUnit.equals(result.records.length, 0, "Expected 0 records");
 
             console.log("## Checking server");
@@ -2762,7 +2843,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyCreated = function() {
             for (var i=0; i<3; i++) {
                 createdRecords.push({Id:"local_" + i, Name:"testSyncUpLocallyCreated" + i, __locally_created__:true, attributes:{type:"Account"}});
             }
-            return cache.saveAll(createdRecords, false);
+            return cache.saveAll(createdRecords);
         })
         .then(function(records) {
             console.log("## Calling sync up");
@@ -2773,7 +2854,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyCreated = function() {
             return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
         })
         .then(function(result) {
-            console.log("## Checking data retured from cache");
+            console.log("## Checking data returned from cache");
             QUnit.equals(result.records.length, 3, "Expected 3 records");
             _.each(result.records, function(record) {
                 QUnit.ok(!record.__local__, "Record should no longer marked as local");
@@ -3027,24 +3108,25 @@ var tryConflictDetection = function(message, cache, cacheForOriginals, theirs, y
 /**
  Helper function to run sync down and consume all status updates until done
  */
-SmartSyncTestSuite.prototype.trySyncDown = function(cache, soupName, idToName) {
+SmartSyncTestSuite.prototype.trySyncDown = function(cache, soupName, idToName, mergeMode) {
+    var options = {mergeMode: mergeMode};
     var target = {type:"soql", query:"SELECT Id, Name FROM Account WHERE Id IN ('" +  _.keys(idToName).join("','") + "') ORDER BY Name"};
     var numberRecords = _.keys(idToName).length;
-    return this.syncDown(target, soupName, {})
+    return this.syncDown(target, soupName, options)
         .then(function(sync) {
             console.log("## Checking sync");
-            assertContains(sync, {type:"syncDown", target: target, status:"RUNNING", progress:0, soupName: soupName});
+            assertContains(sync, {type:"syncDown", target: target, status:"RUNNING", progress:0, soupName: soupName, options:options});
             return eventPromiser(document, "sync", function(event) { return event.detail.status == "DONE";});
         })
         .then(function(event) {
             console.log("## Checking event");
-            assertContains(event.detail, {type:"syncDown", target: target, status:"DONE", progress:100, soupName: soupName});
+            assertContains(event.detail, {type:"syncDown", target: target, status:"DONE", progress:100, soupName: soupName, options:options});
 
             console.log("## Checking cache");
             return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:numberRecords});
         })
         .then(function(result) {
-            console.log("## Checking data retured from cache");
+            console.log("## Checking data returned from cache");
             QUnit.equals(result.records.length, numberRecords, "Expected " + numberRecords + " records");
             QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
         });
