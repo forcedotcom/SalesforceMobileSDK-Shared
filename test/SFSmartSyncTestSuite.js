@@ -3173,7 +3173,7 @@ var tryConflictDetection = function(message, cache, cacheForOriginals, theirs, y
  */
 SmartSyncTestSuite.prototype.trySyncDown = function(cache, soupName, idToName, mergeMode) {
     var options = {mergeMode: mergeMode};
-    var target = {type:"soql", query:"SELECT Id, Name, SystemModstamp FROM Account WHERE Id IN ('" +  _.keys(idToName).join("','") + "') ORDER BY Name"};
+    var target = {type:"soql", query:"SELECT Id, Name, LastModifiedDate FROM Account WHERE Id IN ('" +  _.keys(idToName).join("','") + "') ORDER BY Name"};
     var numberRecords = _.keys(idToName).length;
     var syncDownId;
     return this.syncDown(target, soupName, options)

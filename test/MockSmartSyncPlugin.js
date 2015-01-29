@@ -100,7 +100,7 @@ var MockSmartSyncPlugin = (function(window) {
                 }
                 else {
                     if (target.type == "soql") {
-                        sync.maxTimeStamp = _.max(_.map(_.pluck(_.pluck(collection.models, "attributes"), "SystemModstamp"), function(d) { return (new Date(d)).getTime(); }));
+                        sync.maxTimeStamp = _.max(_.map(_.pluck(_.pluck(collection.models, "attributes"), "LastModifiedDate"), function(d) { return (new Date(d)).getTime(); }));
                     }
                     sync.totalSize = collection.models.length;
                     self.sendUpdate(syncId, "DONE", 100);
@@ -127,7 +127,7 @@ var MockSmartSyncPlugin = (function(window) {
         },
 
         addFilterForReSync: function(query, maxTimeStamp) {
-            var extraPredicate = "SystemModstamp > " + (new Date(maxTimeStamp)).toISOString();
+            var extraPredicate = "LastModifiedDate > " + (new Date(maxTimeStamp)).toISOString();
             var modifiedQuery = query.toLowerCase().indexOf(" where ") > 0
                 ? query.replace(/( [wW][hH][eE][rR][eE] )/, "$1" + extraPredicate + " and ")
                 : query.replace(/( [fF][rR][oO][mM][ ]+[^ ]*)/, "$1 where " + extraPredicate);
