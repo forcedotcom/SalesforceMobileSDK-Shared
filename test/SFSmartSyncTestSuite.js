@@ -2717,7 +2717,9 @@ SmartSyncTestSuite.prototype.testReSync = function() {
         })
         .then(function(syncId) {
             syncDownId = syncId;
-
+            return timeoutPromiser(1000);
+        })
+        .then(function() {
             console.log("## Updating records on server");
             idToUpdatedName = {};
             var ids = [_.keys(idToName)[0], _.keys(idToName)[2]];
@@ -3035,6 +3037,18 @@ var eventPromiser = function(object, eventName, filter) {
     object.addEventListener(eventName, listener, false);
     return d.promise();
 };
+
+/**
+ * Helper function turning setTimeout into promise
+ */
+var timeoutPromiser = function(millis) {
+    var d = $.Deferred();
+    setTimeout(function() {
+        d.resolve();
+    }, millis);
+    return d.promise();
+};
+
 
 /**
  * Helper function turning function taking success/error options into promise
