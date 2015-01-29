@@ -17,7 +17,7 @@
 <script src="js/backbone.js"></script>
 <script src="js/forcetk.mobilesdk.js"></script>
 
-<!-- Local Testing -/->
+<!-- Local Testing -->
 <script src="js/forcetk.ui.js"></script>
 <script src="js/MockCordova.js"></script>
 <script src="js/cordova.force.js"></script>
@@ -25,7 +25,7 @@
 <script src="js/MockSmartSyncPlugin.js"></script>
 <!-- End Local Testing -->
 
-<!-- Container -->
+<!-- Container -/->
 <script src="cordova.js"></script>
 <!-- End Container -->
 
@@ -95,7 +95,7 @@
 // The User Model
 app.models.User = Force.SObject.extend({
     sobjectType: "User",
-    fieldlist: ["Id", "FirstName", "LastName", "Title", "CompanyName", "Email", "MobilePhone","City"],
+    fieldlist: ["Id", "FirstName", "LastName", "Title", "CompanyName", "Email", "MobilePhone","City", "SystemModstamp"],
     cache: function() { return app.cache;},
     cacheMode: Force.CACHE_MODE.CACHE_ONLY
 });
@@ -153,6 +153,9 @@ app.views.SearchPage = Backbone.View.extend({
         var progress =  (typeof sync.progress === "number" && sync.progress < 100) ? " (" + Math.round(sync.progress) + "%)" : "";
 
         if (sync.type === "syncDown") {
+            if (sync.target.type == "soql") {
+                this.lastSoqlSyncDownId = sync.syncId;
+            }
             var syncType = sync.target.type.toLowerCase()
             $(".syncdown" + syncType).html("Sync " + syncType + progress);
         }
@@ -170,7 +173,7 @@ app.views.SearchPage = Backbone.View.extend({
     },
 
     syncDown: function(target) {
-        cordova.require("com.salesforce.plugin.smartsync").syncDown(target, "users", {}, this.handleSyncUpdate.bind(this));
+        cordova.require("com.salesforce.plugin.smartsync").syncDown(target, "users", {mergeMode:Force.MERGE_MODE_DOWNLOAD.LEAVE_IF_CHANGED}, this.handleSyncUpdate.bind(this));
     },
 
     syncDownMru: function(event) {
@@ -178,7 +181,14 @@ app.views.SearchPage = Backbone.View.extend({
     },
 
     syncDownSoql: function(event) {
-        this.syncDown({type:"soql", query:"SELECT " + this.fieldlist.join(",") + " FROM User WHERE CompanyName = 'salesforce.com' LIMIT 10000"});
+        if (!_.isNumber(this.lastSoqlSyncDownId)) {
+            // First time
+            this.syncDown({type:"soql", query:"SELECT " + this.fieldlist.join(",") + " FROM User WHERE CompanyName = 'salesforce.com' LIMIT 1000"});
+        }
+        else {
+            // Subsequent times
+            cordova.require("com.salesforce.plugin.smartsync").reSync(this.lastSoqlSyncDownId, this.handleSyncUpdate.bind(this));
+        }
     },
 
     syncDownSosl: function(event) {

@@ -804,6 +804,14 @@ cordova.define("com.salesforce.plugin.smartsync", function (require, exports, mo
             );        
     };
 
+    var reSync = function(syncId, successCB, errorCB) {
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "reSync",
+             [{"syncId": syncId}]
+            );        
+    };
+
+
     var syncUp = function(soupName, options, successCB, errorCB) {
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "syncUp",
@@ -824,7 +832,8 @@ cordova.define("com.salesforce.plugin.smartsync", function (require, exports, mo
     module.exports = {
         syncDown: syncDown,
         syncUp: syncUp,
-        getSyncStatus: getSyncStatus
+        getSyncStatus: getSyncStatus,
+        reSync: reSync
     };
 });
 
