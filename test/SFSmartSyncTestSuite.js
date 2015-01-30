@@ -2730,7 +2730,7 @@ SmartSyncTestSuite.prototype.testReSync = function() {
         })
         .then(function() {
             console.log("## Calling reSync");
-            idToName = _.extend(idToName, idToUpdatedName)
+            idToName = _.extend(idToName, idToUpdatedName);
             return self.tryReSync(cache, soupName, idToName, syncDownId, _.keys(idToUpdatedName).length);
         })
         .then(function() {
@@ -3193,7 +3193,7 @@ SmartSyncTestSuite.prototype.trySyncDown = function(cache, soupName, idToName, m
     return this.syncDown(target, soupName, options)
         .then(function(sync) {
             console.log("## Checking sync");
-            syncDownId = sync.id;
+            syncDownId = sync._soupEntryId;
             assertContains(sync, {type:"syncDown", target: target, status:"RUNNING", progress:0, soupName: soupName, options:options});
             return eventPromiser(document, "sync", function(event) { return event.detail.status == "DONE";});
         })
@@ -3220,12 +3220,12 @@ SmartSyncTestSuite.prototype.tryReSync = function(cache, soupName, idToName, syn
     return this.reSync(syncDownId)
         .then(function(sync) {
             console.log("## Checking sync");
-            assertContains(sync, {id:syncDownId, type:"syncDown", status:"RUNNING", progress:0, soupName: soupName});
+            assertContains(sync, {_soupEntryId:syncDownId, type:"syncDown", status:"RUNNING", progress:0, soupName: soupName});
             return eventPromiser(document, "sync", function(event) { return event.detail.status == "DONE";});
         })
         .then(function(event) {
             console.log("## Checking event");
-            assertContains(event.detail, {id: syncDownId, type:"syncDown", status:"DONE", progress:100, totalSize: updatedCount, soupName: soupName});
+            assertContains(event.detail, {_soupEntryId: syncDownId, type:"syncDown", status:"DONE", progress:100, totalSize: updatedCount, soupName: soupName});
 
             console.log("## Checking cache");
             return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:numberRecords});

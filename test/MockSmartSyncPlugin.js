@@ -43,7 +43,7 @@ var MockSmartSyncPlugin = (function(window) {
 
         recordSync: function(type, target, soupName, options) {
             var syncId = lastSyncId++;
-            var sync = {id: syncId, type:type, target:target, soupName:soupName, options: options, status: "RUNNING", progress: 0};
+            var sync = {_soupEntryId: syncId, type:type, target:target, soupName:soupName, options: options, status: "RUNNING", progress: 0};
             syncs[syncId] = sync;
             return syncId;
         },
