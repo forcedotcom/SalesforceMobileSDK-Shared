@@ -95,7 +95,7 @@
 // The User Model
 app.models.User = Force.SObject.extend({
     sobjectType: "User",
-    fieldlist: ["Id", "FirstName", "LastName", "Title", "CompanyName", "Email", "MobilePhone","City", "SystemModstamp"],
+    fieldlist: ["Id", "FirstName", "LastName", "Title", "CompanyName", "Email", "MobilePhone","City", "LastModifiedDate"],
     cache: function() { return app.cache;},
     cacheMode: Force.CACHE_MODE.CACHE_ONLY
 });
