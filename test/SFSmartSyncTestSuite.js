@@ -2840,7 +2840,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithNoOverwrite = function(
             console.log("## Updating local records");
             updatedRecords = [];
             _.each(_.keys(idToName), function(id) {
-                updatedRecords.push({Id:id, Name:idToName[id]+"Updated", __locally_updated__:true});
+                updatedRecords.push({Id:id, Name:idToName[id] + "Updated", __locally_updated__:true});
             });
             return cache.saveAll(updatedRecords);
         })
@@ -2849,7 +2849,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithNoOverwrite = function(
             idToUpdatedName = {};
             var ids = [_.keys(idToName)[0], _.keys(idToName)[1], _.keys(idToName)[2]];
             _.each(ids, function(id) {
-                idToUpdatedName[id] = idToName[id] + "Updated";
+                idToUpdatedName[id] = idToName[id] + "Updated again";
             });
             return updateRecords(idToUpdatedName);
         })
@@ -2981,7 +2981,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeletedWithNoOverwrite = function(
             idToUpdatedName = {};
             var ids = [_.keys(idToName)[0], _.keys(idToName)[1], _.keys(idToName)[2]];
             _.each(ids, function(id) {
-                idToUpdatedName[id] = idToName[id] + "Updated";
+                idToUpdatedName[id] = idToName[id] + "Updated again";
             });
             return updateRecords(idToUpdatedName);
         })
