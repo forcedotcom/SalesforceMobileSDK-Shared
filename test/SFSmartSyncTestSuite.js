@@ -2756,7 +2756,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdated = function() {
     var self = this;
     var idToName = {};
     var updatedRecords;
-    var options = {fieldlist: ["Name"]};
+    var options = {fieldlist: ["Name"], mergeMode: Force.MERGE_MODE_DOWNLOAD.OVERWRITE};
     var soupName = "testSyncUpLocallyUpdated";
     var cache;
 
@@ -2768,7 +2768,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdated = function() {
         })
         .then(function() { 
             console.log("## Direct creation against server");    
-            return createRecords(idToName, "testFetchSObjects", 3);
+            return createRecords(idToName, "testSyncUpLocallyUpdated", 3);
         })
         .then(function() {
             console.log("## Calling sync down");
@@ -2810,6 +2810,77 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdated = function() {
 };
 
 /** 
+ * TEST smartsyncplugin sync up with locally updated records and merge mode leave-if-changed
+ */
+SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithNoOverwrite = function() {
+    console.log("# In SmartSyncTestSuite.testSyncUpLocallyUpdatedWithNoOverwrite");
+    var self = this;
+    var idToName = {};
+    var idToUpdatedName = {};
+    var updatedRecords;
+    var options = {fieldlist: ["Name"], mergeMode: Force.MERGE_MODE_DOWNLOAD.LEAVE_IF_CHANGED};
+    var soupName = "testSyncUpLocallyUpdatedWithNoOverwrite";
+    var cache;
+
+    Force.smartstoreClient.removeSoup(soupName)
+        .then(function() {
+            console.log("## Initialization of StoreCache's");
+            cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
+            return $.when(cache.init());
+        })
+        .then(function() { 
+            console.log("## Direct creation against server");    
+            return createRecords(idToName, "testSyncUpLocallyUpdatedWithNoOverwrite", 3);
+        })
+        .then(function() {
+            console.log("## Calling sync down");
+            return self.trySyncDown(cache, soupName, idToName, Force.MERGE_MODE_DOWNLOAD.LEAVE_IF_CHANGED);
+        })
+        .then(function() {
+            console.log("## Updating local records");
+            updatedRecords = [];
+            _.each(_.keys(idToName), function(id) {
+                updatedRecords.push({Id:id, Name:idToName[id]+"Updated", __locally_updated__:true});
+            });
+            return cache.saveAll(updatedRecords);
+        })
+        .then(function() {
+            console.log("## Updating records on server");
+            idToUpdatedName = {};
+            var ids = [_.keys(idToName)[0], _.keys(idToName)[1], _.keys(idToName)[2]];
+            _.each(ids, function(id) {
+                idToUpdatedName[id] = idToName[id] + "Updated";
+            });
+            return updateRecords(idToUpdatedName);
+        })
+        .then(function(records) {
+            console.log("## Calling sync up");
+            return self.trySyncUp(soupName, options);
+        })
+        .then(function() {
+            console.log("## Checking cache");
+            return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from cache");
+            QUnit.equals(result.records.length, 3, "Expected 3 records");
+            _.each(result.records, function(record) {
+                QUnit.ok(record.__local__, "Record should still be marked as local");
+                QUnit.ok(record.__locally_updated__, "Record should still be marked as updated");
+            });
+
+            console.log("## Checking server");
+            return checkServerMultiple(updatedRecords);
+        })
+        .then(function() {
+            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
+/** 
  * TEST smartsyncplugin sync up with locally deleted records
  */
 SmartSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
@@ -2817,7 +2888,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
     var self = this;
     var idToName = {};
     var deletedRecords;
-    var options = {fieldlist: ["Name"]};
+    var options = {fieldlist: ["Name"], mergeMode: Force.MERGE_MODE_DOWNLOAD.OVERWRITE};
     var soupName = "testSyncUpLocallyDeleted";
     var cache;
 
@@ -2871,6 +2942,77 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
 };
 
 /** 
+ * TEST smartsyncplugin sync up with locally deleted records and merge mode leave-if-changed
+ */
+SmartSyncTestSuite.prototype.testSyncUpLocallyDeletedWithNoOverwrite = function() {
+    console.log("# In SmartSyncTestSuite.testSyncUpLocallyDeletedWithNoOverwrite");
+    var self = this;
+    var idToName = {};
+    var idToUpdatedName = {};
+    var deletedRecords;
+    var options = {fieldlist: ["Name"], mergeMode: Force.MERGE_MODE_DOWNLOAD.LEAVE_IF_CHANGED};
+    var soupName = "testSyncUpLocallyDeletedWithNoOverwrite";
+    var cache;
+
+    Force.smartstoreClient.removeSoup(soupName)
+        .then(function() {
+            console.log("## Initialization of StoreCache's");
+            cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
+            return $.when(cache.init());
+        })
+        .then(function() { 
+            console.log("## Direct creation against server");
+            return createRecords(idToName, "testSyncUpLocallyDeletedWithNoOverwrite", 3);
+        })
+        .then(function() {
+            console.log("## Calling sync down");
+            return self.trySyncDown(cache, soupName, idToName, Force.MERGE_MODE_DOWNLOAD.LEAVE_IF_CHANGED);
+        })
+        .then(function() {
+            console.log("## Deleted local records");
+            deletedRecords = [];
+            _.each(_.keys(idToName), function(id) {
+                deletedRecords.push({Id:id, __locally_deleted__:true});
+            });
+            return cache.saveAll(deletedRecords);
+        })
+        .then(function() {
+            console.log("## Updating records on server");
+            idToUpdatedName = {};
+            var ids = [_.keys(idToName)[0], _.keys(idToName)[1], _.keys(idToName)[2]];
+            _.each(ids, function(id) {
+                idToUpdatedName[id] = idToName[id] + "Updated";
+            });
+            return updateRecords(idToUpdatedName);
+        })
+        .then(function(records) {
+            console.log("## Calling sync up");
+            return self.trySyncUp(soupName, options);
+        })
+        .then(function() {
+            console.log("## Checking cache");
+            return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from cache");
+            QUnit.equals(result.records.length, 3, "Expected 3 records");
+
+            console.log("## Checking server");
+            return Force.forcetkClient.query("select Id from Account where Id in ('" + _.pluck(deletedRecords, "Id").join("','") + "')");
+        })
+        .then(function(resp) {
+            console.log("## Checking data returned from server");
+            QUnit.equals(resp.records.length, 3, "Expected 3 records");
+
+            // Cleanup
+            return $.when(Force.smartstoreClient.removeSoup(soupName));
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
+/** 
  * TEST smartsyncplugin sync up with locally created records
  */
 SmartSyncTestSuite.prototype.testSyncUpLocallyCreated = function() {
@@ -2878,7 +3020,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyCreated = function() {
     var self = this;
     var idToName = {};
     var createdRecords;
-    var options = {fieldlist: ["Name"]};
+    var options = {fieldlist: ["Name"], mergeMode: Force.MERGE_MODE_DOWNLOAD.OVERWRITE};
     var soupName = "testSyncUpLocallyCreated";
     var cache;
 
