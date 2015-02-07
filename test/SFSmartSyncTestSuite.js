@@ -2778,7 +2778,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdated = function() {
             console.log("## Updating local records");
             updatedRecords = [];
             _.each(_.keys(idToName), function(id) {
-                updatedRecords.push({Id:id, Name:idToName[id]+"Updated", __locally_updated__:true});
+                updatedRecords.push({Id:id, Name:idToName[id] + "Updated", __locally_updated__:true});
             });
             return cache.saveAll(updatedRecords);
         })
@@ -2817,7 +2817,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithNoOverwrite = function(
     var self = this;
     var idToName = {};
     var idToUpdatedName = {};
-    var updatedRecords;
+    var updatedLocalRecords;
     var options = {fieldlist: ["Name"], mergeMode: Force.MERGE_MODE_DOWNLOAD.LEAVE_IF_CHANGED};
     var soupName = "testSyncUpLocallyUpdatedWithNoOverwrite";
     var cache;
@@ -2838,11 +2838,11 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithNoOverwrite = function(
         })
         .then(function() {
             console.log("## Updating local records");
-            updatedRecords = [];
+            updatedLocalRecords = [];
             _.each(_.keys(idToName), function(id) {
-                updatedRecords.push({Id:id, Name:idToName[id] + "Updated", __locally_updated__:true});
+                updatedLocalRecords.push({Id:id, Name:idToName[id] + "Updated", __locally_updated__:true});
             });
-            return cache.saveAll(updatedRecords);
+            return cache.saveAll(updatedLocalRecords);
         })
         .then(function() {
             console.log("## Updating records on server");
@@ -2853,7 +2853,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithNoOverwrite = function(
             });
             return updateRecords(idToUpdatedName);
         })
-        .then(function(records) {
+        .then(function() {
             console.log("## Calling sync up");
             return self.trySyncUp(soupName, options);
         })
@@ -2868,11 +2868,11 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithNoOverwrite = function(
                 QUnit.ok(record.__local__, "Record should still be marked as local");
                 QUnit.ok(record.__locally_updated__, "Record should still be marked as updated");
             });
-
             console.log("## Checking server");
-            return checkServerMultiple(updatedRecords);
+            return Force.forcetkClient.query("select Id, Name from Account where Id in ('" + _.keys(idToName)[0] + "', '" + _.keys(idToName)[1] + "', '" + _.keys(idToName)[2] + "')");
         })
-        .then(function() {
+        .then(function(result) {
+            QUnit.equals(result.records.length, 3, "Expected 3 records");
             return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
         })
         .then(function() {
@@ -2985,7 +2985,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeletedWithNoOverwrite = function(
             });
             return updateRecords(idToUpdatedName);
         })
-        .then(function(records) {
+        .then(function() {
             console.log("## Calling sync up");
             return self.trySyncUp(soupName, options);
         })
@@ -2996,7 +2996,10 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeletedWithNoOverwrite = function(
         .then(function(result) {
             console.log("## Checking data returned from cache");
             QUnit.equals(result.records.length, 3, "Expected 3 records");
-
+            _.each(result.records, function(record) {
+                QUnit.ok(record.__local__, "Record should still be marked as local");
+                QUnit.ok(record.__locally_deleted__, "Record should still be marked as deleted");
+            });
             console.log("## Checking server");
             return Force.forcetkClient.query("select Id from Account where Id in ('" + _.pluck(deletedRecords, "Id").join("','") + "')");
         })
