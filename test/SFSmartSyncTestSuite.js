@@ -2925,7 +2925,6 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
         .then(function(result) {
             console.log("## Checking data returned from cache");
             QUnit.equals(result.records.length, 0, "Expected 0 records");
-
             console.log("## Checking server");
             return Force.forcetkClient.query("select Id from Account where Id in ('" + _.pluck(deletedRecords, "Id").join("','") + "')");
         })
@@ -2981,7 +2980,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeletedWithNoOverwrite = function(
             idToUpdatedName = {};
             var ids = [_.keys(idToName)[0], _.keys(idToName)[1], _.keys(idToName)[2]];
             _.each(ids, function(id) {
-                idToUpdatedName[id] = idToName[id] + "Updated again";
+                idToUpdatedName[id] = idToName[id] + "Updated";
             });
             return updateRecords(idToUpdatedName);
         })
@@ -3008,7 +3007,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeletedWithNoOverwrite = function(
             QUnit.equals(resp.records.length, 3, "Expected 3 records");
 
             // Cleanup
-            return $.when(Force.smartstoreClient.removeSoup(soupName));
+            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
         })
         .then(function() {
             self.finalizeTest();
@@ -3036,7 +3035,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyCreated = function() {
         .then(function() { 
             console.log("## Local creation");    
             createdRecords = [];
-            for (var i=0; i<3; i++) {
+            for (var i = 0; i < 3; i++) {
                 createdRecords.push({Id:"local_" + i, Name:"testSyncUpLocallyCreated" + i, __locally_created__:true, attributes:{type:"Account"}});
             }
             return cache.saveAll(createdRecords);
