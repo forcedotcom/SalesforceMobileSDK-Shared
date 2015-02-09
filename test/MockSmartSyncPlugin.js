@@ -155,7 +155,7 @@ var MockSmartSyncPlugin = (function(window) {
                     fieldlist: options.fieldlist,
                     cache: cache,
                     cacheMode: Force.CACHE_MODE.SERVER_FIRST,
-                    mergeMode: Force.MERGE_MODE.OVERWRITE,
+                    mergeMode: options.mergeMode,
                     success: function() {
                         sync();
                     },
