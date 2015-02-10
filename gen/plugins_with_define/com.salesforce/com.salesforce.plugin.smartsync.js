@@ -38,6 +38,14 @@ var syncDown = function(target, soupName, options, successCB, errorCB) {
         );        
 };
 
+var reSync = function(syncId, successCB, errorCB) {
+    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+         "reSync",
+         [{"syncId": syncId}]
+        );        
+};
+
+
 var syncUp = function(soupName, options, successCB, errorCB) {
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "syncUp",
@@ -52,12 +60,20 @@ var getSyncStatus = function(syncId, successCB, errorCB) {
         );        
 };
 
+var MERGE_MODE = {
+    OVERWRITE: "OVERWRITE",
+    LEAVE_IF_CHANGED: "LEAVE_IF_CHANGED"
+};
+
+
 /**
  * Part of the module that is public
  */
 module.exports = {
+    MERGE_MODE: MERGE_MODE,
     syncDown: syncDown,
     syncUp: syncUp,
-    getSyncStatus: getSyncStatus
+    getSyncStatus: getSyncStatus,
+    reSync: reSync
 };
 });
