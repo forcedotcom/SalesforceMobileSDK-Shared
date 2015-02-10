@@ -34,7 +34,7 @@ var SmartSyncTestSuite = function () {
     SFTestSuite.call(this, "SmartSyncTestSuite");
 
     // To run specific tests
-    // this.testsToRun = ["testReSync"];
+    // this.testsToRun = ["testSyncUpLocallyDeletedWithNoOverwrite", "testSyncUpLocallyUpdatedWithNoOverwrite"];
 };
 
 // We are sub-classing SFTestSuite
@@ -181,7 +181,7 @@ SmartSyncTestSuite.prototype.testStoreCacheSave = function() {
         assertContains(records[0], {Id:"007", Name:"JamesBond", Mission:"TopSecret2", Organization:"MI6"});
 
         console.log("## Saving partial record to cache with noMerge flag");
-        return cache.save({Id:"007", Mission:"TopSecret3"}, Force.MERGE_MODE_DOWNLOAD.OVERWRITE);
+        return cache.save({Id:"007", Mission:"TopSecret3"}, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
     })
     .then(function(record) {
         console.log("## Direct retrieve from underlying cache");
@@ -250,7 +250,7 @@ SmartSyncTestSuite.prototype.testStoreCacheSaveAll = function() {
 
         console.log("## Saving partial records to cache with noMerge flag");
         var partialRecords = [{Id:"007", Mission:"TopSecret"},{Id:"008", Team:"Team"}, {Id:"009", Organization:"Org"}];        
-        return cache.saveAll(partialRecords, Force.MERGE_MODE_DOWNLOAD.OVERWRITE);
+        return cache.saveAll(partialRecords, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
     })
     .then(function(records) {
         console.log("## Direct retrieve from underlying cache");
@@ -2603,7 +2603,7 @@ SmartSyncTestSuite.prototype.testSyncDown = function() {
         })
         .then(function() {
             console.log("## Calling sync down");
-            return self.trySyncDown(cache, soupName, idToName, Force.MERGE_MODE_DOWNLOAD.OVERWRITE);
+            return self.trySyncDown(cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
         })
         .then(function() {
             return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
@@ -2638,7 +2638,7 @@ SmartSyncTestSuite.prototype.testSyncDownWithNoOverwrite = function() {
         })
         .then(function() {
             console.log("## Calling sync down");
-            return self.trySyncDown(cache, soupName, idToName, Force.MERGE_MODE_DOWNLOAD.OVERWRITE);
+            return self.trySyncDown(cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
         })
         .then(function() {
             console.log("## Updating local records");
@@ -2651,7 +2651,7 @@ SmartSyncTestSuite.prototype.testSyncDownWithNoOverwrite = function() {
         })
         .then(function() {
             console.log("## Calling sync down with mergeMode leave-if-changed");
-            return self.trySyncDown(cache, soupName, idToUpdatedName, Force.MERGE_MODE_DOWNLOAD.LEAVE_IF_CHANGED);
+            return self.trySyncDown(cache, soupName, idToUpdatedName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.LEAVE_IF_CHANGED);
         })
         .then(function() {
             console.log("## Checking cache");
@@ -2667,7 +2667,7 @@ SmartSyncTestSuite.prototype.testSyncDownWithNoOverwrite = function() {
             });
 
             console.log("## Calling sync down with mergeMode overwrite");
-            return self.trySyncDown(cache, soupName, idToName, Force.MERGE_MODE_DOWNLOAD.OVERWRITE);
+            return self.trySyncDown(cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
         })
         .then(function() {
             console.log("## Checking cache");
@@ -2713,7 +2713,7 @@ SmartSyncTestSuite.prototype.testReSync = function() {
         })
         .then(function() {
             console.log("## Calling sync down");
-            return self.trySyncDown(cache, soupName, idToName, Force.MERGE_MODE_DOWNLOAD.OVERWRITE);
+            return self.trySyncDown(cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
         })
         .then(function(syncId) {
             syncDownId = syncId;
@@ -2756,7 +2756,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdated = function() {
     var self = this;
     var idToName = {};
     var updatedRecords;
-    var options = {fieldlist: ["Name"], mergeMode: Force.MERGE_MODE_DOWNLOAD.OVERWRITE};
+    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE};
     var soupName = "testSyncUpLocallyUpdated";
     var cache;
 
@@ -2772,7 +2772,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdated = function() {
         })
         .then(function() {
             console.log("## Calling sync down");
-            return self.trySyncDown(cache, soupName, idToName, Force.MERGE_MODE_DOWNLOAD.OVERWRITE);
+            return self.trySyncDown(cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
         })
         .then(function() {
             console.log("## Updating local records");
@@ -2818,7 +2818,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithNoOverwrite = function(
     var idToName = {};
     var idToUpdatedName = {};
     var updatedLocalRecords;
-    var options = {fieldlist: ["Name"], mergeMode: Force.MERGE_MODE_DOWNLOAD.LEAVE_IF_CHANGED};
+    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.LEAVE_IF_CHANGED};
     var soupName = "testSyncUpLocallyUpdatedWithNoOverwrite";
     var cache;
 
@@ -2834,7 +2834,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithNoOverwrite = function(
         })
         .then(function() {
             console.log("## Calling sync down");
-            return self.trySyncDown(cache, soupName, idToName, Force.MERGE_MODE_DOWNLOAD.LEAVE_IF_CHANGED);
+            return self.trySyncDown(cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.LEAVE_IF_CHANGED);
         })
         .then(function() {
             console.log("## Updating local records");
@@ -2843,6 +2843,9 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithNoOverwrite = function(
                 updatedLocalRecords.push({Id:id, Name:idToName[id] + "Updated", __locally_updated__:true});
             });
             return cache.saveAll(updatedLocalRecords);
+        })
+        .then(function() {
+            return timeoutPromiser(1000);
         })
         .then(function() {
             console.log("## Updating records on server");
@@ -2888,7 +2891,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
     var self = this;
     var idToName = {};
     var deletedRecords;
-    var options = {fieldlist: ["Name"], mergeMode: Force.MERGE_MODE_DOWNLOAD.OVERWRITE};
+    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE};
     var soupName = "testSyncUpLocallyDeleted";
     var cache;
 
@@ -2904,7 +2907,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
         })
         .then(function() {
             console.log("## Calling sync down");
-            return self.trySyncDown(cache, soupName, idToName, Force.MERGE_MODE_DOWNLOAD.OVERWRITE);
+            return self.trySyncDown(cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
         })
         .then(function() {
             console.log("## Deleted local records");
@@ -2949,7 +2952,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeletedWithNoOverwrite = function(
     var idToName = {};
     var idToUpdatedName = {};
     var deletedRecords;
-    var options = {fieldlist: ["Name"], mergeMode: Force.MERGE_MODE_DOWNLOAD.LEAVE_IF_CHANGED};
+    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.LEAVE_IF_CHANGED};
     var soupName = "testSyncUpLocallyDeletedWithNoOverwrite";
     var cache;
 
@@ -2965,7 +2968,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeletedWithNoOverwrite = function(
         })
         .then(function() {
             console.log("## Calling sync down");
-            return self.trySyncDown(cache, soupName, idToName, Force.MERGE_MODE_DOWNLOAD.LEAVE_IF_CHANGED);
+            return self.trySyncDown(cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.LEAVE_IF_CHANGED);
         })
         .then(function() {
             console.log("## Deleted local records");
@@ -2974,6 +2977,9 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeletedWithNoOverwrite = function(
                 deletedRecords.push({Id:id, __locally_deleted__:true});
             });
             return cache.saveAll(deletedRecords);
+        })
+        .then(function() {
+            return timeoutPromiser(1000);
         })
         .then(function() {
             console.log("## Updating records on server");
@@ -3022,7 +3028,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyCreated = function() {
     var self = this;
     var idToName = {};
     var createdRecords;
-    var options = {fieldlist: ["Name"], mergeMode: Force.MERGE_MODE_DOWNLOAD.OVERWRITE};
+    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE};
     var soupName = "testSyncUpLocallyCreated";
     var cache;
 

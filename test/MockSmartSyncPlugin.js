@@ -155,18 +155,43 @@ var MockSmartSyncPlugin = (function(window) {
                     fieldlist: options.fieldlist,
                     cache: cache,
                     cacheMode: Force.CACHE_MODE.SERVER_FIRST,
-                    mergeMode: options.mergeMode,
+                    mergeMode: Force.MERGE_MODE.OVERWRITE,
                     success: function() {
-                        sync();
+                        sync(); // Next record
                     },
                     error: function() {
-                        self.sendUpdate(syncId, "FAILED", 0, {recordId: record.id}); // or should we update the cached record with __sync_failed__ = true                  
-                        sync();
+                        self.sendUpdate(syncId, "FAILED", 0, {recordId: record.id});
+                        sync(); // Next record
                     }
                 };
 
+                if (options.mergeMode == "LEAVE_IF_CHANGED" && record.get("LastModifiedDate")) {
+                    // Getting LastModifiedDate from record on server
+                    var serverRecord = new Force.SObject();
+                    serverRecord.sobjectType = record.sobjectType;
+                    serverRecord.id = record.id;
+                    serverRecord.fetch({
+                        success: function() {
+                            if (serverRecord.get("LastModifiedDate") > record.get("LastModifiedDate")) {
+                                // Record has changed, leave it alone
+                                console.log("Record " + record.id + " has changed on server - leaving unchanged");
+                                sync(); // Next record
+                            }
 
-                return record.get("__locally_deleted__") ? record.destroy(saveOptions) : record.save(null, saveOptions);
+                            else {
+                                // Record hasn't change, save over
+                                record.get("__locally_deleted__") ? record.destroy(saveOptions) : record.save(null, saveOptions);
+                            }
+                        },
+                        error: function() {
+                            self.sendUpdate(syncId, "FAILED", 0, {recordId: record.id});
+                            sync(); // Next record
+                        }
+                    });
+                }
+                else {
+                    record.get("__locally_deleted__") ? record.destroy(saveOptions) : record.save(null, saveOptions);
+                }
             };
 
             cache.init().then(function() {

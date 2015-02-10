@@ -826,10 +826,17 @@ cordova.define("com.salesforce.plugin.smartsync", function (require, exports, mo
             );        
     };
 
+    var MERGE_MODE = {
+        OVERWRITE: "OVERWRITE",
+        LEAVE_IF_CHANGED: "LEAVE_IF_CHANGED"
+    };
+
+
     /**
      * Part of the module that is public
      */
     module.exports = {
+        MERGE_MODE: MERGE_MODE,
         syncDown: syncDown,
         syncUp: syncUp,
         getSyncStatus: getSyncStatus,
