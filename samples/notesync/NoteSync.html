@@ -60,7 +60,6 @@
 
   <a href="#notes/<%= Id %>">
     <span class="important"><%= Title %></span><br/>
-
     <% if (__locally_updated__) { %><span class="pull-right btn btn-negative">modified</span><br/><% } %>
   </a>
 </script>
@@ -77,10 +76,7 @@
     <div class="content-padded">
       <div class="details">
         <input placeholder="Title" type="text" name="Title" value="<%= Title %>" /><br/>
-        <input placeholder="CompanyName" type="text" name="CompanyName" value="<%= CompanyName %>" /><br/>
-        <input placeholder="City" type="text" name="City" value="<%= City %>" /><br/>
-        <input placeholder="Phone" type="text" name="MobilePhone" value="<%= MobilePhone %>" /><br/>
-        <input placeholder="Email" type="text" name="Email" value="<%= Email %>" />
+        <textarea placeholder="Content" type="text" name="Content" value="<%= ContentDecoded %>" /><br/>
         <% if (__locally_updated__) { %><span class="btn btn-negative btn-block">Locally Modified</span><% } %>
       </div>
     </div>
@@ -164,7 +160,7 @@ app.views.SearchPage = Backbone.View.extend({
     },
 
     syncDown: function() {
-        var target = {type:"soql", query:"SELECT " + this.fieldlist.join(",") + " FROM ContentNote LIMIT 1000"};
+        var target = {type:"custom", androidImpl:"com.salesforce.samples.notesync.ContentSoqlSyncTarget", query:"SELECT " + this.fieldlist.join(",") + " FROM ContentNote LIMIT 1000"};
         cordova.require("com.salesforce.plugin.smartsync").syncDown(target, "notes", {mergeMode:Force.MERGE_MODE_DOWNLOAD.LEAVE_IF_CHANGED}, this.handleSyncUpdate.bind(this));
     },
 
@@ -205,6 +201,7 @@ app.views.NoteListItemView = Backbone.View.extend({
     template: _.template($("#note-list-item").html()),
 
     render: function(eventName) {
+        var templateData = _.extend({ContentDecoded: btoa(this.model.get("Content"))}, this.model.toJSON());
         $(this.el).addClass("table-view-cell").html(this.template(this.model.toJSON()));
         return this;
     },
@@ -232,7 +229,12 @@ app.views.NotePage = Backbone.View.extend({
     change: function(event) {
         // apply change to model
         var target = event.target;
-        this.model.set(target.name, target.value);
+        if (target.name == "ContentDecoded") {
+            this.model.set("Content", atob(target.value));
+        }
+        else {
+            this.model.set(target.name, target.value);
+        }
     },
 
     save: function() {
