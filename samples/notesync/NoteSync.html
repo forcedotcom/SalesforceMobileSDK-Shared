@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Users</title>
+<title>Notes</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
 <link rel="stylesheet" href="css/ratchet.css"/>
 <link rel="stylesheet" href="css/ratchet-theme-ios.css"/> <!-- TODO import ratchet-theme.css instead and have ratchet-theme.css point to the theme for the platform -->
@@ -17,7 +17,7 @@
 <script src="js/backbone.js"></script>
 <script src="js/forcetk.mobilesdk.js"></script>
 
-<!-- Local Testing -/->
+<!-- Local Testing -->
 <script src="js/forcetk.ui.js"></script>
 <script src="js/MockCordova.js"></script>
 <script src="js/cordova.force.js"></script>
@@ -25,7 +25,7 @@
 <script src="js/MockSmartSyncPlugin.js"></script>
 <!-- End Local Testing -->
 
-<!-- Container -->
+<!-- Container -/->
 <script src="cordova.js"></script>
 <!-- End Container -->
 
@@ -38,14 +38,11 @@
 <!-- --------------------------------------- Search page template ------------------------------------------------- -->
 <script id="search-page" type="text/template">
   <header class="bar bar-nav">
-    <h1 class="title">Users</h1>
+    <h1 class="title">Notes</h1>
   </header>
   <footer class="bar bar-footer">
-    <a class="btn btn-nav btn-positive pull-left syncdownmru">Sync mru</a>
-    <a class="btn btn-nav btn-positive pull-left syncdownsoql">Sync soql</a>
-    <a class="btn btn-nav btn-positive pull-left syncdownsosl">Sync sosl</a>
+    <a class="btn btn-nav btn-positive pull-left syncdown">Sync Down</a>
     <a class="btn btn-nav btn-positive pull-left syncup">Sync Up</a>
-    <a class="btn btn-nav pull-right cachesize">Cache Size</a>
     <a class="btn btn-nav pull-right inspect">DB</a>
   </footer>
 
@@ -58,18 +55,18 @@
   </div>
 </script>
 
-<!-- --------------------------------------- User list item template ---------------------------------------------- -->
-<script id="user-list-item" type="text/template">
+<!-- --------------------------------------- Notes list item template ---------------------------------------------- -->
+<script id="note-list-item" type="text/template">
 
-  <a href="#users/<%= Id %>">
-    <span class="important"><%= FirstName %> <%= LastName %></span><br/>
-    <% if (Title) { %><%= Title %><% } %> <% if (CompanyName) { %><%= CompanyName %><% } %>
+  <a href="#notes/<%= Id %>">
+    <span class="important"><%= Title %></span><br/>
+
     <% if (__locally_updated__) { %><span class="pull-right btn btn-negative">modified</span><br/><% } %>
   </a>
 </script>
 
-<!-- --------------------------------------- User page template -------------------------------------------------- -->
-<script id="user-page" type="text/template">
+<!-- --------------------------------------- Note page template -------------------------------------------------- -->
+<script id="note-page" type="text/template">
   <header class="bar bar-nav">
     <a href="#" class="btn btn-nav pull-left back">Back</a>
     <a class="btn btn-nav btn-positive pull-right save">Save</a>
@@ -92,17 +89,17 @@
 
 <script>
 // -------------------------------------------------- The Models ---------------------------------------------------- //
-// The User Model
-app.models.User = Force.SObject.extend({
-    sobjectType: "User",
-    fieldlist: ["Id", "FirstName", "LastName", "Title", "CompanyName", "Email", "MobilePhone","City", "LastModifiedDate"],
+// The Note Model
+app.models.Note = Force.SObject.extend({
+    sobjectType: "Note",
+    fieldlist: ["Id", "Title", "Content", "LastModifiedDate"],
     cache: function() { return app.cache;},
     cacheMode: Force.CACHE_MODE.CACHE_ONLY
 });
 
-// The UserCollection Model
-app.models.UserCollection = Force.SObjectCollection.extend({
-    model: app.models.User,
+// The NoteCollection Model
+app.models.NoteCollection = Force.SObjectCollection.extend({
+    model: app.models.Note,
     cache: function() { return app.cache;},
 
     getCriteria: function() {
@@ -113,10 +110,10 @@ app.models.UserCollection = Force.SObjectCollection.extend({
         this.key = key;
         this.config = {type:"cache", 
                        cacheQuery:{queryType:"smart", 
-                                   smartSql:"SELECT {users:_soup}"
-                                   + " FROM {users}"
-                                   + " WHERE {users:FirstName} like '" + key + "%'"
-                                   + " ORDER BY {users:LastName} "
+                                   smartSql:"SELECT {notes:_soup}"
+                                   + " FROM {notes}"
+                                   + " WHERE {notes:Title} like '" + key + "%'"
+                                   + " ORDER BY {notes:Title} "
                                    + " LIMIT 25 ", 
                                    pageSize:25}
                       };
@@ -132,18 +129,15 @@ app.views.SearchPage = Backbone.View.extend({
 
     events: {
         "keyup .search-key": "search",
-        "click .syncdownmru": "syncDownMru",
-        "click .syncdownsoql": "syncDownSoql",
-        "click .syncdownsosl": "syncDownSosl",
+        "click .syncdown": "syncDown",
         "click .syncup": "syncUp",
-        "click .cachesize": "cacheSize",
         "click .inspect": "inspect"
     },
 
     initialize: function() {
         var that = this;
-        this.fieldlist = app.models.User.prototype.fieldlist;
-        this.listView = new app.views.UserListView({model: this.model});
+        this.fieldlist = app.models.Note.prototype.fieldlist;
+        this.listView = new app.views.NoteListView({model: this.model});
         document.addEventListener("sync", function() { 
             that.handleSyncUpdate(event.detail);
         });
@@ -153,11 +147,8 @@ app.views.SearchPage = Backbone.View.extend({
         var progress =  (typeof sync.progress === "number" && sync.progress < 100) ? " (" + Math.round(sync.progress) + "%)" : "";
 
         if (sync.type === "syncDown") {
-            if (sync.target.type == "soql") {
-                this.lastSoqlSyncDownId = sync.syncId;
-            }
-            var syncType = sync.target.type.toLowerCase()
-            $(".syncdown" + syncType).html("Sync " + syncType + progress);
+            this.lastSoqlSyncDownId = sync.syncId;
+            $(".syncdown").html("Sync " + progress);
         }
         if (sync.type === "syncUp") {
             $(".syncup").html("Sync Up" + progress);
@@ -172,38 +163,13 @@ app.views.SearchPage = Backbone.View.extend({
         return this;
     },
 
-    syncDown: function(target) {
-        cordova.require("com.salesforce.plugin.smartsync").syncDown(target, "users", {mergeMode:Force.MERGE_MODE_DOWNLOAD.LEAVE_IF_CHANGED}, this.handleSyncUpdate.bind(this));
-    },
-
-    syncDownMru: function(event) {
-        this.syncDown({type:"mru", sobjectType: "User", fieldlist: this.fieldlist});
-    },
-
-    syncDownSoql: function(event) {
-        if (!_.isNumber(this.lastSoqlSyncDownId)) {
-            // First time
-            this.syncDown({type:"soql", query:"SELECT " + this.fieldlist.join(",") + " FROM User WHERE CompanyName = 'salesforce.com' LIMIT 1000"});
-        }
-        else {
-            // Subsequent times
-            cordova.require("com.salesforce.plugin.smartsync").reSync(this.lastSoqlSyncDownId, this.handleSyncUpdate.bind(this));
-        }
-    },
-
-    syncDownSosl: function(event) {
-        this.syncDown({type:"sosl", query:"FIND {salesforce.com} RETURNING User (" + this.fieldlist.join(",") + ")"});
+    syncDown: function() {
+        var target = {type:"soql", query:"SELECT " + this.fieldlist.join(",") + " FROM ContentNote LIMIT 1000"};
+        cordova.require("com.salesforce.plugin.smartsync").syncDown(target, "notes", {mergeMode:Force.MERGE_MODE_DOWNLOAD.LEAVE_IF_CHANGED}, this.handleSyncUpdate.bind(this));
     },
 
     syncUp: function(event) {
-        cordova.require("com.salesforce.plugin.smartsync").syncUp("users", {fieldlist: this.fieldlist}, this.handleSyncUpdate.bind(this));
-    },
-
-    cacheSize: function() {
-        Force.smartstoreClient.runSmartQuery({queryType:"smart", smartSql:"SELECT count(*) from {users}", pageSize:1})
-            .done(function(result) {
-                alert("Number of entries in cache: " + result.currentPageOrderedEntries[0][0]);
-            });
+        cordova.require("com.salesforce.plugin.smartsync").syncUp("notes", {fieldlist: this.fieldlist}, this.handleSyncUpdate.bind(this));
     },
 
     inspect: function() {
@@ -216,7 +182,7 @@ app.views.SearchPage = Backbone.View.extend({
     }
 });
 
-app.views.UserListView = Backbone.View.extend({
+app.views.NoteListView = Backbone.View.extend({
 
     listItemViews: [],
 
@@ -226,17 +192,17 @@ app.views.UserListView = Backbone.View.extend({
 
     render: function(eventName) {
         _.each(this.listItemViews, function(itemView) { itemView.close(); });
-        this.listItemViews = _.map(this.model.models, function(model) { return new app.views.UserListItemView({model: model}); });
+        this.listItemViews = _.map(this.model.models, function(model) { return new app.views.NoteListItemView({model: model}); });
         $(this.el).append(_.map(this.listItemViews, function(itemView) { return itemView.render().el;} ));
         return this;
     }
 
 });
 
-app.views.UserListItemView = Backbone.View.extend({
+app.views.NoteListItemView = Backbone.View.extend({
 
     tagName: "li",
-    template: _.template($("#user-list-item").html()),
+    template: _.template($("#note-list-item").html()),
 
     render: function(eventName) {
         $(this.el).addClass("table-view-cell").html(this.template(this.model.toJSON()));
@@ -249,9 +215,9 @@ app.views.UserListItemView = Backbone.View.extend({
     }
 });
 
-app.views.UserPage = Backbone.View.extend({
+app.views.NotePage = Backbone.View.extend({
 
-    template: _.template($("#user-page").html()),
+    template: _.template($("#note-page").html()),
 
     events: {
         "change": "change",
@@ -287,12 +253,12 @@ app.Router = Backbone.StackRouter.extend({
     routes: {
         "": "list",
         "list": "list",
-        "users/:id": "viewUser"
+        "notes/:id": "viewNote"
     },
 
     setupCaches: function() {
         // Cache for offline support
-        app.cache = new Force.StoreCache("users", [ {path:"FirstName", type:"string"}, {path:"LastName", type:"string"} ]);
+        app.cache = new Force.StoreCache("notes", [ {path:"Title", type:"string"} ]);
         app.cache.init();
     },
 
@@ -303,11 +269,11 @@ app.Router = Backbone.StackRouter.extend({
         this.setupCaches();
 
         // Collection behind search screen
-        app.searchResults = new app.models.UserCollection();
+        app.searchResults = new app.models.NoteCollection();
 
-        // We keep a single instance of SearchPage and UserPage
+        // We keep a single instance of SearchPage and NotePage
         app.searchPage = new app.views.SearchPage({model: app.searchResults});
-        app.userPage = new app.views.UserPage();
+        app.notePage = new app.views.NotePage();
     },
 
     list: function() {
@@ -316,12 +282,12 @@ app.Router = Backbone.StackRouter.extend({
         this.slidePage(app.searchPage);
     },
 
-    viewUser: function(id) {
+    viewNote: function(id) {
         var that = this;
-        var user = new app.models.User({Id: id});
-        user.fetch({
+        var note = new app.models.Note({Id: id});
+        note.fetch({
             success: function() {
-                app.userPage.model = user;
+                app.notePage.model = note;
                 that.slidePage(app.userPage);
             }
         });
