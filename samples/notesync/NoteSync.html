@@ -17,7 +17,7 @@
 <script src="js/backbone.js"></script>
 <script src="js/forcetk.mobilesdk.js"></script>
 
-<!-- Local Testing -->
+<!-- Local Testing -/->
 <script src="js/forcetk.ui.js"></script>
 <script src="js/MockCordova.js"></script>
 <script src="js/cordova.force.js"></script>
@@ -25,7 +25,7 @@
 <script src="js/MockSmartSyncPlugin.js"></script>
 <!-- End Local Testing -->
 
-<!-- Container -/->
+<!-- Container -->
 <script src="cordova.js"></script>
 <!-- End Container -->
 
@@ -69,14 +69,14 @@
   <header class="bar bar-nav">
     <a href="#" class="btn btn-nav pull-left back">Back</a>
     <a class="btn btn-nav btn-positive pull-right save">Save</a>
-    <h1 class="title"><%= FirstName %> <%= LastName %></h1>
+    <h1 class="title"><%= Title %></h1>
   </header>
 
   <div class="content">
     <div class="content-padded">
       <div class="details">
         <input placeholder="Title" type="text" name="Title" value="<%= Title %>" /><br/>
-        <textarea placeholder="Content" type="text" name="Content" value="<%= ContentDecoded %>" /><br/>
+        <textarea placeholder="Content" type="text" name="ContentDecoded"><%= ContentDecoded %></textarea><br/>
         <% if (__locally_updated__) { %><span class="btn btn-negative btn-block">Locally Modified</span><% } %>
       </div>
     </div>
@@ -87,7 +87,7 @@
 // -------------------------------------------------- The Models ---------------------------------------------------- //
 // The Note Model
 app.models.Note = Force.SObject.extend({
-    sobjectType: "Note",
+    sobjectType: "ContentNote",
     fieldlist: ["Id", "Title", "Content", "LastModifiedDate"],
     cache: function() { return app.cache;},
     cacheMode: Force.CACHE_MODE.CACHE_ONLY
@@ -201,7 +201,6 @@ app.views.NoteListItemView = Backbone.View.extend({
     template: _.template($("#note-list-item").html()),
 
     render: function(eventName) {
-        var templateData = _.extend({ContentDecoded: btoa(this.model.get("Content"))}, this.model.toJSON());
         $(this.el).addClass("table-view-cell").html(this.template(this.model.toJSON()));
         return this;
     },
@@ -222,7 +221,8 @@ app.views.NotePage = Backbone.View.extend({
     },
 
     render: function(eventName) {
-        $(this.el).html(this.template(this.model.toJSON()));
+        var templateData = _.extend({ContentDecoded: atob(this.model.get("Content"))}, this.model.toJSON());
+        $(this.el).html(this.template(templateData));
         return this;
     },
 
@@ -230,7 +230,7 @@ app.views.NotePage = Backbone.View.extend({
         // apply change to model
         var target = event.target;
         if (target.name == "ContentDecoded") {
-            this.model.set("Content", atob(target.value));
+            this.model.set("Content", btoa(target.value));
         }
         else {
             this.model.set(target.name, target.value);
@@ -290,7 +290,7 @@ app.Router = Backbone.StackRouter.extend({
         note.fetch({
             success: function() {
                 app.notePage.model = note;
-                that.slidePage(app.userPage);
+                that.slidePage(app.notePage);
             }
         });
     }
