@@ -160,7 +160,7 @@ app.views.SearchPage = Backbone.View.extend({
     },
 
     syncDown: function() {
-        var target = {type:"custom", androidImpl:"com.salesforce.samples.notesync.ContentSoqlSyncTarget", query:"SELECT " + this.fieldlist.join(",") + " FROM ContentNote LIMIT 1000"};
+        var target = {type:"custom", androidImpl:"com.salesforce.samples.notesync.ContentSoqlSyncTarget", iOSImpl:"SFContentSoqlSyncTarget", query:"SELECT " + this.fieldlist.join(",") + " FROM ContentNote LIMIT 1000"};
         cordova.require("com.salesforce.plugin.smartsync").syncDown(target, "notes", {mergeMode:Force.MERGE_MODE_DOWNLOAD.LEAVE_IF_CHANGED}, this.handleSyncUpdate.bind(this));
     },
 
