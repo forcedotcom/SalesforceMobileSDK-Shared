@@ -283,7 +283,6 @@ if (forcetk.Client === undefined) {
         // See http://www.salesforce.com/us/developer/docs/chatterapi/Content/intro_requesting_bearer_token_url.htm#kanchor36
         headers["X-Connect-Bearer-Urls"] = true;
         if (client.userAgentString !== null) {
-            headers['User-Agent'] = client.userAgentString;
             headers['X-User-Agent'] = client.userAgentString;
         }
         return headers;
