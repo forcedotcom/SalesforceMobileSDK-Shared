@@ -812,10 +812,20 @@ cordova.define("com.salesforce.plugin.smartsync", function (require, exports, mo
     };
 
 
-    var syncUp = function(soupName, options, successCB, errorCB) {
+    var syncUp = function(target, soupName, options, successCB, errorCB) {
+        // For backward compatibility -- if syncUp is called without target
+        if (typeof(target) === "string") {
+            errorCB  = successCB;
+            successCB = options;
+            options = soupName;
+            soupName = target;
+            target = null;
+        }
+        target = target || {};
+
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "syncUp",
-             [{"soupName": soupName, "options": options}]
+             [{"target": target, "soupName": soupName, "options": options}]
             );        
     };
 
