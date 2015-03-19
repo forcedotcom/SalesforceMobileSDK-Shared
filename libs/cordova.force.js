@@ -469,7 +469,6 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
 
     var exec = require("com.salesforce.util.exec").exec;
 
-
     /**
      * SoupIndexSpec consturctor
      */
@@ -531,6 +530,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     
     // ====== Logging support ======
     var logLevel;
+    var isGlobalStore;
     var storeConsole = {};
 
     var setLogLevel = function(level) {
@@ -541,13 +541,24 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
             storeConsole[methods[i]] = (i <= levelAsInt ? console[methods[i]].bind(console) : function() {});
         }
     };
-    // Showing info and above (i.e. error) by default
+
+    // Showing info and above (i.e. error) by default.
     setLogLevel("info");
 
     var getLogLevel = function () {
         return logLevel;
     };
 
+    var setIsGlobal = function(global) {
+        isGlobalStore = global;
+    };
+
+    // Setting global as false by default.
+    setIsGlobal(false);
+
+    var getIsGlobal = function () {
+        return isGlobalStore;
+    };
 
     // ====== querySpec factory methods
     // Returns a query spec that will page through all soup entries in order by the given path value
@@ -601,14 +612,14 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     // ====== Soup manipulation ======
     var getDatabaseSize = function(successCB, errorCB) {
         storeConsole.debug("SmartStore.getDatabaseSize");
-        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE, "pgGetDatabaseSize", []);
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE, "pgGetDatabaseSize", [{"isGlobalStore": isGlobalStore}]);
     };
 
     var registerSoup = function (soupName, indexSpecs, successCB, errorCB) {
         storeConsole.debug("SmartStore.registerSoup: '" + soupName + "' indexSpecs: " + JSON.stringify(indexSpecs));
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgRegisterSoup",
-             [{"soupName": soupName, "indexes": indexSpecs}]
+             [{"soupName": soupName, "indexes": indexSpecs, "isGlobalStore": isGlobalStore}]
             );
     };
 
@@ -616,7 +627,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         storeConsole.debug("SmartStore.removeSoup: " + soupName);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgRemoveSoup",
-             [{"soupName": soupName}]
+             [{"soupName": soupName, "isGlobalStore": isGlobalStore}]
             );
     };
 
@@ -624,7 +635,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         storeConsole.debug("SmartStore.getSoupIndexSpecs: " + soupName);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgGetSoupIndexSpecs",
-             [{"soupName": soupName}]
+             [{"soupName": soupName, "isGlobalStore": isGlobalStore}]
             );
     };
 
@@ -632,7 +643,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         storeConsole.debug("SmartStore.alterSoup: '" + soupName + "' indexSpecs: " + JSON.stringify(indexSpecs));
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgAlterSoup",
-             [{"soupName": soupName, "indexes": indexSpecs, "reIndexData": reIndexData}]
+             [{"soupName": soupName, "indexes": indexSpecs, "reIndexData": reIndexData, "isGlobalStore": isGlobalStore}]
             );
     };
 
@@ -640,7 +651,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         storeConsole.debug("SmartStore.reIndexSoup: '" + soupName + "' paths: " + JSON.stringify(paths));
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgReIndexSoup",
-             [{"soupName": soupName, "paths": paths}]
+             [{"soupName": soupName, "paths": paths, "isGlobalStore": isGlobalStore}]
             );
     };
 
@@ -648,20 +659,20 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         storeConsole.debug("SmartStore.clearSoup: '" + soupName + "'");
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgClearSoup",
-             [{"soupName": soupName}]
+             [{"soupName": soupName, "isGlobalStore": isGlobalStore}]
             );
     };
 
     var showInspector = function() {
         storeConsole.debug("SmartStore.showInspector");
-        exec(SALESFORCE_MOBILE_SDK_VERSION, null, null, SERVICE, "pgShowInspector", []);
+        exec(SALESFORCE_MOBILE_SDK_VERSION, null, null, SERVICE, "pgShowInspector", [{"isGlobalStore": isGlobalStore}]);
     };
 
     var soupExists = function (soupName, successCB, errorCB) {
         storeConsole.debug("SmartStore.soupExists: " + soupName);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgSoupExists",
-             [{"soupName": soupName}]
+             [{"soupName": soupName, "isGlobalStore": isGlobalStore}]
             );
     };
 
@@ -670,7 +681,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         storeConsole.debug("SmartStore.querySoup: '" + soupName + "' indexPath: " + querySpec.indexPath);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgQuerySoup",
-             [{"soupName": soupName, "querySpec": querySpec}]
+             [{"soupName": soupName, "querySpec": querySpec, "isGlobalStore": isGlobalStore}]
             );
     };
 
@@ -679,7 +690,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         storeConsole.debug("SmartStore.runSmartQuery: smartSql: " + querySpec.smartSql);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgRunSmartQuery",
-             [{"querySpec": querySpec}]
+             [{"querySpec": querySpec, "isGlobalStore": isGlobalStore}]
             );
     };
 
@@ -687,7 +698,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         storeConsole.debug("SmartStore.retrieveSoupEntry: '" + soupName + "' entryIds: " + entryIds);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgRetrieveSoupEntries",
-             [{"soupName": soupName, "entryIds": entryIds}]
+             [{"soupName": soupName, "entryIds": entryIds, "isGlobalStore": isGlobalStore}]
             );
     };
 
@@ -699,7 +710,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         storeConsole.debug("SmartStore.upsertSoupEntries: '" + soupName + "' entries.length: " + entries.length);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgUpsertSoupEntries", 
-             [{"soupName": soupName, "entries": entries, "externalIdPath": externalIdPath}]
+             [{"soupName": soupName, "entries": entries, "externalIdPath": externalIdPath, "isGlobalStore": isGlobalStore}]
             );
     };
 
@@ -707,7 +718,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         storeConsole.debug("SmartStore.removeFromSoup: '" + soupName + "' entryIds: " + entryIds);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgRemoveFromSoup",
-             [{"soupName": soupName, "entryIds": entryIds}]
+             [{"soupName": soupName, "entryIds": entryIds, "isGlobalStore": isGlobalStore}]
             );
     };
 
@@ -716,7 +727,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         storeConsole.debug("moveCursorToPageIndex: " + cursor.cursorId + "  newPageIndex: " + newPageIndex);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgMoveCursorToPageIndex",
-             [{"cursorId": cursor.cursorId, "index": newPageIndex}]
+             [{"cursorId": cursor.cursorId, "index": newPageIndex, "isGlobalStore": isGlobalStore}]
             );
     };
 
@@ -744,7 +755,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         storeConsole.debug("closeCursor: " + cursor.cursorId);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgCloseCursor",
-             [{"cursorId": cursor.cursorId}]
+             [{"cursorId": cursor.cursorId, "isGlobalStore": isGlobalStore}]
             );
     };
 
@@ -778,6 +789,8 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         soupExists: soupExists,
         upsertSoupEntries: upsertSoupEntries,
         upsertSoupEntriesWithExternalId: upsertSoupEntriesWithExternalId,
+        setIsGlobal: setIsGlobal,
+        getIsGlobal: getIsGlobal,
 
         // Constructors
         QuerySpec: QuerySpec,
