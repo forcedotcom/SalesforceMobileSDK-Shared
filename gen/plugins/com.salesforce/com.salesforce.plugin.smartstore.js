@@ -91,7 +91,6 @@ var StoreCursor = function () {
 
 // ====== Logging support ======
 var logLevel;
-var isGlobalStore;
 var storeConsole = {};
 
 var setLogLevel = function(level) {
@@ -108,17 +107,6 @@ setLogLevel("info");
 
 var getLogLevel = function () {
     return logLevel;
-};
-
-var setIsGlobal = function(global) {
-    isGlobalStore = global;
-};
-
-// Setting global as false by default.
-setIsGlobal(false);
-
-var getIsGlobal = function () {
-    return isGlobalStore;
 };
 
 // ====== querySpec factory methods
@@ -171,74 +159,84 @@ var buildSmartQuerySpec = function (smartSql, pageSize) {
 };
 
 // ====== Soup manipulation ======
-var getDatabaseSize = function(successCB, errorCB) {
+var getDatabaseSize = function(successCB, errorCB, isGlobalStore) {
     storeConsole.debug("SmartStore.getDatabaseSize");
+    isGlobalStore = isGlobalStore || false;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE, "pgGetDatabaseSize", [{"isGlobalStore": isGlobalStore}]);
 };
 
-var registerSoup = function (soupName, indexSpecs, successCB, errorCB) {
+var registerSoup = function (soupName, indexSpecs, successCB, errorCB, isGlobalStore) {
     storeConsole.debug("SmartStore.registerSoup: '" + soupName + "' indexSpecs: " + JSON.stringify(indexSpecs));
+    isGlobalStore = isGlobalStore || false;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgRegisterSoup",
          [{"soupName": soupName, "indexes": indexSpecs, "isGlobalStore": isGlobalStore}]
         );
 };
 
-var removeSoup = function (soupName, successCB, errorCB) {
+var removeSoup = function (soupName, successCB, errorCB, isGlobalStore) {
     storeConsole.debug("SmartStore.removeSoup: " + soupName);
+    isGlobalStore = isGlobalStore || false;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgRemoveSoup",
          [{"soupName": soupName, "isGlobalStore": isGlobalStore}]
         );
 };
 
-var getSoupIndexSpecs = function(soupName, successCB, errorCB) {
+var getSoupIndexSpecs = function(soupName, successCB, errorCB, isGlobalStore) {
     storeConsole.debug("SmartStore.getSoupIndexSpecs: " + soupName);
+    isGlobalStore = isGlobalStore || false;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgGetSoupIndexSpecs",
          [{"soupName": soupName, "isGlobalStore": isGlobalStore}]
         );
 };
 
-var alterSoup = function (soupName, indexSpecs, reIndexData, successCB, errorCB) {
+var alterSoup = function (soupName, indexSpecs, reIndexData, successCB, errorCB, isGlobalStore) {
     storeConsole.debug("SmartStore.alterSoup: '" + soupName + "' indexSpecs: " + JSON.stringify(indexSpecs));
+    isGlobalStore = isGlobalStore || false;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgAlterSoup",
          [{"soupName": soupName, "indexes": indexSpecs, "reIndexData": reIndexData, "isGlobalStore": isGlobalStore}]
         );
 };
 
-var reIndexSoup = function (soupName, paths, successCB, errorCB) {
+var reIndexSoup = function (soupName, paths, successCB, errorCB, isGlobalStore) {
     storeConsole.debug("SmartStore.reIndexSoup: '" + soupName + "' paths: " + JSON.stringify(paths));
+    isGlobalStore = isGlobalStore || false;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgReIndexSoup",
          [{"soupName": soupName, "paths": paths, "isGlobalStore": isGlobalStore}]
         );
 };
 
-var clearSoup = function (soupName, successCB, errorCB) {
+var clearSoup = function (soupName, successCB, errorCB, isGlobalStore) {
     storeConsole.debug("SmartStore.clearSoup: '" + soupName + "'");
+    isGlobalStore = isGlobalStore || false;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgClearSoup",
          [{"soupName": soupName, "isGlobalStore": isGlobalStore}]
         );
 };
 
-var showInspector = function() {
+var showInspector = function(isGlobalStore) {
     storeConsole.debug("SmartStore.showInspector");
+    isGlobalStore = isGlobalStore || false;
     exec(SALESFORCE_MOBILE_SDK_VERSION, null, null, SERVICE, "pgShowInspector", [{"isGlobalStore": isGlobalStore}]);
 };
 
-var soupExists = function (soupName, successCB, errorCB) {
+var soupExists = function (soupName, successCB, errorCB, isGlobalStore) {
     storeConsole.debug("SmartStore.soupExists: " + soupName);
+    isGlobalStore = isGlobalStore || false;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgSoupExists",
          [{"soupName": soupName, "isGlobalStore": isGlobalStore}]
         );
 };
 
-var querySoup = function (soupName, querySpec, successCB, errorCB) {
+var querySoup = function (soupName, querySpec, successCB, errorCB, isGlobalStore) {
     if (querySpec.queryType == "smart") throw new Error("Smart queries can only be run using runSmartQuery");
+    isGlobalStore = isGlobalStore || false;
     storeConsole.debug("SmartStore.querySoup: '" + soupName + "' indexPath: " + querySpec.indexPath);
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgQuerySoup",
@@ -246,37 +244,42 @@ var querySoup = function (soupName, querySpec, successCB, errorCB) {
         );
 };
 
-var runSmartQuery = function (querySpec, successCB, errorCB) {
+var runSmartQuery = function (querySpec, successCB, errorCB, isGlobalStore) {
     if (querySpec.queryType != "smart") throw new Error("runSmartQuery can only run smart queries");
     storeConsole.debug("SmartStore.runSmartQuery: smartSql: " + querySpec.smartSql);
+    isGlobalStore = isGlobalStore || false;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgRunSmartQuery",
          [{"querySpec": querySpec, "isGlobalStore": isGlobalStore}]
         );
 };
 
-var retrieveSoupEntries = function (soupName, entryIds, successCB, errorCB) {
+var retrieveSoupEntries = function (soupName, entryIds, successCB, errorCB, isGlobalStore) {
     storeConsole.debug("SmartStore.retrieveSoupEntry: '" + soupName + "' entryIds: " + entryIds);
+    isGlobalStore = isGlobalStore || false;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgRetrieveSoupEntries",
          [{"soupName": soupName, "entryIds": entryIds, "isGlobalStore": isGlobalStore}]
         );
 };
 
-var upsertSoupEntries = function (soupName, entries, successCB, errorCB) {
-    upsertSoupEntriesWithExternalId(soupName, entries, "_soupEntryId", successCB, errorCB);
+var upsertSoupEntries = function (soupName, entries, successCB, errorCB, isGlobalStore) {
+    isGlobalStore = isGlobalStore || false;
+    upsertSoupEntriesWithExternalId(soupName, entries, "_soupEntryId", successCB, errorCB, isGlobalStore);
 };
 
-var upsertSoupEntriesWithExternalId = function (soupName, entries, externalIdPath, successCB, errorCB) {
+var upsertSoupEntriesWithExternalId = function (soupName, entries, externalIdPath, successCB, errorCB, isGlobalStore) {
     storeConsole.debug("SmartStore.upsertSoupEntries: '" + soupName + "' entries.length: " + entries.length);
+    isGlobalStore = isGlobalStore || false;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgUpsertSoupEntries", 
          [{"soupName": soupName, "entries": entries, "externalIdPath": externalIdPath, "isGlobalStore": isGlobalStore}]
         );
 };
 
-var removeFromSoup = function (soupName, entryIds, successCB, errorCB) {
+var removeFromSoup = function (soupName, entryIds, successCB, errorCB, isGlobalStore) {
     storeConsole.debug("SmartStore.removeFromSoup: '" + soupName + "' entryIds: " + entryIds);
+    isGlobalStore = isGlobalStore || false;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgRemoveFromSoup",
          [{"soupName": soupName, "entryIds": entryIds, "isGlobalStore": isGlobalStore}]
@@ -284,36 +287,38 @@ var removeFromSoup = function (soupName, entryIds, successCB, errorCB) {
 };
 
 //====== Cursor manipulation ======
-var moveCursorToPageIndex = function (cursor, newPageIndex, successCB, errorCB) {
+var moveCursorToPageIndex = function (cursor, newPageIndex, successCB, errorCB, isGlobalStore) {
     storeConsole.debug("moveCursorToPageIndex: " + cursor.cursorId + "  newPageIndex: " + newPageIndex);
+    isGlobalStore = isGlobalStore || false;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgMoveCursorToPageIndex",
          [{"cursorId": cursor.cursorId, "index": newPageIndex, "isGlobalStore": isGlobalStore}]
         );
 };
 
-var moveCursorToNextPage = function (cursor, successCB, errorCB) {
+var moveCursorToNextPage = function (cursor, successCB, errorCB, isGlobalStore) {
+    isGlobalStore = isGlobalStore || false;
     var newPageIndex = cursor.currentPageIndex + 1;
     if (newPageIndex >= cursor.totalPages) {
         errorCB(cursor, new Error("moveCursorToNextPage called while on last page"));
-    }
-    else {
-        moveCursorToPageIndex(cursor, newPageIndex, successCB, errorCB);
+    } else {
+        moveCursorToPageIndex(cursor, newPageIndex, successCB, errorCB, isGlobalStore);
     }
 };
 
-var moveCursorToPreviousPage = function (cursor, successCB, errorCB) {
+var moveCursorToPreviousPage = function (cursor, successCB, errorCB, isGlobalStore) {
+    isGlobalStore = isGlobalStore || false;
     var newPageIndex = cursor.currentPageIndex - 1;
     if (newPageIndex < 0) {
         errorCB(cursor, new Error("moveCursorToPreviousPage called while on first page"));
-    }
-    else {
-        moveCursorToPageIndex(cursor, newPageIndex, successCB, errorCB);
+    } else {
+        moveCursorToPageIndex(cursor, newPageIndex, successCB, errorCB, isGlobalStore);
     }
 };
 
-var closeCursor = function (cursor, successCB, errorCB) {
+var closeCursor = function (cursor, successCB, errorCB, isGlobalStore) {
     storeConsole.debug("closeCursor: " + cursor.cursorId);
+    isGlobalStore = isGlobalStore || false;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgCloseCursor",
          [{"cursorId": cursor.cursorId, "isGlobalStore": isGlobalStore}]
@@ -350,8 +355,6 @@ module.exports = {
     soupExists: soupExists,
     upsertSoupEntries: upsertSoupEntries,
     upsertSoupEntriesWithExternalId: upsertSoupEntriesWithExternalId,
-    setIsGlobal: setIsGlobal,
-    getIsGlobal: getIsGlobal,
 
     // Constructors
     QuerySpec: QuerySpec,
