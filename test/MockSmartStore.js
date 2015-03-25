@@ -505,7 +505,7 @@ var MockSmartStore = (function(window) {
             this._cursors[cursorId] = cursor;
             // Since original cursor from smarstore doesn't contain querySpec and soupName, 
             // remove them here too before returning cursor to the user.
-            return _.omit(cursor, 'soupName', 'querySpec');
+            return this.omit(cursor, 'soupName', 'querySpec');
         },
 
         moveCursorToPage: function(cursorId, pageIndex) {
@@ -518,7 +518,17 @@ var MockSmartStore = (function(window) {
 
             // Since original cursor from smarstore doesn't contain querySpec and soupName, 
             // remove them here too before returning cursor to the user.
-            return _.omit(cursor, 'soupName', 'querySpec');
+            return this.omit(cursor, 'soupName', 'querySpec');
+        },
+
+        omit: function(obj, varNames) {
+            var ret = {};
+            for(var i in obj) {
+                if(varNames.indexOf(i) < 0) {
+                    ret[i] = obj[i];
+                }
+            }
+            return ret;
         },
 
         closeCursor: function(cursorId) {
