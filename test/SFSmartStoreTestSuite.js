@@ -42,6 +42,9 @@ var SmartStoreTestSuite = function () {
                                          {path:"Name", type:"string"}, 
                                          {path:"Id", type:"string"}
                                      ]);
+
+    // To run specific tests
+    // this.testsToRun = ["testSmartQueryWithIntegerCompare"];
 };
 
 // We are sub-classing AbstractSmartStoreTestSuite
@@ -908,6 +911,9 @@ SmartStoreTestSuite.prototype.testIntegerQuerySpec  = function() {
     });
 };
 
+/**
+ * TEST smart query with count
+ */
 SmartStoreTestSuite.prototype.testSmartQueryWithCount  = function() {
     console.log("In SFSmartStoreTestSuite.testSmartQueryWithCount");
     var self = this;
@@ -922,6 +928,90 @@ SmartStoreTestSuite.prototype.testSmartQueryWithCount  = function() {
             QUnit.equal(1, cursor.currentPageOrderedEntries.length, "check number of rows returned");
             QUnit.equal(1, cursor.currentPageOrderedEntries[0].length, "check number of fields returned");
             QUnit.equal("[[3]]", JSON.stringify(cursor.currentPageOrderedEntries), "check currentPageOrderedEntries");
+            return self.closeCursor(cursor);
+        })
+        .done(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            self.finalizeTest();
+        });
+};
+
+/**
+ * TEST smart query with compare on integer field
+ */
+SmartStoreTestSuite.prototype.testSmartQueryWithIntegerCompare  = function() {
+
+    var self = this;
+    var myEntry1 = { Name: "A", rank:1 };
+    var myEntry2 = { Name: "B", rank:2 };
+    var myEntry3 = { Name: "C", rank:3 };
+    var myEntry4 = { Name: "D", rank:4 };
+    var myEntry5 = { Name: "E", rank:5 };
+    var rawEntries = [myEntry1, myEntry2, myEntry3, myEntry4, myEntry5];
+    var soupName = "alphabetSoup";
+
+    var pluckNames = function(cursor) {
+        var names = "";
+        for (var i=0; i<cursor.currentPageOrderedEntries.length; i++) {
+            names += cursor.currentPageOrderedEntries[i][0].Name;
+        }
+        return names;
+    };
+
+    var buildQuerySpec = function(comparison) {
+        var smartQuery = "select {alphabetSoup:_soup} from {alphabetSoup} where {alphabetSoup:rank} " + comparison + " order by lower({alphabetSoup:Name})";
+        return navigator.smartstore.buildSmartQuerySpec(smartQuery, 5);
+    };
+
+    self.removeAndRecreateSoup(soupName, [{path:"Name", type:"string"}, {path:"rank", type:"integer"}])
+        .pipe(function() {
+            return self.upsertSoupEntries(soupName,rawEntries);
+        })
+        .pipe(function(entries) {
+            return self.runSmartQuery(buildQuerySpec("!= 3"));
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(pluckNames(cursor), "ABDE");
+            return self.closeCursor(cursor);
+        })
+        .pipe(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            return self.runSmartQuery(buildQuerySpec("= 3"));
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(pluckNames(cursor), "C");
+            return self.closeCursor(cursor);
+        })
+        .pipe(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            return self.runSmartQuery(buildQuerySpec("< 3"));
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(pluckNames(cursor), "AB");
+            return self.closeCursor(cursor);
+        })
+        .pipe(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            return self.runSmartQuery(buildQuerySpec("<= 3"));
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(pluckNames(cursor), "ABC");
+            return self.closeCursor(cursor);
+        })
+        .pipe(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            return self.runSmartQuery(buildQuerySpec("> 3"));
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(pluckNames(cursor), "DE");
+            return self.closeCursor(cursor);
+        })
+        .pipe(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            return self.runSmartQuery(buildQuerySpec(">= 3"));
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(pluckNames(cursor), "CDE");
             return self.closeCursor(cursor);
         })
         .done(function(param) { 
