@@ -315,9 +315,47 @@ var MockSmartStore = (function(window) {
                     example: "SELECT count(*) FROM {soupName}", 
                     pattern: /SELECT count\(\*\) FROM {(.*)}/i, 
                     processor: this._smartQuerySoupCount 
+                },
+                { 
+                    name: "Comparing soup item to integer", 
+                    example: "SELECT {soupName:_soup} FROM {soupName} WHERE {soupName:whereField} > 123456", 
+                    pattern: /SELECT {(.*):_soup} FROM {(.*)} WHERE {(.*):(.*)} ([><]) ([0-9]+)/i,
+                    processor: this._smartQuerySoupCompare
                 }
-
             ];
+        },
+        
+        _smartQuerySoupCompare : function(queryDesc, matches, smartSql) {
+            if (matches[1] === matches[2] && matches[1] === matches[3]) {
+                // Gather the parameters.
+                var soupName = matches[2];
+                var whereField = matches[4];
+                var comparator = matches[5];
+                var compareTo = parseInt(matches[6], 10);
+    
+                // Make sure the soup has all the appropriate fields.
+                this.checkSoup(soupName);
+                this.checkIndex(soupName, whereField);
+    
+                var soup = _soups[soupName];
+                var soupIndexedData = _soupIndexedData[soupName];
+    
+                // Pull results out from soup iteratively.
+                var results = [];
+                for (var soupEntryId in soup) {
+                    var soupElt = soup[soupEntryId];
+                    var projection = parseInt(soupIndexedData[soupEntryId][whereField], 10) || 0;
+                    if((comparator == "<" && projection < compareTo) || (comparator == ">" && projection > compareTo)) {
+                        var row = [];
+                        row.push(soupElt);
+                        results.push(row);
+                    }
+                }
+    
+                return results;
+            }
+            
+            throw new Error("SmartQuery for \"" + queryDesc.name + "\" not supported by MockSmartStore: " + smartSql);
         },
 
         _smartQuerySoupIn : function(queryDesc, matches, smartSql) {
@@ -505,7 +543,7 @@ var MockSmartStore = (function(window) {
             this._cursors[cursorId] = cursor;
             // Since original cursor from smarstore doesn't contain querySpec and soupName, 
             // remove them here too before returning cursor to the user.
-            return _.omit(cursor, 'soupName', 'querySpec');
+            return this.omit(cursor, ['soupName', 'querySpec']);
         },
 
         moveCursorToPage: function(cursorId, pageIndex) {
@@ -518,9 +556,19 @@ var MockSmartStore = (function(window) {
 
             // Since original cursor from smarstore doesn't contain querySpec and soupName, 
             // remove them here too before returning cursor to the user.
-            return _.omit(cursor, 'soupName', 'querySpec');
+            return this.omit(cursor, ['soupName', 'querySpec']);
         },
-
+        
+        omit: function(obj, varNames) {
+            var ret = {};
+            for(var i in obj) {
+                if(varNames.indexOf(i) < 0) {
+                    ret[i] = obj[i];
+                }
+            }
+            return ret;
+        },
+        
         closeCursor: function(cursorId) {
             delete this._cursors[cursorId];
         },
