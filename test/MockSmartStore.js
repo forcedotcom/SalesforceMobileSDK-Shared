@@ -33,7 +33,8 @@
 
 var MockSmartStore = (function(window) {
     // Constructor
-    var module = function() {
+    var module = function(isGlobalStore) {
+        this.isGlobalStore = isGlobalStore || false;
         this._soups = {};     
         this._soupIndexedData = {}; 
         this._soupIndexSpecs = {};
@@ -46,8 +47,7 @@ var MockSmartStore = (function(window) {
     module.prototype = {
         constructor: module,
 
-        reset: function(isGlobalStore) {
-            this.isGlobalStore = isGlobalStore || false;
+        reset: function() {
             this._soups = {};
             this._soupIndexedData = {};
             this._soupIndexSpecs = {};
@@ -644,6 +644,6 @@ function hookToCordova(cordova, store, globalStore) {
     });
 }
 
-var mockStore = new MockSmartStore();
-var mockGlobalStore = new MockSmartStore();
+var mockStore = new MockSmartStore(false);
+var mockGlobalStore = new MockSmartStore(true);
 hookToCordova(cordova, mockStore, mockGlobalStore);
