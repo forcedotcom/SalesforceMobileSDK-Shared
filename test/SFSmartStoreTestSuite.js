@@ -102,70 +102,62 @@ SmartStoreTestSuite.prototype.testRegisterRemoveSoupGlobalStore = function()  {
     var REGULAR_STORE = false;
 
     // Start clean
-    self.removeSoup(REGULAR_STORE, soupName)
+    $.when(self.removeSoup(REGULAR_STORE, soupName),
+           self.removeSoup(GLOBAL_STORE, soupName))
         .pipe(function() {
-            // Check soup does not exist
-            return self.soupExists(REGULAR_STORE, soupName);
+            // Check soup does not exist in either stores
+            return $.when(self.soupExists(REGULAR_STORE, soupName),
+                          self.soupExists(GLOBAL_STORE, soupName));
         })
-        .pipe(function(exists) {
+        .pipe(function(exists, existsGlobal) {
             QUnit.equals(exists, false, "soup should not already exist in regular store");
-            // Remove from global store as well
-            return self.removeSoup(GLOBAL_STORE, soupName);
-        })
-        .pipe(function() {
-            // Check soup does not exist
-            return self.soupExists(GLOBAL_STORE, soupName);
-        })
-        .pipe(function(exists) {
-            QUnit.equals(exists, false, "soup should not already exist in global store");
+            QUnit.equals(existsGlobal, false, "soup should not already exist in global store");
             // Create soup in global store
             return self.registerSoup(GLOBAL_STORE, soupName, self.defaultSoupIndexes);
         })
         .pipe(function(soupName2) {
             QUnit.equals(soupName2,soupName,"registered soup OK in global store");
-            // Check soup now exists
-            return self.soupExists(GLOBAL_STORE, soupName);
+            // Check soup exist only in global store
+            return $.when(self.soupExists(REGULAR_STORE, soupName),
+                          self.soupExists(GLOBAL_STORE, soupName));
         })
-        .pipe(function(exists) {
-            QUnit.equals(exists, true, "soup should now exist in global store");
-            // Check if soup exists in regular store
-            return self.soupExists(REGULAR_STORE, soupName);
-        })
-        .pipe(function(exists) {
+        .pipe(function(exists, existsGlobal) {
             QUnit.equals(exists, false, "soup should not exist in regular store");
+            QUnit.equals(existsGlobal, true, "soup should now exist in global store");
             // Create soup in regular store
             return self.registerSoup(REGULAR_STORE, soupName, self.defaultSoupIndexes);
         })
         .pipe(function(soupName2) {
             QUnit.equals(soupName2,soupName,"registered soup OK in regular store");
-            // Check soup now exists
-            return self.soupExists(REGULAR_STORE, soupName);
+            // Check soup exist only in both stores
+            return $.when(self.soupExists(REGULAR_STORE, soupName),
+                          self.soupExists(GLOBAL_STORE, soupName));
         })
-        .pipe(function(exists) {
+        .pipe(function(exists, existsGlobal) {
             QUnit.equals(exists, true, "soup should now exist in regular store");
+            QUnit.equals(existsGlobal, true, "soup should exist in global store");
             // Remove soup from global store
             return self.removeSoup(GLOBAL_STORE, soupName);
         })
         .pipe(function() {
-            // Check soup no longer exists in global store
-            return self.soupExists(GLOBAL_STORE, soupName);
+            // Check soup exist only in regular store
+            return $.when(self.soupExists(REGULAR_STORE, soupName),
+                          self.soupExists(GLOBAL_STORE, soupName));
         })
-        .pipe(function(exists) {
-            QUnit.equals(exists, false, "soup should no longer exist in global store");
-            // Check if soup still exists in regular store
-            return self.soupExists(REGULAR_STORE, soupName);
-        })
-        .pipe(function(exists) {
+        .pipe(function(exists, existsGlobal) {
             QUnit.equals(exists, true, "soup should still exist in regular store");
+            QUnit.equals(existsGlobal, false, "soup should no longer exist in global store");
             // Remove soup from regular store
             return self.removeSoup(REGULAR_STORE, soupName);
         })
         .pipe(function() {
-            // Check soup no longer exists in regular store
-            return self.soupExists(REGULAR_STORE, soupName);
+            // Check soup no longer exist in either store
+            return $.when(self.soupExists(REGULAR_STORE, soupName),
+                          self.soupExists(GLOBAL_STORE, soupName));
         })
-        .done(function(exists) {
+        .done(function(exists, existsGlobal) {
             QUnit.equals(exists, false, "soup should no longer exist in regular store");
+            QUnit.equals(existsGlobal, false, "soup should no longer exist in global store");
             self.finalizeTest();
         });
 };
