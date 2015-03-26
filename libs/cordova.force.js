@@ -597,21 +597,21 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         return inst;
     };
 
-    // Helper function to handle calls missing isGlobalStore argument
-    // Return true if isGlobalStore argument was missing and calling function was re-invoked with the additional isGlobalStore argument
-    // Return false if isglobalstore argument is present
-    var callWithGlobalStoreArgument = function(argumentsOfCaller) {
+    // Helper function to handle calls that don't specify isGlobalStore as first argument
+    // If missing, the caller is re-invoked with false prepended to the arguments list and true is returned
+    // Otherwise, false is returned
+    var checkFirstArg = function(argumentsOfCaller) {
         // Turning arguments into array
         var args = Array.prototype.slice.call(argumentsOfCaller);
         // If first argument is not a boolean
         if (typeof(args[0]) !== "boolean") {
-            // Pre-pending isGlobalStore argument (false)
+            // Pre-pending false
             args.unshift(false);
             // Re-invoking function
             argumentsOfCaller.callee.apply(null, args);
             return true;
         }
-        // isGlobalStore argument already present
+        // First argument is a boolean
         else {
             return false;
         }
@@ -620,13 +620,13 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     
     // ====== Soup manipulation ======
     var getDatabaseSize = function (isGlobalStore, successCB, errorCB) {
-        if (callWithGlobalStoreArgument(arguments)) return;
+        if (checkFirstArg(arguments)) return;
         storeConsole.debug("SmartStore.getDatabaseSize:isGlobalStore=" + isGlobalStore);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE, "pgGetDatabaseSize", [{"isGlobalStore": isGlobalStore}]);
     };
     
     var registerSoup = function (isGlobalStore, soupName, indexSpecs, successCB, errorCB) {
-        if (callWithGlobalStoreArgument(arguments)) return;
+        if (checkFirstArg(arguments)) return;
         storeConsole.debug("SmartStore.registerSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",indexSpecs=" + JSON.stringify(indexSpecs));
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgRegisterSoup",
@@ -635,7 +635,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     };
 
     var removeSoup = function (isGlobalStore, soupName, successCB, errorCB) {
-        if (callWithGlobalStoreArgument(arguments)) return;
+        if (checkFirstArg(arguments)) return;
         storeConsole.debug("SmartStore.removeSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgRemoveSoup",
@@ -644,7 +644,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     };
 
     var getSoupIndexSpecs = function(isGlobalStore, soupName, successCB, errorCB) {
-        if (callWithGlobalStoreArgument(arguments)) return;
+        if (checkFirstArg(arguments)) return;
         storeConsole.debug("SmartStore.getSoupIndexSpecs:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgGetSoupIndexSpecs",
@@ -653,7 +653,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     };
 
     var alterSoup = function (isGlobalStore, soupName, indexSpecs, reIndexData, successCB, errorCB) {
-        if (callWithGlobalStoreArgument(arguments)) return;
+        if (checkFirstArg(arguments)) return;
         storeConsole.debug("SmartStore.alterSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",indexSpecs=" + JSON.stringify(indexSpecs));
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgAlterSoup",
@@ -662,7 +662,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     };
 
     var reIndexSoup = function (isGlobalStore, soupName, paths, successCB, errorCB) {
-        if (callWithGlobalStoreArgument(arguments)) return;
+        if (checkFirstArg(arguments)) return;
         storeConsole.debug("SmartStore.reIndexSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",paths=" + JSON.stringify(paths));
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgReIndexSoup",
@@ -671,7 +671,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     };
 
     var clearSoup = function (isGlobalStore, soupName, successCB, errorCB) {
-        if (callWithGlobalStoreArgument(arguments)) return;
+        if (checkFirstArg(arguments)) return;
         storeConsole.debug("SmartStore.clearSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgClearSoup",
@@ -686,7 +686,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     };
 
     var soupExists = function (isGlobalStore, soupName, successCB, errorCB) {
-        if (callWithGlobalStoreArgument(arguments)) return;
+        if (checkFirstArg(arguments)) return;
         storeConsole.debug("SmartStore.soupExists:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgSoupExists",
@@ -695,7 +695,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     };
 
     var querySoup = function (isGlobalStore, soupName, querySpec, successCB, errorCB) {
-        if (callWithGlobalStoreArgument(arguments)) return;
+        if (checkFirstArg(arguments)) return;
         if (querySpec.queryType == "smart") throw new Error("Smart queries can only be run using runSmartQuery");
         storeConsole.debug("SmartStore.querySoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",indexPath=" + querySpec.indexPath);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
@@ -705,7 +705,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     };
 
     var runSmartQuery = function (isGlobalStore, querySpec, successCB, errorCB) {
-        if (callWithGlobalStoreArgument(arguments)) return;
+        if (checkFirstArg(arguments)) return;
         if (querySpec.queryType != "smart") throw new Error("runSmartQuery can only run smart queries");
         storeConsole.debug("SmartStore.runSmartQuery:isGlobalStore=" +isGlobalStore+ ",smartSql=" + querySpec.smartSql);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
@@ -715,7 +715,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     };
 
     var retrieveSoupEntries = function (isGlobalStore, soupName, entryIds, successCB, errorCB) {
-        if (callWithGlobalStoreArgument(arguments)) return;
+        if (checkFirstArg(arguments)) return;
         storeConsole.debug("SmartStore.retrieveSoupEntries:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",entryIds=" + entryIds);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgRetrieveSoupEntries",
@@ -724,12 +724,12 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     };
 
     var upsertSoupEntries = function (isGlobalStore, soupName, entries, successCB, errorCB) {
-        if (callWithGlobalStoreArgument(arguments)) return;
+        if (checkFirstArg(arguments)) return;
         upsertSoupEntriesWithExternalId(isGlobalStore, soupName, entries, "_soupEntryId", successCB, errorCB);
     };
 
     var upsertSoupEntriesWithExternalId = function (isGlobalStore, soupName, entries, externalIdPath, successCB, errorCB) {
-        if (callWithGlobalStoreArgument(arguments)) return;
+        if (checkFirstArg(arguments)) return;
         storeConsole.debug("SmartStore.upsertSoupEntries:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",entries=" + entries.length + ",externalIdPath=" + externalIdPath);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgUpsertSoupEntries", 
@@ -738,7 +738,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     };
 
     var removeFromSoup = function (isGlobalStore, soupName, entryIds, successCB, errorCB) {
-        if (callWithGlobalStoreArgument(arguments)) return;
+        if (checkFirstArg(arguments)) return;
         storeConsole.debug("SmartStore.removeFromSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",entryIds=" + entryIds);
         isGlobalStore = isGlobalStore || false;
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
@@ -749,7 +749,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
 
     //====== Cursor manipulation ======
     var moveCursorToPageIndex = function (isGlobalStore, cursor, newPageIndex, successCB, errorCB) {
-        if (callWithGlobalStoreArgument(arguments)) return;
+        if (checkFirstArg(arguments)) return;
         storeConsole.debug("moveCursorToPageIndex:isGlobalStore=" + isGlobalStore +",cursorId=" + cursor.cursorId + ",newPageIndex=" + newPageIndex);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgMoveCursorToPageIndex",
@@ -758,7 +758,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     };
 
     var moveCursorToNextPage = function (isGlobalStore, cursor, successCB, errorCB) {
-        if (callWithGlobalStoreArgument(arguments)) return;
+        if (checkFirstArg(arguments)) return;
         var newPageIndex = cursor.currentPageIndex + 1;
         if (newPageIndex >= cursor.totalPages) {
             errorCB(cursor, new Error("moveCursorToNextPage called while on last page"));
@@ -768,7 +768,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     };
 
     var moveCursorToPreviousPage = function (isGlobalStore, cursor, successCB, errorCB) {
-        if (callWithGlobalStoreArgument(arguments)) return;
+        if (checkFirstArg(arguments)) return;
         var newPageIndex = cursor.currentPageIndex - 1;
         if (newPageIndex < 0) {
             errorCB(cursor, new Error("moveCursorToPreviousPage called while on first page"));
@@ -778,7 +778,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     };
 
     var closeCursor = function (isGlobalStore, cursor, successCB, errorCB) {
-        if (callWithGlobalStoreArgument(arguments)) return;
+        if (checkFirstArg(arguments)) return;
         storeConsole.debug("closeCursor:isGlobalStore=" + isGlobalStore +",cursorId=" + cursor.cursorId);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgCloseCursor",
@@ -835,42 +835,70 @@ cordova.define("com.salesforce.plugin.smartsync", function (require, exports, mo
 
     var exec = require("com.salesforce.util.exec").exec;
 
-    var syncDown = function(target, soupName, options, successCB, errorCB) {
+    // NB: also in smartstore plugin
+    var checkFirstArg = function(argumentsOfCaller) {
+        var args = Array.prototype.slice.call(argumentsOfCaller);
+        if (typeof(args[0]) !== "boolean") {
+            args.unshift(false);
+            argumentsOfCaller.callee.apply(null, args);
+            return true;
+        }
+        else {
+            return false;
+        }
+    };
+    
+
+    var syncDown = function(isGlobalStore, target, soupName, options, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "syncDown",
-             [{"target": target, "soupName": soupName, "options": options}]
+             [{"target": target, "soupName": soupName, "options": options, "isGlobalStore":isGlobalStore}]
             );        
     };
 
-    var reSync = function(syncId, successCB, errorCB) {
+    var reSync = function(isGlobalStore, syncId, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "reSync",
-             [{"syncId": syncId}]
+             [{"syncId": syncId, "isGlobalStore":isGlobalStore}]
             );        
     };
 
 
-    var syncUp = function(target, soupName, options, successCB, errorCB) {
-        // For backward compatibility -- if syncUp is called without target
-        if (typeof(target) === "string") {
-            errorCB  = successCB;
-            successCB = options;
-            options = soupName;
-            soupName = target;
-            target = null;
+    var syncUp = function(isGlobalStore, target, soupName, options, successCB, errorCB) {
+        var args = Array.prototype.slice.call(arguments);
+        // We accept syncUp(soupName, options, successCB, errorCB)
+        if (typeof(args[0]) === "string") {
+            isGlobalStore = false;
+            target = {};
+            soupName = args[0];
+            options = args[1];
+            successCB = args[2];
+            errorCB = args[3];
+        }
+        // We accept syncUp(target, soupName, options, successCB, errorCB)
+        if (typeof(args[0]) === "object") {
+            isGlobalStore = false;
+            target = args[0];
+            soupName = args[1];
+            options = args[2];
+            successCB = args[3];
+            errorCB = args[4];
         }
         target = target || {};
 
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "syncUp",
-             [{"target": target, "soupName": soupName, "options": options}]
+             [{"target": target, "soupName": soupName, "options": options, "isGlobalStore":isGlobalStore}]
             );        
     };
 
-    var getSyncStatus = function(syncId, successCB, errorCB) {
+    var getSyncStatus = function(isGlobalStore, syncId, successCB, errorCB) {
+        if (checkFirstArg(arguments, "boolean", false)) return;
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "getSyncStatus",
-             [{"syncId": syncId}]
+             [{"syncId": syncId, "isGlobalStore":isGlobalStore}]
             );        
     };
 

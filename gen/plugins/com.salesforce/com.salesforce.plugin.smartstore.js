@@ -158,21 +158,21 @@ var buildSmartQuerySpec = function (smartSql, pageSize) {
     return inst;
 };
 
-// Helper function to handle calls missing isGlobalStore argument
-// Return true if isGlobalStore argument was missing and calling function was re-invoked with the additional isGlobalStore argument
-// Return false if isglobalstore argument is present
-var callWithGlobalStoreArgument = function(argumentsOfCaller) {
+// Helper function to handle calls that don't specify isGlobalStore as first argument
+// If missing, the caller is re-invoked with false prepended to the arguments list and true is returned
+// Otherwise, false is returned
+var checkFirstArg = function(argumentsOfCaller) {
     // Turning arguments into array
     var args = Array.prototype.slice.call(argumentsOfCaller);
     // If first argument is not a boolean
     if (typeof(args[0]) !== "boolean") {
-        // Pre-pending isGlobalStore argument (false)
+        // Pre-pending false
         args.unshift(false);
         // Re-invoking function
         argumentsOfCaller.callee.apply(null, args);
         return true;
     }
-    // isGlobalStore argument already present
+    // First argument is a boolean
     else {
         return false;
     }
@@ -181,13 +181,13 @@ var callWithGlobalStoreArgument = function(argumentsOfCaller) {
 
 // ====== Soup manipulation ======
 var getDatabaseSize = function (isGlobalStore, successCB, errorCB) {
-    if (callWithGlobalStoreArgument(arguments)) return;
+    if (checkFirstArg(arguments)) return;
     storeConsole.debug("SmartStore.getDatabaseSize:isGlobalStore=" + isGlobalStore);
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE, "pgGetDatabaseSize", [{"isGlobalStore": isGlobalStore}]);
 };
 
 var registerSoup = function (isGlobalStore, soupName, indexSpecs, successCB, errorCB) {
-    if (callWithGlobalStoreArgument(arguments)) return;
+    if (checkFirstArg(arguments)) return;
     storeConsole.debug("SmartStore.registerSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",indexSpecs=" + JSON.stringify(indexSpecs));
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgRegisterSoup",
@@ -196,7 +196,7 @@ var registerSoup = function (isGlobalStore, soupName, indexSpecs, successCB, err
 };
 
 var removeSoup = function (isGlobalStore, soupName, successCB, errorCB) {
-    if (callWithGlobalStoreArgument(arguments)) return;
+    if (checkFirstArg(arguments)) return;
     storeConsole.debug("SmartStore.removeSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName);
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgRemoveSoup",
@@ -205,7 +205,7 @@ var removeSoup = function (isGlobalStore, soupName, successCB, errorCB) {
 };
 
 var getSoupIndexSpecs = function(isGlobalStore, soupName, successCB, errorCB) {
-    if (callWithGlobalStoreArgument(arguments)) return;
+    if (checkFirstArg(arguments)) return;
     storeConsole.debug("SmartStore.getSoupIndexSpecs:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName);
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgGetSoupIndexSpecs",
@@ -214,7 +214,7 @@ var getSoupIndexSpecs = function(isGlobalStore, soupName, successCB, errorCB) {
 };
 
 var alterSoup = function (isGlobalStore, soupName, indexSpecs, reIndexData, successCB, errorCB) {
-    if (callWithGlobalStoreArgument(arguments)) return;
+    if (checkFirstArg(arguments)) return;
     storeConsole.debug("SmartStore.alterSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",indexSpecs=" + JSON.stringify(indexSpecs));
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgAlterSoup",
@@ -223,7 +223,7 @@ var alterSoup = function (isGlobalStore, soupName, indexSpecs, reIndexData, succ
 };
 
 var reIndexSoup = function (isGlobalStore, soupName, paths, successCB, errorCB) {
-    if (callWithGlobalStoreArgument(arguments)) return;
+    if (checkFirstArg(arguments)) return;
     storeConsole.debug("SmartStore.reIndexSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",paths=" + JSON.stringify(paths));
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgReIndexSoup",
@@ -232,7 +232,7 @@ var reIndexSoup = function (isGlobalStore, soupName, paths, successCB, errorCB) 
 };
 
 var clearSoup = function (isGlobalStore, soupName, successCB, errorCB) {
-    if (callWithGlobalStoreArgument(arguments)) return;
+    if (checkFirstArg(arguments)) return;
     storeConsole.debug("SmartStore.clearSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName);
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgClearSoup",
@@ -247,7 +247,7 @@ var showInspector = function(isGlobalStore) {
 };
 
 var soupExists = function (isGlobalStore, soupName, successCB, errorCB) {
-    if (callWithGlobalStoreArgument(arguments)) return;
+    if (checkFirstArg(arguments)) return;
     storeConsole.debug("SmartStore.soupExists:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName);
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgSoupExists",
@@ -256,7 +256,7 @@ var soupExists = function (isGlobalStore, soupName, successCB, errorCB) {
 };
 
 var querySoup = function (isGlobalStore, soupName, querySpec, successCB, errorCB) {
-    if (callWithGlobalStoreArgument(arguments)) return;
+    if (checkFirstArg(arguments)) return;
     if (querySpec.queryType == "smart") throw new Error("Smart queries can only be run using runSmartQuery");
     storeConsole.debug("SmartStore.querySoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",indexPath=" + querySpec.indexPath);
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
@@ -266,7 +266,7 @@ var querySoup = function (isGlobalStore, soupName, querySpec, successCB, errorCB
 };
 
 var runSmartQuery = function (isGlobalStore, querySpec, successCB, errorCB) {
-    if (callWithGlobalStoreArgument(arguments)) return;
+    if (checkFirstArg(arguments)) return;
     if (querySpec.queryType != "smart") throw new Error("runSmartQuery can only run smart queries");
     storeConsole.debug("SmartStore.runSmartQuery:isGlobalStore=" +isGlobalStore+ ",smartSql=" + querySpec.smartSql);
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
@@ -276,7 +276,7 @@ var runSmartQuery = function (isGlobalStore, querySpec, successCB, errorCB) {
 };
 
 var retrieveSoupEntries = function (isGlobalStore, soupName, entryIds, successCB, errorCB) {
-    if (callWithGlobalStoreArgument(arguments)) return;
+    if (checkFirstArg(arguments)) return;
     storeConsole.debug("SmartStore.retrieveSoupEntries:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",entryIds=" + entryIds);
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgRetrieveSoupEntries",
@@ -285,12 +285,12 @@ var retrieveSoupEntries = function (isGlobalStore, soupName, entryIds, successCB
 };
 
 var upsertSoupEntries = function (isGlobalStore, soupName, entries, successCB, errorCB) {
-    if (callWithGlobalStoreArgument(arguments)) return;
+    if (checkFirstArg(arguments)) return;
     upsertSoupEntriesWithExternalId(isGlobalStore, soupName, entries, "_soupEntryId", successCB, errorCB);
 };
 
 var upsertSoupEntriesWithExternalId = function (isGlobalStore, soupName, entries, externalIdPath, successCB, errorCB) {
-    if (callWithGlobalStoreArgument(arguments)) return;
+    if (checkFirstArg(arguments)) return;
     storeConsole.debug("SmartStore.upsertSoupEntries:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",entries=" + entries.length + ",externalIdPath=" + externalIdPath);
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgUpsertSoupEntries", 
@@ -299,7 +299,7 @@ var upsertSoupEntriesWithExternalId = function (isGlobalStore, soupName, entries
 };
 
 var removeFromSoup = function (isGlobalStore, soupName, entryIds, successCB, errorCB) {
-    if (callWithGlobalStoreArgument(arguments)) return;
+    if (checkFirstArg(arguments)) return;
     storeConsole.debug("SmartStore.removeFromSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",entryIds=" + entryIds);
     isGlobalStore = isGlobalStore || false;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
@@ -310,7 +310,7 @@ var removeFromSoup = function (isGlobalStore, soupName, entryIds, successCB, err
 
 //====== Cursor manipulation ======
 var moveCursorToPageIndex = function (isGlobalStore, cursor, newPageIndex, successCB, errorCB) {
-    if (callWithGlobalStoreArgument(arguments)) return;
+    if (checkFirstArg(arguments)) return;
     storeConsole.debug("moveCursorToPageIndex:isGlobalStore=" + isGlobalStore +",cursorId=" + cursor.cursorId + ",newPageIndex=" + newPageIndex);
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgMoveCursorToPageIndex",
@@ -319,7 +319,7 @@ var moveCursorToPageIndex = function (isGlobalStore, cursor, newPageIndex, succe
 };
 
 var moveCursorToNextPage = function (isGlobalStore, cursor, successCB, errorCB) {
-    if (callWithGlobalStoreArgument(arguments)) return;
+    if (checkFirstArg(arguments)) return;
     var newPageIndex = cursor.currentPageIndex + 1;
     if (newPageIndex >= cursor.totalPages) {
         errorCB(cursor, new Error("moveCursorToNextPage called while on last page"));
@@ -329,7 +329,7 @@ var moveCursorToNextPage = function (isGlobalStore, cursor, successCB, errorCB) 
 };
 
 var moveCursorToPreviousPage = function (isGlobalStore, cursor, successCB, errorCB) {
-    if (callWithGlobalStoreArgument(arguments)) return;
+    if (checkFirstArg(arguments)) return;
     var newPageIndex = cursor.currentPageIndex - 1;
     if (newPageIndex < 0) {
         errorCB(cursor, new Error("moveCursorToPreviousPage called while on first page"));
@@ -339,7 +339,7 @@ var moveCursorToPreviousPage = function (isGlobalStore, cursor, successCB, error
 };
 
 var closeCursor = function (isGlobalStore, cursor, successCB, errorCB) {
-    if (callWithGlobalStoreArgument(arguments)) return;
+    if (checkFirstArg(arguments)) return;
     storeConsole.debug("closeCursor:isGlobalStore=" + isGlobalStore +",cursorId=" + cursor.cursorId);
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgCloseCursor",

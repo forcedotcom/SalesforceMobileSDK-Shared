@@ -30,26 +30,25 @@
  */
 
 var MockSmartSyncPlugin = (function(window) {
-
     // Constructor
-    var module = function() {}; 
-
-    var lastSyncId = 0;
-    var syncs = {};
+    var module = function(isGlobalStore) {
+        this.lastSyncId = 0;
+        this.syncs = {};
+    }; 
 
     // Prototype
     module.prototype = {
         constructor: module,
 
         recordSync: function(type, target, soupName, options) {
-            var syncId = lastSyncId++;
+            var syncId = this.lastSyncId++;
             var sync = {_soupEntryId: syncId, type:type, target:target, soupName:soupName, options: options, status: "RUNNING", progress: 0};
-            syncs[syncId] = sync;
+            this.syncs[syncId] = sync;
             return syncId;
         },
 
         sendUpdate: function(syncId, status, progress, extras) {
-            var sync = syncs[syncId];
+            var sync = this.syncs[syncId];
             sync.status = status;
             sync.progress = progress;
             var event = new CustomEvent("sync", {detail: _.extend(sync, extras)});
@@ -58,7 +57,7 @@ var MockSmartSyncPlugin = (function(window) {
         },
 
         getSyncStatus: function(syncId, successCB, errorCB) {
-            successCB(syncs[syncId]);
+            successCB(this.syncs[syncId]);
         },
 
         syncDown: function(target, soupName, options, successCB, errorCB) {
@@ -73,7 +72,7 @@ var MockSmartSyncPlugin = (function(window) {
 
         actualSyncDown: function(syncId, successCB, errorCB) {
             var self = this;
-            var sync = syncs[syncId];
+            var sync = this.syncs[syncId];
             var target = sync.target;
             var soupName = sync.soupName;
             var options = sync.options;
@@ -195,7 +194,7 @@ var MockSmartSyncPlugin = (function(window) {
             };
 
             cache.init().then(function() {
-                successCB(syncs[syncId]);
+                successCB(self.syncs[syncId]);
 
                 collection.fetch({
                     success: function() {
@@ -207,35 +206,38 @@ var MockSmartSyncPlugin = (function(window) {
                     }
                 });
             });        
-        },
-
-        hookToCordova: function(cordova) {
-            var SMARTSYNC_SERVICE = "com.salesforce.smartsync";
-            var self = this;
-
-            cordova.interceptExec(SMARTSYNC_SERVICE, "syncUp", function (successCB, errorCB, args) {
-                self.syncUp(args[0].target, args[0].soupName, args[0].options, successCB, errorCB);
-            });
-
-            cordova.interceptExec(SMARTSYNC_SERVICE, "syncDown", function (successCB, errorCB, args) {
-                self.syncDown(args[0].target, args[0].soupName, args[0].options, successCB, errorCB); 
-            });
-
-            cordova.interceptExec(SMARTSYNC_SERVICE, "getSyncStatus", function (successCB, errorCB, args) {
-                self.getSyncStatus(args[0].syncId, successCB, errorCB); 
-            });
-
-            cordova.interceptExec(SMARTSYNC_SERVICE, "reSync", function (successCB, errorCB, args) {
-                self.reSync(args[0].syncId, successCB, errorCB); 
-            });
         }
-
     };
 
     // Return module
     return module;
 })(window);
 
-var mockSmartSyncPlugin = new MockSmartSyncPlugin();
-mockSmartSyncPlugin.hookToCordova(cordova);
+var mockSyncManager = new MockSmartSyncPlugin(false);
+var mockGlobalSyncManager = new MockSmartSyncPlugin(true);
+(function (cordova, syncManager, globalSyncManager) {
+    
+    var SMARTSYNC_SERVICE = "com.salesforce.smartsync";
+
+    cordova.interceptExec(SMARTSYNC_SERVICE, "syncUp", function (successCB, errorCB, args) {
+        var mgr = args[0].isGlobalStore ? globalSyncManager : syncManager;
+        mgr.syncUp(args[0].target, args[0].soupName, args[0].options, successCB, errorCB);
+    });
+
+    cordova.interceptExec(SMARTSYNC_SERVICE, "syncDown", function (successCB, errorCB, args) {
+        var mgr = args[0].isGlobalStore ? globalSyncManager : syncManager;
+        mgr.syncDown(args[0].target, args[0].soupName, args[0].options, successCB, errorCB); 
+    });
+
+    cordova.interceptExec(SMARTSYNC_SERVICE, "getSyncStatus", function (successCB, errorCB, args) {
+        var mgr = args[0].isGlobalStore ? globalSyncManager : syncManager;
+        mgr.getSyncStatus(args[0].syncId, successCB, errorCB); 
+    });
+
+    cordova.interceptExec(SMARTSYNC_SERVICE, "reSync", function (successCB, errorCB, args) {
+        var mgr = args[0].isGlobalStore ? globalSyncManager : syncManager;
+        mgr.reSync(args[0].syncId, successCB, errorCB); 
+    });
+
+})(cordova, mockSyncManager, mockGlobalSyncManager);
 

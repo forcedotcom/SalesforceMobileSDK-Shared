@@ -434,14 +434,14 @@ var MockSmartStore = (function(window) {
                 var comparator = matches[5];
                 var compareTo = parseInt(matches[6], 10);
                 var orderField = matches[7] ? matches[8] : null;
-    
+                
                 // Make sure the soup has all the appropriate fields.
                 this.checkSoup(soupName);
                 this.checkIndex(soupName, whereField);
-    
+                
                 var soup = this._soups[soupName];
                 var soupIndexedData = this._soupIndexedData[soupName];
-    
+                
                 // Pull results out from soup iteratively.
                 var results = [];
                 for (var soupEntryId in soup) {
@@ -467,7 +467,7 @@ var MockSmartStore = (function(window) {
                         return ( p1 > p2 ? 1 : (p1 === p2 ? 0 : -1));
                     });
                 }
-    
+                
                 return results;
             }
             
@@ -489,7 +489,7 @@ var MockSmartStore = (function(window) {
                     }
                     catch(err) {
                         throw new Error("SmartQuery for \"" + queryDesc.name + "\" (Example: " +
-                            queryDesc.example + ") had an error executing: " + err.message);
+                                        queryDesc.example + ") had an error executing: " + err.message);
                     }
                 }
             }
@@ -594,7 +594,10 @@ var MockSmartStore = (function(window) {
     return module;
 })(window);
 
-function hookToCordova(cordova, store, globalStore) {
+var mockStore = new MockSmartStore(false);
+var mockGlobalStore = new MockSmartStore(true);
+(function (cordova, store, globalStore) {
+    
     var SMARTSTORE_SERVICE = "com.salesforce.smartstore";
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgGetDatabaseSize", function (successCB, errorCB, args) {
@@ -706,8 +709,5 @@ function hookToCordova(cordova, store, globalStore) {
             successCB("OK");
         }
     });
-}
 
-var mockStore = new MockSmartStore(false);
-var mockGlobalStore = new MockSmartStore(true);
-hookToCordova(cordova, mockStore, mockGlobalStore);
+})(cordova, mockStore, mockGlobalStore);
