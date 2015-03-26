@@ -32,6 +32,7 @@
 var MockSmartSyncPlugin = (function(window) {
     // Constructor
     var module = function(isGlobalStore) {
+        this.isGlobalStore = isGlobalStore;
         this.lastSyncId = 0;
         this.syncs = {};
     }; 
@@ -48,6 +49,7 @@ var MockSmartSyncPlugin = (function(window) {
         },
 
         sendUpdate: function(syncId, status, progress, extras) {
+            extras = _.extend({isGlobalStore: this.isGlobalStore});
             var sync = this.syncs[syncId];
             sync.status = status;
             sync.progress = progress;
@@ -76,7 +78,7 @@ var MockSmartSyncPlugin = (function(window) {
             var target = sync.target;
             var soupName = sync.soupName;
             var options = sync.options;
-            var cache = new Force.StoreCache(soupName);
+            var cache = new Force.StoreCache(soupName, null, null, this.isGlobalStore);
             var collection = new Force.SObjectCollection();
             var progress = 0;
             collection.cache = cache;
@@ -135,7 +137,7 @@ var MockSmartSyncPlugin = (function(window) {
         syncUp: function(target, soupName, options, successCB, errorCB) {
             var self = this;
             var syncId = self.recordSync("syncUp", target, soupName, options);
-            var cache = new Force.StoreCache(soupName);
+            var cache = new Force.StoreCache(soupName,  null, null, this.isGlobalStore);
             var collection = new Force.SObjectCollection();
             var numberRecords;
             collection.cache = cache;

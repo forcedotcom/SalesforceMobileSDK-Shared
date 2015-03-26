@@ -34,7 +34,7 @@ var SmartSyncTestSuite = function () {
     SFTestSuite.call(this, "SmartSyncTestSuite");
 
     // To run specific tests
-    // this.testsToRun = ["testSyncUpLocallyDeletedWithNoOverwrite", "testSyncUpLocallyUpdatedWithNoOverwrite"];
+    // this.testsToRun = ["testSyncUpLocallyUpdatedWithGlobalStore"];
 };
 
 // We are sub-classing SFTestSuite
@@ -2679,6 +2679,44 @@ SmartSyncTestSuite.prototype.testSyncDown = function() {
 };
 
 /** 
+ * TEST smartsyncplugin sync down to global store soup
+ */
+SmartSyncTestSuite.prototype.testSyncDownToGlobalStore = function() {
+    console.log("# In SmartSyncTestSuite.testSyncDownToGlobalStore");
+    var self = this;
+    var idToName = {};
+    var soupName = "testSyncDownToGlobalStore";
+    var cache;
+
+    Force.smartstoreClient.removeSoup(soupName)
+        .then(function() {
+            console.log("## Initialization of StoreCache's");
+            cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ], null /* default id */, true /* global */);
+            return $.when(cache.init());
+        })
+        .then(function() { 
+            console.log("## Direct creation against server");    
+            return createRecords(idToName, "testSyncDown", 3);
+        })
+        .then(function() {
+            console.log("## Calling sync down");
+            return self.trySyncDown(cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
+        })
+        .then(function() {
+            console.log("## Check both stores");
+            return $.when(Force.smartstoreClient.soupExists(false, soupName), Force.smartstoreClient.soupExists(true, soupName));
+        })
+        .then(function(exists, existsGlobal) {
+            QUnit.equals(exists, false, "soup should not exist in regular store");
+            QUnit.equals(existsGlobal, true, "soup should exist in global store");
+            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(true /* global */, soupName));
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
+/** 
  * TEST smartsyncplugin sync down with merge mode leave-if-changed
  */
 SmartSyncTestSuite.prototype.testSyncDownWithNoOverwrite = function() {
@@ -2849,7 +2887,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdated = function() {
         })
         .then(function(records) {
             console.log("## Calling sync up");
-            return self.trySyncUp(soupName, options);
+            return self.trySyncUp(false /* regular store */, soupName, options);
         })
         .then(function() {
             console.log("## Checking cache");
@@ -2868,6 +2906,73 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdated = function() {
         })
         .then(function() {
             return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
+/** 
+ * TEST smartsyncplugin sync up with locally updated records in global store soup
+ */
+SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithGlobalStore = function() {
+    console.log("# In SmartSyncTestSuite.testSyncUpLocallyUpdatedWithGlobalStore");
+    var self = this;
+    var idToName = {};
+    var updatedRecords;
+    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE};
+    var soupName = "testSyncUpLocallyUpdatedWithGlobalStore";
+    var cache;
+
+    Force.smartstoreClient.removeSoup(soupName)
+        .then(function() {
+            console.log("## Initialization of StoreCache's");
+            cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ], null /* default id*/, true /* global */);
+            return $.when(cache.init());
+        })
+        .then(function() { 
+            console.log("## Direct creation against server");    
+            return createRecords(idToName, "testSyncUpLocallyUpdatedWithGlobalStore", 3);
+        })
+        .then(function() {
+            console.log("## Calling sync down");
+            return self.trySyncDown(cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
+        })
+        .then(function() {
+            console.log("## Updating local records");
+            updatedRecords = [];
+            _.each(_.keys(idToName), function(id) {
+                updatedRecords.push({Id:id, Name:idToName[id] + "Updated", __locally_updated__:true});
+            });
+            return cache.saveAll(updatedRecords);
+        })
+        .then(function(records) {
+            console.log("## Calling sync up");
+            return self.trySyncUp(true /* global store */, soupName, options);
+        })
+        .then(function() {
+            console.log("## Check both stores");
+            return $.when(Force.smartstoreClient.soupExists(false, soupName), Force.smartstoreClient.soupExists(true, soupName));
+        })
+        .then(function(exists, existsGlobal) {
+            QUnit.equals(exists, false, "soup should not exist in regular store");
+            QUnit.equals(existsGlobal, true, "soup should exist in global store");
+            console.log("## Checking cache");
+            return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from cache");
+            QUnit.equals(result.records.length, 3, "Expected 3 records");
+            _.each(result.records, function(record) {
+                QUnit.ok(!record.__local__, "Record should no longer marked as local");
+                QUnit.ok(!record.__locally_updated__, "Record should no longer marked as updated");
+            });
+
+            console.log("## Checking server");
+            return checkServerMultiple(updatedRecords);
+        })
+        .then(function() {
+            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(true /* global */, soupName));
         })
         .then(function() {
             self.finalizeTest();
@@ -2923,7 +3028,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithNoOverwrite = function(
         })
         .then(function() {
             console.log("## Calling sync up");
-            return self.trySyncUp(soupName, options);
+            return self.trySyncUp(false /* regular store */, soupName, options);
         })
         .then(function() {
             console.log("## Checking cache");
@@ -2984,7 +3089,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
         })
         .then(function(records) {
             console.log("## Calling sync up");
-            return self.trySyncUp(soupName, options);
+            return self.trySyncUp(false /* regular store */, soupName, options);
         })
         .then(function() {
             console.log("## Checking cache");
@@ -3057,7 +3162,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeletedWithNoOverwrite = function(
         })
         .then(function() {
             console.log("## Calling sync up");
-            return self.trySyncUp(soupName, options);
+            return self.trySyncUp(false /* regular store */, soupName, options);
         })
         .then(function() {
             console.log("## Checking cache");
@@ -3113,7 +3218,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyCreated = function() {
         })
         .then(function(records) {
             console.log("## Calling sync up");
-            return self.trySyncUp(soupName, options);
+            return self.trySyncUp(false /* regular store */, soupName, options);
         })
         .then(function() {
             console.log("## Checking cache");
@@ -3401,11 +3506,12 @@ var tryConflictDetection = function(message, cache, cacheForOriginals, theirs, y
  Helper function to run sync down and consume all status updates until done
  */
 SmartSyncTestSuite.prototype.trySyncDown = function(cache, soupName, idToName, mergeMode) {
+    var isGlobalStore = cache.isGlobalStore;
     var options = {mergeMode: mergeMode};
     var target = {type:"soql", query:"SELECT Id, Name, LastModifiedDate FROM Account WHERE Id IN ('" +  _.keys(idToName).join("','") + "') ORDER BY Name"};
     var numberRecords = _.keys(idToName).length;
     var syncDownId;
-    return this.syncDown(target, soupName, options)
+    return this.syncDown(isGlobalStore, target, soupName, options)
         .then(function(sync) {
             console.log("## Checking sync");
             syncDownId = sync._soupEntryId;
@@ -3414,7 +3520,7 @@ SmartSyncTestSuite.prototype.trySyncDown = function(cache, soupName, idToName, m
         })
         .then(function(event) {
             console.log("## Checking event");
-            assertContains(event.detail, {type:"syncDown", target: target, status:"DONE", progress:100, totalSize: numberRecords, soupName: soupName, options:options});
+            assertContains(event.detail, {type:"syncDown", target: target, status:"DONE", progress:100, totalSize: numberRecords, soupName: soupName, options:options, isGlobalStore:isGlobalStore});
 
             console.log("## Checking cache");
             return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:numberRecords});
@@ -3457,8 +3563,9 @@ SmartSyncTestSuite.prototype.tryReSync = function(cache, soupName, idToName, syn
 /**
  Helper function to run sync up and consume all status updates until done
  */
-SmartSyncTestSuite.prototype.trySyncUp = function(soupName, options) {
-    return this.syncUp(soupName, options)
+SmartSyncTestSuite.prototype.trySyncUp = function(isGlobalStore, soupName, options) {
+    var target = null;
+    return this.syncUp(isGlobalStore, target, soupName, options)
         .then(function(sync) {
             console.log("## Checking sync");
             assertContains(sync, {type:"syncUp", options: options, status:"RUNNING", progress:0, soupName: soupName});
@@ -3466,7 +3573,7 @@ SmartSyncTestSuite.prototype.trySyncUp = function(soupName, options) {
         })
         .then(function(event) {
             console.log("## Checking event");
-            assertContains(event.detail, {type:"syncUp", options: options, status:"DONE", progress:100, soupName: soupName});
+            assertContains(event.detail, {type:"syncUp", options: options, status:"DONE", progress:100, soupName: soupName, isGlobalStore: isGlobalStore});
         });
 };
 
