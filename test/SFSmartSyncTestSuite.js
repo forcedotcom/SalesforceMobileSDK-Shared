@@ -463,6 +463,71 @@ SmartSyncTestSuite.prototype.testStoreCacheAddLocalFields = function() {
     this.finalizeTest();
 }
 
+/** 
+ * TEST Force.StoreCache backed by global store
+ */
+SmartSyncTestSuite.prototype.testStoreCacheWithGlobalStore = function() {
+    console.log("# In SmartSyncTestSuite.testStoreCacheWithGlobalStore");
+    var self = this;
+    var cache;
+    var cacheGlobal;
+    var soupName = "testSoupForStoreCache";
+    var resultSet;
+    var GLOBAL_STORE = true;
+    var REGULAR_STORE = false;
+    var indexSpecs = [ {path:"Name", type:"string"}];
+    var agent007 = {Id:"007", Name:"JamesBond"};
+    var agent008 = {Id:"008", Name:"Vilain"};
+    var querySpec007 = {queryType:"exact", indexPath:"Name", matchKey:"JamesBond", order:"ascending", pageSize:1}
+    var querySpec008 = {queryType:"exact", indexPath:"Name", matchKey:"Vilain", order:"ascending", pageSize:1}
+
+    $.when(Force.smartstoreClient.removeSoup(REGULAR_STORE, soupName),
+           Force.smartstoreClient.removeSoup(GLOBAL_STORE, soupName))
+        .then(function() {
+            console.log("## Initialization of StoreCache's");
+            cache = new Force.StoreCache(soupName, indexSpecs, null, REGULAR_STORE);
+            cacheGlobal = new Force.StoreCache(soupName, indexSpecs, null, GLOBAL_STORE);
+            return $.when(cache.init(), cacheGlobal.init());
+        })
+        .then(function() {
+            console.log("## Save record into regular cache");
+            return cache.save(agent007);
+        })
+        .then(function() {
+            console.log("## Looking for record in both caches");
+            return $.when(cache.find(querySpec007), cacheGlobal.find(querySpec007));
+        })
+        .then(function(result, resultGlobal) {
+            console.log("## Checking result from regular cache");
+            QUnit.equals(result.records.length, 1);
+            assertContains(result.records[0], agent007);
+            console.log("## Checking result from global cache");
+            QUnit.equals(resultGlobal.records.length, 0);
+            console.log("## Save record into global cache");
+            return cacheGlobal.save(agent008);
+        })
+        .then(function() {
+            console.log("## Looking for record in both caches");
+            return $.when(cache.find(querySpec008), cacheGlobal.find(querySpec008));
+        })
+        .then(function(result, resultGlobal) {
+            console.log("## Checking result from regular cache");
+            QUnit.equals(result.records.length, 0);
+            console.log("## Checking result from global cache");
+            QUnit.equals(resultGlobal.records.length, 1);
+            assertContains(resultGlobal.records[0], agent008);
+            console.log("## Save record into global cache");
+
+            // Cleaning up 
+            return $.when(Force.smartstoreClient.removeSoup(REGULAR_STORE, soupName),
+                          Force.smartstoreClient.removeSoup(GLOBAL_STORE, soupName))
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+}
+
+
 //-------------------------------------------------------------------------------------------------------
 //
 // Tests for Force.SObjectType
