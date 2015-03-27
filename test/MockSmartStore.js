@@ -297,11 +297,7 @@ var MockSmartStore = (function(window) {
                 { 
                     name: "Query with variable select fields and where clause {soup:field} IN list of values", 
                     example: "SELECT {soupName:selectField1}, {soupName:selectField2} FROM {soupName} WHERE {soupName:whereField} IN (values)", 
-                    // NOTE: This regex is designed to capture the SELECT clause (e.g. "{soup:field1}, {soup:field2}") in one of the matches.
-                    // In JS, the regex engine doesn't like to give you a variable number of groups in a single pass, so you have to use a 
-                    // RegExp object and execute in a loop. This should support an indefinite number of selected fields. It uses backreferences
-                    // to ensure that the soupName is the consistent.
-                    pattern: /SELECT ({([\.\w]*):[\.\w]*}((?:\s*?,\s*?){\2:[\.\w]*})*) FROM {\2} WHERE {\2:(.*)} IN \((.*)\)/i, 
+                    pattern: /SELECT (.*) FROM {(.*)} WHERE {(.*):(.*)} IN \((.*)\)/i, 
                     processor: this._smartQuerySoupIn 
                 },
                 { 
@@ -327,54 +323,62 @@ var MockSmartStore = (function(window) {
         },
 
         _smartQuerySoupIn : function(queryDesc, matches, smartSql) {
-            // Note: No need to check that the soupName is consistent throughout.  
-            // queryDesc.pattern has backreferences that should take care of that.
-
-            // Setup Regex for the SELECT colums.
-            // Looks for (example): {soupName:field1}, {soupName:field2}, {soupName:field3}
-            var selectPattern = /{([\.\w]*?):([\.\w]*?)}[\s,]*/ig;
-            var selectRegex = new RegExp(selectPattern);
-            var fieldMatch, selectFields = [];
-
-            // Gather the parameters.
             var soupName = matches[2];
-            while (fieldMatch = selectRegex.exec(matches[1])) {
-                selectFields.push(fieldMatch[2]);
-            }
+            var selectFields = this._getSelectFields(soupName, matches[1]);
             var whereField = matches[4];
             var values = matches[5].split(",");
 
-            var i;
-            for (i = 0; i < values.length; i++) {
-                values[i] = values[i].split("'")[1]; // getting rid of surrounding '
+            if (selectFields != null) {
+                var i;
+                for (i = 0; i < values.length; i++) {
+                    values[i] = values[i].split("'")[1]; // getting rid of surrounding '
+                }
+
+                // Make sure the soup has all the appropriate fields.
+                this.checkSoup(soupName);
+                for (i = 0; i < selectFields.length; i++) {
+                    this.checkIndex(soupName, selectFields[i]);
+                }
+                this.checkIndex(soupName, whereField);
+
+                var soup = this._soups[soupName];
+                var soupIndexedData = this._soupIndexedData[soupName];
+
+                // Pull results out from soup iteratively.
+                var results = [];
+                for (var soupEntryId in soup) {
+                    var soupElt = soup[soupEntryId];
+                    var value = (whereField === "_soupEntryId" ? soupEntryId : soupIndexedData[soupEntryId][whereField]);
+                    if (values.indexOf(value) >= 0) {
+                        var self = this;
+                        var row = [];
+                        selectFields.forEach(function(selectField) {
+                            row.push(selectField === "_soup" ? soupElt : (selectField === "_soupEntryId" ? soupEntryId : soupIndexedData[soupEntryId][selectField]));
+                        })
+                        results.push(row);
+                    }
+                }
+
+                return results;
             }
+        },
 
-            // Make sure the soup has all the appropriate fields.
-            this.checkSoup(soupName);
-            for (i = 0; i < selectFields.length; i++) {
-                this.checkIndex(soupName, selectFields[i]);
-            }
-            this.checkIndex(soupName, whereField);
-
-            var soup = this._soups[soupName];
-            var soupIndexedData = this._soupIndexedData[soupName];
-
-            // Pull results out from soup iteratively.
-            var results = [];
-            for (var soupEntryId in soup) {
-                var soupElt = soup[soupEntryId];
-                var value = (whereField === "_soupEntryId" ? soupEntryId : soupIndexedData[soupEntryId][whereField]);
-                if (values.indexOf(value) >= 0) {
-                    var self = this;
-                    var row = [];
-                    selectFields.forEach(function(selectField) {
-                        row.push(selectField === "_soup" ? soupElt : (selectField === "_soupEntryId" ? soupEntryId : soupIndexedData[soupEntryId][selectField]));
-                    })
-                    results.push(row);
+        // Expect comma separated of {soupName:y}, return array with the values of y
+        _getSelectFields: function(soupName, s) {
+            var fields = [];
+            var fieldPattern = /{(.*):(.*)}/;
+            var soupFields = s.split(",");
+            for (var i=0; i<soupFields.length; i++) {
+                var soupField = soupFields[i].trim();
+                var matches = soupField.match(fieldPattern);
+                if (matches == null || matches[1] !== soupName) {
+                    return null;
+                }
+                else {
+                    fields.push(matches[2]);
                 }
             }
-
-            return results;
+            return fields;
         },
 
         _smartQuerySoupLikeOrdered : function(queryDesc, matches, smartSql) {
@@ -411,8 +415,6 @@ var MockSmartStore = (function(window) {
 
                 return results;
             }
-
-            throw new Error("SmartQuery for \"" + queryDesc.name + "\" not supported by MockSmartStore: " + smartSql);
         },
 
         _smartQuerySoupCount : function(queryDesc, matches, smartSql) {
@@ -470,8 +472,6 @@ var MockSmartStore = (function(window) {
                 
                 return results;
             }
-            
-            throw new Error("SmartQuery for \"" + queryDesc.name + "\" not supported by MockSmartStore: " + smartSql);
         },        
 
         smartQuerySoupFull: function(querySpec) {
@@ -484,12 +484,13 @@ var MockSmartStore = (function(window) {
                 queryDesc = supportedQueries[i];
                 var matches = smartSql.match(queryDesc.pattern);
                 if (matches !== null) {
-                    try {
-                        return queryDesc.processor.call(this, queryDesc, matches, smartSql);
-                    }
-                    catch(err) {
+                    var results = queryDesc.processor.call(this, queryDesc, matches, smartSql);
+                    if (results == null) {
                         throw new Error("SmartQuery for \"" + queryDesc.name + "\" (Example: " +
-                                        queryDesc.example + ") had an error executing: " + err.message);
+                                        queryDesc.example + ") had an error executing: " + smartSql);
+                    }
+                    else {
+                        return results;
                     }
                 }
             }
