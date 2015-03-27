@@ -1028,11 +1028,14 @@ SmartStoreTestSuite.prototype.testSmartQueryWithWhereLikeClause  = function() {
             return self.runSmartQuery(querySpec);
         })
         .pipe(function(cursor) {
-            QUnit.equal(2, cursor.currentPageOrderedEntries.length, "check number of rows returned");
+            var rows = cursor.currentPageOrderedEntries;
+            QUnit.equal(2, rows.length, "check number of rows returned");
+            var actualNames = [rows[0][0].Name, rows[1][0].Name];
+            actualNames.sort();
 
             // Should return 2nd and 3rd entries.
-            QUnit.equal(JSON.stringify([testEntries[1]]), JSON.stringify(cursor.currentPageOrderedEntries[0]), "check currentPageOrderedEntries[0]");
-            QUnit.equal(JSON.stringify([testEntries[2]]), JSON.stringify(cursor.currentPageOrderedEntries[1]), "check currentPageOrderedEntries[1]");
+            QUnit.equal("Pro Bono Bonobo",  actualNames[0]);
+            QUnit.equal("Robot",  actualNames[1]);
             return self.closeCursor(cursor);
         })
         .done(function(param) { 
@@ -1057,12 +1060,14 @@ SmartStoreTestSuite.prototype.testSmartQueryWithWhereLikeClauseOrdered  = functi
             return self.runSmartQuery(querySpec);
         })
         .pipe(function(cursor) {
-            QUnit.equal(3, cursor.currentPageOrderedEntries.length, "check number of rows returned");
+            var rows = cursor.currentPageOrderedEntries;
+            QUnit.equal(3, rows.length, "check number of rows returned");
+            var actualNames = [rows[0][0].Name, rows[1][0].Name, rows[2][0].Name];
 
-            // Should return all entries but not in the default order.
-            QUnit.equal(JSON.stringify([testEntries[1]]), JSON.stringify(cursor.currentPageOrderedEntries[0]), "check currentPageOrderedEntries[0]");
-            QUnit.equal(JSON.stringify([testEntries[2]]), JSON.stringify(cursor.currentPageOrderedEntries[1]), "check currentPageOrderedEntries[1]");
-            QUnit.equal(JSON.stringify([testEntries[0]]), JSON.stringify(cursor.currentPageOrderedEntries[2]), "check currentPageOrderedEntries[2]");
+            // Should return all entries sorted
+            QUnit.equal("Pro Bono Bonobo",  actualNames[0]);
+            QUnit.equal("Robot",  actualNames[1]);
+            QUnit.equal("Todd Stellanova", actualNames[2]);
             return self.closeCursor(cursor);
         })
         .done(function(param) { 
