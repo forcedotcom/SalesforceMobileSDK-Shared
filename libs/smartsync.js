@@ -89,12 +89,12 @@
 
     // Init function
     // * creds: credentials returned by authenticate call
-    // * apiVersion: apiVersion to use, when null, v31.0 (Summer '14) is used
+    // * apiVersion: apiVersion to use, when null, v33.0 (Spring '15) is used
     // * innerForcetkClient: [Optional] A fully initialized forcetkClient to be re-used internally in the SmartSync library
     // * reauth: auth module for the refresh flow
     Force.init = function(creds, apiVersion, innerForcetkClient, reauth) {
         if (!apiVersion || apiVersion == null) {
-            apiVersion = "v31.0";
+            apiVersion = "v33.0";
         }
 
         if(!innerForcetkClient || innerForcetkClient == null) {
@@ -189,10 +189,11 @@
     // A __local__ boolean field is added automatically on save
     // Index are created for keyField and __local__
     //
-    Force.StoreCache = function(soupName, additionalIndexSpecs, keyField) {
+    Force.StoreCache = function(soupName, additionalIndexSpecs, keyField, isGlobalStore) {
         this.soupName = soupName;
         this.keyField = keyField || "Id";
         this.additionalIndexSpecs = additionalIndexSpecs || [];
+        this.isGlobalStore = isGlobalStore || false;
     };
 
     _.extend(Force.StoreCache.prototype, {
@@ -201,7 +202,7 @@
             if (smartstoreClient == null) return;
             var indexSpecs = _.union([{path:this.keyField, type:"string"}, {path:"__local__", type:"string"}],
                                      this.additionalIndexSpecs);
-            return smartstoreClient.registerSoup(this.soupName, indexSpecs);
+            return smartstoreClient.registerSoup(this.isGlobalStore, this.soupName, indexSpecs);
         },
 
         // Return promise which retrieves cached value for the given key
@@ -225,10 +226,10 @@
                 return true;
             };
 
-            return smartstoreClient.querySoup(this.soupName, querySpec)
+            return smartstoreClient.querySoup(this.isGlobalStore, this.soupName, querySpec)
                 .then(function(cursor) {
                     if (cursor.currentPageOrderedEntries.length == 1) record = cursor.currentPageOrderedEntries[0];
-                    return smartstoreClient.closeCursor(cursor);
+                    return smartstoreClient.closeCursor(that.isGlobalStore, cursor);
                 })
                 .then(function() {
                     // if the cached record doesn't have all the field we are interested in the return null
@@ -270,7 +271,7 @@
             return mergeIfRequested()
                 .then(function(record) {
                     record = that.addLocalFields(record);
-                    return smartstoreClient.upsertSoupEntriesWithExternalId(that.soupName, [ record ], that.keyField)
+                    return smartstoreClient.upsertSoupEntriesWithExternalId(that.isGlobalStore, that.soupName, [ record ], that.keyField)
                 })
                 .then(function(records) {
                     return records[0];
@@ -304,14 +305,14 @@
 
                     var querySpec = navigator.smartstore.buildSmartQuerySpec(smartSql, records.length);
 
-                    return smartstoreClient.runSmartQuery(querySpec)
+                    return smartstoreClient.runSmartQuery(that.isGlobalStore, querySpec)
                         .then(function(cursor) {
                             // smart query result will look like [[soupElt1], ...]
                             cursor.currentPageOrderedEntries = _.flatten(cursor.currentPageOrderedEntries);
                             _.each(cursor.currentPageOrderedEntries, function(oldRecord) {
                                 oldRecords[oldRecord[that.keyField]] = oldRecord;
                             });
-                            return smartstoreClient.closeCursor(cursor);
+                            return smartstoreClient.closeCursor(that.isGlobalStore, cursor);
                         })
                         .then(function() {
                             return _.map(records, function(record) {
@@ -332,7 +333,7 @@
                         return that.addLocalFields(record);
                     });
 
-                    return smartstoreClient.upsertSoupEntriesWithExternalId(that.soupName, records, that.keyField);
+                    return smartstoreClient.upsertSoupEntriesWithExternalId(that.isGlobalStore, that.soupName, records, that.keyField);
                 });
         },
 
@@ -346,9 +347,10 @@
         // }
         // XXX we don't have totalSize
         find: function(querySpec) {
+            var cache = this;
             var closeCursorIfNeeded = function(cursor) {
                 if ((cursor.currentPageIndex + 1) == cursor.totalPages) {
-                    return smartstoreClient.closeCursor(cursor).then(function() {
+                    return smartstoreClient.closeCursor(cache.isGlobalStore, cursor).then(function() {
                         return cursor;
                     });
                 }
@@ -369,7 +371,7 @@
                         var that = this;
                         if (that.hasMore()) {
                             // Move cursor to the next page and update records property
-                            return smartstoreClient.moveCursorToNextPage(cursor)
+                            return smartstoreClient.moveCursorToNextPage(cache.isGlobalStore, cursor)
                             .then(closeCursorIfNeeded)
                             .then(function(c) {
                                 cursor = c;
@@ -383,7 +385,7 @@
                     },
 
                     closeCursor: function() {
-                        return smartstoreClient.closeCursor(cursor)
+                        return smartstoreClient.closeCursor(cache.isGlobalStore, cursor)
                             .then(function() { cursor = null; });
                     }
                 }
@@ -391,14 +393,14 @@
 
             var runQuery = function(soupName, querySpec) {
                 if (querySpec.queryType === "smart") {
-                    return smartstoreClient.runSmartQuery(querySpec).then(function(cursor) {
+                    return smartstoreClient.runSmartQuery(cache.isGlobalStore, querySpec).then(function(cursor) {
                         // smart query result will look like [[soupElt1], ...]
                         cursor.currentPageOrderedEntries = _.flatten(cursor.currentPageOrderedEntries);
                         return cursor;
                     })
                 }
                 else {
-                    return smartstoreClient.querySoup(soupName, querySpec)
+                    return smartstoreClient.querySoup(cache.isGlobalStore, soupName, querySpec)
                 }
             }
 
@@ -414,16 +416,16 @@
             var that = this;
             var querySpec = navigator.smartstore.buildExactQuerySpec(this.keyField, key);
             var soupEntryId = null;
-            return smartstoreClient.querySoup(this.soupName, querySpec)
+            return smartstoreClient.querySoup(that.isGlobalStore, this.soupName, querySpec)
                 .then(function(cursor) {
                     if (cursor.currentPageOrderedEntries.length == 1) {
                         soupEntryId = cursor.currentPageOrderedEntries[0]._soupEntryId;
                     }
-                    return smartstoreClient.closeCursor(cursor);
+                    return smartstoreClient.closeCursor(that.isGlobalStore, cursor);
                 })
                 .then(function() {
                     if (soupEntryId != null) {
-                        return smartstoreClient.removeFromSoup(that.soupName, [ soupEntryId ])
+                        return smartstoreClient.removeFromSoup(that.isGlobalStore, that.soupName, [ soupEntryId ])
                     }
                     return null;
                 })

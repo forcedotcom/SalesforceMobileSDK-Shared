@@ -30,26 +30,27 @@
  */
 
 var MockSmartSyncPlugin = (function(window) {
-
     // Constructor
-    var module = function() {}; 
-
-    var lastSyncId = 0;
-    var syncs = {};
+    var module = function(isGlobalStore) {
+        this.isGlobalStore = isGlobalStore;
+        this.lastSyncId = 0;
+        this.syncs = {};
+    }; 
 
     // Prototype
     module.prototype = {
         constructor: module,
 
         recordSync: function(type, target, soupName, options) {
-            var syncId = lastSyncId++;
-            var sync = {syncId: syncId, type:type, target:target, soupName:soupName, options: options, status: "RUNNING", progress: 0};
-            syncs[syncId] = sync;
+            var syncId = this.lastSyncId++;
+            var sync = {_soupEntryId: syncId, type:type, target:target, soupName:soupName, options: options, status: "RUNNING", progress: 0};
+            this.syncs[syncId] = sync;
             return syncId;
         },
 
         sendUpdate: function(syncId, status, progress, extras) {
-            var sync = syncs[syncId];
+            extras = _.extend({isGlobalStore: this.isGlobalStore});
+            var sync = this.syncs[syncId];
             sync.status = status;
             sync.progress = progress;
             var event = new CustomEvent("sync", {detail: _.extend(sync, extras)});
@@ -58,7 +59,7 @@ var MockSmartSyncPlugin = (function(window) {
         },
 
         getSyncStatus: function(syncId, successCB, errorCB) {
-            successCB(syncs[syncId]);
+            successCB(this.syncs[syncId]);
         },
 
         syncDown: function(target, soupName, options, successCB, errorCB) {
@@ -67,13 +68,29 @@ var MockSmartSyncPlugin = (function(window) {
                 return;
             }
 
+            var syncId = this.recordSync("syncDown", target, soupName, options);
+            this.actualSyncDown(syncId, successCB, errorCB);
+        },
+
+        actualSyncDown: function(syncId, successCB, errorCB) {
             var self = this;
-            var syncId = self.recordSync("syncDown", target, soupName, options);
-            var cache = new Force.StoreCache(soupName);
+            var sync = this.syncs[syncId];
+            var target = sync.target;
+            var soupName = sync.soupName;
+            var options = sync.options;
+            var cache = new Force.StoreCache(soupName, null, null, this.isGlobalStore);
             var collection = new Force.SObjectCollection();
             var progress = 0;
             collection.cache = cache;
-            collection.config = target;
+
+            // Resync?
+            var maxTimeStamp = sync.maxTimeStamp;
+            if (target.type == "soql" && _.isNumber(maxTimeStamp) && maxTimeStamp > 0) {
+                collection.config = {type:"soql", query: self.addFilterForReSync(target.query, maxTimeStamp)};
+            }
+            else {
+                collection.config = target;
+            }
 
             var onFetch = function() {
                 progress += (100 - progress) / 2; // bogus but we don't have the totalSize
@@ -82,6 +99,10 @@ var MockSmartSyncPlugin = (function(window) {
                     self.sendUpdate(syncId, "RUNNING", progress);
                 }
                 else {
+                    if (target.type == "soql") {
+                        sync.maxTimeStamp = _.max(_.map(_.pluck(_.pluck(collection.models, "attributes"), "LastModifiedDate"), function(d) { return (new Date(d)).getTime(); }));
+                    }
+                    sync.totalSize = collection.models.length;
                     self.sendUpdate(syncId, "DONE", 100);
                 }
             };
@@ -89,7 +110,7 @@ var MockSmartSyncPlugin = (function(window) {
 
             self.sendUpdate(syncId, "RUNNING", 0);
             cache.init().then(function() {
-                successCB(syncs[syncId]);
+                successCB(sync);
 
                 collection.fetch({
                     success: onFetch,
@@ -101,10 +122,22 @@ var MockSmartSyncPlugin = (function(window) {
             });
         },
 
-        syncUp: function(soupName, options, successCB, errorCB) {
+        reSync: function(syncId, successCB, errorCB) {
+            this.actualSyncDown(syncId, successCB, errorCB);
+        },
+
+        addFilterForReSync: function(query, maxTimeStamp) {
+            var extraPredicate = "LastModifiedDate > " + (new Date(maxTimeStamp)).toISOString();
+            var modifiedQuery = query.toLowerCase().indexOf(" where ") > 0
+                ? query.replace(/( [wW][hH][eE][rR][eE] )/, "$1" + extraPredicate + " and ")
+                : query.replace(/( [fF][rR][oO][mM][ ]+[^ ]*)/, "$1 where " + extraPredicate);
+            return modifiedQuery;
+        },
+
+        syncUp: function(target, soupName, options, successCB, errorCB) {
             var self = this;
-            var syncId = self.recordSync("syncUp", null, soupName, options);
-            var cache = new Force.StoreCache(soupName);
+            var syncId = self.recordSync("syncUp", target, soupName, options);
+            var cache = new Force.StoreCache(soupName,  null, null, this.isGlobalStore);
             var collection = new Force.SObjectCollection();
             var numberRecords;
             collection.cache = cache;
@@ -125,20 +158,45 @@ var MockSmartSyncPlugin = (function(window) {
                     cacheMode: Force.CACHE_MODE.SERVER_FIRST,
                     mergeMode: Force.MERGE_MODE.OVERWRITE,
                     success: function() {
-                        sync();
+                        sync(); // Next record
                     },
                     error: function() {
-                        self.sendUpdate(syncId, "FAILED", 0, {recordId: record.id}); // or should we update the cached record with __sync_failed__ = true                  
-                        sync();
+                        self.sendUpdate(syncId, "FAILED", 0, {recordId: record.id});
+                        sync(); // Next record
                     }
                 };
 
+                if (options.mergeMode == "LEAVE_IF_CHANGED" && record.get("LastModifiedDate")) {
+                    // Getting LastModifiedDate from record on server
+                    var serverRecord = new Force.SObject();
+                    serverRecord.sobjectType = record.sobjectType;
+                    serverRecord.id = record.id;
+                    serverRecord.fetch({
+                        success: function() {
+                            if (serverRecord.get("LastModifiedDate") > record.get("LastModifiedDate")) {
+                                // Record has changed, leave it alone
+                                console.log("Record " + record.id + " has changed on server - leaving unchanged");
+                                sync(); // Next record
+                            }
 
-                return record.get("__locally_deleted__") ? record.destroy(saveOptions) : record.save(null, saveOptions);
+                            else {
+                                // Record hasn't change, save over
+                                record.get("__locally_deleted__") ? record.destroy(saveOptions) : record.save(null, saveOptions);
+                            }
+                        },
+                        error: function() {
+                            self.sendUpdate(syncId, "FAILED", 0, {recordId: record.id});
+                            sync(); // Next record
+                        }
+                    });
+                }
+                else {
+                    record.get("__locally_deleted__") ? record.destroy(saveOptions) : record.save(null, saveOptions);
+                }
             };
 
             cache.init().then(function() {
-                successCB(syncs[syncId]);
+                successCB(self.syncs[syncId]);
 
                 collection.fetch({
                     success: function() {
@@ -150,31 +208,38 @@ var MockSmartSyncPlugin = (function(window) {
                     }
                 });
             });        
-        },
-
-        hookToCordova: function(cordova) {
-            var SMARTSYNC_SERVICE = "com.salesforce.smartsync";
-            var self = this;
-
-            cordova.interceptExec(SMARTSYNC_SERVICE, "syncUp", function (successCB, errorCB, args) {
-                self.syncUp(args[0].soupName, args[0].options, successCB, errorCB);
-            });
-
-            cordova.interceptExec(SMARTSYNC_SERVICE, "syncDown", function (successCB, errorCB, args) {
-                self.syncDown(args[0].target, args[0].soupName, args[0].options, successCB, errorCB); 
-            });
-
-            cordova.interceptExec(SMARTSYNC_SERVICE, "getSyncStatus", function (successCB, errorCB, args) {
-                self.getSyncStatus(args[0].syncId, successCB, errorCB); 
-            });
         }
-
     };
 
     // Return module
     return module;
 })(window);
 
-var mockSmartSyncPlugin = new MockSmartSyncPlugin();
-mockSmartSyncPlugin.hookToCordova(cordova);
+var mockSyncManager = new MockSmartSyncPlugin(false);
+var mockGlobalSyncManager = new MockSmartSyncPlugin(true);
+(function (cordova, syncManager, globalSyncManager) {
+    
+    var SMARTSYNC_SERVICE = "com.salesforce.smartsync";
+
+    cordova.interceptExec(SMARTSYNC_SERVICE, "syncUp", function (successCB, errorCB, args) {
+        var mgr = args[0].isGlobalStore ? globalSyncManager : syncManager;
+        mgr.syncUp(args[0].target, args[0].soupName, args[0].options, successCB, errorCB);
+    });
+
+    cordova.interceptExec(SMARTSYNC_SERVICE, "syncDown", function (successCB, errorCB, args) {
+        var mgr = args[0].isGlobalStore ? globalSyncManager : syncManager;
+        mgr.syncDown(args[0].target, args[0].soupName, args[0].options, successCB, errorCB); 
+    });
+
+    cordova.interceptExec(SMARTSYNC_SERVICE, "getSyncStatus", function (successCB, errorCB, args) {
+        var mgr = args[0].isGlobalStore ? globalSyncManager : syncManager;
+        mgr.getSyncStatus(args[0].syncId, successCB, errorCB); 
+    });
+
+    cordova.interceptExec(SMARTSYNC_SERVICE, "reSync", function (successCB, errorCB, args) {
+        var mgr = args[0].isGlobalStore ? globalSyncManager : syncManager;
+        mgr.reSync(args[0].syncId, successCB, errorCB); 
+    });
+
+})(cordova, mockSyncManager, mockGlobalSyncManager);
 

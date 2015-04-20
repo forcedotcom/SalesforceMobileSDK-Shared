@@ -25,37 +25,91 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "3.1.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "3.2.0";
 var SERVICE = "com.salesforce.smartsync";
 
 var exec = require("com.salesforce.util.exec").exec;
 
-var syncDown = function(target, soupName, options, successCB, errorCB) {
+// NB: also in smartstore plugin
+var checkFirstArg = function(argumentsOfCaller) {
+    var args = Array.prototype.slice.call(argumentsOfCaller);
+    if (typeof(args[0]) !== "boolean") {
+        args.unshift(false);
+        argumentsOfCaller.callee.apply(null, args);
+        return true;
+    }
+    else {
+        return false;
+    }
+};
+
+
+var syncDown = function(isGlobalStore, target, soupName, options, successCB, errorCB) {
+    if (checkFirstArg(arguments)) return;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "syncDown",
-         [{"target": target, "soupName": soupName, "options": options}]
+         [{"target": target, "soupName": soupName, "options": options, "isGlobalStore":isGlobalStore}]
         );        
 };
 
-var syncUp = function(soupName, options, successCB, errorCB) {
+var reSync = function(isGlobalStore, syncId, successCB, errorCB) {
+    if (checkFirstArg(arguments)) return;
+    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+         "reSync",
+         [{"syncId": syncId, "isGlobalStore":isGlobalStore}]
+        );        
+};
+
+
+var syncUp = function(isGlobalStore, target, soupName, options, successCB, errorCB) {
+    var args = Array.prototype.slice.call(arguments);
+    // We accept syncUp(soupName, options, successCB, errorCB)
+    if (typeof(args[0]) === "string") {
+        isGlobalStore = false;
+        target = {};
+        soupName = args[0];
+        options = args[1];
+        successCB = args[2];
+        errorCB = args[3];
+    }
+    // We accept syncUp(target, soupName, options, successCB, errorCB)
+    if (typeof(args[0]) === "object") {
+        isGlobalStore = false;
+        target = args[0];
+        soupName = args[1];
+        options = args[2];
+        successCB = args[3];
+        errorCB = args[4];
+    }
+    target = target || {};
+
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "syncUp",
-         [{"soupName": soupName, "options": options}]
+         [{"target": target, "soupName": soupName, "options": options, "isGlobalStore":isGlobalStore}]
         );        
 };
 
-var getSyncStatus = function(syncId, successCB, errorCB) {
+var getSyncStatus = function(isGlobalStore, syncId, successCB, errorCB) {
+    if (checkFirstArg(arguments, "boolean", false)) return;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "getSyncStatus",
-         [{"syncId": syncId}]
+         [{"syncId": syncId, "isGlobalStore":isGlobalStore}]
         );        
 };
+
+var MERGE_MODE = {
+    OVERWRITE: "OVERWRITE",
+    LEAVE_IF_CHANGED: "LEAVE_IF_CHANGED"
+};
+
 
 /**
  * Part of the module that is public
  */
 module.exports = {
+    MERGE_MODE: MERGE_MODE,
     syncDown: syncDown,
     syncUp: syncUp,
-    getSyncStatus: getSyncStatus
+    getSyncStatus: getSyncStatus,
+    reSync: reSync
 };

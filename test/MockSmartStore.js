@@ -32,44 +32,44 @@
  */
 
 var MockSmartStore = (function(window) {
-    // Private
-    var _soups = {};     
-    var _soupIndexedData = {}; 
-    var _soupIndexSpecs = {};
-    var _cursors = {};
-    var _nextSoupEltIds = {};
-    var _nextCursorId = 1;
-
     // Constructor
-    var module = function() {}; 
+    var module = function(isGlobalStore) {
+        this.isGlobalStore = isGlobalStore || false;
+        this._soups = {};     
+        this._soupIndexedData = {}; 
+        this._soupIndexSpecs = {};
+        this._cursors = {};
+        this._nextSoupEltIds = {};
+        this._nextCursorId = 1;
+    };
 
     // Prototype
     module.prototype = {
         constructor: module,
 
         reset: function() {
-            _soups = {};
-            _soupIndexedData = {};
-            _soupIndexSpecs = {};
-            _cursors = {};
-            _nextSoupEltIds = {};
-            _nextCursorId = 1;
+            this._soups = {};
+            this._soupIndexedData = {};
+            this._soupIndexSpecs = {};
+            this._cursors = {};
+            this._nextSoupEltIds = {};
+            this._nextCursorId = 1;
         },
 
         useSessionStorage: function() {
             if (window.sessionStorage) {
                 // Restore smartstore from storage
-                var STORAGE_KEY_MOCKSTORE = "mockStore";
+                var STORAGE_KEY_MOCKSTORE = this.isGlobalStore ? "mockGlobalStore" : "mockStore";
                 var json = window.sessionStorage.getItem(STORAGE_KEY_MOCKSTORE);
                 if (json) {
                     console.log("Getting store from session storage");
-                    mockStore.fromJSON(json);
+                    this.fromJSON(json);
                 }
                 // Save smartstore to storage when onBeforeUnload fires
                 window.onbeforeunload = function() {
                     if (window.sessionStorage) {
                         console.log("Saving store to session storage");
-                        var json = mockStore.toJSON();
+                        var json = this.toJSON();
                         window.sessionStorage.setItem(STORAGE_KEY_MOCKSTORE, json);
                     }
                 };
@@ -78,23 +78,23 @@ var MockSmartStore = (function(window) {
 
         toJSON: function() {
             return JSON.stringify({
-                soups: _soups,
-                soupIndexedData: _soupIndexedData,
-                soupIndexSpecs: _soupIndexSpecs,
-                cursors: _cursors,
-                nextSoupEltIds: _nextSoupEltIds,
-                nextCursorId: _nextCursorId
+                soups: this._soups,
+                soupIndexedData: this._soupIndexedData,
+                soupIndexSpecs: this._soupIndexSpecs,
+                cursors: this._cursors,
+                nextSoupEltIds: this._nextSoupEltIds,
+                nextCursorId: this._nextCursorId
             });
         },
 
         fromJSON: function(json) {
             var obj = JSON.parse(json);
-            _soups = obj.soups;
-            _soupIndexedData = obj.soupIndexedData;
-            _soupIndexSpecs = obj.soupIndexSpecs;
-            _cursors = obj.cursors;
-            _nextSoupEltIds = obj.nextSoupEltIds;
-            _nextCursorId = obj.nextCursorId;
+            this._soups = obj.soups;
+            this._soupIndexedData = obj.soupIndexedData;
+            this._soupIndexSpecs = obj.soupIndexSpecs;
+            this._cursors = obj.cursors;
+            this._nextSoupEltIds = obj.nextSoupEltIds;
+            this._nextCursorId = obj.nextCursorId;
         },
 
         checkSoup: function(soupName) {
@@ -106,11 +106,11 @@ var MockSmartStore = (function(window) {
         },
 
         soupExists: function(soupName) {
-            return _soups[soupName] !== undefined;
+            return this._soups[soupName] !== undefined;
         },
 
         indexExists: function(soupName, indexPath) {
-            var indexSpecs = _soupIndexSpecs[soupName];
+            var indexSpecs = this._soupIndexSpecs[soupName];
             if (indexSpecs != null) {
                 for (var i=0; i<indexSpecs.length; i++) {
                     var indexSpec = indexSpecs[i];
@@ -124,22 +124,22 @@ var MockSmartStore = (function(window) {
 
         registerSoup: function(soupName, indexSpecs) {
             if (!this.soupExists(soupName)) {
-                _soups[soupName] = {};
-                _soupIndexSpecs[soupName] = indexSpecs;
-                _soupIndexedData[soupName] = {};
+                this._soups[soupName] = {};
+                this._soupIndexSpecs[soupName] = indexSpecs;
+                this._soupIndexedData[soupName] = {};
             }
             return soupName;
         },
 
         removeSoup: function(soupName) {
-            delete _soups[soupName];
-            delete _soupIndexSpecs[soupName];
-            delete _nextSoupEltIds[soupName];
+            delete this._soups[soupName];
+            delete this._soupIndexSpecs[soupName];
+            delete this._nextSoupEltIds[soupName];
         },
 
         getSoupIndexSpecs: function(soupName) {
             this.checkSoup(soupName); 
-            return _soupIndexSpecs[soupName];
+            return this._soupIndexSpecs[soupName];
         },
 
         alterSoup: function(soupName, indexSpecs, reIndexData) {
@@ -147,19 +147,19 @@ var MockSmartStore = (function(window) {
 
             // Gather path---type of old index specs
             var oldPathTypes = [];
-            var oldIndexSpecs = _soupIndexSpecs[soupName];
+            var oldIndexSpecs = this._soupIndexSpecs[soupName];
             for (var i=0; i<oldIndexSpecs.length; i++) {
                 var indexSpec = oldIndexSpecs[i];
                 oldPathTypes.push(indexSpec.path + "---" + indexSpec.type);
             }
 
-            // Update _soupIndexSpecs
-            _soupIndexSpecs[soupName] = indexSpecs;
+            // Update this._soupIndexSpecs
+            this._soupIndexSpecs[soupName] = indexSpecs;
 
             // Update soupIndexedData
-            var soup = _soups[soupName];
-            _soupIndexedData[soupName] = {};
-            var soupIndexedData = _soupIndexedData[soupName];
+            var soup = this._soups[soupName];
+            this._soupIndexedData[soupName] = {};
+            var soupIndexedData = this._soupIndexedData[soupName];
             for (var soupEntryId in soup) {
                 soupIndexedData[soupEntryId] = {};
                 var soupElt = soup[soupEntryId];
@@ -180,9 +180,9 @@ var MockSmartStore = (function(window) {
         reIndexSoup: function(soupName, paths) {
             this.checkSoup(soupName);
 
-            var soup = _soups[soupName];
-            var indexSpecs = _soupIndexSpecs[soupName];
-            var soupIndexedData = _soupIndexedData[soupName];
+            var soup = this._soups[soupName];
+            var indexSpecs = this._soupIndexSpecs[soupName];
+            var soupIndexedData = this._soupIndexedData[soupName];
             for (var soupEntryId in soup) {
                 var soupElt = soup[soupEntryId];
 
@@ -199,8 +199,8 @@ var MockSmartStore = (function(window) {
 
         clearSoup: function(soupName) {
             this.checkSoup(soupName);
-            _soups[soupName] = {};
-            _soupIndexedData[soupName] = {};
+            this._soups[soupName] = {};
+            this._soupIndexedData[soupName] = {};
         },
 
         upsertSoupEntries: function(soupName, entries, externalIdPath) {
@@ -208,9 +208,9 @@ var MockSmartStore = (function(window) {
             if (externalIdPath != "_soupEntryId" && !this.indexExists(soupName, externalIdPath)) 
                 throw new Error(soupName + " does not have an index on " + externalIdPath); 
 
-            var soup = _soups[soupName];
-            var soupIndexedData = _soupIndexedData[soupName];
-            var indexSpecs = _soupIndexSpecs[soupName];
+            var soup = this._soups[soupName];
+            var soupIndexedData = this._soupIndexedData[soupName];
+            var indexSpecs = this._soupIndexSpecs[soupName];
             var upsertedEntries = [];
             
             for (var i=0; i<entries.length; i++) {
@@ -237,8 +237,8 @@ var MockSmartStore = (function(window) {
 
                 // create
                 if (!("_soupEntryId" in entry)) { 
-                    _nextSoupEltIds[soupName] = (soupName in _nextSoupEltIds ? _nextSoupEltIds[soupName]+1 : 1);
-                    entry._soupEntryId = _nextSoupEltIds[soupName];
+                    this._nextSoupEltIds[soupName] = (soupName in this._nextSoupEltIds ? this._nextSoupEltIds[soupName]+1 : 1);
+                    entry._soupEntryId = this._nextSoupEltIds[soupName];
                 }
 
                 // last modified date
@@ -248,7 +248,7 @@ var MockSmartStore = (function(window) {
                 soup[entry._soupEntryId] = entry;
                 upsertedEntries.push(entry);
 
-                // update _soupIndexedData
+                // update this._soupIndexedData
                 var indexedData = {};
                 for (var j=0; j<indexSpecs.length; j++) {
                     var path = indexSpecs[j].path;
@@ -261,7 +261,7 @@ var MockSmartStore = (function(window) {
 
         retrieveSoupEntries: function(soupName, entryIds) {
             this.checkSoup(soupName); 
-            var soup = _soups[soupName];
+            var soup = this._soups[soupName];
             var entries = [];
             for (var i=0; i<entryIds.length; i++) {
                 var entryId = entryIds[i];
@@ -272,8 +272,8 @@ var MockSmartStore = (function(window) {
 
         removeFromSoup: function(soupName, entryIds) {
             this.checkSoup(soupName); 
-            var soup = _soups[soupName];
-            var soupIndexedData = _soupIndexedData[soupName];
+            var soup = this._soups[soupName];
+            var soupIndexedData = this._soupIndexedData[soupName];
             for (var i=0; i<entryIds.length; i++) {
                 var entryId = entryIds[i];
                 delete soup[entryId];
@@ -297,11 +297,7 @@ var MockSmartStore = (function(window) {
                 { 
                     name: "Query with variable select fields and where clause {soup:field} IN list of values", 
                     example: "SELECT {soupName:selectField1}, {soupName:selectField2} FROM {soupName} WHERE {soupName:whereField} IN (values)", 
-                    // NOTE: This regex is designed to capture the SELECT clause (e.g. "{soup:field1}, {soup:field2}") in one of the matches.
-                    // In JS, the regex engine doesn't like to give you a variable number of groups in a single pass, so you have to use a 
-                    // RegExp object and execute in a loop. This should support an indefinite number of selected fields. It uses backreferences
-                    // to ensure that the soupName is the consistent.
-                    pattern: /SELECT ({([\.\w]*):[\.\w]*}((?:\s*?,\s*?){\2:[\.\w]*})*) FROM {\2} WHERE {\2:(.*)} IN \((.*)\)/i, 
+                    pattern: /SELECT (.*) FROM {(.*)} WHERE {(.*):(.*)} IN \((.*)\)/i, 
                     processor: this._smartQuerySoupIn 
                 },
                 { 
@@ -314,61 +310,75 @@ var MockSmartStore = (function(window) {
                     name: "Count of soup items", 
                     example: "SELECT count(*) FROM {soupName}", 
                     pattern: /SELECT count\(\*\) FROM {(.*)}/i, 
-                    processor: this._smartQuerySoupCount 
+                    processor: this._smartQuerySoupCount
+                },
+                { 
+                    name: "Comparing soup item to integer with optional order by", 
+                    example: "SELECT {soupName:_soup} FROM {soupName} WHERE {soupName:whereField} > 123456 ORDER BY LOWER({soupName:orderByField})", 
+                    pattern: /SELECT {(.*):_soup} FROM {(.*)} WHERE {(.*):(.*)} ([!=<>]+) ([0-9]+)(?: ORDER BY LOWER\({(.*):(.*)}\))?/i,
+                    processor: this._smartQuerySoupCompare
                 }
 
             ];
         },
 
         _smartQuerySoupIn : function(queryDesc, matches, smartSql) {
-            // Note: No need to check that the soupName is consistent throughout.  
-            // queryDesc.pattern has backreferences that should take care of that.
-
-            // Setup Regex for the SELECT colums.
-            // Looks for (example): {soupName:field1}, {soupName:field2}, {soupName:field3}
-            var selectPattern = /{([\.\w]*?):([\.\w]*?)}[\s,]*/ig;
-            var selectRegex = new RegExp(selectPattern);
-            var fieldMatch, selectFields = [];
-
-            // Gather the parameters.
             var soupName = matches[2];
-            while (fieldMatch = selectRegex.exec(matches[1])) {
-                selectFields.push(fieldMatch[2]);
-            }
+            var selectFields = this._getSelectFields(soupName, matches[1]);
             var whereField = matches[4];
             var values = matches[5].split(",");
 
-            var i;
-            for (i = 0; i < values.length; i++) {
-                values[i] = values[i].split("'")[1]; // getting rid of surrounding '
+            if (selectFields != null) {
+                var i;
+                for (i = 0; i < values.length; i++) {
+                    values[i] = values[i].split("'")[1]; // getting rid of surrounding '
+                }
+
+                // Make sure the soup has all the appropriate fields.
+                this.checkSoup(soupName);
+                for (i = 0; i < selectFields.length; i++) {
+                    this.checkIndex(soupName, selectFields[i]);
+                }
+                this.checkIndex(soupName, whereField);
+
+                var soup = this._soups[soupName];
+                var soupIndexedData = this._soupIndexedData[soupName];
+
+                // Pull results out from soup iteratively.
+                var results = [];
+                for (var soupEntryId in soup) {
+                    var soupElt = soup[soupEntryId];
+                    var value = (whereField === "_soupEntryId" ? soupEntryId : soupIndexedData[soupEntryId][whereField]);
+                    if (values.indexOf(value) >= 0) {
+                        var self = this;
+                        var row = [];
+                        selectFields.forEach(function(selectField) {
+                            row.push(selectField === "_soup" ? soupElt : (selectField === "_soupEntryId" ? soupEntryId : soupIndexedData[soupEntryId][selectField]));
+                        })
+                        results.push(row);
+                    }
+                }
+
+                return results;
             }
+        },
 
-            // Make sure the soup has all the appropriate fields.
-            this.checkSoup(soupName);
-            for (i = 0; i < selectFields.length; i++) {
-                this.checkIndex(soupName, selectFields[i]);
-            }
-            this.checkIndex(soupName, whereField);
-
-            var soup = _soups[soupName];
-            var soupIndexedData = _soupIndexedData[soupName];
-
-            // Pull results out from soup iteratively.
-            var results = [];
-            for (var soupEntryId in soup) {
-                var soupElt = soup[soupEntryId];
-                var value = (whereField === "_soupEntryId" ? soupEntryId : soupIndexedData[soupEntryId][whereField]);
-                if (values.indexOf(value) >= 0) {
-                    var self = this;
-                    var row = [];
-                    selectFields.forEach(function(selectField) {
-                        row.push(selectField === "_soup" ? soupElt : (selectField === "_soupEntryId" ? soupEntryId : soupIndexedData[soupEntryId][selectField]));
-                    })
-                    results.push(row);
+        // Expect comma separated of {soupName:y}, return array with the values of y
+        _getSelectFields: function(soupName, s) {
+            var fields = [];
+            var fieldPattern = /{(.*):(.*)}/;
+            var soupFields = s.split(",");
+            for (var i=0; i<soupFields.length; i++) {
+                var soupField = soupFields[i].trim();
+                var matches = soupField.match(fieldPattern);
+                if (matches == null || matches[1] !== soupName) {
+                    return null;
+                }
+                else {
+                    fields.push(matches[2]);
                 }
             }
-
-            return results;
+            return fields;
         },
 
         _smartQuerySoupLikeOrdered : function(queryDesc, matches, smartSql) {
@@ -381,8 +391,8 @@ var MockSmartStore = (function(window) {
                 this.checkSoup(soupName); 
                 this.checkIndex(soupName, whereField);
                 if (orderField) this.checkIndex(soupName, orderField);
-                var soup = _soups[soupName];
-                var soupIndexedData = _soupIndexedData[soupName];
+                var soup = this._soups[soupName];
+                var soupIndexedData = this._soupIndexedData[soupName];
 
                 var results = [];
                 for (var soupEntryId in soup) {
@@ -405,20 +415,64 @@ var MockSmartStore = (function(window) {
 
                 return results;
             }
-
-            throw new Error("SmartQuery for \"" + queryDesc.name + "\" not supported by MockSmartStore: " + smartSql);
         },
 
         _smartQuerySoupCount : function(queryDesc, matches, smartSql) {
             var soupName = matches[1];
             this.checkSoup(soupName); 
-            var soup = _soups[soupName];
+            var soup = this._soups[soupName];
             var count = 0;
             for (var soupEntryId in soup) {
                 count++;
             }
             return [[count]];
         },
+
+        _smartQuerySoupCompare : function(queryDesc, matches, smartSql) {
+            if (matches[1] === matches[2] && matches[1] === matches[3] && (!matches[7] || matches[1] === matches[7])) {
+                // Gather the parameters.
+                var soupName = matches[2];
+                var whereField = matches[4];
+                var comparator = matches[5];
+                var compareTo = parseInt(matches[6], 10);
+                var orderField = matches[7] ? matches[8] : null;
+                
+                // Make sure the soup has all the appropriate fields.
+                this.checkSoup(soupName);
+                this.checkIndex(soupName, whereField);
+                
+                var soup = this._soups[soupName];
+                var soupIndexedData = this._soupIndexedData[soupName];
+                
+                // Pull results out from soup iteratively.
+                var results = [];
+                for (var soupEntryId in soup) {
+                    var soupElt = soup[soupEntryId];
+                    var projection = parseInt(soupIndexedData[soupEntryId][whereField], 10) || 0;
+                    if((comparator == "!=" && projection != compareTo)
+                       || (comparator == "=" && projection == compareTo)
+                       || (comparator == "<" && projection < compareTo)
+                       || (comparator == "<=" && projection <= compareTo)
+                       || (comparator == ">=" && projection >= compareTo)
+                       || (comparator == ">" && projection > compareTo))
+                    {
+                        var row = [];
+                        row.push(soupElt);
+                        results.push(row);
+                    }
+                }
+
+                if (orderField) {
+                    results = results.sort(function(row1, row2) {
+                        var p1 = row1[0][orderField].toLowerCase();
+                        var p2 = row2[0][orderField].toLowerCase();
+                        return ( p1 > p2 ? 1 : (p1 === p2 ? 0 : -1));
+                    });
+                }
+                
+                return results;
+            }
+        },        
 
         smartQuerySoupFull: function(querySpec) {
             // Match the query against the supported queries in test and then execute.
@@ -430,12 +484,13 @@ var MockSmartStore = (function(window) {
                 queryDesc = supportedQueries[i];
                 var matches = smartSql.match(queryDesc.pattern);
                 if (matches !== null) {
-                    try {
-                        return queryDesc.processor.call(this, queryDesc, matches, smartSql);
-                    }
-                    catch(err) {
+                    var results = queryDesc.processor.call(this, queryDesc, matches, smartSql);
+                    if (results == null) {
                         throw new Error("SmartQuery for \"" + queryDesc.name + "\" (Example: " +
-                            queryDesc.example + ") had an error executing: " + err.message);
+                                        queryDesc.example + ") had an error executing: " + smartSql);
+                    }
+                    else {
+                        return results;
                     }
                 }
             }
@@ -452,8 +507,8 @@ var MockSmartStore = (function(window) {
             this.checkSoup(soupName); 
             this.checkIndex(soupName, querySpec.indexPath);
 
-            var soup = _soups[soupName];
-            var soupIndexedData = _soupIndexedData[soupName];
+            var soup = this._soups[soupName];
+            var soupIndexedData = this._soupIndexedData[soupName];
             var results = [];
             var likeRegexp = (querySpec.likeKey ? new RegExp("^" + querySpec.likeKey.replace(/%/g, ".*"), "i") : null);
             for (var soupEntryId in soup) {
@@ -490,7 +545,7 @@ var MockSmartStore = (function(window) {
 
         querySoup: function(soupName, querySpec) {
             var results = this.querySoupFull(soupName, querySpec);
-            var cursorId = _nextCursorId++;
+            var cursorId = this._nextCursorId++;
             var cursor = {
                 cursorId: cursorId, 
                 pageSize: querySpec.pageSize,
@@ -502,14 +557,14 @@ var MockSmartStore = (function(window) {
                 totalEntries: results.length
             };
 
-            _cursors[cursorId] = cursor;
+            this._cursors[cursorId] = cursor;
             // Since original cursor from smarstore doesn't contain querySpec and soupName, 
             // remove them here too before returning cursor to the user.
-            return _.omit(cursor, 'soupName', 'querySpec');
+            return this.omit(cursor, 'soupName', 'querySpec');
         },
 
         moveCursorToPage: function(cursorId, pageIndex) {
-            var cursor = _cursors[cursorId];
+            var cursor = this._cursors[cursorId];
             var querySpec = cursor.querySpec;
             var results = this.querySoupFull(cursor.soupName, querySpec);
 
@@ -518,118 +573,142 @@ var MockSmartStore = (function(window) {
 
             // Since original cursor from smarstore doesn't contain querySpec and soupName, 
             // remove them here too before returning cursor to the user.
-            return _.omit(cursor, 'soupName', 'querySpec');
+            return this.omit(cursor, 'soupName', 'querySpec');
+        },
+
+        omit: function(obj, varNames) {
+            var ret = {};
+            for(var i in obj) {
+                if(varNames.indexOf(i) < 0) {
+                    ret[i] = obj[i];
+                }
+            }
+            return ret;
         },
 
         closeCursor: function(cursorId) {
-            delete _cursors[cursorId];
+            delete this._cursors[cursorId];
         },
-
-        hookToCordova: function(cordova) {
-            var SMARTSTORE_SERVICE = "com.salesforce.smartstore";
-            var self = this;
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgGetDatabaseSize", function (successCB, errorCB, args) {
-                successCB(self.toJSON().length);
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgRegisterSoup", function (successCB, errorCB, args) {
-                var soupName = args[0].soupName;
-                var indexSpecs = args[0].indexes;
-                if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
-                if (indexSpecs !== undefined && indexSpecs.length == 0) {errorCB("No indexSpecs specified for soup: " + soupName); return;}
-                successCB(self.registerSoup(soupName, indexSpecs));
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgRemoveSoup", function (successCB, errorCB, args) {
-                var soupName = args[0].soupName;
-                self.removeSoup(soupName);
-                successCB("OK");
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgClearSoup", function (successCB, errorCB, args) {
-                var soupName = args[0].soupName;
-                self.clearSoup(soupName);
-                successCB("OK");
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgGetSoupIndexSpecs", function (successCB, errorCB, args) {
-                var soupName = args[0].soupName;
-                if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
-                successCB(self.getSoupIndexSpecs(soupName));
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgAlterSoup", function (successCB, errorCB, args) {
-                var soupName = args[0].soupName;
-                var indexSpecs = args[0].indexes;
-                var reIndexData = args[0].reIndexData;
-                if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
-                successCB(self.alterSoup(soupName, indexSpecs, reIndexData));
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgReIndexSoup", function (successCB, errorCB, args) {
-                var soupName = args[0].soupName;
-                var paths = args[0].paths;
-                if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
-                successCB(self.reIndexSoup(soupName, paths));
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgSoupExists", function (successCB, errorCB, args) {
-                var soupName = args[0].soupName;
-                successCB(self.soupExists(soupName));
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgQuerySoup", function (successCB, errorCB, args) {
-                var soupName = args[0].soupName;
-                var querySpec = args[0].querySpec;
-                successCB(self.querySoup(soupName, querySpec));
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgRunSmartQuery", function (successCB, errorCB, args) {
-                var querySpec = args[0].querySpec;
-                successCB(self.querySoup(null, querySpec));
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgRetrieveSoupEntries", function (successCB, errorCB, args) {
-                var soupName = args[0].soupName;
-                var entryIds = args[0].entryIds;
-                successCB(self.retrieveSoupEntries(soupName, entryIds));
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgUpsertSoupEntries", function (successCB, errorCB, args) {
-                var soupName = args[0].soupName;
-                var entries = args[0].entries;
-                var externalIdPath = args[0].externalIdPath;
-                successCB(self.upsertSoupEntries(soupName, entries, externalIdPath));
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgRemoveFromSoup", function (successCB, errorCB, args) {
-                var soupName = args[0].soupName;
-                var entryIds = args[0].entryIds;
-                self.removeFromSoup(soupName, entryIds);
-                successCB("OK");
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgMoveCursorToPageIndex", function (successCB, errorCB, args) {
-                var cursorId = args[0].cursorId;
-                var index = args[0].index;
-                successCB(self.moveCursorToPage(cursorId, index));
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgCloseCursor", function (successCB, errorCB, args) {
-                var cursorId = args[0].cursorId;
-                self.closeCursor(cursorId);
-                if (successCB) {
-                    successCB("OK");
-                }
-            });
-        }
-
     };
 
     // Return module
     return module;
 })(window);
 
-var mockStore = new MockSmartStore();
-mockStore.hookToCordova(cordova);
+var mockStore = new MockSmartStore(false);
+var mockGlobalStore = new MockSmartStore(true);
+(function (cordova, store, globalStore) {
+    
+    var SMARTSTORE_SERVICE = "com.salesforce.smartstore";
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgGetDatabaseSize", function (successCB, errorCB, args) {
+        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        successCB(targetStore.toJSON().length);
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgRegisterSoup", function (successCB, errorCB, args) {
+        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var soupName = args[0].soupName;
+        var indexSpecs = args[0].indexes;
+        if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
+        if (indexSpecs !== undefined && indexSpecs.length == 0) {errorCB("No indexSpecs specified for soup: " + soupName); return;}
+        successCB(targetStore.registerSoup(soupName, indexSpecs));
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgRemoveSoup", function (successCB, errorCB, args) {
+        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var soupName = args[0].soupName;
+        targetStore.removeSoup(soupName);
+        successCB("OK");
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgClearSoup", function (successCB, errorCB, args) {
+        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var soupName = args[0].soupName;
+        targetStore.clearSoup(soupName);
+        successCB("OK");
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgGetSoupIndexSpecs", function (successCB, errorCB, args) {
+        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var soupName = args[0].soupName;
+        if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
+        successCB(targetStore.getSoupIndexSpecs(soupName));
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgAlterSoup", function (successCB, errorCB, args) {
+        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var soupName = args[0].soupName;
+        var indexSpecs = args[0].indexes;
+        var reIndexData = args[0].reIndexData;
+        if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
+        successCB(targetStore.alterSoup(soupName, indexSpecs, reIndexData));
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgReIndexSoup", function (successCB, errorCB, args) {
+        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var soupName = args[0].soupName;
+        var paths = args[0].paths;
+        if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
+        successCB(targetStore.reIndexSoup(soupName, paths));
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgSoupExists", function (successCB, errorCB, args) {
+        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var soupName = args[0].soupName;
+        successCB(targetStore.soupExists(soupName));
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgQuerySoup", function (successCB, errorCB, args) {
+        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var soupName = args[0].soupName;
+        var querySpec = args[0].querySpec;
+        successCB(targetStore.querySoup(soupName, querySpec));
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgRunSmartQuery", function (successCB, errorCB, args) {
+        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var querySpec = args[0].querySpec;
+        successCB(targetStore.querySoup(null, querySpec));
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgRetrieveSoupEntries", function (successCB, errorCB, args) {
+        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var soupName = args[0].soupName;
+        var entryIds = args[0].entryIds;
+        successCB(targetStore.retrieveSoupEntries(soupName, entryIds));
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgUpsertSoupEntries", function (successCB, errorCB, args) {
+        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var soupName = args[0].soupName;
+        var entries = args[0].entries;
+        var externalIdPath = args[0].externalIdPath;
+        successCB(targetStore.upsertSoupEntries(soupName, entries, externalIdPath));
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgRemoveFromSoup", function (successCB, errorCB, args) {
+        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var soupName = args[0].soupName;
+        var entryIds = args[0].entryIds;
+        targetStore.removeFromSoup(soupName, entryIds);
+        successCB("OK");
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgMoveCursorToPageIndex", function (successCB, errorCB, args) {
+        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var cursorId = args[0].cursorId;
+        var index = args[0].index;
+        successCB(targetStore.moveCursorToPage(cursorId, index));
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgCloseCursor", function (successCB, errorCB, args) {
+        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var cursorId = args[0].cursorId;
+        targetStore.closeCursor(cursorId);
+        if (successCB) {
+            successCB("OK");
+        }
+    });
+
+})(cordova, mockStore, mockGlobalStore);
