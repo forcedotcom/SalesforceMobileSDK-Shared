@@ -112,12 +112,9 @@ app.models.UserCollection = Force.SObjectCollection.extend({
     setCriteria: function(key) {
         this.key = key;
         this.config = {type:"cache", 
-                       cacheQuery:{queryType:"smart", 
-                                   smartSql:"SELECT {users:_soup}"
-                                   + " FROM {users}"
-                                   + " WHERE {users:FirstName} like '" + key + "%'"
-                                   + " ORDER BY {users:LastName} "
-                                   + " LIMIT 25 ", 
+                       cacheQuery:{queryType:"match",
+                                   matchKey:key + "*",
+                                   indexPath:"LastName",
                                    pageSize:25}
                       };
     }
@@ -292,7 +289,7 @@ app.Router = Backbone.StackRouter.extend({
 
     setupCaches: function() {
         // Cache for offline support
-        app.cache = new Force.StoreCache("users", [ {path:"FirstName", type:"string"}, {path:"LastName", type:"string"} ]);
+        app.cache = new Force.StoreCache("users", [ {path:"FirstName", type:"full_text"}, {path:"LastName", type:"full_text"} ]);
         app.cache.init();
     },
 
