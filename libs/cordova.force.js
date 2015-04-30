@@ -716,6 +716,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     var querySoup = function (isGlobalStore, soupName, querySpec, successCB, errorCB) {
         if (checkFirstArg(arguments)) return;
         if (querySpec.queryType == "smart") throw new Error("Smart queries can only be run using runSmartQuery");
+        if (querySpec.order != null && orderPath == null) querySpec.orderPath = querySpec.indexPath; // for backward compatibility with pre-3.3 code
         storeConsole.debug("SmartStore.querySoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",indexPath=" + querySpec.indexPath);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgQuerySoup",
