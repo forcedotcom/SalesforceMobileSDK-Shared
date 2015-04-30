@@ -488,7 +488,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         //path for the original IndexSpec you wish to use for search: may be a compound path eg Account.Owner.Name
         this.indexPath = path;
 
-        //for queryType "exact"
+        //for queryType "exact" and "match"
         this.matchKey = null;
 
         //for queryType "like"
@@ -502,6 +502,9 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
 
         // for queryType "smart"
         this.smartSql = null;
+
+        //path to sort by : optional
+        this.orderPath = null
 
         //"ascending" or "descending" : optional
         this.order = "ascending";
@@ -551,9 +554,10 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     // ====== querySpec factory methods
     // Returns a query spec that will page through all soup entries in order by the given path value
     // Internally it simply does a range query with null begin and end keys
-    var buildAllQuerySpec = function (path, order, pageSize) {
-        var inst = new QuerySpec(path);
+    var buildAllQuerySpec = function (orderPath, order, pageSize) {
+        var inst = new QuerySpec();
         inst.queryType = "range";
+        inst.orderPath = orderPath;
         if (order) { inst.order = order; } // override default only if a value was specified
         if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
         return inst;
@@ -562,6 +566,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     // Returns a query spec that will page all entries exactly matching the matchKey value for path
     var buildExactQuerySpec = function (path, matchKey, pageSize) {
         var inst = new QuerySpec(path);
+        inst.orderPath = path;
         inst.matchKey = matchKey;
         if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
         return inst;
@@ -573,6 +578,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         inst.queryType = "range";
         inst.beginKey = beginKey;
         inst.endKey = endKey;
+        inst.orderPath = path;
         if (order) { inst.order = order; } // override default only if a value was specified
         if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
         return inst;
@@ -583,6 +589,19 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         var inst = new QuerySpec(path);
         inst.queryType = "like";
         inst.likeKey = likeKey;
+        inst.orderPath = path;
+        if (order) { inst.order = order; } // override default only if a value was specified
+        if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+        return inst;
+    };
+
+    // Returns a query spec that will page all entries matching the given full-text search matchKey value for path
+    // Pass null for path to match matchKey across all full-text indexed fields
+    var buildMatchQuerySpec = function (path, likeKey, orderPath, order, pageSize) {
+        var inst = new QuerySpec(path);
+        inst.queryType = "match";
+        inst.matchKey = matchKey;
+        inst.orderPath = path;
         if (order) { inst.order = order; } // override default only if a value was specified
         if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
         return inst;

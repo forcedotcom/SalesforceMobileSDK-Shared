@@ -114,7 +114,7 @@ app.models.UserCollection = Force.SObjectCollection.extend({
         this.config = {type:"cache", 
                        cacheQuery:{queryType:"match",
                                    matchKey:key + "*",
-                                   indexPath:"LastName",
+                                   orderPath:"LastName",
                                    pageSize:25}
                       };
     }
@@ -180,7 +180,7 @@ app.views.SearchPage = Backbone.View.extend({
     syncDownSoql: function(event) {
         if (!_.isNumber(this.lastSoqlSyncDownId)) {
             // First time
-            this.syncDown({type:"soql", query:"SELECT " + this.fieldlist.join(",") + " FROM User WHERE CompanyName = 'salesforce.com' LIMIT 1000"});
+            this.syncDown({type:"soql", query:"SELECT " + this.fieldlist.join(",") + " FROM User WHERE CompanyName = 'salesforce.com' LIMIT 10000"});
         }
         else {
             // Subsequent times
@@ -289,7 +289,7 @@ app.Router = Backbone.StackRouter.extend({
 
     setupCaches: function() {
         // Cache for offline support
-        app.cache = new Force.StoreCache("users", [ {path:"FirstName", type:"full_text"}, {path:"LastName", type:"full_text"} ]);
+        app.cache = new Force.StoreCache("users", [ {path:"FirstName", type:"full_text"}, {path:"LastName", type:"full_text"}, {path:"Title", type:"full_text"} ]);
         app.cache.init();
     },
 
