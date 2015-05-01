@@ -50,7 +50,7 @@ var QuerySpec = function (path) {
     //path for the original IndexSpec you wish to use for search: may be a compound path eg Account.Owner.Name
     this.indexPath = path;
 
-    //for queryType "exact"
+    //for queryType "exact" and "match"
     this.matchKey = null;
 
     //for queryType "like"
@@ -64,6 +64,9 @@ var QuerySpec = function (path) {
 
     // for queryType "smart"
     this.smartSql = null;
+
+    //path to sort by : optional
+    this.orderPath = null
 
     //"ascending" or "descending" : optional
     this.order = "ascending";
@@ -113,9 +116,10 @@ var getLogLevel = function () {
 // ====== querySpec factory methods
 // Returns a query spec that will page through all soup entries in order by the given path value
 // Internally it simply does a range query with null begin and end keys
-var buildAllQuerySpec = function (path, order, pageSize) {
-    var inst = new QuerySpec(path);
+var buildAllQuerySpec = function (orderPath, order, pageSize) {
+    var inst = new QuerySpec();
     inst.queryType = "range";
+    inst.orderPath = orderPath;
     if (order) { inst.order = order; } // override default only if a value was specified
     if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
     return inst;
@@ -124,6 +128,7 @@ var buildAllQuerySpec = function (path, order, pageSize) {
 // Returns a query spec that will page all entries exactly matching the matchKey value for path
 var buildExactQuerySpec = function (path, matchKey, pageSize) {
     var inst = new QuerySpec(path);
+    inst.orderPath = path;
     inst.matchKey = matchKey;
     if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
     return inst;
@@ -135,6 +140,7 @@ var buildRangeQuerySpec = function (path, beginKey, endKey, order, pageSize) {
     inst.queryType = "range";
     inst.beginKey = beginKey;
     inst.endKey = endKey;
+    inst.orderPath = path;
     if (order) { inst.order = order; } // override default only if a value was specified
     if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
     return inst;
@@ -145,6 +151,19 @@ var buildLikeQuerySpec = function (path, likeKey, order, pageSize) {
     var inst = new QuerySpec(path);
     inst.queryType = "like";
     inst.likeKey = likeKey;
+    inst.orderPath = path;
+    if (order) { inst.order = order; } // override default only if a value was specified
+    if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+    return inst;
+};
+
+// Returns a query spec that will page all entries matching the given full-text search matchKey value for path
+// Pass null for path to match matchKey across all full-text indexed fields
+var buildMatchQuerySpec = function (path, likeKey, orderPath, order, pageSize) {
+    var inst = new QuerySpec(path);
+    inst.queryType = "match";
+    inst.matchKey = matchKey;
+    inst.orderPath = path;
     if (order) { inst.order = order; } // override default only if a value was specified
     if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
     return inst;
@@ -259,6 +278,7 @@ var soupExists = function (isGlobalStore, soupName, successCB, errorCB) {
 var querySoup = function (isGlobalStore, soupName, querySpec, successCB, errorCB) {
     if (checkFirstArg(arguments)) return;
     if (querySpec.queryType == "smart") throw new Error("Smart queries can only be run using runSmartQuery");
+    if (querySpec.order != null && querySpec.orderPath == null) querySpec.orderPath = querySpec.indexPath; // for backward compatibility with pre-3.3 code
     storeConsole.debug("SmartStore.querySoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",indexPath=" + querySpec.indexPath);
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgQuerySoup",
