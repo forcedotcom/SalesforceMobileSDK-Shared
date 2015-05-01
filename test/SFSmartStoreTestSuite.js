@@ -716,12 +716,14 @@ SmartStoreTestSuite.prototype.testQuerySpecFactories = function() {
     var query =  navigator.smartstore.buildExactQuerySpec(path,beginKey,pageSize);
     QUnit.equal(query.queryType,"exact","check queryType");
     QUnit.equal(query.indexPath,path,"check indexPath");
+    QUnit.equal(query.orderPath,path,"check orderPath");
     QUnit.equal(query.matchKey,beginKey,"check matchKey");
     QUnit.equal(query.pageSize,pageSize,"check pageSize");
     
     query =  navigator.smartstore.buildRangeQuerySpec(path,beginKey,endKey,order,pageSize);
     QUnit.equal(query.queryType,"range","check queryType");
     QUnit.equal(query.indexPath,path,"check indexPath");
+    QUnit.equal(query.orderPath,path,"check orderPath");
     QUnit.equal(query.beginKey,beginKey,"check beginKey");
     QUnit.equal(query.endKey,endKey,"check endKey");
     QUnit.equal(query.order,order,"check order");
@@ -730,13 +732,15 @@ SmartStoreTestSuite.prototype.testQuerySpecFactories = function() {
     query =  navigator.smartstore.buildLikeQuerySpec(path,beginKey,order,pageSize);
     QUnit.equal(query.queryType,"like","check queryType");
     QUnit.equal(query.indexPath,path,"check indexPath");
+    QUnit.equal(query.orderPath,path,"check orderPath");
     QUnit.equal(query.likeKey,beginKey,"check likeKey");
     QUnit.equal(query.order,order,"check order");
     QUnit.equal(query.pageSize,pageSize,"check pageSize");
     
     var query =  navigator.smartstore.buildAllQuerySpec(path,order,pageSize);
     QUnit.equal(query.queryType,"range","check queryType");
-    QUnit.equal(query.indexPath,path,"check indexPath");
+    QUnit.equal(query.indexPath,null,"check indexPath");
+    QUnit.equal(query.orderPath,path,"check orderPath");
     QUnit.equal(query.beginKey,null,"check beginKey");
     QUnit.equal(query.endKey,null,"check endKey");
     QUnit.equal(query.order,order,"check order");
