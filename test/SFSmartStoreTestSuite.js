@@ -867,7 +867,7 @@ SmartStoreTestSuite.prototype.testFullTextSearch  = function() {
     self.stuffTestSoup()
         .pipe(function(entries) {
             QUnit.equal(entries.length, 3,"check stuffTestSoup result");
-            var querySpec = navigator.smartstore.buildMatchQuerySpec("Name","Stellanova");
+            var querySpec = navigator.smartstore.buildMatchQuerySpec("Title","Engineer");
             return self.querySoup(self.defaultSoupName, querySpec);
         })
         .pipe(function(cursor) {
