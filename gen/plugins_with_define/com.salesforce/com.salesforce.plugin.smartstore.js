@@ -1,6 +1,6 @@
 cordova.define("com.salesforce.plugin.smartstore", function(require, exports, module) {
 /*
- * Copyright (c) 2012-14, salesforce.com, inc.
+ * Copyright (c) 2012-15, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -116,56 +116,58 @@ var getLogLevel = function () {
 // ====== querySpec factory methods
 // Returns a query spec that will page through all soup entries in order by the given path value
 // Internally it simply does a range query with null begin and end keys
-var buildAllQuerySpec = function (orderPath, order, pageSize) {
-    var inst = new QuerySpec();
+var buildAllQuerySpec = function (path, order, pageSize) {
+    var inst = new QuerySpec(path);
     inst.queryType = "range";
-    inst.orderPath = orderPath;
+    inst.orderPath = path;
     if (order) { inst.order = order; } // override default only if a value was specified
     if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
     return inst;
 };
 
 // Returns a query spec that will page all entries exactly matching the matchKey value for path
-var buildExactQuerySpec = function (path, matchKey, pageSize) {
+var buildExactQuerySpec = function (path, matchKey, pageSize, order, orderPath) {
     var inst = new QuerySpec(path);
-    inst.orderPath = path;
     inst.matchKey = matchKey;
     if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+    if (order) { inst.order = order; } // override default only if a value was specified
+    inst.orderPath = orderPath ? orderPath : path;
     return inst;
 };
 
 // Returns a query spec that will page all entries in the range beginKey ...endKey for path
-var buildRangeQuerySpec = function (path, beginKey, endKey, order, pageSize) {
+var buildRangeQuerySpec = function (path, beginKey, endKey, order, pageSize, orderPath) {
     var inst = new QuerySpec(path);
     inst.queryType = "range";
     inst.beginKey = beginKey;
     inst.endKey = endKey;
-    inst.orderPath = path;
     if (order) { inst.order = order; } // override default only if a value was specified
     if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+    inst.orderPath = orderPath ? orderPath : path;
     return inst;
 };
 
 // Returns a query spec that will page all entries matching the given likeKey value for path
-var buildLikeQuerySpec = function (path, likeKey, order, pageSize) {
+var buildLikeQuerySpec = function (path, likeKey, order, pageSize, orderPath) {
     var inst = new QuerySpec(path);
     inst.queryType = "like";
     inst.likeKey = likeKey;
-    inst.orderPath = path;
     if (order) { inst.order = order; } // override default only if a value was specified
     if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+    inst.orderPath = orderPath ? orderPath : path;
     return inst;
 };
 
 // Returns a query spec that will page all entries matching the given full-text search matchKey value for path
 // Pass null for path to match matchKey across all full-text indexed fields
-var buildMatchQuerySpec = function (path, likeKey, orderPath, order, pageSize) {
+var buildMatchQuerySpec = function (path, matchKey, order, pageSize, orderPath) {
     var inst = new QuerySpec(path);
     inst.queryType = "match";
     inst.matchKey = matchKey;
-    inst.orderPath = path;
+    inst.orderPath = orderPath;
     if (order) { inst.order = order; } // override default only if a value was specified
     if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+    inst.orderPath = orderPath ? orderPath : path;
     return inst;
 };
 
@@ -378,6 +380,7 @@ module.exports = {
     buildLikeQuerySpec: buildLikeQuerySpec,
     buildRangeQuerySpec: buildRangeQuerySpec,
     buildSmartQuerySpec: buildSmartQuerySpec,
+    buildMatchQuerySpec: buildMatchQuerySpec,
     clearSoup: clearSoup,
     closeCursor: closeCursor,
     getDatabaseSize: getDatabaseSize,
