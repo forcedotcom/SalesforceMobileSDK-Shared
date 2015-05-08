@@ -511,6 +511,7 @@ var MockSmartStore = (function(window) {
             var soupIndexedData = this._soupIndexedData[soupName];
             var results = [];
             var likeRegexp = (querySpec.likeKey ? new RegExp("^" + querySpec.likeKey.replace(/%/g, ".*"), "i") : null);
+            var matchRegexp = (querySpec.queryType == "match" ? new RegExp(querySpec.matchKey.replace(/\*/g, ".*"), "i") : null);
             for (var soupEntryId in soup) {
                 var soupElt = soup[soupEntryId];
                 var projection = soupIndexedData[soupEntryId][querySpec.indexPath];
@@ -530,11 +531,16 @@ var MockSmartStore = (function(window) {
                         results.push(soupElt);
                     }
                 }
+                else if (querySpec.queryType === "match") {
+                    if (projection.match(matchRegexp)) {
+                        results.push(soupElt);
+                    }
+                }
             }
 
             results = results.sort(function(soupElt1,soupElt2) {
-                var p1 = soupElt1[querySpec.indexPath];
-                var p2 = soupElt2[querySpec.indexPath];
+                var p1 = soupElt1[querySpec.orderPath];
+                var p2 = soupElt2[querySpec.orderPath];
                 var compare = ( p1 > p2 ? 1 : (p1 == p2 ? 0 : -1));
                 return (querySpec.order == "ascending" ? compare : -compare);
             });
