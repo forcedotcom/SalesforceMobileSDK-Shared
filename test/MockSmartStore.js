@@ -545,8 +545,10 @@ var MockSmartStore = (function(window) {
         // query "fox -dog" will return false
         // query "f* dog" will return true
         doesFullTextMatch: function(text, query) {
-            var wordsOfQuery = query.split(/[^a-zA-Z0-9*-]/).sort(); // to move the "-" words first
+            var wordsOfQuery = query.split(/[^a-zA-Z0-9*-]/);
+            wordsOfQuery.sort(); // to move the "-" words first
             var wordsOfElt = text.split(/\W/);
+            wordsOfElt.sort(); // to speed up matches
             for (var j=0; j<wordsOfQuery.length; j++) {
                 var wordOfQuery = wordsOfQuery[j].trim();
                 if (wordOfQuery == "") {
@@ -555,7 +557,7 @@ var MockSmartStore = (function(window) {
 
                 var foundQueryWord = false;
                 for (var i=0; i<wordsOfElt.length; i++) {
-                    var wordOfElt = wordsOfElt[i].trim().sort(); // to speed up matches
+                    var wordOfElt = wordsOfElt[i].trim();
                     if (wordOfElt == "") {
                         continue;
                     }
