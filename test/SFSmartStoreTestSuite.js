@@ -880,7 +880,7 @@ SmartStoreTestSuite.prototype.testFullTextSearch  = function() {
         })
         .pipe(function() {
             // Searching across fields with multiple terms
-            var querySpec = navigator.smartstore.buildMatchQuerySpec(null, "white black", "descending", 10, "name");
+            var querySpec = navigator.smartstore.buildMatchQuerySpec(null, "small black", "descending", 10, "name");
             return self.tryFullTextSearch(soupName, querySpec, ["lizard", "cat"]);
         })
         .pipe(function() {
@@ -900,7 +900,7 @@ SmartStoreTestSuite.prototype.testFullTextSearch  = function() {
         })
         .pipe(function() {
             // Searching across fields with multiple terms (one starred, one negated)
-            var querySpec = navigator.smartstore.buildMatchQuerySpec(null, "m* -small", "ascending", 10, "name");
+            var querySpec = navigator.smartstore.buildMatchQuerySpec(null, "gr* -small", "ascending", 10, "name");
             return self.tryFullTextSearch(soupName, querySpec, ["dog", "elephant"]);
         })
         .pipe(function(entries) {

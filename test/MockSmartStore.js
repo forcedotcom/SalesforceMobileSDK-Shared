@@ -523,15 +523,23 @@ var MockSmartStore = (function(window) {
 
             for (var soupEntryId in soup) {
                 var soupElt = soup[soupEntryId];
-                for (var i=0; i<paths.length; i++) {
-                    var path = paths[i];
-                    var projection = soupIndexedData[soupEntryId][path];
-                    if (this.doesFullTextMatch(projection, querySpec.matchKey)) {
-                        // If any field match, then that row is a match
-                        results.push(soupElt);
-                        // No need to check other fields
-                        break;
+
+                var text = "";
+                if (querySpec.indexPath) {
+                    text = soupIndexedData[soupEntryId][querySpec.indexPath];
+                }
+                else {
+                    // No indexPath provided, match against all full-text fields
+                    var indexSpecs = this._soupIndexSpecs[soupName];
+                    for (var i=0; i<indexSpecs.length; i++) {
+                        var indexSpec = indexSpecs[i];
+                        if (indexSpec.type === "full_text") {
+                            text += soupIndexedData[soupEntryId][indexSpec.path] + " ";
+                        }
                     }
+                }
+                if (this.doesFullTextMatch(text, querySpec.matchKey)) {
+                    results.push(soupElt);
                 }
             }
 
