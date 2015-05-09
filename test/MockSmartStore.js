@@ -512,7 +512,9 @@ var MockSmartStore = (function(window) {
             }
             else {
                 // No indexPath provided, match against all full-text fields
-                for (var indexSpec in this._soupIndexSpecs) {
+                var indexSpecs = this._soupIndexSpecs[soupName];
+                for (var i=0; i<indexSpecs.length; i++) {
+                    var indexSpec = indexSpecs[i];
                     if (indexSpec.type === "full_text") {
                         paths.push(indexSpec.path);
                     }
@@ -555,30 +557,47 @@ var MockSmartStore = (function(window) {
                     continue;
                 }
 
-                var foundQueryWord = false;
-                for (var i=0; i<wordsOfElt.length; i++) {
-                    var wordOfElt = wordsOfElt[i].trim();
-                    if (wordOfElt == "") {
-                        continue;
-                    }
-                    else if (wordOfQuery.indexOf("-") == 0 && wordOfElt.indexOf(wordOfQuery.substring(1))) {
-                        // A query word to exclude was found
-                        return false;
-                    }
-                    else if (wordOfQuery == wordOfElt) {
-                        foundQueryWord = true;
-                        // all the "-" tests have already been conducted, we don't need to test further
-                        break;
-                    }
-                    else if (wordOfQuery.endsWith("*") && wordOfElt.indexOf(wordOfQuery.substring(0, wordOfQuery.length - 1))) {
-                        foundQueryWord = true;
-                        // all the "-" tests have already been conducted, we don't need to test further
-                        break;
+                // Negative keyword (keyword to exclude)
+                if (wordOfQuery.indexOf("-") == 0) {
+                    wordOfQuery = wordOfQuery.substring(1);
+
+                    for (var i=0; i<wordsOfElt.length; i++) {
+                        var wordOfElt = wordsOfElt[i].trim();
+                        if (wordOfElt == "") {
+                            continue;
+                        }
+                        if (wordOfElt.indexOf(wordOfQuery) == 0) {
+                            // A query word to exclude was found
+                            return false;
+                        }
                     }
                 }
-                // This query word was not found
-                if (!foundQueryWord) {
-                    return false;
+                // Regular keyword
+                else {
+                    var foundQueryWord = false;
+                    for (var i=0; i<wordsOfElt.length; i++) {
+                        var wordOfElt = wordsOfElt[i].trim();
+                        if (wordOfElt == "") {
+                            continue;
+                        }
+
+                        if (wordOfQuery.endsWith("*")) {
+                            if (wordOfElt.indexOf(wordOfQuery.substring(0, wordOfQuery.length - 1)) == 0) {
+                                foundQueryWord = true;
+                                // all the "-" tests have already been conducted, we don't need to test further
+                                break;
+                            }
+                        }
+                        else if (wordOfQuery == wordOfElt) {
+                            foundQueryWord = true;
+                            // all the "-" tests have already been conducted, we don't need to test further
+                            break;
+                        }
+                    }
+                    // This query word was not found
+                    if (!foundQueryWord) {
+                        return false;
+                    }
                 }
             }
             return true;
