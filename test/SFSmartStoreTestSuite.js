@@ -889,11 +889,6 @@ SmartStoreTestSuite.prototype.testFullTextSearch  = function() {
             return self.tryFullTextSearch(soupName, querySpec, ["dog", "elephant", "lizard"]);
         })
         .pipe(function() {
-            // Searching across fields with one term negated
-            var querySpec = navigator.smartstore.buildMatchQuerySpec(null, "-reptilian", "ascending", 10, "name");
-            return self.tryFullTextSearch(soupName, querySpec, ["cat", "dog", "elephant"]);
-        })
-        .pipe(function() {
             // Searching across fields with multiple terms one being negated
             var querySpec = navigator.smartstore.buildMatchQuerySpec(null, "black -tabby", "descending", 10, "name");
             return self.tryFullTextSearch(soupName, querySpec, ["lizard", "dog"]);
@@ -918,11 +913,6 @@ SmartStoreTestSuite.prototype.testFullTextSearch  = function() {
             // Searching one field with one term starred
             var querySpec = navigator.smartstore.buildMatchQuerySpec("colors", "gr*", "ascending", 10, "name");
             return self.tryFullTextSearch(soupName, querySpec, ["dog", "elephant", "lizard"]);
-        })
-        .pipe(function() {
-            // Searching one field with one term negated
-            var querySpec = navigator.smartstore.buildMatchQuerySpec("colors", "-reptilian", "ascending", 10, "name");
-            return self.tryFullTextSearch(soupName, querySpec, ["cat", "dog", "elephant", "lizard"]);
         })
         .pipe(function() {
             // Searching one field with multiple terms one being negated
