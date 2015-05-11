@@ -291,40 +291,40 @@ var MockSmartStore = (function(window) {
             return o;
         },
 
-        _supportedQueries : function() {
+        supportedQueries : function() {
             // NB we don't have full support evidently
             return [
                 { 
                     name: "Query with variable select fields and where clause {soup:field} IN list of values", 
                     example: "SELECT {soupName:selectField1}, {soupName:selectField2} FROM {soupName} WHERE {soupName:whereField} IN (values)", 
                     pattern: /SELECT (.*) FROM {(.*)} WHERE {(.*):(.*)} IN \((.*)\)/i, 
-                    processor: this._smartQuerySoupIn 
+                    processor: this.smartQuerySoupIn 
                 },
                 { 
                     name: "Query with where clause {soup:field} like 'value' with optional order by", 
                     example: "SELECT {soupName:_soup} FROM {soupName} WHERE {soupName:whereField} LIKE 'value' ORDER BY LOWER({soupName:orderByField})", 
                     pattern: /SELECT {(.*):_soup} FROM {(.*)} WHERE {(.*):(.*)} LIKE '(.*)'(?: ORDER BY LOWER\({(.*):(.*)}\))?/i, 
-                    processor: this._smartQuerySoupLikeOrdered 
+                    processor: this.smartQuerySoupLikeOrdered 
                 },
                 { 
                     name: "Count of soup items", 
                     example: "SELECT count(*) FROM {soupName}", 
                     pattern: /SELECT count\(\*\) FROM {(.*)}/i, 
-                    processor: this._smartQuerySoupCount
+                    processor: this.smartQuerySoupCount
                 },
                 { 
                     name: "Comparing soup item to integer with optional order by", 
                     example: "SELECT {soupName:_soup} FROM {soupName} WHERE {soupName:whereField} > 123456 ORDER BY LOWER({soupName:orderByField})", 
                     pattern: /SELECT {(.*):_soup} FROM {(.*)} WHERE {(.*):(.*)} ([!=<>]+) ([0-9]+)(?: ORDER BY LOWER\({(.*):(.*)}\))?/i,
-                    processor: this._smartQuerySoupCompare
+                    processor: this.smartQuerySoupCompare
                 }
 
             ];
         },
 
-        _smartQuerySoupIn : function(queryDesc, matches, smartSql) {
+        smartQuerySoupIn : function(queryDesc, matches, smartSql) {
             var soupName = matches[2];
-            var selectFields = this._getSelectFields(soupName, matches[1]);
+            var selectFields = this.getSelectFields(soupName, matches[1]);
             var whereField = matches[4];
             var values = matches[5].split(",");
 
@@ -364,7 +364,7 @@ var MockSmartStore = (function(window) {
         },
 
         // Expect comma separated of {soupName:y}, return array with the values of y
-        _getSelectFields: function(soupName, s) {
+        getSelectFields: function(soupName, s) {
             var fields = [];
             var fieldPattern = /{(.*):(.*)}/;
             var soupFields = s.split(",");
@@ -381,7 +381,7 @@ var MockSmartStore = (function(window) {
             return fields;
         },
 
-        _smartQuerySoupLikeOrdered : function(queryDesc, matches, smartSql) {
+        smartQuerySoupLikeOrdered : function(queryDesc, matches, smartSql) {
             if (matches[1] === matches[2] && matches[1] === matches[3] && (!matches[6] || matches[1] === matches[6])) {
                 var soupName = matches[1];
                 var whereField = matches[4];
@@ -417,7 +417,7 @@ var MockSmartStore = (function(window) {
             }
         },
 
-        _smartQuerySoupCount : function(queryDesc, matches, smartSql) {
+        smartQuerySoupCount : function(queryDesc, matches, smartSql) {
             var soupName = matches[1];
             this.checkSoup(soupName); 
             var soup = this._soups[soupName];
@@ -428,7 +428,7 @@ var MockSmartStore = (function(window) {
             return [[count]];
         },
 
-        _smartQuerySoupCompare : function(queryDesc, matches, smartSql) {
+        smartQuerySoupCompare : function(queryDesc, matches, smartSql) {
             if (matches[1] === matches[2] && matches[1] === matches[3] && (!matches[7] || matches[1] === matches[7])) {
                 // Gather the parameters.
                 var soupName = matches[2];
@@ -478,7 +478,7 @@ var MockSmartStore = (function(window) {
             // Match the query against the supported queries in test and then execute.
 
             var smartSql = querySpec.smartSql;
-            var supportedQueries = this._supportedQueries();
+            var supportedQueries = this.supportedQueries();
 
             for (var i = 0; i < supportedQueries.length; i++) {
                 queryDesc = supportedQueries[i];
@@ -498,9 +498,126 @@ var MockSmartStore = (function(window) {
             throw new Error("SmartQuery not supported by MockSmartStore:" + smartSql);
         },
 
+        // Support some full-text queries (see doesFullTextMatch for details)
+        querySoupFullTextSearch: function(soupName, querySpec) {
+            this.checkSoup(soupName); 
+            var soup = this._soups[soupName];
+            var soupIndexedData = this._soupIndexedData[soupName];
+            var results = [];
+
+            var paths = [];
+
+            if (querySpec.indexPath) {
+                paths.push(querySpec.indexPath);
+            }
+            else {
+                // No indexPath provided, match against all full-text fields
+                var indexSpecs = this._soupIndexSpecs[soupName];
+                for (var i=0; i<indexSpecs.length; i++) {
+                    var indexSpec = indexSpecs[i];
+                    if (indexSpec.type === "full_text") {
+                        paths.push(indexSpec.path);
+                    }
+                }
+            }
+
+            for (var soupEntryId in soup) {
+                var soupElt = soup[soupEntryId];
+
+                var text = "";
+                if (querySpec.indexPath) {
+                    text = soupIndexedData[soupEntryId][querySpec.indexPath];
+                }
+                else {
+                    // No indexPath provided, match against all full-text fields
+                    var indexSpecs = this._soupIndexSpecs[soupName];
+                    for (var i=0; i<indexSpecs.length; i++) {
+                        var indexSpec = indexSpecs[i];
+                        if (indexSpec.type === "full_text") {
+                            text += soupIndexedData[soupEntryId][indexSpec.path] + " ";
+                        }
+                    }
+                }
+                if (this.doesFullTextMatch(text, querySpec.matchKey)) {
+                    results.push(soupElt);
+                }
+            }
+
+            return this.sortResults(results, querySpec);
+        },
+
+        // query: space separated terms that all need to be in text
+        // A term can be prefixed by - to indicate it should not be present.
+        // A term can be suffixed by * to indicate to match any words starting with that term
+        //
+        // Example for the text: "the fox jumped over the dog"
+        // query "fox dog" will return true
+        // query "fox -dog" will return false
+        // query "f* dog" will return true
+        doesFullTextMatch: function(text, query) {
+            var wordsOfQuery = query.split(/[^a-zA-Z0-9*-]/);
+            wordsOfQuery.sort(); // to move the "-" words first
+            var wordsOfElt = text.split(/\W/);
+            wordsOfElt.sort(); // to speed up matches
+            for (var j=0; j<wordsOfQuery.length; j++) {
+                var wordOfQuery = wordsOfQuery[j].trim();
+                if (wordOfQuery == "") {
+                    continue;
+                }
+
+                // Negative keyword (keyword to exclude)
+                if (wordOfQuery.indexOf("-") == 0) {
+                    wordOfQuery = wordOfQuery.substring(1);
+
+                    for (var i=0; i<wordsOfElt.length; i++) {
+                        var wordOfElt = wordsOfElt[i].trim();
+                        if (wordOfElt == "") {
+                            continue;
+                        }
+                        if (wordOfElt.indexOf(wordOfQuery) == 0) {
+                            // A query word to exclude was found
+                            return false;
+                        }
+                    }
+                }
+                // Regular keyword
+                else {
+                    var foundQueryWord = false;
+                    for (var i=0; i<wordsOfElt.length; i++) {
+                        var wordOfElt = wordsOfElt[i].trim();
+                        if (wordOfElt == "") {
+                            continue;
+                        }
+
+                        if (wordOfQuery.endsWith("*")) {
+                            if (wordOfElt.indexOf(wordOfQuery.substring(0, wordOfQuery.length - 1)) == 0) {
+                                foundQueryWord = true;
+                                // all the "-" tests have already been conducted, we don't need to test further
+                                break;
+                            }
+                        }
+                        else if (wordOfQuery == wordOfElt) {
+                            foundQueryWord = true;
+                            // all the "-" tests have already been conducted, we don't need to test further
+                            break;
+                        }
+                    }
+                    // This query word was not found
+                    if (!foundQueryWord) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        },
+
         querySoupFull: function(soupName, querySpec) {
             if (querySpec.queryType == "smart") {
                 return this.smartQuerySoupFull(querySpec);
+            }
+
+            if (querySpec.queryType == "match") {
+                return this.querySoupFullTextSearch(soupName, querySpec);
             }
 
             // other query type
@@ -511,7 +628,6 @@ var MockSmartStore = (function(window) {
             var soupIndexedData = this._soupIndexedData[soupName];
             var results = [];
             var likeRegexp = (querySpec.likeKey ? new RegExp("^" + querySpec.likeKey.replace(/%/g, ".*"), "i") : null);
-            var matchRegexp = (querySpec.queryType == "match" ? new RegExp(querySpec.matchKey.replace(/\*/g, ".*"), "i") : null);
             for (var soupEntryId in soup) {
                 var soupElt = soup[soupEntryId];
                 var projection = soupIndexedData[soupEntryId][querySpec.indexPath];
@@ -531,23 +647,21 @@ var MockSmartStore = (function(window) {
                         results.push(soupElt);
                     }
                 }
-                else if (querySpec.queryType === "match") {
-                    if (projection.match(matchRegexp)) {
-                        results.push(soupElt);
-                    }
-                }
             }
 
-            results = results.sort(function(soupElt1,soupElt2) {
+            return this.sortResults(results, querySpec);
+        },
+
+        sortResults: function(results, querySpec) {
+            var resultsSorted = results.sort(function(soupElt1,soupElt2) {
                 var p1 = soupElt1[querySpec.orderPath];
                 var p2 = soupElt2[querySpec.orderPath];
                 var compare = ( p1 > p2 ? 1 : (p1 == p2 ? 0 : -1));
                 return (querySpec.order == "ascending" ? compare : -compare);
             });
 
-            return results;
+            return resultsSorted;
         },
-
 
         querySoup: function(soupName, querySpec) {
             var results = this.querySoupFull(soupName, querySpec);
