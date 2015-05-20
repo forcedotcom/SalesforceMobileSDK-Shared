@@ -1167,7 +1167,8 @@
                     } else return {
                         records: resp.recentItems,
                         totalSize: resp.recentItems.length,
-                        hasMore: function() { return false; }
+                        hasMore: function() { return false; },
+                        getMore: function() { return null; }
                     };
                 });
         };
