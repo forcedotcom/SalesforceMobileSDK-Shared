@@ -111,12 +111,8 @@ app.models.UserCollection = Force.SObjectCollection.extend({
 
     setCriteria: function(key) {
         this.key = key;
-        this.config = {type:"cache", 
-                       cacheQuery:{queryType:"match",
-                                   matchKey:key + "*",
-                                   orderPath:"LastName",
-                                   pageSize:25}
-                      };
+        var querySpec = _.extend({orderPath:"LastName", pageSize:25}, (key == "" ? {queryType:"range"} : {queryType:"match", matchKey: key + "*"}));
+        this.config = {type:"cache", cacheQuery: querySpec};
     }
 });
 
