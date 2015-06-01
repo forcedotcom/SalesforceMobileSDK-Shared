@@ -890,12 +890,12 @@ SmartStoreTestSuite.prototype.testFullTextSearch  = function() {
         })
         .pipe(function() {
             // Searching across fields with multiple terms one being negated
-            var querySpec = navigator.smartstore.buildMatchQuerySpec(null, "black -tabby", "descending", 10, "name");
+            var querySpec = navigator.smartstore.buildMatchQuerySpec(null, "black NOT tabby", "descending", 10, "name");
             return self.tryFullTextSearch(soupName, querySpec, ["lizard", "dog"]);
         })
         .pipe(function() {
             // Searching across fields with multiple terms (one starred, one negated)
-            var querySpec = navigator.smartstore.buildMatchQuerySpec(null, "gr* -small", "ascending", 10, "name");
+            var querySpec = navigator.smartstore.buildMatchQuerySpec(null, "gr* NOT small", "ascending", 10, "name");
             return self.tryFullTextSearch(soupName, querySpec, ["dog", "elephant"]);
         })
         .pipe(function(entries) {
@@ -916,12 +916,12 @@ SmartStoreTestSuite.prototype.testFullTextSearch  = function() {
         })
         .pipe(function() {
             // Searching one field with multiple terms one being negated
-            var querySpec = navigator.smartstore.buildMatchQuerySpec("colors", "black -tabby", "descending", 10, "name");
+            var querySpec = navigator.smartstore.buildMatchQuerySpec("colors", "black NOT tabby", "descending", 10, "name");
             return self.tryFullTextSearch(soupName, querySpec, ["lizard", "dog"]);
         })
         .pipe(function() {
             // Searching one with multiple terms (one starred, one negated)
-            var querySpec = navigator.smartstore.buildMatchQuerySpec("description", "m* -small", "ascending", 10, "name");
+            var querySpec = navigator.smartstore.buildMatchQuerySpec("description", "m* NOT small", "ascending", 10, "name");
             return self.tryFullTextSearch(soupName, querySpec, ["dog", "elephant"]);
         })
         .done(function(param) { 
