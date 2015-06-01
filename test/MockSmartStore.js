@@ -552,10 +552,11 @@ var MockSmartStore = (function(window) {
         //
         // Example for the text: "the fox jumped over the dog"
         // query "fox dog" will return true
-        // query "fox -dog" will return false
+        // query "fox NOT dog" will return false
         // query "f* dog" will return true
         doesFullTextMatch: function(text, query) {
-            var wordsOfQuery = query.split(/[^a-zA-Z0-9*-]/);
+            var queryWithMinusForNots = query.replace(/ NOT /g, " -"); // code was originally written for standard syntax, turning "abc NOT def" into "abc -def"
+            var wordsOfQuery = queryWithMinusForNots.split(/[^a-zA-Z0-9*-]/);
             wordsOfQuery.sort(); // to move the "-" words first
             var wordsOfElt = text.split(/\W/);
             wordsOfElt.sort(); // to speed up matches
