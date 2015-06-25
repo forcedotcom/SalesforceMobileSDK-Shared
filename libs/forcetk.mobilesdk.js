@@ -265,7 +265,7 @@ if (forcetk.Client === undefined) {
         this.sessionId = sessionId;
         this.apiVersion = (typeof apiVersion === 'undefined' || apiVersion === null) ? 'v33.0': apiVersion;
         // In PhoneGap OR outside
-        if (location.protocol === 'file:' || this.proxyUrl != null) {
+        if (location.protocol === 'ms-appx:' || location.protocol === 'ms-appx-web:' || location.protocol === 'file:' || this.proxyUrl != null) {
             this.instanceUrl = instanceUrl;
         } 
         // In Visualforce
