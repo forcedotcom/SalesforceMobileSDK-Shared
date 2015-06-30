@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "3.3.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "4.0.0";
 var SERVICE = "com.salesforce.smartsync";
 
 var exec = require("com.salesforce.util.exec").exec;
