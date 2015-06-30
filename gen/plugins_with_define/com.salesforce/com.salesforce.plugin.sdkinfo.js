@@ -1,6 +1,6 @@
 cordova.define("com.salesforce.plugin.sdkinfo", function(require, exports, module) {
 /*
- * Copyright (c) 2012-14, salesforce.com, inc.
+ * Copyright (c) 2012-15, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -26,7 +26,7 @@ cordova.define("com.salesforce.plugin.sdkinfo", function(require, exports, modul
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "3.2.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "3.3.0";
 var SERVICE = "com.salesforce.sdkinfo";
 
 var exec = require("com.salesforce.util.exec").exec;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-14, salesforce.com, inc.
+ * Copyright (c) 2012-15, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "3.2.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "3.3.0";
 
 /**
  * Utilify functions for logging
@@ -488,7 +488,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         //path for the original IndexSpec you wish to use for search: may be a compound path eg Account.Owner.Name
         this.indexPath = path;
 
-        //for queryType "exact"
+        //for queryType "exact" and "match"
         this.matchKey = null;
 
         //for queryType "like"
@@ -502,6 +502,9 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
 
         // for queryType "smart"
         this.smartSql = null;
+
+        //path to sort by : optional
+        this.orderPath = null
 
         //"ascending" or "descending" : optional
         this.order = "ascending";
@@ -554,37 +557,55 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     var buildAllQuerySpec = function (path, order, pageSize) {
         var inst = new QuerySpec(path);
         inst.queryType = "range";
+        inst.orderPath = path;
         if (order) { inst.order = order; } // override default only if a value was specified
         if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
         return inst;
     };
 
     // Returns a query spec that will page all entries exactly matching the matchKey value for path
-    var buildExactQuerySpec = function (path, matchKey, pageSize) {
+    var buildExactQuerySpec = function (path, matchKey, pageSize, order, orderPath) {
         var inst = new QuerySpec(path);
         inst.matchKey = matchKey;
         if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+        if (order) { inst.order = order; } // override default only if a value was specified
+        inst.orderPath = orderPath ? orderPath : path;
         return inst;
     };
 
     // Returns a query spec that will page all entries in the range beginKey ...endKey for path
-    var buildRangeQuerySpec = function (path, beginKey, endKey, order, pageSize) {
+    var buildRangeQuerySpec = function (path, beginKey, endKey, order, pageSize, orderPath) {
         var inst = new QuerySpec(path);
         inst.queryType = "range";
         inst.beginKey = beginKey;
         inst.endKey = endKey;
         if (order) { inst.order = order; } // override default only if a value was specified
         if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+        inst.orderPath = orderPath ? orderPath : path;
         return inst;
     };
 
     // Returns a query spec that will page all entries matching the given likeKey value for path
-    var buildLikeQuerySpec = function (path, likeKey, order, pageSize) {
+    var buildLikeQuerySpec = function (path, likeKey, order, pageSize, orderPath) {
         var inst = new QuerySpec(path);
         inst.queryType = "like";
         inst.likeKey = likeKey;
         if (order) { inst.order = order; } // override default only if a value was specified
         if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+        inst.orderPath = orderPath ? orderPath : path;
+        return inst;
+    };
+
+    // Returns a query spec that will page all entries matching the given full-text search matchKey value for path
+    // Pass null for path to match matchKey across all full-text indexed fields
+    var buildMatchQuerySpec = function (path, matchKey, order, pageSize, orderPath) {
+        var inst = new QuerySpec(path);
+        inst.queryType = "match";
+        inst.matchKey = matchKey;
+        inst.orderPath = orderPath;
+        if (order) { inst.order = order; } // override default only if a value was specified
+        if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+        inst.orderPath = orderPath ? orderPath : path;
         return inst;
     };
 
@@ -697,6 +718,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     var querySoup = function (isGlobalStore, soupName, querySpec, successCB, errorCB) {
         if (checkFirstArg(arguments)) return;
         if (querySpec.queryType == "smart") throw new Error("Smart queries can only be run using runSmartQuery");
+        if (querySpec.order != null && querySpec.orderPath == null) querySpec.orderPath = querySpec.indexPath; // for backward compatibility with pre-3.3 code
         storeConsole.debug("SmartStore.querySoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",indexPath=" + querySpec.indexPath);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgQuerySoup",
@@ -796,6 +818,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         buildLikeQuerySpec: buildLikeQuerySpec,
         buildRangeQuerySpec: buildRangeQuerySpec,
         buildSmartQuerySpec: buildSmartQuerySpec,
+        buildMatchQuerySpec: buildMatchQuerySpec,
         clearSoup: clearSoup,
         closeCursor: closeCursor,
         getDatabaseSize: getDatabaseSize,

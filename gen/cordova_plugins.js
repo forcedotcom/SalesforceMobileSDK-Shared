@@ -47,7 +47,7 @@ module.exports = [
 module.exports.metadata = 
 // TOP OF METADATA
 {
-    "com.salesforce": "3.2.0"
+    "com.salesforce": "3.3.0"
 }
 // BOTTOM OF METADATA
 });
