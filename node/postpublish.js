@@ -30,13 +30,13 @@
 var exec = require('child_process').exec;
 var path = require('path');
 var fs = require('fs');
-var repoUtils = require('../external/shared/node/repoUtils');
+var repoUtils = require('./repoUtils');
 
 var fullInputPath = path.resolve(path.join(__dirname, 'changed_symlink_files'));
 var symLinkEntries = repoUtils.readSymLinkInput(fullInputPath);
 
 // Move the original README back into place.
-var absGitRepoPath = path.resolve(path.join(__dirname, '..'));
+var absGitRepoPath = path.resolve(path.join(__dirname, '..', '..', '..'));
 var readmePath = path.join(absGitRepoPath, 'README.md');
 var readmeBackupPath = readmePath + '.orig';
 console.log('Moving original repo README file back into place.');

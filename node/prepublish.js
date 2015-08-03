@@ -38,10 +38,10 @@
 var fs = require('fs');
 var path = require('path');
 var exec = require('child_process').exec;
-var repoUtils = require('../external/shared/node/repoUtils');
+var repoUtils = require('./repoUtils');
 
 // Use npm.md as the README for the package.
-var absGitRepoPath = path.resolve(path.join(__dirname, '..'));
+var absGitRepoPath = path.resolve(path.join(__dirname, '..', '..', '..'));
 var readmePath = path.join(absGitRepoPath, 'README.md');
 var readmeBackupPath = readmePath + '.orig';
 var npmMdPath = path.join(absGitRepoPath, 'npm.md');
