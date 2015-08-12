@@ -218,7 +218,7 @@
                 var o = soupElt;
                 for (var i = 0; i<pathElements.length; i++) {
                     var pathElement = pathElements[i];
-                    if (!_.has(o, pathElement)) {
+					if (!o || !_.has(o, pathElement)) {
                         return false;
                     }
                     o = o[pathElement];
