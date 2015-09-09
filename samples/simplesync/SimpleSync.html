@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Users</title>
+<title>Contacts</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
 <link rel="stylesheet" href="css/ratchet.css"/>
 <link rel="stylesheet" href="css/ratchet-theme-ios.css"/> <!-- TODO import ratchet-theme.css instead and have ratchet-theme.css point to the theme for the platform -->
@@ -38,7 +38,7 @@
 <!-- --------------------------------------- Search page template ------------------------------------------------- -->
 <script id="search-page" type="text/template">
   <header class="bar bar-nav">
-    <h1 class="title">Users</h1>
+    <h1 class="title">Contacts</h1>
   </header>
   <footer class="bar bar-footer">
     <a class="btn btn-nav btn-positive pull-left syncdownmru">Sync mru</a>
@@ -58,18 +58,18 @@
   </div>
 </script>
 
-<!-- --------------------------------------- User list item template ---------------------------------------------- -->
-<script id="user-list-item" type="text/template">
+<!-- --------------------------------------- Contact list item template ---------------------------------------------- -->
+<script id="contact-list-item" type="text/template">
 
-  <a href="#users/<%= Id %>">
+  <a href="#contacts/<%= Id %>">
     <span class="important"><%= FirstName %> <%= LastName %></span><br/>
-    <% if (Title) { %><%= Title %><% } %> <% if (CompanyName) { %><%= CompanyName %><% } %>
+    <% if (Title) { %><%= Title %><% } %> <% if (Department) { %><%= Department %><% } %>
     <% if (__locally_updated__) { %><span class="pull-right btn btn-negative">modified</span><br/><% } %>
   </a>
 </script>
 
-<!-- --------------------------------------- User page template -------------------------------------------------- -->
-<script id="user-page" type="text/template">
+<!-- --------------------------------------- Contact page template -------------------------------------------------- -->
+<script id="contact-page" type="text/template">
   <header class="bar bar-nav">
     <a href="#" class="btn btn-nav pull-left back">Back</a>
     <a class="btn btn-nav btn-positive pull-right save">Save</a>
@@ -80,9 +80,9 @@
     <div class="content-padded">
       <div class="details">
         <input placeholder="Title" type="text" name="Title" value="<%= Title %>" /><br/>
-        <input placeholder="CompanyName" type="text" name="CompanyName" value="<%= CompanyName %>" /><br/>
-        <input placeholder="City" type="text" name="City" value="<%= City %>" /><br/>
-        <input placeholder="Phone" type="text" name="MobilePhone" value="<%= MobilePhone %>" /><br/>
+        <input placeholder="Department" type="text" name="Department" value="<%= Department %>" /><br/>
+        <input placeholder="MobilePhone" type="text" name="MobilePhone" value="<%= MobilePhone %>" /><br/>
+        <input placeholder="HomePhone" type="text" name="HomePhone" value="<%= HomePhone %>" /><br/>
         <input placeholder="Email" type="text" name="Email" value="<%= Email %>" />
         <% if (__locally_updated__) { %><span class="btn btn-negative btn-block">Locally Modified</span><% } %>
       </div>
@@ -92,17 +92,17 @@
 
 <script>
 // -------------------------------------------------- The Models ---------------------------------------------------- //
-// The User Model
-app.models.User = Force.SObject.extend({
-    sobjectType: "User",
-    fieldlist: ["Id", "FirstName", "LastName", "Title", "CompanyName", "Email", "MobilePhone","City", "LastModifiedDate"],
+// The Contact Model
+app.models.Contact = Force.SObject.extend({
+    sobjectType: "Contact",
+    fieldlist: ["Id", "FirstName", "LastName", "Title", "Email", "MobilePhone","Department","HomePhone", "LastModifiedDate"],
     cache: function() { return app.cache;},
     cacheMode: Force.CACHE_MODE.CACHE_ONLY
 });
 
-// The UserCollection Model
-app.models.UserCollection = Force.SObjectCollection.extend({
-    model: app.models.User,
+// The ContactCollection Model
+app.models.ContactCollection = Force.SObjectCollection.extend({
+    model: app.models.Contact,
     cache: function() { return app.cache;},
 
     getCriteria: function() {
@@ -135,8 +135,8 @@ app.views.SearchPage = Backbone.View.extend({
 
     initialize: function() {
         var that = this;
-        this.fieldlist = app.models.User.prototype.fieldlist;
-        this.listView = new app.views.UserListView({model: this.model});
+        this.fieldlist = app.models.Contact.prototype.fieldlist;
+        this.listView = new app.views.ContactListView({model: this.model});
         document.addEventListener("sync", function() { 
             that.handleSyncUpdate(event.detail);
         });
@@ -166,17 +166,17 @@ app.views.SearchPage = Backbone.View.extend({
     },
 
     syncDown: function(target) {
-        cordova.require("com.salesforce.plugin.smartsync").syncDown(target, "users", {mergeMode:Force.MERGE_MODE_DOWNLOAD.LEAVE_IF_CHANGED}, this.handleSyncUpdate.bind(this));
+        cordova.require("com.salesforce.plugin.smartsync").syncDown(target, "contacts", {mergeMode:Force.MERGE_MODE_DOWNLOAD.LEAVE_IF_CHANGED}, this.handleSyncUpdate.bind(this));
     },
 
     syncDownMru: function(event) {
-        this.syncDown({type:"mru", sobjectType: "User", fieldlist: this.fieldlist});
+        this.syncDown({type:"mru", sobjectType: "Contact", fieldlist: this.fieldlist});
     },
 
     syncDownSoql: function(event) {
         if (!_.isNumber(this.lastSoqlSyncDownId)) {
             // First time
-            this.syncDown({type:"soql", query:"SELECT " + this.fieldlist.join(",") + " FROM User WHERE CompanyName = 'salesforce.com' LIMIT 10000"});
+            this.syncDown({type:"soql", query:"SELECT " + this.fieldlist.join(",") + " FROM Contact  LIMIT 10000"});
         }
         else {
             // Subsequent times
@@ -185,15 +185,15 @@ app.views.SearchPage = Backbone.View.extend({
     },
 
     syncDownSosl: function(event) {
-        this.syncDown({type:"sosl", query:"FIND {salesforce.com} RETURNING User (" + this.fieldlist.join(",") + ")"});
+        this.syncDown({type:"sosl", query:"FIND {salesforce.com} RETURNING Contact (" + this.fieldlist.join(",") + ")"});
     },
 
     syncUp: function(event) {
-        cordova.require("com.salesforce.plugin.smartsync").syncUp("users", {fieldlist: this.fieldlist}, this.handleSyncUpdate.bind(this));
+        cordova.require("com.salesforce.plugin.smartsync").syncUp("contacts", {fieldlist: this.fieldlist}, this.handleSyncUpdate.bind(this));
     },
 
     cacheSize: function() {
-        Force.smartstoreClient.runSmartQuery({queryType:"smart", smartSql:"SELECT count(*) from {users}", pageSize:1})
+        Force.smartstoreClient.runSmartQuery({queryType:"smart", smartSql:"SELECT count(*) from {contacts}", pageSize:1})
             .done(function(result) {
                 alert("Number of entries in cache: " + result.currentPageOrderedEntries[0][0]);
             });
@@ -209,7 +209,7 @@ app.views.SearchPage = Backbone.View.extend({
     }
 });
 
-app.views.UserListView = Backbone.View.extend({
+app.views.ContactListView = Backbone.View.extend({
 
     listItemViews: [],
 
@@ -219,17 +219,17 @@ app.views.UserListView = Backbone.View.extend({
 
     render: function(eventName) {
         _.each(this.listItemViews, function(itemView) { itemView.close(); });
-        this.listItemViews = _.map(this.model.models, function(model) { return new app.views.UserListItemView({model: model}); });
+        this.listItemViews = _.map(this.model.models, function(model) { return new app.views.ContactListItemView({model: model}); });
         $(this.el).append(_.map(this.listItemViews, function(itemView) { return itemView.render().el;} ));
         return this;
     }
 
 });
 
-app.views.UserListItemView = Backbone.View.extend({
+app.views.ContactListItemView = Backbone.View.extend({
 
     tagName: "li",
-    template: _.template($("#user-list-item").html()),
+    template: _.template($("#contact-list-item").html()),
 
     render: function(eventName) {
         $(this.el).addClass("table-view-cell").html(this.template(this.model.toJSON()));
@@ -242,9 +242,9 @@ app.views.UserListItemView = Backbone.View.extend({
     }
 });
 
-app.views.UserPage = Backbone.View.extend({
+app.views.ContactPage = Backbone.View.extend({
 
-    template: _.template($("#user-page").html()),
+    template: _.template($("#contact-page").html()),
 
     events: {
         "change": "change",
@@ -280,12 +280,12 @@ app.Router = Backbone.StackRouter.extend({
     routes: {
         "": "list",
         "list": "list",
-        "users/:id": "viewUser"
+        "contacts/:id": "viewContact"
     },
 
     setupCaches: function() {
         // Cache for offline support
-        app.cache = new Force.StoreCache("users", [ {path:"FirstName", type:"full_text"}, {path:"LastName", type:"full_text"}, {path:"Title", type:"full_text"} ]);
+        app.cache = new Force.StoreCache("contacts", [ {path:"FirstName", type:"full_text"}, {path:"LastName", type:"full_text"}, {path:"Title", type:"full_text"} ]);
         app.cache.init();
     },
 
@@ -296,11 +296,11 @@ app.Router = Backbone.StackRouter.extend({
         this.setupCaches();
 
         // Collection behind search screen
-        app.searchResults = new app.models.UserCollection();
+        app.searchResults = new app.models.ContactCollection();
 
-        // We keep a single instance of SearchPage and UserPage
+        // We keep a single instance of SearchPage and ContactPage
         app.searchPage = new app.views.SearchPage({model: app.searchResults});
-        app.userPage = new app.views.UserPage();
+        app.contactPage = new app.views.ContactPage();
     },
 
     list: function() {
@@ -309,13 +309,13 @@ app.Router = Backbone.StackRouter.extend({
         this.slidePage(app.searchPage);
     },
 
-    viewUser: function(id) {
+    viewContact: function(id) {
         var that = this;
-        var user = new app.models.User({Id: id});
-        user.fetch({
+        var contact = new app.models.Contact({Id: id});
+        contact.fetch({
             success: function() {
-                app.userPage.model = user;
-                that.slidePage(app.userPage);
+                app.contactPage.model = contact;
+                that.slidePage(app.contactPage);
             }
         });
     }
