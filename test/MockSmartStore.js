@@ -622,8 +622,12 @@ var MockSmartStore = (function(window) {
             }
 
             // other query type
-            this.checkSoup(soupName); 
-            this.checkIndex(soupName, querySpec.indexPath);
+            this.checkSoup(soupName);
+
+            // other query type (but not all query)
+            if (!(querySpec.queryType == "range" && querySpec.beginKey == null && querySpec.endKey == null)) {
+                this.checkIndex(soupName, querySpec.indexPath);
+            }
 
             var soup = this._soups[soupName];
             var soupIndexedData = this._soupIndexedData[soupName];
@@ -631,7 +635,7 @@ var MockSmartStore = (function(window) {
             var likeRegexp = (querySpec.likeKey ? new RegExp("^" + querySpec.likeKey.replace(/%/g, ".*"), "i") : null);
             for (var soupEntryId in soup) {
                 var soupElt = soup[soupEntryId];
-                var projection = soupIndexedData[soupEntryId][querySpec.indexPath];
+                var projection = querySpec.indexPath == null ? null : soupIndexedData[soupEntryId][querySpec.indexPath];
                 if (querySpec.queryType === "exact") {
                     if (projection == querySpec.matchKey) {
                         results.push(soupElt);
