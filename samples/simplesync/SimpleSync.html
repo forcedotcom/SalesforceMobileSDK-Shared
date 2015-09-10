@@ -39,12 +39,9 @@
 <script id="search-page" type="text/template">
   <header class="bar bar-nav">
     <h1 class="title">Contacts</h1>
+    <a class="btn btn-nav btn-positive pull-right sync">Sync</a>
   </header>
   <footer class="bar bar-footer">
-    <a class="btn btn-nav btn-positive pull-left syncdownmru">Sync mru</a>
-    <a class="btn btn-nav btn-positive pull-left syncdownsoql">Sync soql</a>
-    <a class="btn btn-nav btn-positive pull-left syncdownsosl">Sync sosl</a>
-    <a class="btn btn-nav btn-positive pull-left syncup">Sync Up</a>
     <a class="btn btn-nav pull-right cachesize">Cache Size</a>
     <a class="btn btn-nav pull-right inspect">DB</a>
   </footer>
@@ -62,9 +59,14 @@
 <script id="contact-list-item" type="text/template">
 
   <a href="#contacts/<%= Id %>">
-    <span class="important"><%= FirstName %> <%= LastName %></span><br/>
-    <% if (Title) { %><%= Title %><% } %> <% if (Department) { %><%= Department %><% } %>
-    <% if (__locally_updated__) { %><span class="pull-right btn btn-negative">modified</span><br/><% } %>
+    <div class="circle" style="background-color:<%= color %>">
+      <div class="initials"><%= initials %></div>
+    </div>
+    <div>
+      <span class="important"><%= FirstName %> <%= LastName %></span><br/>
+      <% if (Title) { %><%= Title %><% } %> <% if (Department) { %><%= Department %><% } %>
+      <% if (__locally_updated__) { %><span class="pull-right btn btn-negative">modified</span><br/><% } %>
+      </div>
   </a>
 </script>
 
@@ -79,11 +81,13 @@
   <div class="content">
     <div class="content-padded">
       <div class="details">
+        <input placeholder="FirstName" type="text" name="FirstName" value="<%= FirstName %>" /><br/>
+        <input placeholder="LastName" type="text" name="LastName" value="<%= LastName %>" /><br/>
         <input placeholder="Title" type="text" name="Title" value="<%= Title %>" /><br/>
+        <input placeholder="Mobile Phone" type="text" name="MobilePhone" value="<%= MobilePhone %>" /><br/>
+        <input placeholder="Email address" type="text" name="Email" value="<%= Email %>" />
         <input placeholder="Department" type="text" name="Department" value="<%= Department %>" /><br/>
-        <input placeholder="MobilePhone" type="text" name="MobilePhone" value="<%= MobilePhone %>" /><br/>
-        <input placeholder="HomePhone" type="text" name="HomePhone" value="<%= HomePhone %>" /><br/>
-        <input placeholder="Email" type="text" name="Email" value="<%= Email %>" />
+        <input placeholder="Home Phone" type="text" name="HomePhone" value="<%= HomePhone %>" /><br/>
         <% if (__locally_updated__) { %><span class="btn btn-negative btn-block">Locally Modified</span><% } %>
       </div>
     </div>
@@ -125,10 +129,7 @@ app.views.SearchPage = Backbone.View.extend({
 
     events: {
         "keyup .search-key": "search",
-        "click .syncdownmru": "syncDownMru",
-        "click .syncdownsoql": "syncDownSoql",
-        "click .syncdownsosl": "syncDownSosl",
-        "click .syncup": "syncUp",
+        "click .sync": "sync",
         "click .cachesize": "cacheSize",
         "click .inspect": "inspect"
     },
@@ -136,26 +137,11 @@ app.views.SearchPage = Backbone.View.extend({
     initialize: function() {
         var that = this;
         this.fieldlist = app.models.Contact.prototype.fieldlist;
+        this.fieldlistForSyncUp = _.omit(app.models.Contact.prototype.fieldlist, "Id", "LastModifiedDate");
         this.listView = new app.views.ContactListView({model: this.model});
         document.addEventListener("sync", function() { 
             that.handleSyncUpdate(event.detail);
         });
-    },
-
-    handleSyncUpdate: function(sync) {
-        var progress =  (typeof sync.progress === "number" && sync.progress < 100) ? " (" + Math.round(sync.progress) + "%)" : "";
-
-        if (sync.type === "syncDown") {
-            if (sync.target.type == "soql") {
-                this.lastSoqlSyncDownId = sync.syncId;
-            }
-            var syncType = sync.target.type.toLowerCase()
-            $(".syncdown" + syncType).html("Sync " + syncType + progress);
-        }
-        if (sync.type === "syncUp") {
-            $(".syncup").html("Sync Up" + progress);
-        }
-        if (sync.status === "DONE") { this.search(); }
     },
 
     render: function(eventName) {
@@ -165,31 +151,54 @@ app.views.SearchPage = Backbone.View.extend({
         return this;
     },
 
-    syncDown: function(target) {
-        cordova.require("com.salesforce.plugin.smartsync").syncDown(target, "contacts", {mergeMode:Force.MERGE_MODE_DOWNLOAD.LEAVE_IF_CHANGED}, this.handleSyncUpdate.bind(this));
+    // syncUp followed by syncDown followed by search
+    handleSyncUpdate: function(sync) {
+        if (sync.status !== "DONE") {
+            $(".sync").html("Sync - " + sync.type + " " + Math.round(sync.progress) + "%");
+
+            if (sync.type === "syncDown") {
+                this.lastSyncDownId = sync._soupEntryId;
+            }
+        }
+
+        if (sync.status === "DONE") {
+            $(".sync").html("Sync");
+
+            if (sync.type === "syncDown") {
+                this.syncInFlight = false;
+                $(".sync").disabled = false;
+                this.search();
+            }
+            if (sync.type === "syncUp") {
+                this.syncDown();
+            }
+        }
+        else {
+        }
     },
 
-    syncDownMru: function(event) {
-        this.syncDown({type:"mru", sobjectType: "Contact", fieldlist: this.fieldlist});
-    },
-
-    syncDownSoql: function(event) {
-        if (!_.isNumber(this.lastSoqlSyncDownId)) {
+    syncDown: function() {
+        if (!_.isNumber(this.lastsyncDownId)) {
             // First time
-            this.syncDown({type:"soql", query:"SELECT " + this.fieldlist.join(",") + " FROM Contact  LIMIT 10000"});
+            var target = {type:"soql", query:"SELECT " + this.fieldlist.join(",") + " FROM Contact  LIMIT 10000"};
+            cordova.require("com.salesforce.plugin.smartsync").syncDown(target, "contacts", {mergeMode:Force.MERGE_MODE_DOWNLOAD.OVERWRITE}, this.handleSyncUpdate.bind(this));
         }
         else {
             // Subsequent times
-            cordova.require("com.salesforce.plugin.smartsync").reSync(this.lastSoqlSyncDownId, this.handleSyncUpdate.bind(this));
+            cordova.require("com.salesforce.plugin.smartsync").reSync(this.lastSyncDownId, this.handleSyncUpdate.bind(this));
         }
     },
 
-    syncDownSosl: function(event) {
-        this.syncDown({type:"sosl", query:"FIND {salesforce.com} RETURNING Contact (" + this.fieldlist.join(",") + ")"});
+    syncUp: function() {
+        cordova.require("com.salesforce.plugin.smartsync").syncUp("contacts", {fieldlist: this.fieldlistForSyncUp}, this.handleSyncUpdate.bind(this));
     },
 
-    syncUp: function(event) {
-        cordova.require("com.salesforce.plugin.smartsync").syncUp("contacts", {fieldlist: this.fieldlist}, this.handleSyncUpdate.bind(this));
+    sync: function() {
+        if (!this.syncInFlight) {
+            this.syncInFlight = true;
+            $(".sync").disabled = true;
+            this.syncUp();
+        }
     },
 
     cacheSize: function() {
@@ -227,12 +236,46 @@ app.views.ContactListView = Backbone.View.extend({
 });
 
 app.views.ContactListItemView = Backbone.View.extend({
+    colors : [
+	    'rgb(26, 188, 156)',
+	    'rgb(46, 204, 113)',
+	    'rgb(52, 152, 219)',
+	    'rgb(155, 89, 182)',
+	    'rgb(52, 73, 94)',
+	    'rgb(22, 160, 133)',
+	    'rgb(39, 174, 96)',
+	    'rgb(41, 128, 185)',
+	    'rgb(142, 68, 173)',
+	    'rgb(44, 62, 80)',
+	    'rgb(241, 196, 15)',
+	    'rgb(230, 126, 34)',
+	    'rgb(231, 76, 60)',
+	    'rgb(149, 165, 166)',
+	    'rgb(243, 156, 18)',
+	    'rgb(211, 84, 0)',
+	    'rgb(192, 57, 43)',
+	    'rgb(189, 195, 199)',
+	    'rgb(127, 140, 141)'
+    ],
 
     tagName: "li",
     template: _.template($("#contact-list-item").html()),
 
     render: function(eventName) {
-        $(this.el).addClass("table-view-cell").html(this.template(this.model.toJSON()));
+        // Compute initials
+        var firstName = this.model.get("FirstName");
+        var lastName = this.model.get("LastName");
+        var initials = (firstName ? firstName.substring(0,1) : "") + (lastName ? lastName.substring(0,1) : "");
+        // Compute color
+        var code = 0;
+        if (lastName) {
+            for (var i=0; i< lastName.length; i++) {
+                code += lastName.charCodeAt(i);
+            }
+        }
+        var color = this.colors[code % this.colors.length];
+        var templateData = _.extend({initials: initials, color: color}, this.model.toJSON());
+        $(this.el).addClass("table-view-cell").html(this.template(templateData));
         return this;
     },
 
