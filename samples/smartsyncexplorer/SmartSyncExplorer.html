@@ -328,7 +328,7 @@ app.Router = Backbone.StackRouter.extend({
 
     setupCaches: function() {
         // Cache for offline support
-        app.cache = new Force.StoreCache("contacts", [ {path:"FirstName", type:"full_text"}, {path:"LastName", type:"full_text"}, {path:"Title", type:"full_text"} ]);
+        app.cache = new Force.StoreCache("contacts", [ {path:"FirstName", type:"full_text"}, {path:"LastName", type:"full_text"}]);
         app.cache.init();
     },
 
