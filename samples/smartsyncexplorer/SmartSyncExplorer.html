@@ -58,11 +58,11 @@
 <!-- --------------------------------------- Contact list item template ---------------------------------------------- -->
 <script id="contact-list-item" type="text/template">
 
-  <a href="#contacts/<%= Id %>">
+  <a href="#contacts/<%= Id %>" style="padding:0">
     <div class="circle" style="background-color:<%= color %>">
       <div class="initials"><%= initials %></div>
     </div>
-    <div>
+    <div style="padding-top:4px">
       <span class="important"><%= FirstName %> <%= LastName %></span><br/>
       <% if (Title) { %><%= Title %><% } %> <% if (Department) { %><%= Department %><% } %>
       <% if (__locally_updated__) { %><span class="pull-right btn btn-negative">modified</span><br/><% } %>
@@ -236,27 +236,7 @@ app.views.ContactListView = Backbone.View.extend({
 });
 
 app.views.ContactListItemView = Backbone.View.extend({
-    colors : [
-	    'rgb(26, 188, 156)',
-	    'rgb(46, 204, 113)',
-	    'rgb(52, 152, 219)',
-	    'rgb(155, 89, 182)',
-	    'rgb(52, 73, 94)',
-	    'rgb(22, 160, 133)',
-	    'rgb(39, 174, 96)',
-	    'rgb(41, 128, 185)',
-	    'rgb(142, 68, 173)',
-	    'rgb(44, 62, 80)',
-	    'rgb(241, 196, 15)',
-	    'rgb(230, 126, 34)',
-	    'rgb(231, 76, 60)',
-	    'rgb(149, 165, 166)',
-	    'rgb(243, 156, 18)',
-	    'rgb(211, 84, 0)',
-	    'rgb(192, 57, 43)',
-	    'rgb(189, 195, 199)',
-	    'rgb(127, 140, 141)'
-    ],
+    colors : ["#1abc9c", "#2ecc71", "#3498db", "#9b59b6", "#34495e", "#16a085", "#27ae60", "#2980b9", "#8e44ad", "#2c3e50", "#f1c40f", "#e67e22", "#e74c3c", "#95a5a6", "#f39c12", "#d35400", "#c0392b", "#bdc3c7", "#7f8c8d"],
 
     tagName: "li",
     template: _.template($("#contact-list-item").html()),
