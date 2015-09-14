@@ -65,8 +65,8 @@
     <div style="padding-top:4px">
       <span class="important"><%= FirstName %> <%= LastName %></span><br/>
       <% if (Title) { %><%= Title %><% } %> <% if (Department) { %><%= Department %><% } %>
-      <% if (__locally_updated__) { %><span class="pull-right btn btn-negative">modified</span><br/><% } %>
       </div>
+    <% if (__locally_updated__ || __locally_deleted__) { %><span class="pull-right btn btn-negative"><%= __locally_deleted__ ? "deleted" : "modified" %></span><% } %>
   </a>
 </script>
 
@@ -75,7 +75,7 @@
   <header class="bar bar-nav">
     <a href="#" class="btn btn-nav pull-left back">Back</a>
     <a class="btn btn-nav btn-positive pull-right save">Save</a>
-    <h1 class="title"><%= FirstName %> <%= LastName %></h1>
+    <a class="btn btn-nav btn-negative pull-right toggleDelete">Delete</a>
   </header>
 
   <div class="content">
@@ -88,7 +88,6 @@
         <input placeholder="Email address" type="text" name="Email" value="<%= Email %>" />
         <input placeholder="Department" type="text" name="Department" value="<%= Department %>" /><br/>
         <input placeholder="Home Phone" type="text" name="HomePhone" value="<%= HomePhone %>" /><br/>
-        <% if (__locally_updated__) { %><span class="btn btn-negative btn-block">Locally Modified</span><% } %>
       </div>
     </div>
   </div>
@@ -115,7 +114,7 @@ app.models.ContactCollection = Force.SObjectCollection.extend({
 
     setCriteria: function(key) {
         this.key = key;
-        var querySpec = _.extend({orderPath:"LastName", pageSize:25}, (key == "" ? {queryType:"range"} : {queryType:"match", matchKey: key + "*"}));
+        var querySpec = _.extend({orderPath:"LastName", pageSize:100}, (key == "" ? {queryType:"range"} : {queryType:"match", matchKey: key + "*"}));
         this.config = {type:"cache", cacheQuery: querySpec};
     }
 });
@@ -137,7 +136,7 @@ app.views.SearchPage = Backbone.View.extend({
     initialize: function() {
         var that = this;
         this.fieldlist = app.models.Contact.prototype.fieldlist;
-        this.fieldlistForSyncUp = _.omit(app.models.Contact.prototype.fieldlist, "Id", "LastModifiedDate");
+        this.fieldlistForSyncUp = _.without(app.models.Contact.prototype.fieldlist, "Id", "LastModifiedDate");
         this.listView = new app.views.ContactListView({model: this.model});
         document.addEventListener("sync", function() { 
             that.handleSyncUpdate(event.detail);
@@ -160,8 +159,7 @@ app.views.SearchPage = Backbone.View.extend({
                 this.lastSyncDownId = sync._soupEntryId;
             }
         }
-
-        if (sync.status === "DONE") {
+        else {
             $(".sync").html("Sync");
 
             if (sync.type === "syncDown") {
@@ -173,12 +171,10 @@ app.views.SearchPage = Backbone.View.extend({
                 this.syncDown();
             }
         }
-        else {
-        }
     },
 
     syncDown: function() {
-        if (!_.isNumber(this.lastsyncDownId)) {
+        if (!_.isNumber(this.lastSyncDownId)) {
             // First time
             var target = {type:"soql", query:"SELECT " + this.fieldlist.join(",") + " FROM Contact  LIMIT 10000"};
             cordova.require("com.salesforce.plugin.smartsync").syncDown(target, "contacts", {mergeMode:Force.MERGE_MODE_DOWNLOAD.OVERWRITE}, this.handleSyncUpdate.bind(this));
@@ -271,11 +267,15 @@ app.views.ContactPage = Backbone.View.extend({
 
     events: {
         "change": "change",
-        "click .save": "save"
+        "click .save": "save",
+        "click .toggleDelete": "toggleDelete"
+
     },
 
     render: function(eventName) {
         $(this.el).html(this.template(this.model.toJSON()));
+        var deleted = this.model.get("__locally_deleted__");
+        $(".toggleDelete", this.el).html(deleted?"Undelete":"Delete");
         return this;
     },
 
@@ -291,8 +291,21 @@ app.views.ContactPage = Backbone.View.extend({
                 app.router.navigate("#", {trigger:true});
             }
         });
-    }
+    },
 
+    toggleDelete: function() {
+        if(this.model.get("__locally_deleted__")) {
+            this.model.set("__locally_deleted__", false);
+            this.save();
+        }
+        else {
+            this.model.destroy({
+                success: function() {
+                    app.router.navigate("#", {trigger:true});
+                }
+            });
+        }
+    }
 });
 
 
@@ -323,6 +336,7 @@ app.Router = Backbone.StackRouter.extend({
 
         // We keep a single instance of SearchPage and ContactPage
         app.searchPage = new app.views.SearchPage({model: app.searchResults});
+        app.searchPage.sync(); // kick off sync on load
         app.contactPage = new app.views.ContactPage();
     },
 
