@@ -40,6 +40,7 @@
   <header class="bar bar-nav">
     <h1 class="title">Contacts</h1>
     <a class="btn btn-nav btn-positive pull-right sync">Sync</a>
+    <a class="btn btn-nav btn-positive pull-right add">Add</a>
   </header>
   <footer class="bar bar-footer">
     <a class="btn btn-nav pull-right cachesize">Cache Size</a>
@@ -68,14 +69,14 @@
       <span class="important"><%= FirstName %> <%= LastName %></span><br/>
       <% if (Title) { %><%= Title %><% } %> <% if (Department) { %><%= Department %><% } %>
       </div>
-    <% if (__locally_updated__ || __locally_deleted__) { %><span class="pull-right btn btn-negative"><%= __locally_deleted__ ? "deleted" : "modified" %></span><% } %>
+    <% if (__local__) { %><span class="pull-right btn btn-negative"><%= (__locally_deleted__ ? "deleted" : (__locally_created__ ? "created" : "modified")) %></span><% } %>
   </a>
 </script>
 
 <!-- --------------------------------------- Contact page template -------------------------------------------------- -->
 <script id="contact-page" type="text/template">
   <header class="bar bar-nav">
-    <a href="#" class="btn btn-nav pull-left back">Back</a>
+    <a class="btn btn-nav pull-left back">Back</a>
     <a class="btn btn-nav btn-positive pull-right save">Save</a>
     <a class="btn btn-nav btn-negative pull-right toggleDelete">Delete</a>
   </header>
@@ -130,6 +131,7 @@ app.views.SearchPage = Backbone.View.extend({
 
     events: {
         "keyup .search-key": "search",
+        "click .add": "add",
         "click .sync": "sync",
         "click .logout": "logout",
         "click .switchUser": "switchUser",
@@ -199,6 +201,15 @@ app.views.SearchPage = Backbone.View.extend({
             $(".sync").disabled = true;
             this.syncUp();
         }
+    },
+
+    add: function() {
+        var model = new app.models.Contact({Id: null, FirstName: null, LastName: null, Title: null, Email: null, MobilePhone: null, HomePhone: null, Department: null});
+        model.save(null, {
+            success: function(model) {
+                app.router.navigate("#contacts/" + model.id, {trigger:true});
+            }
+        });
     },
 
     cacheSize: function() {
@@ -279,6 +290,7 @@ app.views.ContactPage = Backbone.View.extend({
 
     events: {
         "change": "change",
+        "click .back": "back",
         "click .save": "save",
         "click .toggleDelete": "toggleDelete"
 
@@ -295,6 +307,20 @@ app.views.ContactPage = Backbone.View.extend({
         // apply change to model
         var target = event.target;
         this.model.set(target.name, target.value);
+    },
+
+    back: function() {
+        if(this.model.get("__locally_created__") && !this.model.get("__locally_modified__")) {
+            // Nothing typed in - delete
+            this.model.destroy({
+                success: function() {
+                    app.router.navigate("#", {trigger:true});
+                }
+            });
+        }
+        else {
+            app.router.navigate("#", {trigger:true});
+        }
     },
 
     save: function() {
