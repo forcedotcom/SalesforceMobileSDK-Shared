@@ -192,7 +192,7 @@ app.views.SearchPage = Backbone.View.extend({
     },
 
     syncUp: function() {
-        cordova.require("com.salesforce.plugin.smartsync").syncUp("contacts", {fieldlist: this.fieldlistForSyncUp}, this.handleSyncUpdate.bind(this));
+        cordova.require("com.salesforce.plugin.smartsync").syncUp("contacts", {fieldlist: this.fieldlistForSyncUp, sobjectCollectionClass:app.models.ContactCollection /* only used by mock */}, this.handleSyncUpdate.bind(this));
     },
 
     sync: function() {
