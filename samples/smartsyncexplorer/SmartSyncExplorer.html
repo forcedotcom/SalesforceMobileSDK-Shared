@@ -44,6 +44,8 @@
   <footer class="bar bar-footer">
     <a class="btn btn-nav pull-right cachesize">Cache Size</a>
     <a class="btn btn-nav pull-right inspect">DB</a>
+    <a class="btn btn-nav pull-right switchUser">Switch User</a>
+    <a class="btn btn-nav pull-right logout">Logout</a>
   </footer>
 
   <div class="bar bar-standard bar-header-secondary">
@@ -129,6 +131,8 @@ app.views.SearchPage = Backbone.View.extend({
     events: {
         "keyup .search-key": "search",
         "click .sync": "sync",
+        "click .logout": "logout",
+        "click .switchUser": "switchUser",
         "click .cachesize": "cacheSize",
         "click .inspect": "inspect"
     },
@@ -206,6 +210,14 @@ app.views.SearchPage = Backbone.View.extend({
 
     inspect: function() {
         cordova.require("com.salesforce.plugin.smartstore").showInspector();
+    },
+
+    switchUser: function() {
+        cordova.require("com.salesforce.plugin.sfaccountmanager").switchToUser();
+    },
+
+    logout: function() {
+        cordova.require("com.salesforce.plugin.sfaccountmanager").logout();
     },
 
     search: function(event) {
