@@ -134,11 +134,11 @@ var MockSmartSyncPlugin = (function(window) {
             return modifiedQuery;
         },
 
-        syncUp: function(target, soupName, options, successCB, errorCB) {
+        syncUp: function(target, soupName, options, successCB, errorCB, sobjectCollectionClass) {
             var self = this;
             var syncId = self.recordSync("syncUp", target, soupName, options);
             var cache = new Force.StoreCache(soupName,  null, null, this.isGlobalStore);
-            var collection = new Force.SObjectCollection();
+            var collection = typeof sobjectCollectionClass === "function" ? new sobjectCollectionClass() : new Force.SObjectCollection();
             var numberRecords;
             collection.cache = cache;
             collection.config = {type:"cache", cacheQuery:{queryType:"exact", indexPath:"__local__", matchKey:true, order:"ascending", pageSize:10000}};
@@ -223,7 +223,8 @@ var mockGlobalSyncManager = new MockSmartSyncPlugin(true);
 
     cordova.interceptExec(SMARTSYNC_SERVICE, "syncUp", function (successCB, errorCB, args) {
         var mgr = args[0].isGlobalStore ? globalSyncManager : syncManager;
-        mgr.syncUp(args[0].target, args[0].soupName, args[0].options, successCB, errorCB);
+        mgr.syncUp(args[0].target, args[0].soupName, args[0].options, successCB, errorCB,
+                   args[0].options.sobjectCollectionClass /* XXX only in mock: needed to successfully sync up locally created records because sobjectType is unknown otherwise */);
     });
 
     cordova.interceptExec(SMARTSYNC_SERVICE, "syncDown", function (successCB, errorCB, args) {
