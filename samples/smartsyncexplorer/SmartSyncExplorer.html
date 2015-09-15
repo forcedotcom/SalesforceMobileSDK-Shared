@@ -192,7 +192,7 @@ app.views.SearchPage = Backbone.View.extend({
     },
 
     syncUp: function() {
-        cordova.require("com.salesforce.plugin.smartsync").syncUp("contacts", {fieldlist: this.fieldlistForSyncUp, sobjectCollectionClass:app.models.ContactCollection /* only used by mock */}, this.handleSyncUpdate.bind(this));
+        cordova.require("com.salesforce.plugin.smartsync").syncUp("contacts", {fieldlist: this.fieldlistForSyncUp}, this.handleSyncUpdate.bind(this));
     },
 
     sync: function() {
@@ -204,8 +204,9 @@ app.views.SearchPage = Backbone.View.extend({
     },
 
     add: function() {
-        var model = new app.models.Contact({Id: null, FirstName: null, LastName: null, Title: null, Email: null, MobilePhone: null, HomePhone: null, Department: null});
+        var model = new app.models.Contact({Id: null, FirstName: null, LastName: null, Title: null, Email: null, MobilePhone: null, HomePhone: null, Department: null, attributes: {type: "Contact"}});
         model.save(null, {
+            fieldlist: _.union(app.models.Contact.prototype.fieldlist, ["attributes"]),
             success: function(model) {
                 app.router.navigate("#contacts/" + model.id, {trigger:true});
             }
