@@ -74,8 +74,8 @@
     border-radius: 50%;
     float: left;
     display: flex;
-    justify-content: center;
-    align-items: center;
+    text-align: center;
+    line-height: 50px;
     margin-right: 4px;
 }
 
