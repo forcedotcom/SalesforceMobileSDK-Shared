@@ -5,7 +5,6 @@ cd $appname
 cordova plugin add cordova-plugin-contacts                                              (contactexplorer only)
 cordova plugin add cordova-plugin-statusbar                                             (contactexplorer only)
 cordova plugin add https://github.com/forcedotcom/SalesforceMobileSDK-CordovaPlugin
-cordova plugin add cordova-plugin-whitelist
 cordova platform add android                                                            (for android)
 node plugins/com.salesforce/tools/postinstall-android.js 21 true                        (for android)
 cordova platform add ios                                                                (for ios)
