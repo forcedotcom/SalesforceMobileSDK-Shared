@@ -26,26 +26,12 @@
 
 'use strict';
 
-var { SFSmartStoreReactBridge } = require('react-native').NativeModules;
+var { SalesforceSmartStoreReactBridge, SFSmartStoreReactBridge } = require('react-native').NativeModules;
+var forceCommon = require('./react.force.common.js');
 
-/**
- * exec
- */
 var exec = function(successCB, errorCB, methodName, args) {
-    var func = "SFSmartStoreReactBridge." + methodName;
-    console.log(func + " called: " + JSON.stringify(args));
-    SFSmartStoreReactBridge[methodName](args, function(error, result) {
-        if (error) {
-            console.log(func + " failed: " + JSON.stringify(error));
-            if (errorCB) errorCB(error);
-        }
-        else {
-            console.log(func + " succeeded");
-            if (successCB) successCB(result);
-        }
-    });
+    forceCommon.exec("SFSmartStoreReactBridge", "SalesforceSmartStoreReactBridge", SFSmartStoreReactBridge, SalesforceSmartStoreReactBridge, successCB, errorCB, methodName, args);
 };
-
 
 /**
  * SoupIndexSpec consturctor
