@@ -89,12 +89,12 @@
 
     // Init function
     // * creds: credentials returned by authenticate call
-    // * apiVersion: apiVersion to use, when null, v33.0 (Spring '15) is used
+    // * apiVersion: apiVersion to use, when null, v34.0 (Summer '15) is used
     // * innerForcetkClient: [Optional] A fully initialized forcetkClient to be re-used internally in the SmartSync library
     // * reauth: auth module for the refresh flow
     Force.init = function(creds, apiVersion, innerForcetkClient, reauth) {
         if (!apiVersion || apiVersion == null) {
-            apiVersion = "v33.0";
+            apiVersion = "v34.0";
         }
 
         if(!innerForcetkClient || innerForcetkClient == null) {
@@ -1422,7 +1422,7 @@
 
             // Id is the id attribute
             idAttribute: 'Id',
-
+            
             syncRemoteObjectWithServer: function(method, id, attributes, fieldlist) {
                 return Force.syncApexRestObjectWithServer(method, this.apexRestPath, id, this.idAttribute, attributes, fieldlist);
             }
