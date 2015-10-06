@@ -263,7 +263,7 @@ if (forcetk.Client === undefined) {
      */
     forcetk.Client.prototype.setSessionToken = function(sessionId, apiVersion, instanceUrl) {
         this.sessionId = sessionId;
-        this.apiVersion = (typeof apiVersion === 'undefined' || apiVersion === null) ? 'v33.0': apiVersion;
+        this.apiVersion = (typeof apiVersion === 'undefined' || apiVersion === null) ? 'v34.0': apiVersion;
         // In PhoneGap OR outside
         if (location.protocol === 'ms-appx:' || location.protocol === 'ms-appx-web:' || location.protocol === 'file:' || this.proxyUrl != null) {
             this.instanceUrl = instanceUrl;

@@ -47,7 +47,7 @@ var exec = function(path, successCB, errorCB, method, payload, headerParams) {
     });
 };
 
-var apiVersion = 'v33.0';
+var apiVersion = 'v34.0';
 
 /**
  * Set apiVersion to be used
