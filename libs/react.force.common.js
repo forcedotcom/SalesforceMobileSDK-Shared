@@ -53,14 +53,17 @@ var exec = function(moduleIOSName, moduleAndroidName, moduleIOS, moduleAndroid, 
         console.log(func + " called: " + JSON.stringify(args));
         moduleAndroid[methodName](
             args,
+            function(result) {
+                console.log(func + " succeeded");
+                if (successCB) {
+                    successCB(JSON.parse(result))
+                };
+            },
             function(error) {
                 console.log(func + " failed");
                 if (errorCB) errorCB(error);
-            },
-            function(result) {
-                console.log(func + " succeeded");
-                if (successCB) successCB(result);
-            });
+            }
+        );
     }
 };
 
