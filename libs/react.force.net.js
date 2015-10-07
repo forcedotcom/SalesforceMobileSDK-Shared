@@ -29,10 +29,12 @@
 var { SalesforceNetReactBridge, SFNetReactBridge } = require('react-native').NativeModules;
 var forceCommon = require('./react.force.common.js');
 
-var exec = function(successCB, errorCB, methodName, args) {
+var exec = function(path, successCB, errorCB, method, payload, headerParams) {
+    method = method || "GET";
+    payload = payload || {};
+    headerParams = headerParams || {};
     var args = {path:path, method:method, queryParams:payload, headerParams:headerParams};
-    var methodName = "sendRequest";
-    forceCommon.exec("SFNetReactBridge", "SalesforceNetReactBridge", SFNetReactBridge, SalesforceNetReactBridge, successCB, errorCB, methodName, args);
+    forceCommon.exec("SFNetReactBridge", "SalesforceNetReactBridge", SFNetReactBridge, SalesforceNetReactBridge, successCB, errorCB, "sendRequest", args);
 };
 
 
