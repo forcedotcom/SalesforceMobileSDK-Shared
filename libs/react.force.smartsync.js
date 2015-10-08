@@ -26,11 +26,11 @@
 
 'use strict';
 
-var { SalesforceSmartSyncReactBridge, SFSmartSyncReactBridge } = require('react-native').NativeModules;
+var { SmartSyncReactBridge, SFSmartSyncReactBridge } = require('react-native').NativeModules;
 var forceCommon = require('./react.force.common.js');
 
 var exec = function(successCB, errorCB, methodName, args) {
-    forceCommon.exec("SFSmartSyncReactBridge", "SalesforceSmartSyncReactBridge", SFSmartSyncReactBridge, SalesforceSmartSyncReactBridge, successCB, errorCB, methodName, args);
+    forceCommon.exec("SFSmartSyncReactBridge", "SmartSyncReactBridge", SFSmartSyncReactBridge, SmartSyncReactBridge, successCB, errorCB, methodName, args);
 };
 
 
