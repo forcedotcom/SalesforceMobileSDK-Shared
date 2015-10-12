@@ -26,24 +26,11 @@
 
 'use strict';
 
-var { SFOauthReactBridge } = require('react-native').NativeModules;
+var { SalesforceOauthReactBridge, SFOauthReactBridge } = require('react-native').NativeModules;
+var forceCommon = require('./react.force.common.js');
 
-/**
- * exec
- */
 var exec = function(successCB, errorCB, methodName, args) {
-    var func = "SFOauthReactBridge." + methodName;
-    console.log(func + " called: " + JSON.stringify(args));
-    SFOauthReactBridge[methodName](args, function(error, result) {
-        if (error) {
-            console.log(func + " failed: " + JSON.stringify(error));
-            if (errorCB) errorCB(error);
-        }
-        else {
-            console.log(func + " succeeded");
-            if (successCB) successCB(result);
-        }
-    });
+    forceCommon.exec("SFOauthReactBridge", "SalesforceOauthReactBridge", SFOauthReactBridge, SalesforceOauthReactBridge, successCB, errorCB, methodName, args);
 };
 
 /**
@@ -92,5 +79,5 @@ var logout = function () {
  */
 module.exports = {
     getAuthCredentials: getAuthCredentials,
-    logout: logout,
+    logout: logout
 };

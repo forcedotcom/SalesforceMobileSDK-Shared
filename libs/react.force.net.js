@@ -26,26 +26,17 @@
 
 'use strict';
 
-var { SFNetReactBridge } = require('react-native').NativeModules;
+var { SalesforceNetReactBridge, SFNetReactBridge } = require('react-native').NativeModules;
+var forceCommon = require('./react.force.common.js');
 
-/**
- * exec
- */
 var exec = function(path, successCB, errorCB, method, payload, headerParams) {
-    var func = "SFNetReactBridge.sendRequest";
+    method = method || "GET";
+    payload = payload || {};
+    headerParams = headerParams || {};
     var args = {path:path, method:method, queryParams:payload, headerParams:headerParams};
-    console.log(func + " called with path:" + path + " and method:" + method);
-    SFNetReactBridge.sendRequest(args, function(error, result) {
-        if (error) {
-            console.log(func + " failed: " + JSON.stringify(error));
-            if (errorCB) errorCB(error);
-        }
-        else {
-            console.log(func + " succeeded");
-            if (successCB) successCB(result);
-        }
-    });
+    forceCommon.exec("SFNetReactBridge", "SalesforceNetReactBridge", SFNetReactBridge, SalesforceNetReactBridge, successCB, errorCB, "sendRequest", args);
 };
+
 
 var apiVersion = 'v34.0';
 

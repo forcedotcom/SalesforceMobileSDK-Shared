@@ -26,44 +26,50 @@
 
 'use strict';
 
-var { SmartSyncReactBridge, SFSmartSyncReactBridge } = require('react-native').NativeModules;
-var forceCommon = require('./react.force.common.js');
-
-var exec = function(successCB, errorCB, methodName, args) {
-    forceCommon.exec("SFSmartSyncReactBridge", "SmartSyncReactBridge", SFSmartSyncReactBridge, SmartSyncReactBridge, successCB, errorCB, methodName, args);
+/**
+ * exec
+ */
+var exec = function(moduleIOSName, moduleAndroidName, moduleIOS, moduleAndroid, successCB, errorCB, methodName, args) {
+    // ios
+    if (moduleIOS) {
+        var func = moduleIOSName + "." + methodName;
+        console.log(func + " called: " + JSON.stringify(args));
+        moduleIOS[methodName](
+            args,
+            function(error, result) {
+                if (error) {
+                    console.log(func + " failed: " + JSON.stringify(error));
+                    if (errorCB) errorCB(error);
+                }
+                else {
+                    console.log(func + " succeeded");
+                    if (successCB) successCB(result);
+                }
+            });
+    }
+    // android
+    else if (moduleAndroid) {
+        var func = moduleAndroidName + "." + methodName;
+        console.log(func + " called: " + JSON.stringify(args));
+        moduleAndroid[methodName](
+            args,
+            function(result) {
+                console.log(func + " succeeded");
+                if (successCB) {
+                    successCB(JSON.parse(result))
+                };
+            },
+            function(error) {
+                console.log(func + " failed");
+                if (errorCB) errorCB(error);
+            }
+        );
+    }
 };
-
-
-var syncDown = function(isGlobalStore, target, soupName, options, successCB, errorCB) {
-    exec(successCB, errorCB, "syncDown", {"target": target, "soupName": soupName, "options": options, "isGlobalStore":isGlobalStore});        
-};
-
-var reSync = function(isGlobalStore, syncId, successCB, errorCB) {
-    exec(successCB, errorCB, "reSync", {"syncId": syncId, "isGlobalStore":isGlobalStore});        
-};
-
-
-var syncUp = function(isGlobalStore, target, soupName, options, successCB, errorCB) {
-    exec(successCB, errorCB, "syncUp", {"target": target, "soupName": soupName, "options": options, "isGlobalStore":isGlobalStore});        
-};
-
-var getSyncStatus = function(isGlobalStore, syncId, successCB, errorCB) {
-    exec(successCB, errorCB, "getSyncStatus", {"syncId": syncId, "isGlobalStore":isGlobalStore});        
-};
-
-var MERGE_MODE = {
-    OVERWRITE: "OVERWRITE",
-    LEAVE_IF_CHANGED: "LEAVE_IF_CHANGED"
-};
-
 
 /**
  * Part of the module that is public
  */
 module.exports = {
-    MERGE_MODE: MERGE_MODE,
-    syncDown: syncDown,
-    syncUp: syncUp,
-    getSyncStatus: getSyncStatus,
-    reSync: reSync
+    exec: exec
 };
