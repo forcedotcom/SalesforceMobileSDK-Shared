@@ -224,7 +224,12 @@ if (forcetk.Client === undefined) {
         var that = this;
         if (typeof this.authCallback === 'undefined' || this.authCallback === null) {
             if (this.refreshToken) {
-                var url = this.loginUrl + '/services/oauth2/token';
+                //Login URL is used to refresh the token which fails. Instance url works and should be used to refresh the token.
+                var url = this.loginUrl;
+                if(this.instanceUrl != null && this.instanceUrl != '') {
+                  url=this.instanceUrl;
+                }
+                url += '/services/oauth2/token';
                 return $j.ajax({
                     type: 'POST',
                     url: (this.proxyUrl !== null) ? this.proxyUrl: url,
