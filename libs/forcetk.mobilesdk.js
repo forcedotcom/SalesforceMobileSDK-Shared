@@ -27,7 +27,7 @@
 (function($j) {
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "3.3.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "4.0.0";
 
 /*
  * JavaScript library to wrap REST API on Visualforce. Leverages Ajax Proxy
@@ -257,13 +257,13 @@ if (forcetk.Client === undefined) {
      * Set a session token and the associated metadata in the client.
      * @param sessionId a salesforce.com session ID. In a Visualforce page,
      *                   use '{!$Api.sessionId}' to obtain a session ID.
-     * @param [apiVersion="33.0"] Force.com API version
+     * @param [apiVersion="34.0"] Force.com API version
      * @param [instanceUrl] Omit this if running on Visualforce; otherwise
      *                   use the value from the OAuth token.
      */
     forcetk.Client.prototype.setSessionToken = function(sessionId, apiVersion, instanceUrl) {
         this.sessionId = sessionId;
-        this.apiVersion = (typeof apiVersion === 'undefined' || apiVersion === null) ? 'v33.0': apiVersion;
+        this.apiVersion = (typeof apiVersion === 'undefined' || apiVersion === null) ? 'v34.0': apiVersion;
         // In PhoneGap OR outside
         if (location.protocol === 'ms-appx:' || location.protocol === 'ms-appx-web:' || location.protocol === 'file:' || this.proxyUrl != null) {
             this.instanceUrl = instanceUrl;

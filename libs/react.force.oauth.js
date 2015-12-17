@@ -1,6 +1,5 @@
-cordova.define("com.salesforce.plugin.oauth", function(require, exports, module) {
 /*
- * Copyright (c) 2012-15, salesforce.com, inc.
+ * Copyright (c) 2015, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -25,11 +24,14 @@ cordova.define("com.salesforce.plugin.oauth", function(require, exports, module)
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "4.0.0";
-var SERVICE = "com.salesforce.oauth";
+'use strict';
 
-var exec = require("com.salesforce.util.exec").exec;
+var { SalesforceOauthReactBridge, SFOauthReactBridge } = require('react-native').NativeModules;
+var forceCommon = require('./react.force.common.js');
+
+var exec = function(successCB, errorCB, methodName, args) {
+    forceCommon.exec("SFOauthReactBridge", "SalesforceOauthReactBridge", SFOauthReactBridge, SalesforceOauthReactBridge, successCB, errorCB, methodName, args);
+};
 
 /**
  * Whether or not logout has already been initiated.  Can only be initiated once
@@ -38,41 +40,21 @@ var exec = require("com.salesforce.util.exec").exec;
 var logoutInitiated = false;
 
 /**
- * Obtain authentication credentials, calling 'authenticate' only if necessary.
- * Most index.html authors can simply use this method to obtain auth credentials
- * after onDeviceReady.
+ * Obtain authentication credentials.
  *   success - The success callback function to use.
  *   fail    - The failure/error callback function to use.
- * cordova returns a dictionary with:
+ * Returns a dictionary with:
  *     accessToken
  *     refreshToken
- *  clientId
+ *     clientId
  *     userId
  *     orgId
- *  loginUrl
+ *     loginUrl
  *     instanceUrl
  *     userAgent
  */
 var getAuthCredentials = function (success, fail) {
-    exec(SALESFORCE_MOBILE_SDK_VERSION, success, fail, SERVICE, "getAuthCredentials", []);
-};
-
-/**
- * Initiates the authentication process, with the given app configuration.
- *   success         - The success callback function to use.
- *   fail            - The failure/error callback function to use.
- * cordova returns a dictionary with:
- *   accessToken
- *   refreshToken
- *   clientId
- *   userId
- *   orgId
- *   loginUrl
- *   instanceUrl
- *   userAgent
- */
-var authenticate = function (success, fail) {
-    exec(SALESFORCE_MOBILE_SDK_VERSION, success, fail, SERVICE, "authenticate", []);
+    exec(success, fail, "getAuthCredentials", {});
 };
 
 /**
@@ -88,34 +70,8 @@ var authenticate = function (success, fail) {
 var logout = function () {
     if (!logoutInitiated) {
         logoutInitiated = true;
-        exec(SALESFORCE_MOBILE_SDK_VERSION, null, null, SERVICE, "logoutCurrentUser", []);
+        exec(null, null, "logoutCurrentUser", {});
     }
-};
-
-/**
- * Gets the app's homepage as an absolute URL.  Used for attempting to load any cached
- * content that the developer may have built into the app (via HTML5 caching).
- *
- * This method will either return the URL as a string, or an empty string if the URL has not been
- * initialized.
- */
-var getAppHomeUrl = function (success) {
-    exec(SALESFORCE_MOBILE_SDK_VERSION, success, null, SERVICE, "getAppHomeUrl", []);
-};
-
-/**
- * Goes through the refresh flow, and sets the new session token in the supplied forcetkClient.
- */
-var forcetkRefresh = function (forcetkClient, success, fail) {
-    authenticate(function(oauthResponse) {
-        var oauthResponseData = oauthResponse;
-        if (oauthResponse.data)  {
-            oauthResponseData = oauthResponse.data;
-        }
-        forcetkClient.setSessionToken(oauthResponseData.accessToken, null, oauthResponseData.instanceUrl);
-        success();
-    },
-    fail);
 };
 
 /**
@@ -123,9 +79,5 @@ var forcetkRefresh = function (forcetkClient, success, fail) {
  */
 module.exports = {
     getAuthCredentials: getAuthCredentials,
-    authenticate: authenticate,
-    logout: logout,
-    getAppHomeUrl: getAppHomeUrl,
-    forcetkRefresh: forcetkRefresh
+    logout: logout
 };
-});

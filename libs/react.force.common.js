@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-15, salesforce.com, inc.
+ * Copyright (c) 2015, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -24,26 +24,48 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "4.0.0";
-var exec = function(pluginVersion, successCB, errorCB, service, action, args) {
-    var tag = "TIMING " + service + ":" + action;
-    console.time(tag);
-    args.unshift("pluginSDKVersion:" + pluginVersion);
-    var cordovaExec = require('cordova/exec');
-    return cordovaExec(
-        function() {
-            console.timeEnd(tag);
-            if (typeof successCB === "function")
-                successCB.apply(null, arguments);
-        }, 
-        function() {
-            console.timeEnd(tag);
-            console.error(tag + " failed");
-            if (typeof errorCB === "function")
-                errorCB.apply(null, arguments);
-        }, 
-        service, action, args);                  
+'use strict';
+
+/**
+ * exec
+ */
+var exec = function(moduleIOSName, moduleAndroidName, moduleIOS, moduleAndroid, successCB, errorCB, methodName, args) {
+    // ios
+    if (moduleIOS) {
+        var func = moduleIOSName + "." + methodName;
+        console.log(func + " called: " + JSON.stringify(args));
+        moduleIOS[methodName](
+            args,
+            function(error, result) {
+                if (error) {
+                    console.log(func + " failed: " + JSON.stringify(error));
+                    if (errorCB) errorCB(error);
+                }
+                else {
+                    console.log(func + " succeeded");
+                    if (successCB) successCB(result);
+                }
+            });
+    }
+    // android
+    else if (moduleAndroid) {
+        var func = moduleAndroidName + "." + methodName;
+        console.log(func + " called: " + JSON.stringify(args));
+        moduleAndroid[methodName](
+            args,
+            function(result) {
+                console.log(func + " succeeded");
+                if (successCB) {
+                    var resultParsed = result ? JSON.parse(result) : result;
+                    successCB(resultParsed)
+                };
+            },
+            function(error) {
+                console.log(func + " failed");
+                if (errorCB) errorCB(error);
+            }
+        );
+    }
 };
 
 /**

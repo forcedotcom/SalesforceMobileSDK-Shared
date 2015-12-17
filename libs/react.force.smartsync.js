@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-15, salesforce.com, inc.
+ * Copyright (c) 2015, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -24,31 +24,46 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "4.0.0";
-var exec = function(pluginVersion, successCB, errorCB, service, action, args) {
-    var tag = "TIMING " + service + ":" + action;
-    console.time(tag);
-    args.unshift("pluginSDKVersion:" + pluginVersion);
-    var cordovaExec = require('cordova/exec');
-    return cordovaExec(
-        function() {
-            console.timeEnd(tag);
-            if (typeof successCB === "function")
-                successCB.apply(null, arguments);
-        }, 
-        function() {
-            console.timeEnd(tag);
-            console.error(tag + " failed");
-            if (typeof errorCB === "function")
-                errorCB.apply(null, arguments);
-        }, 
-        service, action, args);                  
+'use strict';
+
+var { SmartSyncReactBridge, SFSmartSyncReactBridge } = require('react-native').NativeModules;
+var forceCommon = require('./react.force.common.js');
+
+var exec = function(successCB, errorCB, methodName, args) {
+    forceCommon.exec("SFSmartSyncReactBridge", "SmartSyncReactBridge", SFSmartSyncReactBridge, SmartSyncReactBridge, successCB, errorCB, methodName, args);
 };
+
+
+var syncDown = function(isGlobalStore, target, soupName, options, successCB, errorCB) {
+    exec(successCB, errorCB, "syncDown", {"target": target, "soupName": soupName, "options": options, "isGlobalStore":isGlobalStore});        
+};
+
+var reSync = function(isGlobalStore, syncId, successCB, errorCB) {
+    exec(successCB, errorCB, "reSync", {"syncId": syncId, "isGlobalStore":isGlobalStore});        
+};
+
+
+var syncUp = function(isGlobalStore, target, soupName, options, successCB, errorCB) {
+    exec(successCB, errorCB, "syncUp", {"target": target, "soupName": soupName, "options": options, "isGlobalStore":isGlobalStore});        
+};
+
+var getSyncStatus = function(isGlobalStore, syncId, successCB, errorCB) {
+    exec(successCB, errorCB, "getSyncStatus", {"syncId": syncId, "isGlobalStore":isGlobalStore});        
+};
+
+var MERGE_MODE = {
+    OVERWRITE: "OVERWRITE",
+    LEAVE_IF_CHANGED: "LEAVE_IF_CHANGED"
+};
+
 
 /**
  * Part of the module that is public
  */
 module.exports = {
-    exec: exec
+    MERGE_MODE: MERGE_MODE,
+    syncDown: syncDown,
+    syncUp: syncUp,
+    getSyncStatus: getSyncStatus,
+    reSync: reSync
 };
