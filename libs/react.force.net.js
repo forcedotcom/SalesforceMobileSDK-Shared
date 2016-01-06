@@ -223,7 +223,8 @@ var query = function(soql, callback, error) {
  * @param [error=null] function called in case of error
  */
 var queryMore = function( url, callback, error ){
-    return exec('/services/data',  url, callback, error );
+    var pathFromUrl = url.match(/https:\/\/[^/]*(.*)/)[1];
+    return exec('',  pathFromUrl, callback, error );
 };
 
 /*
