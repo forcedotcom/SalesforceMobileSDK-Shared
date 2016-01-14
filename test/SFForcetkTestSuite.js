@@ -75,8 +75,8 @@ ForcetkTestSuite.prototype.testComputeWebAppSdkAgentForAndroidUserAgents = funct
     console.log("In SFForcetkTestSuite.testComputeWebAppSdkAgentForAndroidUserAgents");
 
     // User agents taken from http://www.zytrax.com/tech/web/mobile_ids.html
-    this.tryUserAgent("android mobile", "4.1.1", "Nexus_7_Build_JRO03D", "Mozilla/5.0 (Linux; U; Android 4.1.1; he-il; Nexus 7 Build/JRO03D) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.1 Safari/534.30");
-    this.tryUserAgent("android mobile", "2.1", "Nexus_One_Build_ERD62", "Mozilla/5.0 (Linux; U; Android 2.1; en-us; Nexus One Build/ERD62) AppleWebKit/530.17 (KHTML, like Gecko) Version/4.1 Mobile Safari/530.17");
+    this.tryUserAgent("android mobile", "4.1.1", "Nexus_7_Build_JRO03D", "Mozilla/5.0 (Linux; U; Android 4.1.1; he-il; Nexus 7 Build/JRO03D) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Safari/534.30");
+    this.tryUserAgent("android mobile", "2.1", "Nexus_One_Build_ERD62", "Mozilla/5.0 (Linux; U; Android 2.1; en-us; Nexus One Build/ERD62) AppleWebKit/530.17 (KHTML, like Gecko) Version/4.0 Mobile Safari/530.17");
     this.finalizeTest();
 }; 
 
