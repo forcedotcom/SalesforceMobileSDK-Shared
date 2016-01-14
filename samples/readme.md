@@ -6,7 +6,7 @@ cordova plugin add cordova-plugin-contacts                                      
 cordova plugin add cordova-plugin-statusbar                                             (contactexplorer only)
 cordova plugin add https://github.com/forcedotcom/SalesforceMobileSDK-CordovaPlugin
 cordova platform add android                                                            (for android)
-node plugins/com.salesforce/tools/postinstall-android.js 21 true                        (for android)
+node plugins/com.salesforce/tools/postinstall-android.js 23 true                        (for android)
 cordova platform add ios                                                                (for ios)
 cp -r (path to SalesforceMobileSDK-Shared)/samples/$template/* www/
 cordova prepare

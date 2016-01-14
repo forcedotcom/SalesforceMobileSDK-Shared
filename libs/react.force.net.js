@@ -29,15 +29,6 @@
 var { SalesforceNetReactBridge, SFNetReactBridge } = require('react-native').NativeModules;
 var forceCommon = require('./react.force.common.js');
 
-var exec = function(path, successCB, errorCB, method, payload, headerParams) {
-    method = method || "GET";
-    payload = payload || {};
-    headerParams = headerParams || {};
-    var args = {path:path, method:method, queryParams:payload, headerParams:headerParams};
-    forceCommon.exec("SFNetReactBridge", "SalesforceNetReactBridge", SFNetReactBridge, SalesforceNetReactBridge, successCB, errorCB, "sendRequest", args);
-};
-
-
 var apiVersion = 'v34.0';
 
 /**
@@ -54,6 +45,18 @@ var getApiVersion = function() {
     return apiVersion;
 }
 
+/** 
+ * Send arbitray force.com request
+ */
+var sendRequest = function(endPoint, path, successCB, errorCB, method, payload, headerParams) {
+    method = method || "GET";
+    payload = payload || {};
+    headerParams = headerParams || {};
+    var args = {endPoint: endPoint, path:path, method:method, queryParams:payload, headerParams:headerParams};
+    forceCommon.exec("SFNetReactBridge", "SalesforceNetReactBridge", SFNetReactBridge, SalesforceNetReactBridge, successCB, errorCB, "sendRequest", args);
+};
+
+
 /*
  * Lists summary information about each Salesforce.com version currently
  * available, including the version, label, and a link to each version's
@@ -62,7 +65,7 @@ var getApiVersion = function() {
  * @param [error=null] function called in case of error
  */
 var versions = function(callback, error) {
-    return exec('/', callback, error);
+    return sendRequest('/services/data', '/', callback, error);
 };
 
 /*
@@ -72,7 +75,7 @@ var versions = function(callback, error) {
  * @param [error=null] function called in case of error
  */
 var resources = function(callback, error) {
-    return exec('/' + apiVersion + '/', callback, error);
+    return sendRequest('/services/data', '/' + apiVersion + '/', callback, error);
 };
 
 /*
@@ -82,7 +85,7 @@ var resources = function(callback, error) {
  * @param [error=null] function called in case of error
  */
 var describeGlobal = function(callback, error) {
-    return exec('/' + apiVersion + '/sobjects/', callback, error);
+    return sendRequest('/services/data', '/' + apiVersion + '/sobjects/', callback, error);
 };
 
 /*
@@ -92,8 +95,8 @@ var describeGlobal = function(callback, error) {
  * @param [error=null] function called in case of error
  */
 var metadata = function(objtype, callback, error) {
-    return exec('/' + apiVersion + '/sobjects/' + objtype + '/'
-                     , callback, error);
+    return sendRequest('/services/data', '/' + apiVersion + '/sobjects/' + objtype + '/'
+                       , callback, error);
 };
 
 /*
@@ -104,8 +107,8 @@ var metadata = function(objtype, callback, error) {
  * @param [error=null] function called in case of error
  */
 var describe = function(objtype, callback, error) {
-    return exec('/' + apiVersion + '/sobjects/' + objtype
-                     + '/describe/', callback, error);
+    return sendRequest('/services/data', '/' + apiVersion + '/sobjects/' + objtype
+                       + '/describe/', callback, error);
 };
 
 /*
@@ -117,8 +120,8 @@ var describe = function(objtype, callback, error) {
  */
 var describeLayout = function(objtype, recordTypeId, callback, error) {
     recordTypeId = recordTypeId ? recordTypeId : '';
-    return exec('/' + apiVersion + '/sobjects/' + objtype
-                     + '/describe/layouts/' + recordTypeId, callback, error);
+    return sendRequest('/services/data', '/' + apiVersion + '/sobjects/' + objtype
+                       + '/describe/layouts/' + recordTypeId, callback, error);
 };
 
 /*
@@ -131,8 +134,8 @@ var describeLayout = function(objtype, recordTypeId, callback, error) {
  * @param [error=null] function called in case of error
  */
 var create = function(objtype, fields, callback, error) {
-    return exec('/' + apiVersion + '/sobjects/' + objtype + '/'
-                     , callback, error, "POST", JSON.stringify(fields));
+    return sendRequest('/services/data', '/' + apiVersion + '/sobjects/' + objtype + '/'
+                       , callback, error, "POST", JSON.stringify(fields));
 };
 
 /*
@@ -151,8 +154,8 @@ var retrieve = function(objtype, id, fieldlist, callback, error) {
         fieldlist = null;
     }
     var fields = fieldlist ? '?fields=' + fieldlist : '';
-    return exec('/' + apiVersion + '/sobjects/' + objtype + '/' + id
-                     + fields, callback, error);
+    return sendRequest('/services/data', '/' + apiVersion + '/sobjects/' + objtype + '/' + id
+                       + fields, callback, error);
 };
 
 /*
@@ -168,8 +171,8 @@ var retrieve = function(objtype, id, fieldlist, callback, error) {
  * @param [error=null] function called in case of error
  */
 var upsert = function(objtype, externalIdField, externalId, fields, callback, error) {
-    return exec('/' + apiVersion + '/sobjects/' + objtype + '/' + externalIdField + '/' + externalId
-                     + '?_HttpMethod=PATCH', callback, error, "POST", JSON.stringify(fields));
+    return sendRequest('/services/data', '/' + apiVersion + '/sobjects/' + objtype + '/' + externalIdField + '/' + externalId
+                       + '?_HttpMethod=PATCH', callback, error, "POST", JSON.stringify(fields));
 };
 
 /*
@@ -183,8 +186,8 @@ var upsert = function(objtype, externalIdField, externalId, fields, callback, er
  * @param [error=null] function called in case of error
  */
 var update = function(objtype, id, fields, callback, error) {
-    return exec('/' + apiVersion + '/sobjects/' + objtype + '/' + id
-                     + '?_HttpMethod=PATCH', callback, error, "POST", JSON.stringify(fields));
+    return sendRequest('/services/data', '/' + apiVersion + '/sobjects/' + objtype + '/' + id
+                       + '?_HttpMethod=PATCH', callback, error, "POST", JSON.stringify(fields));
 };
 
 /*
@@ -196,8 +199,8 @@ var update = function(objtype, id, fields, callback, error) {
  * @param [error=null] function called in case of error
  */
 var del = function(objtype, id, callback, error) {
-    return exec('/' + apiVersion + '/sobjects/' + objtype + '/' + id
-                     , callback, error, "DELETE");
+    return sendRequest('/services/data', '/' + apiVersion + '/sobjects/' + objtype + '/' + id
+                       , callback, error, "DELETE");
 };
 
 /*
@@ -208,8 +211,8 @@ var del = function(objtype, id, callback, error) {
  * @param [error=null] function called in case of error
  */
 var query = function(soql, callback, error) {
-    return exec('/' + apiVersion + '/query?q=' + encodeURI(soql)
-                     , callback, error);
+    return sendRequest('/services/data', '/' + apiVersion + '/query?q=' + encodeURI(soql)
+                       , callback, error);
 };
 
 /*
@@ -223,7 +226,8 @@ var query = function(soql, callback, error) {
  * @param [error=null] function called in case of error
  */
 var queryMore = function( url, callback, error ){
-    return exec( url, callback, error );
+    var pathFromUrl = url.match(/https:\/\/[^/]*(.*)/)[1];
+return sendRequest('',  pathFromUrl, callback, error );
 };
 
 /*
@@ -234,8 +238,8 @@ var queryMore = function( url, callback, error ){
  * @param [error=null] function called in case of error
  */
 var search = function(sosl, callback, error) {
-    return exec('/' + apiVersion + '/search?q=' + encodeURI(sosl)
-                     , callback, error);
+    return sendRequest('/services/data', '/' + apiVersion + '/search?q=' + encodeURI(sosl)
+                       , callback, error);
 };
 
 /**
@@ -244,6 +248,7 @@ var search = function(sosl, callback, error) {
 module.exports = {
     setApiVersion: setApiVersion,
     getApiVersion: getApiVersion,
+    sendRequest: sendRequest,
     versions: versions,
     resources: resources,
     describeGlobal: describeGlobal,
