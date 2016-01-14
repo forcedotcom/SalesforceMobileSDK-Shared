@@ -135,7 +135,7 @@ var describeLayout = function(objtype, recordTypeId, callback, error) {
  */
 var create = function(objtype, fields, callback, error) {
     return sendRequest('/services/data', '/' + apiVersion + '/sobjects/' + objtype + '/'
-                       , callback, error, "POST", JSON.stringify(fields));
+                       , callback, error, "POST", fields);
 };
 
 /*
@@ -172,7 +172,7 @@ var retrieve = function(objtype, id, fieldlist, callback, error) {
  */
 var upsert = function(objtype, externalIdField, externalId, fields, callback, error) {
     return sendRequest('/services/data', '/' + apiVersion + '/sobjects/' + objtype + '/' + externalIdField + '/' + externalId
-                       + '?_HttpMethod=PATCH', callback, error, "POST", JSON.stringify(fields));
+                       + '?_HttpMethod=PATCH', callback, error, "POST", fields);
 };
 
 /*
@@ -187,7 +187,7 @@ var upsert = function(objtype, externalIdField, externalId, fields, callback, er
  */
 var update = function(objtype, id, fields, callback, error) {
     return sendRequest('/services/data', '/' + apiVersion + '/sobjects/' + objtype + '/' + id
-                       + '?_HttpMethod=PATCH', callback, error, "POST", JSON.stringify(fields));
+                       + '?_HttpMethod=PATCH', callback, error, "POST", fields);
 };
 
 /*
