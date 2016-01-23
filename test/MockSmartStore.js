@@ -261,7 +261,7 @@ var MockSmartStore = (function(window) {
 
         retrieveSoupEntries: function(soupName, entryIds) {
             this.checkSoup(soupName); 
-            var soup = this._soups[soupName];
+             var soup = this._soups[soupName];
             var entries = [];
             for (var i=0; i<entryIds.length; i++) {
                 var entryId = entryIds[i];
@@ -282,15 +282,46 @@ var MockSmartStore = (function(window) {
         },
 
         project: function(soupElt, path) {
-            var pathElements = path.split(".");
-            var o = soupElt;
-            for (var i = 0; i<pathElements.length; i++) {
-                var pathElement = pathElements[i];
-                o = o[pathElement];
+            if (soupElt == null) {
+                return null;
             }
-            return o;
+            if (path == null || path.length == 0) {
+                return soupElt;
+            }
+            var pathElements = path.split(".");
+		    return this.projectHelper(soupElt, pathElements, 0);
         },
 
+        projectHelper: function(jsonObj, pathElements, index) {
+		    var result = null;
+
+		    if (index == pathElements.length) {
+			    return jsonObj;
+		    }
+
+		    if (null != jsonObj) {
+			    var pathElement = pathElements[index];
+
+			    if (jsonObj instanceof Array) {
+				    result = [];
+				    for (var i=0; i<jsonObj.length; i++) {
+					    var resultPart = this.projectHelper(jsonObj[i], pathElements, index);
+					    if (resultPart != null) {
+                            result.push(resultPart)
+					    }
+				    }
+				    if (result.length == 0) {
+					    result = null;
+				    }
+			    }
+			    else {
+				    result = this.projectHelper(jsonObj[pathElement], pathElements, index+1);
+			    }
+		    }
+
+		    return result;
+	    },
+        
         supportedQueries : function() {
             // NB we don't have full support evidently
             return [
@@ -342,18 +373,17 @@ var MockSmartStore = (function(window) {
                 this.checkIndex(soupName, whereField);
 
                 var soup = this._soups[soupName];
-                var soupIndexedData = this._soupIndexedData[soupName];
 
                 // Pull results out from soup iteratively.
                 var results = [];
                 for (var soupEntryId in soup) {
                     var soupElt = soup[soupEntryId];
-                    var value = (whereField === "_soupEntryId" ? soupEntryId : soupIndexedData[soupEntryId][whereField]);
+                    var value = (whereField === "_soupEntryId" ? soupEntryId : this.getTypedIndexedData(soupName, whereField, soupEntryId));
                     if (values.indexOf(value) >= 0) {
                         var self = this;
                         var row = [];
                         selectFields.forEach(function(selectField) {
-                            row.push(selectField === "_soup" ? soupElt : (selectField === "_soupEntryId" ? soupEntryId : soupIndexedData[soupEntryId][selectField]));
+                            row.push(selectField === "_soup" ? soupElt : (selectField === "_soupEntryId" ? soupEntryId : self.getTypedIndexedData(soupName, selectField, soupEntryId)));
                         })
                         results.push(row);
                     }
@@ -392,12 +422,11 @@ var MockSmartStore = (function(window) {
                 this.checkIndex(soupName, whereField);
                 if (orderField) this.checkIndex(soupName, orderField);
                 var soup = this._soups[soupName];
-                var soupIndexedData = this._soupIndexedData[soupName];
 
                 var results = [];
                 for (var soupEntryId in soup) {
                     var soupElt = soup[soupEntryId];
-                    var projection = soupIndexedData[soupEntryId][whereField] || "";
+                    var projection = this.getTypedIndexedData(soupName, whereField, soupEntryId) || "";
                     if (projection.match(likeRegexp)) {
                         var row = [];
                         row.push(soupElt);
@@ -442,13 +471,12 @@ var MockSmartStore = (function(window) {
                 this.checkIndex(soupName, whereField);
                 
                 var soup = this._soups[soupName];
-                var soupIndexedData = this._soupIndexedData[soupName];
                 
                 // Pull results out from soup iteratively.
                 var results = [];
                 for (var soupEntryId in soup) {
                     var soupElt = soup[soupEntryId];
-                    var projection = parseInt(soupIndexedData[soupEntryId][whereField], 10) || 0;
+                    var projection = this.getTypedIndexedData(soupName, whereField, soupEntryId) || 0;
                     if((comparator == "!=" && projection != compareTo)
                        || (comparator == "=" && projection == compareTo)
                        || (comparator == "<" && projection < compareTo)
@@ -502,7 +530,6 @@ var MockSmartStore = (function(window) {
         querySoupFullTextSearch: function(soupName, querySpec) {
             this.checkSoup(soupName); 
             var soup = this._soups[soupName];
-            var soupIndexedData = this._soupIndexedData[soupName];
             var results = [];
 
             for (var soupEntryId in soup) {
@@ -510,7 +537,7 @@ var MockSmartStore = (function(window) {
 
                 var text = "";
                 if (querySpec.indexPath) {
-                    text = soupIndexedData[soupEntryId][querySpec.indexPath];
+                    text = this.getTypedIndexedData(soupName, querySpec.indexPath, soupEntryId);
                 }
                 else {
                     // No indexPath provided, match against all full-text fields
@@ -518,7 +545,7 @@ var MockSmartStore = (function(window) {
                     for (var i=0; i<indexSpecs.length; i++) {
                         var indexSpec = indexSpecs[i];
                         if (indexSpec.type === "full_text") {
-                            text += soupIndexedData[soupEntryId][indexSpec.path] + " ";
+                            text += this.getTypedIndexedData(soupName, indexSpec.path, soupEntryId) + " ";
                         }
                     }
                 }
@@ -528,6 +555,47 @@ var MockSmartStore = (function(window) {
             }
 
             return this.sortResults(results, querySpec);
+        },
+
+        typeForPath: function(soupName, path) {
+            var indexSpecs = this._soupIndexSpecs[soupName];
+            if (indexSpecs != null) {
+                for (var i=0; i<indexSpecs.length; i++) {
+                    var indexSpec = indexSpecs[i];
+                    if (indexSpec.path == path) {
+                        return indexSpec.type;
+                    }
+                }
+            }
+            return null;
+        },
+
+        asType: function(type, value) {
+            switch(type) {
+            case "string":
+            case "full_text":
+                // e.g. non-leaf nodes
+                if (typeof value !== "string") {
+                    return JSON.stringify(value);
+                }
+                break;
+            case "integer":
+            case "floating":
+                if (typeof value === "string") {
+                    return (type === "integer" ? parseInt(value, 10) : parseFloat(value));
+                }
+                break;
+            }
+            // XXX might not get a number back if a number is expected
+            return value;
+        },
+
+        getTypedIndexedData: function(soupName, path, soupEntryId) {
+            this.checkIndex(soupName, path);
+            var soupIndexedData = this._soupIndexedData[soupName];
+            var dataRaw = soupIndexedData[soupEntryId][path];
+            var type = this.typeForPath(soupName, path);
+            return this.asType(type, dataRaw);
         },
 
         // query: space separated terms that all need to be in text
@@ -614,12 +682,11 @@ var MockSmartStore = (function(window) {
             }
 
             var soup = this._soups[soupName];
-            var soupIndexedData = this._soupIndexedData[soupName];
             var results = [];
             var likeRegexp = (querySpec.likeKey ? new RegExp("^" + querySpec.likeKey.replace(/%/g, ".*"), "i") : null);
             for (var soupEntryId in soup) {
                 var soupElt = soup[soupEntryId];
-                var projection = querySpec.indexPath == null ? null : soupIndexedData[soupEntryId][querySpec.indexPath];
+                var projection = querySpec.indexPath == null ? null : this.getTypedIndexedData(soupName, querySpec.indexPath, soupEntryId);
                 if (querySpec.queryType === "exact") {
                     if (projection == querySpec.matchKey) {
                         results.push(soupElt);
