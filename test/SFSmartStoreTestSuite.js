@@ -876,53 +876,52 @@ SmartStoreTestSuite.prototype.testFullTextSearch  = function() {
         .pipe(function(entries) {
             // Searching across fields with one term
             var querySpec = navigator.smartstore.buildMatchQuerySpec(null, "grey", "ascending", 10, "name");
-            return self.tryFullTextSearch(soupName, querySpec, ["dog", "elephant"]);
+            return self.tryQuery(soupName, querySpec, ["dog", "elephant"]);
         })
         .pipe(function() {
             // Searching across fields with multiple terms
             var querySpec = navigator.smartstore.buildMatchQuerySpec(null, "small black", "descending", 10, "name");
-            return self.tryFullTextSearch(soupName, querySpec, ["lizard", "cat"]);
+            return self.tryQuery(soupName, querySpec, ["lizard", "cat"]);
         })
         .pipe(function() {
             // Searching across fields with one term starred
             var querySpec = navigator.smartstore.buildMatchQuerySpec(null, "gr*", "ascending", 10, "name");
-            return self.tryFullTextSearch(soupName, querySpec, ["dog", "elephant", "lizard"]);
+            return self.tryQuery(soupName, querySpec, ["dog", "elephant", "lizard"]);
         })
         .pipe(function() {
             // Searching across fields with multiple terms one being negated
             var querySpec = navigator.smartstore.buildMatchQuerySpec(null, "black NOT tabby", "descending", 10, "name");
-            return self.tryFullTextSearch(soupName, querySpec, ["lizard", "dog"]);
+            return self.tryQuery(soupName, querySpec, ["lizard", "dog"]);
         })
         .pipe(function() {
             // Searching across fields with multiple terms (one starred, one negated)
             var querySpec = navigator.smartstore.buildMatchQuerySpec(null, "gr* NOT small", "ascending", 10, "name");
-            return self.tryFullTextSearch(soupName, querySpec, ["dog", "elephant"]);
+            return self.tryQuery(soupName, querySpec, ["dog", "elephant"]);
         })
         .pipe(function(entries) {
             // Searching one field with one term
-            return self.run
             var querySpec = navigator.smartstore.buildMatchQuerySpec("colors", "grey");
-            return self.tryFullTextSearch(soupName, querySpec, ["elephant", "dog"]);
+            return self.tryQuery(soupName, querySpec, ["elephant", "dog"]);
         })
         .pipe(function() {
             // Searching one field with multiple terms
             var querySpec = navigator.smartstore.buildMatchQuerySpec("colors", "white black", "ascending", 10, "name");
-            return self.tryFullTextSearch(soupName, querySpec, ["cat", "lizard"]);
+            return self.tryQuery(soupName, querySpec, ["cat", "lizard"]);
         })
         .pipe(function() {
             // Searching one field with one term starred
             var querySpec = navigator.smartstore.buildMatchQuerySpec("colors", "gr*", "ascending", 10, "name");
-            return self.tryFullTextSearch(soupName, querySpec, ["dog", "elephant", "lizard"]);
+            return self.tryQuery(soupName, querySpec, ["dog", "elephant", "lizard"]);
         })
         .pipe(function() {
             // Searching one field with multiple terms one being negated
             var querySpec = navigator.smartstore.buildMatchQuerySpec("colors", "black NOT tabby", "descending", 10, "name");
-            return self.tryFullTextSearch(soupName, querySpec, ["lizard", "dog"]);
+            return self.tryQuery(soupName, querySpec, ["lizard", "dog"]);
         })
         .pipe(function() {
             // Searching one with multiple terms (one starred, one negated)
             var querySpec = navigator.smartstore.buildMatchQuerySpec("description", "m* NOT small", "ascending", 10, "name");
-            return self.tryFullTextSearch(soupName, querySpec, ["dog", "elephant"]);
+            return self.tryQuery(soupName, querySpec, ["dog", "elephant"]);
         })
         .done(function(param) { 
             QUnit.ok(true,"closeCursor ok"); 
@@ -930,7 +929,7 @@ SmartStoreTestSuite.prototype.testFullTextSearch  = function() {
         });
 };
 
-SmartStoreTestSuite.prototype.tryFullTextSearch = function(soupName, querySpec, expectedNames) {
+SmartStoreTestSuite.prototype.tryQuery = function(soupName, querySpec, expectedNames) {
     var self = this;
     return self.querySoup(soupName, querySpec)
         .pipe(function(cursor) {
@@ -942,6 +941,136 @@ SmartStoreTestSuite.prototype.tryFullTextSearch = function(soupName, querySpec, 
         })
 };
 
+/**
+ * TEST full-text search against array node
+ */
+SmartStoreTestSuite.prototype.testFullTextSearchAgainstArrayNode  = function() {
+    console.log("In SFSmartStoreTestSuite.testFullTextSearchAgainstArrayNode");
+    var self = this;
+    var myEntry1 = { name: "elephant", attributes:[{color: "grey"}] };
+    var myEntry2 = { name: "cat", attributes:[{color: "black"}, {color: "tabby"}, {color: "white"}] };
+    var myEntry3 = { name: "dog", attributes:[{color: "black"}, {color: "grey"}] };
+    var myEntry4 = { name: "lizard", attributes:[{color: "black"}, {color: "green"}, {color: "white"}] };
+    var rawEntries = [myEntry1, myEntry2, myEntry3, myEntry4];
+    var soupName = "fullTextSearchAgainstArrayNodeSoup";
+
+    self.removeAndRecreateSoup(soupName, [{path:"name", type:"string"},  {path:"attributes.color", type:"full_text"}])
+        .pipe(function() {
+            return self.upsertSoupEntries(soupName,rawEntries);
+        })
+        .pipe(function(entries) {
+            var querySpec = navigator.smartstore.buildMatchQuerySpec("attributes.color", "grey");
+            return self.tryQuery(soupName, querySpec, ["elephant", "dog"]);
+        })
+        .pipe(function() {
+            var querySpec = navigator.smartstore.buildMatchQuerySpec("attributes.color", "white black", "ascending", 10, "name");
+            return self.tryQuery(soupName, querySpec, ["cat", "lizard"]);
+        })
+        .pipe(function() {
+            var querySpec = navigator.smartstore.buildMatchQuerySpec("attributes.color", "gr*", "ascending", 10, "name");
+            return self.tryQuery(soupName, querySpec, ["dog", "elephant", "lizard"]);
+        })
+        .pipe(function() {
+            var querySpec = navigator.smartstore.buildMatchQuerySpec("attributes.color", "black NOT tabby", "descending", 10, "name");
+            return self.tryQuery(soupName, querySpec, ["lizard", "dog"]);
+        })
+        .done(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            self.finalizeTest();
+        });
+};
+
+/**
+ * TEST like query against array node
+ */
+SmartStoreTestSuite.prototype.testLikeQueryAgainstArrayNode  = function() {
+    console.log("In SFSmartStoreTestSuite.testLikeQueryAgainstArrayNode");
+    var self = this;
+    var myEntry1 = { name: "elephant", attributes:[{color: "grey"}] };
+    var myEntry2 = { name: "cat", attributes:[{color: "black"}, {color: "tabby"}, {color: "white"}] };
+    var myEntry3 = { name: "dog", attributes:[{color: "black"}, {color: "grey"}] };
+    var myEntry4 = { name: "lizard", attributes:[{color: "black"}, {color: "green"}, {color: "white"}] };
+    var rawEntries = [myEntry1, myEntry2, myEntry3, myEntry4];
+    var soupName = "likeQueryAgainstArrayNodeSoup";
+
+    self.removeAndRecreateSoup(soupName, [{path:"name", type:"string"},  {path:"attributes.color", type:"string"}])
+        .pipe(function() {
+            return self.upsertSoupEntries(soupName,rawEntries);
+        })
+        .pipe(function(entries) {
+            var querySpec = navigator.smartstore.buildLikeQuerySpec("attributes.color", "%grey%");
+            return self.tryQuery(soupName, querySpec, ["elephant", "dog"]);
+        })
+        .pipe(function() {
+            var querySpec = navigator.smartstore.buildLikeQuerySpec("attributes.color", "%gr%", "ascending", 10, "name");
+            return self.tryQuery(soupName, querySpec, ["dog", "elephant", "lizard"]);
+        })
+        .done(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            self.finalizeTest();
+        });
+};
+
+/**
+ * TEST exact query against array node
+ */
+SmartStoreTestSuite.prototype.testExactQueryAgainstArrayNode  = function() {
+    console.log("In SFSmartStoreTestSuite.testExactQueryAgainstArrayNode");
+    var self = this;
+    var myEntry1 = { name: "elephant", attributes:[{color: "grey"}] };
+    var myEntry2 = { name: "cat", attributes:[{color: "black"}, {color: "tabby"}, {color: "white"}] };
+    var myEntry3 = { name: "dog", attributes:[{color: "black"}, {color: "grey"}] };
+    var myEntry4 = { name: "lizard", attributes:[{color: "black"}, {color: "green"}, {color: "white"}] };
+    var rawEntries = [myEntry1, myEntry2, myEntry3, myEntry4];
+    var soupName = "exactQueryAgainstArrayNodeSoup";
+
+    self.removeAndRecreateSoup(soupName, [{path:"name", type:"string"},  {path:"attributes.color", type:"string"}])
+        .pipe(function() {
+            return self.upsertSoupEntries(soupName,rawEntries);
+        })
+        .pipe(function(entries) {
+            var querySpec = navigator.smartstore.buildExactQuerySpec("attributes.color", "[\"grey\"]");
+            return self.tryQuery(soupName, querySpec, ["elephant"]);
+        })
+        .done(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            self.finalizeTest();
+        });
+};
+
+/**
+ * TEST smart query against array node
+ */
+SmartStoreTestSuite.prototype.testSmartQueryAgainstArrayNode  = function() {
+    console.log("In SFSmartStoreTestSuite.testSmartQueryAgainstArrayNode");
+    var self = this;
+    var myEntry1 = { name: "elephant", attributes:[{color: "grey"}] };
+    var myEntry2 = { name: "cat", attributes:[{color: "black"}, {color: "tabby"}, {color: "white"}] };
+    var myEntry3 = { name: "dog", attributes:[{color: "black"}, {color: "grey"}] };
+    var myEntry4 = { name: "lizard", attributes:[{color: "black"}, {color: "green"}, {color: "white"}] };
+    var rawEntries = [myEntry1, myEntry2, myEntry3, myEntry4];
+    var soupName = "smartQueryAgainstArrayNodeSoup";
+
+    self.removeAndRecreateSoup(soupName, [{path:"name", type:"string"},  {path:"attributes.color", type:"string"}])
+        .pipe(function() {
+            return self.upsertSoupEntries(soupName,rawEntries);
+        })
+        .pipe(function(entries) {
+            var querySpec = navigator.smartstore.buildSmartQuerySpec("SELECt {" + soupName + ":_soup} FROM {" + soupName + "} where {" + soupName + ":attributes.color} LIKE '%grey%' ORDER BY LOWER({" + soupName + ":name})" , 5);
+            return self.runSmartQuery(querySpec);
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(2, cursor.currentPageOrderedEntries.length, "check number of rows returned");
+            QUnit.equal(1, cursor.currentPageOrderedEntries[0].length, "check number of fields returned");
+            QUnit.equal("dog", cursor.currentPageOrderedEntries[0][0].name, "check first row");
+            QUnit.equal("elephant", cursor.currentPageOrderedEntries[1][0].name, "check second row");
+            return self.closeCursor(cursor);
+        })
+        .done(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            self.finalizeTest();
+        });
+};
     
 /**
  * TEST query with compound path
