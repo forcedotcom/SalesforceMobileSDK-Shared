@@ -261,7 +261,7 @@ var MockSmartStore = (function(window) {
 
         retrieveSoupEntries: function(soupName, entryIds) {
             this.checkSoup(soupName); 
-             var soup = this._soups[soupName];
+            var soup = this._soups[soupName];
             var entries = [];
             for (var i=0; i<entryIds.length; i++) {
                 var entryId = entryIds[i];
