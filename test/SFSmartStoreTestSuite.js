@@ -959,8 +959,8 @@ SmartStoreTestSuite.prototype.testFullTextSearchAgainstArrayNode  = function() {
             return self.upsertSoupEntries(soupName,rawEntries);
         })
         .pipe(function(entries) {
-            var querySpec = navigator.smartstore.buildMatchQuerySpec("attributes.color", "grey");
-            return self.tryQuery(soupName, querySpec, ["elephant", "dog"], "descending", 10, "name");
+            var querySpec = navigator.smartstore.buildMatchQuerySpec("attributes.color", "grey", "descending", 10, "name");
+            return self.tryQuery(soupName, querySpec, ["elephant", "dog"]);
         })
         .pipe(function() {
             var querySpec = navigator.smartstore.buildMatchQuerySpec("attributes.color", "white black", "ascending", 10, "name");
