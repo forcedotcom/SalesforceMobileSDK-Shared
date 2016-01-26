@@ -153,9 +153,9 @@ var retrieve = function(objtype, id, fieldlist, callback, error) {
         callback = fieldlist;
         fieldlist = null;
     }
-    var fields = fieldlist ? '?fields=' + fieldlist : '';
+    var fields = fieldlist ? {fields:fieldlist} : null;
     return sendRequest('/services/data', '/' + apiVersion + '/sobjects/' + objtype + '/' + id
-                       + fields, callback, error);
+                       , callback, error, 'GET', fields);
 };
 
 /*
@@ -172,7 +172,7 @@ var retrieve = function(objtype, id, fieldlist, callback, error) {
  */
 var upsert = function(objtype, externalIdField, externalId, fields, callback, error) {
     return sendRequest('/services/data', '/' + apiVersion + '/sobjects/' + objtype + '/' + externalIdField + '/' + externalId
-                       + '?_HttpMethod=PATCH', callback, error, "POST", fields);
+                       , callback, error, "PATCH", fields);
 };
 
 /*
@@ -187,7 +187,7 @@ var upsert = function(objtype, externalIdField, externalId, fields, callback, er
  */
 var update = function(objtype, id, fields, callback, error) {
     return sendRequest('/services/data', '/' + apiVersion + '/sobjects/' + objtype + '/' + id
-                       + '?_HttpMethod=PATCH', callback, error, "POST", fields);
+                       , callback, error, "PATCH", fields);
 };
 
 /*
@@ -211,8 +211,8 @@ var del = function(objtype, id, callback, error) {
  * @param [error=null] function called in case of error
  */
 var query = function(soql, callback, error) {
-    return sendRequest('/services/data', '/' + apiVersion + '/query?q=' + encodeURI(soql)
-                       , callback, error);
+    return sendRequest('/services/data', '/' + apiVersion + '/query'
+                       , callback, error, 'GET', {q: soql});
 };
 
 /*
@@ -238,8 +238,8 @@ return sendRequest('',  pathFromUrl, callback, error );
  * @param [error=null] function called in case of error
  */
 var search = function(sosl, callback, error) {
-    return sendRequest('/services/data', '/' + apiVersion + '/search?q=' + encodeURI(sosl)
-                       , callback, error);
+    return sendRequest('/services/data', '/' + apiVersion + '/search'
+                       , callback, error, 'GET', {q: sosl});
 };
 
 /**
