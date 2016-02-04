@@ -194,6 +194,7 @@ function createCompileApp(tmpDir, appType, os) {
     var target = appType + ' app for ' + os;
     log('==== TESTING ' + target + '====', COLOR.green);
     var appName = appType + os + 'App';
+    var appDir = path.join(tmpDir, appName);
     var appId = '3MVG9Iu66FKeHhINkB1l7xt7kR8czFcCTUhgoA8Ol2Ltf1eYHOU4SqQRSEitYFDUpqRWcoQ2.dBv_a1Dyu5xa';
     var callbackUri = 'testsfdc:///mobilesdk/detect/oauth/done';
 
@@ -216,26 +217,33 @@ function createCompileApp(tmpDir, appType, os) {
 
         if (appType.indexOf('native') >=0) {
             // Pointing to repoDir in Podfile
-            shelljs.sed('-i', /pod ('Salesforce.*')/g, 'pod $1, :path => \'../SalesforceMobileSDK-iOS\'', path.join(tmpDir, appName, 'Podfile'));
-            shelljs.sed('-i', /pod ('Smart.*')/g, 'pod $1, :path => \'../SalesforceMobileSDK-iOS\'', path.join(tmpDir, appName, 'Podfile'));
+            shelljs.sed('-i', /pod ('Salesforce.*')/g, 'pod $1, :path => \'../SalesforceMobileSDK-iOS\'', path.join(appDir, 'Podfile'));
+            shelljs.sed('-i', /pod ('Smart.*')/g, 'pod $1, :path => \'../SalesforceMobileSDK-iOS\'', path.join(appDir, 'Podfile'));
 
-            shelljs.pushd(path.join(tmpDir, appName));
+            shelljs.pushd(appDir);
             runProcessCatchError('pod update');    
             shelljs.popd();
 
-            var workspacePath = path.join(tmpDir, appName, appName + '.xcworkspace');
+            var workspacePath = path.join(appDir, appName + '.xcworkspace');
             runProcessCatchError('xcodebuild -workspace ' + workspacePath + ' -scheme Pods-' + appName + ' clean build', 'COMPILING ' + target)
         }
         else {
-            shelljs.pushd(path.join(tmpDir, appName));
+            shelljs.pushd(appDir);
             runProcessCatchError('cordova build', 'COMPILING ' + target);    
             shelljs.popd();
         }
         
     }
     else if (os === OS.android) {
-        var targetDir = path.join(tmpDir, appName);
-        shelljs.mkdir('-p', targetDir);
+        var targetDir;
+
+        if (appType.indexOf('native')>=0) {
+            shelljs.mkdir('-p', appDir);
+            targetDir = appDir;
+        }
+        else {
+            targetDir = tmpDir;
+        }
 
         var forcedroidArgs = 'create '
             + ' --apptype=' + appType
@@ -250,12 +258,12 @@ function createCompileApp(tmpDir, appType, os) {
         runProcessCatchError(forcePath + ' ' + forcedroidArgs, 'GENERATING ' + target);
 
         if (appType.indexOf('native')>=0) {
-            shelljs.pushd(targetDir);
+            shelljs.pushd(appDir);
             runProcessCatchError('./gradlew', 'COMPILING ' + target);    
             shelljs.popd();
         }
         else {
-            shelljs.pushd(path.join(tmpDir, appName));
+            shelljs.pushd(appDir);
             runProcessCatchError('cordova build', 'COMPILING ' + target);    
             shelljs.popd();
         }
@@ -285,12 +293,12 @@ function editForceScriptToUseLocalPluginRepo(tmpDir, os) {
 //
 function runProcessCatchError(cmd, msg) {
     try {
-        if (msg) log('!STARTING!  ' + msg, COLOR.yellow);
+        if (msg) log('!TESTING!  ' + msg, COLOR.yellow);
         log('Running: ' + cmd);
         execSync(cmd);
-        if (msg) log('!COMPLETED! ' + msg, COLOR.yellow);
+        if (msg) log('!SUCCESS! ' + msg, COLOR.yellow);
     } catch (err) {
-        if (msg) log('!FAILED!    ' + msg, COLOR.red);
+        if (msg) log('!FAILURE!    ' + msg, COLOR.red);
         console.error(err.stderr.toString());
     }
 }
