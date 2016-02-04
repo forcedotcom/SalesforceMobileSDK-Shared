@@ -265,7 +265,7 @@ function createCompileApp(tmpDir, appType, os) {
 //
 // Update cordova plugin repo
 //
-function updatePluginRepo(tmpDir, pluginRepoDir, branch, testingIOS, testingAndroid) {
+function updatePluginRepo(tmpDir, pluginRepoDir, branch) {
     log('Updating cordova plugin at ' + branch, COLOR.green);
     shelljs.pushd(pluginRepoDir);
     runProcessThrowError(path.join('tools', 'update.sh') + ' -b ' + branch);    
@@ -276,6 +276,7 @@ function updatePluginRepo(tmpDir, pluginRepoDir, branch, testingIOS, testingAndr
 // Update forceios/forcedroid script to use local plugin repo
 //
 function editForceScriptToUseLocalPluginRepo(tmpDir, os) {
+    log('Editing  ' + forcePackageNameForOs(os) + '.js to use local cordova plugin', COLOR.green);
     shelljs.sed('-i', /'cordova plugin add .*'/g, '\'cordova plugin add ../SalesforceMobileSDK-CordovaPlugin\'', path.join(tmpDir, 'node_modules', forcePackageNameForOs(os), 'node', forcePackageNameForOs(os) + '.js'));
 }    
 
