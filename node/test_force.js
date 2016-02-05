@@ -196,7 +196,7 @@ function createCompileApp(tmpDir, appType, os) {
     var appName = appType + os + 'App';
     var appId = '3MVG9Iu66FKeHhINkB1l7xt7kR8czFcCTUhgoA8Ol2Ltf1eYHOU4SqQRSEitYFDUpqRWcoQ2.dBv_a1Dyu5xa';
     var callbackUri = 'testsfdc:///mobilesdk/detect/oauth/done';
-
+    var appDir = path.join(tmpDir, appName);
     var forcePath = path.join(tmpDir, 'node_modules', '.bin', forcePackageNameForOs(os));
 
     var forceArgs = 'create '
@@ -217,7 +217,7 @@ function createCompileApp(tmpDir, appType, os) {
         var targetDir;
 
         if (appType.indexOf('native')>=0) {
-            targetDir = path.join(tmpDir, appType);
+            targetDir = appDir;
             shelljs.mkdir('-p', targetDir);
         }
         else {
@@ -241,10 +241,9 @@ function createCompileApp(tmpDir, appType, os) {
     if (appType.indexOf('native') >=0) {
         if (os == OS.ios) {
             // IOS - Native
-            var appDir = path.join(tmpDir, appName);
             editPodfileToUseLocalRepo(appDir);
             var workspacePath = path.join(appDir, appName + '.xcworkspace');
-            runProcessCatchError('pod update', appDir);    
+            runProcessThrowError('pod update', appDir);    
             runProcessCatchError('xcodebuild -workspace ' + workspacePath 
                                  + ' -scheme Pods-' + appName // XXX building Pods-<appName> scheme because <appName> scheme only appears after project is opened in XCode !!
                                  + ' clean build', 
@@ -252,8 +251,7 @@ function createCompileApp(tmpDir, appType, os) {
         }
         else {
             // Android - Native
-            var projectDir = path.join(tmpDir, appType, appName);
-            runProcessCatchError('./gradlew assembleDebug', 'COMPILING ' + target, projectDir);    
+            runProcessCatchError('./gradlew assembleDebug', 'COMPILING ' + target, appDir);
         }
     }
     else {
@@ -291,6 +289,7 @@ function editPodfileToUseLocalRepo(appDir) {
 
 //
 // Helper to run arbitrary shell command - errors caught (and reported)
+// Returns true if successful
 //
 function runProcessCatchError(cmd, msg, dir) {
     var success = false;
@@ -316,8 +315,12 @@ function runProcessCatchError(cmd, msg, dir) {
 function runProcessThrowError(cmd, dir) {
     log('Running: ' + cmd);
     if (dir) shelljs.pushd(dir);
-    execSync(cmd);
-    if (dir) shelljs.popd();
+    try {
+        execSync(cmd);
+    }
+    finally {
+        if (dir) shelljs.popd();
+    }
 }
 
 //
