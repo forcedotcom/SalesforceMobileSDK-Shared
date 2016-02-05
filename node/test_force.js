@@ -192,81 +192,73 @@ function createDeployForcePackage(repoDir, tmpDir, os) {
 //
 function createCompileApp(tmpDir, appType, os) {
     var target = appType + ' app for ' + os;
-    log('==== TESTING ' + target + ' ====', COLOR.green);
+    log('==== ' + target + ' ====', COLOR.green);
     var appName = appType + os + 'App';
-    var appDir = path.join(tmpDir, appName);
     var appId = '3MVG9Iu66FKeHhINkB1l7xt7kR8czFcCTUhgoA8Ol2Ltf1eYHOU4SqQRSEitYFDUpqRWcoQ2.dBv_a1Dyu5xa';
     var callbackUri = 'testsfdc:///mobilesdk/detect/oauth/done';
 
     var forcePath = path.join(tmpDir, 'node_modules', '.bin', forcePackageNameForOs(os));
 
-    if (os === OS.ios) {
-        forceiosArgs = 'create '
-            + ' --apptype=' + appType
-            + ' --appname=' + appName
-            + ' --companyid=com.mycompany'
+    var forceArgs = 'create '
+        + ' --apptype=' + appType
+        + ' --appname=' + appName;
+
+    if (os == OS.ios) {
+        // ios only args
+        forceArgs += ' --companyid=com.mycompany'
             + ' --organization=MyCompany'
             + ' --outputdir=' + tmpDir
             + ' --appid=' + appId
-            + ' --callbackuri=' + callbackUri;
-        if (appType === 'hybrid_remote') {
-            forceiosArgs += ' --startPage=/apex/testPage';
-        }
-
-        runProcessCatchError(forcePath + ' ' + forceiosArgs, 'GENERATING ' + target);
-
-        if (appType.indexOf('native') >=0) {
-            // Pointing to repoDir in Podfile
-            shelljs.sed('-i', /pod ('Salesforce.*')/g, 'pod $1, :path => \'../SalesforceMobileSDK-iOS\'', path.join(appDir, 'Podfile'));
-            shelljs.sed('-i', /pod ('Smart.*')/g, 'pod $1, :path => \'../SalesforceMobileSDK-iOS\'', path.join(appDir, 'Podfile'));
-
-            shelljs.pushd(appDir);
-            runProcessCatchError('pod update');    
-            shelljs.popd();
-
-            var workspacePath = path.join(appDir, appName + '.xcworkspace');
-            runProcessCatchError('xcodebuild -workspace ' + workspacePath + ' -scheme Pods-' + appName + ' clean build', 'COMPILING ' + target)
-        }
-        else {
-            shelljs.pushd(appDir);
-            runProcessCatchError('cordova build', 'COMPILING ' + target);    
-            shelljs.popd();
-        }
-        
+            + ' --callbackuri=' + callbackUri
+            + ' --startPage=/apex/testPage';
     }
-    else if (os === OS.android) {
+    else {
+        // android only args
         var targetDir;
 
         if (appType.indexOf('native')>=0) {
-            shelljs.mkdir('-p', appDir);
-            targetDir = appDir;
+            targetDir = path.join(tmpDir, appType);
+            shelljs.mkdir('-p', targetDir);
         }
         else {
             targetDir = tmpDir;
         }
 
-        var forcedroidArgs = 'create '
-            + ' --apptype=' + appType
-            + ' --appname=' + appName
-            + ' --packagename=com.mycompany'
+        forceArgs += ' --packagename=com.mycompany'
             + ' --targetdir=' + targetDir
             + ' --usesmartstore=yes';
-            if (appType === 'hybrid_remote') {
-                forcedroidArgs += ' --startpage=/apex/testPage';
-            }
+            +' --startpage=/apex/testPage';
+    }
 
-        runProcessCatchError(forcePath + ' ' + forcedroidArgs, 'GENERATING ' + target);
+    // Generation
+    var generationSucceeded = runProcessCatchError(forcePath + ' ' + forceArgs, 'GENERATING ' + target);
 
-        if (appType.indexOf('native')>=0) {
-            shelljs.pushd(appDir);
-            runProcessCatchError('./gradlew assembleDebug', 'COMPILING ' + target);    
-            shelljs.popd();
+    if (!generationSucceeded) {
+        return; // no point continuing
+    }
+
+    // Compilation
+    if (appType.indexOf('native') >=0) {
+        if (os == OS.ios) {
+            // IOS - Native
+            var appDir = path.join(tmpDir, appName);
+            editPodfileToUseLocalRepo(appDir);
+            var workspacePath = path.join(appDir, appName + '.xcworkspace');
+            runProcessCatchError('pod update', appDir);    
+            runProcessCatchError('xcodebuild -workspace ' + workspacePath 
+                                 + ' -scheme Pods-' + appName // XXX building Pods-<appName> scheme because <appName> scheme only appears after project is opened in XCode !!
+                                 + ' clean build', 
+                                 'COMPILING ' + target); 
         }
         else {
-            shelljs.pushd(appDir);
-            runProcessCatchError('cordova build', 'COMPILING ' + target);    
-            shelljs.popd();
+            // Android - Native
+            var projectDir = path.join(tmpDir, appType, appName);
+            runProcessCatchError('./gradlew assembleDebug', 'COMPILING ' + target, projectDir);    
         }
+    }
+    else {
+        // IOS or Android - Hybrid
+        runProcessCatchError('cordova build', 'COMPILING ' + target, appDir);    
     }
 }
 
@@ -289,25 +281,43 @@ function editForceScriptToUseLocalPluginRepo(tmpDir, os) {
 }    
 
 //
+// Update podfile to use local ios repo
+// 
+function editPodfileToUseLocalRepo(appDir) {
+    log('Editing podfile to use local ios repo', COLOR.green);
+    shelljs.sed('-i', /pod ('Salesforce.*')/g, 'pod $1, :path => \'../SalesforceMobileSDK-iOS\'', path.join(appDir, 'Podfile'));
+    shelljs.sed('-i', /pod ('Smart.*')/g, 'pod $1, :path => \'../SalesforceMobileSDK-iOS\'', path.join(appDir, 'Podfile'));
+}
+
+//
 // Helper to run arbitrary shell command - errors caught (and reported)
 //
-function runProcessCatchError(cmd, msg) {
+function runProcessCatchError(cmd, msg, dir) {
+    var success = false;
+    log('Running: ' + cmd);
+    if (dir) shelljs.pushd(dir);
     try {
-        log('Running: ' + cmd);
         execSync(cmd);
         if (msg) log('!SUCCESS! ' + msg, COLOR.yellow);
+        success = true;
     } catch (err) {
         if (msg) log('!FAILURE! ' + msg, COLOR.red);
         console.error(err.stderr.toString());
+    }
+    finally {
+        if (dir) shelljs.popd();
+        return success;
     }
 }
 
 //
 // Helper to run arbitrary shell command - errors thrown
 //
-function runProcessThrowError(cmd) {
+function runProcessThrowError(cmd, dir) {
     log('Running: ' + cmd);
+    if (dir) shelljs.pushd(dir);
     execSync(cmd);
+    if (dir) shelljs.popd();
 }
 
 //
