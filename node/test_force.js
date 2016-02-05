@@ -1,8 +1,5 @@
 #!/usr/bin/env node
 
-// Constant
-var version='4.1.0';
-
 // Enums
 var COLOR = {
     'red': '\x1b[31;1m',
@@ -53,6 +50,7 @@ function main(args) {
 
     // Args extraction
     var usageRequested = parsedArgs.hasOwnProperty('usage');
+    var version = parsedArgs.version || '';
     var chosenOperatingSystems = cleanSplit(parsedArgs.os, ',');
     var fork = parsedArgs.fork || 'forcedotcom';
     var branch = parsedArgs.branch || 'unstable';
@@ -64,6 +62,7 @@ function main(args) {
     var testingHybrid = chosenAppTypes.indexOf(APP_TYPE.hybrid_local) >= 0 || chosenAppTypes.indexOf(APP_TYPE.hybrid_remote) >= 0;
 
     // Validation
+    validateVersion(version);
     validateOperatingSystems(chosenOperatingSystems);
     validateAppTypes(chosenAppTypes);
 
@@ -81,14 +80,14 @@ function main(args) {
     if (testingIOS) {
         var repoName = 'SalesforceMobileSDK-iOS';
         var repoDir = cloneRepo(tmpDir, fork, repoName, branch);
-        createDeployForcePackage(repoDir, tmpDir, OS.ios);
+        createDeployForcePackage(repoDir, tmpDir, OS.ios, version);
     }
 
     // Get android repo if requested
     if (testingAndroid) {
         var repoName = 'SalesforceMobileSDK-Android';
         var repoDir = cloneRepo(tmpDir, fork, repoName, branch);
-        createDeployForcePackage(repoDir, tmpDir, OS.android);
+        createDeployForcePackage(repoDir, tmpDir, OS.android, version);
     }
 
     // Get cordova plugin repo if any hybrid testing requested
@@ -121,6 +120,8 @@ function usage() {
         + '      where osN are : ios, android\n'
         + '    --test=appType1,appType2,etc\n'
         + '      where appTypeN are in: native, native_swift, react_native, hybrid_local, hybrid_remote\n'
+        + '    --version=x.y.z\n'
+        + '      version of the forceios/droid package expected to be built\n'
         + '    [--fork=FORK (defaults to forcedotcom)]\n'
         + '    [--branch=BRANCH (defaults to unstable)]\n'
         + '    [--pluginFork=PLUGIN_FORK (defaults to forcedotcom)]\n'
@@ -179,7 +180,7 @@ function cloneRepo(tmpDir, fork, repoName, branch) {
 //
 // Create and deploy forceios/forcedroid
 //
-function createDeployForcePackage(repoDir, tmpDir, os) {
+function createDeployForcePackage(repoDir, tmpDir, os, version) {
     log('Generating ' + forcePackageNameForOs(os) + ' package', COLOR.green);
     var buildNpmPath = os === OS.ios ? path.join(repoDir, 'build', 'build_npm.xml') : path.join(repoDir, 'build_npm.xml');
     runProcessThrowError('ant -f ' + buildNpmPath);
@@ -342,6 +343,16 @@ function log(msg, color) {
 //
 function random(n) {
     return (n/10)+Math.floor(Math.random()*(9*n/10));
+}
+
+//
+// Helper to validate version
+// 
+function validateVersion(version) {
+    if (version.match(/\d\.\d\.\d/) == null) {
+            log('Invalid version: ' + version, COLOR.red);
+            process.exit(1);
+    }
 }
 
 //
