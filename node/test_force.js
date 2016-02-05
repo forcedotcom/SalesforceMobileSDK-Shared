@@ -104,7 +104,6 @@ function main(args) {
         var os = chosenOperatingSystems[i];
         for (var j=0; j<chosenAppTypes.length; j++) {
             var appType = chosenAppTypes[j];
-            if (appType === APP_TYPE.native_swift && os === OS.android) continue; // that app type doesn't exist for android
             createCompileApp(tmpDir, appType, os);
         }
     }
@@ -191,6 +190,8 @@ function createDeployForcePackage(repoDir, tmpDir, os) {
 // Create and compile app 
 //
 function createCompileApp(tmpDir, appType, os) {
+    if (appType === APP_TYPE.native_swift && os === OS.android) return; // that app type doesn't exist for android
+
     var target = appType + ' app for ' + os;
     log('==== ' + target + ' ====', COLOR.green);
     var appName = appType + os + 'App';
