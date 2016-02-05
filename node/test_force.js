@@ -253,7 +253,8 @@ function createCompileApp(tmpDir, appType, os) {
         }
         else {
             // Android - Native
-            runProcessCatchError('./gradlew assembleDebug', 'COMPILING ' + target, appDir);
+            var gradle = isWindows() ? '.\\gradlew.bat' : './gradlew';
+            runProcessCatchError(gradle + ' assembleDebug', 'COMPILING ' + target, appDir);
         }
     }
     else {
@@ -361,7 +362,7 @@ function validateVersion(version) {
 function validateOperatingSystems(chosenOperatingSystems) {
     for (var i=0; i<chosenOperatingSystems.length; i++) {
         var os = chosenOperatingSystems[i];
-        if (!OS.hasOwnProperty(os)) {
+        if (!OS.hasOwnProperty(os) || (isWindows() && os === OS.ios)) {
             log('Invalid os: ' + os, COLOR.red);
             process.exit(1);
         }
@@ -404,4 +405,11 @@ function forcePackageNameForOs(os) {
         case OS.android: return 'forcedroid';
         case OS.ios: return 'forceios';
     }
+}
+
+//
+// Return true if running on Windows
+//
+function isWindows() {
+    return /^win/.test(process.platform);
 }
