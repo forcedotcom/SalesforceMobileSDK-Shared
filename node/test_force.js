@@ -192,7 +192,7 @@ function createDeployForcePackage(repoDir, tmpDir, os) {
 //
 function createCompileApp(tmpDir, appType, os) {
     var target = appType + ' app for ' + os;
-    log('==== TESTING ' + target + '====', COLOR.green);
+    log('==== TESTING ' + target + ' ====', COLOR.green);
     var appName = appType + os + 'App';
     var appDir = path.join(tmpDir, appName);
     var appId = '3MVG9Iu66FKeHhINkB1l7xt7kR8czFcCTUhgoA8Ol2Ltf1eYHOU4SqQRSEitYFDUpqRWcoQ2.dBv_a1Dyu5xa';
@@ -259,7 +259,7 @@ function createCompileApp(tmpDir, appType, os) {
 
         if (appType.indexOf('native')>=0) {
             shelljs.pushd(appDir);
-            runProcessCatchError('./gradlew', 'COMPILING ' + target);    
+            runProcessCatchError('./gradlew assembleDebug', 'COMPILING ' + target);    
             shelljs.popd();
         }
         else {
@@ -293,12 +293,11 @@ function editForceScriptToUseLocalPluginRepo(tmpDir, os) {
 //
 function runProcessCatchError(cmd, msg) {
     try {
-        if (msg) log('!TESTING!  ' + msg, COLOR.yellow);
         log('Running: ' + cmd);
         execSync(cmd);
         if (msg) log('!SUCCESS! ' + msg, COLOR.yellow);
     } catch (err) {
-        if (msg) log('!FAILURE!    ' + msg, COLOR.red);
+        if (msg) log('!FAILURE! ' + msg, COLOR.red);
         console.error(err.stderr.toString());
     }
 }
