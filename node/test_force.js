@@ -50,12 +50,12 @@ function main(args) {
 
     // Args extraction
     var usageRequested = parsedArgs.hasOwnProperty('usage');
-    var version = parsedArgs.version || '';
+    var version = parsedArgs.version || '4.1.0';
     var chosenOperatingSystems = cleanSplit(parsedArgs.os, ',');
     var fork = parsedArgs.fork || 'forcedotcom';
     var branch = parsedArgs.branch || 'unstable';
-    var pluginFork = parsedArgs.pluginFork || 'forcedotcom';
-    var pluginBranch = parsedArgs.pluginBranch || 'unstable';
+    var pluginFork = parsedArgs.plugin_fork || 'forcedotcom';
+    var pluginBranch = parsedArgs.plugin_branch || 'unstable';
     var chosenAppTypes = cleanSplit(parsedArgs.test, ',');
     var testingIOS = chosenOperatingSystems.indexOf(OS.ios) >= 0;
     var testingAndroid = chosenOperatingSystems.indexOf(OS.android) >= 0;
@@ -124,8 +124,8 @@ function usage() {
         + '      version of the forceios/droid package expected to be built\n'
         + '    [--fork=FORK (defaults to forcedotcom)]\n'
         + '    [--branch=BRANCH (defaults to unstable)]\n'
-        + '    [--pluginFork=PLUGIN_FORK (defaults to forcedotcom)]\n'
-        + '    [--pluginBranch=PLUGIN_BRANCH (defaults to unstable)]\n'
+        + '    [--plugin_fork=PLUGIN_FORK (defaults to forcedotcom)]\n'
+        + '    [--plugin_branch=PLUGIN_BRANCH (defaults to unstable)]\n'
         + '\n'
         + '  If ios is targeted:\n'
         + '  - clones https://github.com/FORK/SalesforceMobileSDK-iOS at branch BRANCH\n'
