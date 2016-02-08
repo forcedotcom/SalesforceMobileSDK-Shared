@@ -50,7 +50,7 @@ function main(args) {
 
     // Args extraction
     var usageRequested = parsedArgs.hasOwnProperty('usage');
-    var version = parsedArgs.version || '';
+    var version = parsedArgs.version || '4.1.0';
     var chosenOperatingSystems = cleanSplit(parsedArgs.os, ',');
     var fork = parsedArgs.fork || 'forcedotcom';
     var branch = parsedArgs.branch || 'unstable';
