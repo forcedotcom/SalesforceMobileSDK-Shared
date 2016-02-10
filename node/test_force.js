@@ -246,7 +246,7 @@ function createCompileApp(tmpDir, appType, os) {
             var workspacePath = path.join(appDir, appName + '.xcworkspace');
             runProcessThrowError('pod update', appDir);    
             runProcessCatchError('xcodebuild -workspace ' + workspacePath 
-                                 + ' -scheme Pods-' + appName // XXX building Pods-<appName> scheme because <appName> scheme only appears after project is opened in XCode !!
+                                 + ' -scheme ' + appName
                                  + ' clean build', 
                                  'COMPILING ' + target); 
         }
