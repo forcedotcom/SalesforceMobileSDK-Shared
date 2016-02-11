@@ -227,7 +227,7 @@ function createCompileApp(tmpDir, appType, os) {
 
         forceArgs += ' --packagename=com.mycompany'
             + ' --targetdir=' + targetDir
-            + ' --usesmartstore=yes';
+            + ' --usesmartstore=yes'
             +' --startpage=/apex/testPage';
     }
 
@@ -257,8 +257,15 @@ function createCompileApp(tmpDir, appType, os) {
         }
     }
     else {
-        // IOS or Android - Hybrid
-        runProcessCatchError('cordova build', 'COMPILING ' + target, appDir);    
+        if (os == OS.ios) {
+            // IOS - Native
+            runProcessCatchError('cordova build', 'COMPILING ' + target, appDir);    
+        }
+        else {
+            // Android - Native
+            var gradle = isWindows() ? '.\\gradlew.bat' : './gradlew';
+            runProcessCatchError(gradle + ' assembleDebug', 'COMPILING ' + target, path.join(appDir, 'platforms', 'android'));
+        }
     }
 }
 
