@@ -32,9 +32,14 @@ var execSync = require('child_process').execSync,
 
 try {
     shelljs = require('shelljs');
-}
-catch (e) {
-    log('You need to run: npm install shelljs, before running test_force.js', COLOR.red);
+    var version = require('shelljs/package.json').version
+    if (version !== '0.5.3') {
+        console.log('The version 0.5.3 of the node package shelljs is required to use this script. Run \'npm install shelljs@0.5.3\' before running this script.');
+        process.exit(1);
+    }
+
+} catch(e) {
+    console.log('The node package shelljs is required to use this script. Run \'npm install shelljs@0.5.3\' before running this script.');
     process.exit(1);
 }
 
