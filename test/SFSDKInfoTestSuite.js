@@ -58,9 +58,9 @@ SDKInfoTestSuite.prototype.testGetInfo = function()  {
     self.getInfo()
         .done(function(sdkInfo) {
             // sdkVersion
-        	QUnit.ok(sdkInfo.sdkVersion.indexOf("4.0") == 0, "expected different sdk version");
+        	QUnit.ok(sdkInfo.sdkVersion.indexOf("4.1") == 0, "expected different sdk version");
             // appName
-            QUnit.ok(sdkInfo.appName == "SalesforceHybridSDKTestApp" || sdkInfo.appName == "ForcePluginsTest", "expected different app name");
+            QUnit.ok(sdkInfo.appName == "SalesforceHybridSDKTestApp" || sdkInfo.appName == "SalesforceHybridTest", "expected different app name");
             // appVersion
             QUnit.equal(sdkInfo.appVersion, "1.0", "expected different app version");
             // forcePluginsAvailable
