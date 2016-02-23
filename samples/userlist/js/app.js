@@ -30,7 +30,7 @@
             function (creds) {
                 // Create forcetk client instance for rest API calls
                 var forceClient = new forcetk.Client(creds.clientId, creds.loginUrl);
-                forceClient.setSessionToken(creds.accessToken, "v34.0", creds.instanceUrl);
+                forceClient.setSessionToken(creds.accessToken, "v36.0", creds.instanceUrl);
                 forceClient.setRefreshToken(creds.refreshToken);
 
                 // Call success handler and handover the forcetkClient

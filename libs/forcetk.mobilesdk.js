@@ -257,13 +257,13 @@ if (forcetk.Client === undefined) {
      * Set a session token and the associated metadata in the client.
      * @param sessionId a salesforce.com session ID. In a Visualforce page,
      *                   use '{!$Api.sessionId}' to obtain a session ID.
-     * @param [apiVersion="34.0"] Force.com API version
+     * @param [apiVersion="v36.0"] Force.com API version
      * @param [instanceUrl] Omit this if running on Visualforce; otherwise
      *                   use the value from the OAuth token.
      */
     forcetk.Client.prototype.setSessionToken = function(sessionId, apiVersion, instanceUrl) {
         this.sessionId = sessionId;
-        this.apiVersion = (typeof apiVersion === 'undefined' || apiVersion === null) ? 'v34.0': apiVersion;
+        this.apiVersion = (typeof apiVersion === 'undefined' || apiVersion === null) ? 'v36.0': apiVersion;
         // In PhoneGap OR outside
         if (location.protocol === 'ms-appx:' || location.protocol === 'ms-appx-web:' || location.protocol === 'file:' || this.proxyUrl != null) {
             this.instanceUrl = instanceUrl;
