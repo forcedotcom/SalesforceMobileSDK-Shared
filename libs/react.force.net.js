@@ -53,7 +53,7 @@ var sendRequest = function(endPoint, path, successCB, errorCB, method, payload, 
     payload = payload || {};
     headerParams = headerParams || {};
     // File params expected to be of the form:
-    // {<fileParamNameInPost>: {mimeType:<someMimeType>, path:<localFilePath>, name:<fileNameInPost>}}
+    // {<fileParamNameInPost>: {fileMimeType:<someMimeType>, fileUrl:<fileUrl>, fileName:<fileNameForPost>}}
     fileParams = fileParams || {}; 
     var args = {endPoint: endPoint, path:path, method:method, queryParams:payload, headerParams:headerParams, fileParams: fileParams};
     forceCommon.exec("SFNetReactBridge", "SalesforceNetReactBridge", SFNetReactBridge, SalesforceNetReactBridge, successCB, errorCB, "sendRequest", args);
