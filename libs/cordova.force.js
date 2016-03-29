@@ -268,14 +268,16 @@ cordova.define("com.salesforce.plugin.oauth", function (require, exports, module
      *   success - The success callback function to use.
      *   fail    - The failure/error callback function to use.
      * cordova returns a dictionary with:
-     *     accessToken
-     *     refreshToken
-     *  clientId
-     *     userId
-     *     orgId
-     *  loginUrl
-     *     instanceUrl
-     *     userAgent
+     *   accessToken
+     *   refreshToken
+     *   clientId
+     *   userId
+     *   orgId
+     *   loginUrl
+     *   instanceUrl
+     *   userAgent
+     *   community id 
+     *   community url
      */
     var getAuthCredentials = function (success, fail) {
         exec(SALESFORCE_MOBILE_SDK_VERSION, success, fail, SERVICE, "getAuthCredentials", []);
@@ -294,6 +296,8 @@ cordova.define("com.salesforce.plugin.oauth", function (require, exports, module
      *   loginUrl
      *   instanceUrl
      *   userAgent
+     *   community id 
+     *   community url
      */
     var authenticate = function (success, fail) {
         exec(SALESFORCE_MOBILE_SDK_VERSION, success, fail, SERVICE, "authenticate", []);

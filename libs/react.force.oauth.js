@@ -40,18 +40,40 @@ var exec = function(successCB, errorCB, methodName, args) {
 var logoutInitiated = false;
 
 /**
+ * Initiates the authentication process, with the given app configuration.
+ *   success         - The success callback function to use.
+ *   fail            - The failure/error callback function to use.
+ * Returns a dictionary with:
+ *   accessToken
+ *   refreshToken
+ *   clientId
+ *   userId
+ *   orgId
+ *   loginUrl
+ *   instanceUrl
+ *   userAgent
+ *   community id 
+ *   community url
+ */
+var authenticate = function (success, fail) {
+    exec(success, fail, "authenticate", {});
+};
+
+/**
  * Obtain authentication credentials.
  *   success - The success callback function to use.
  *   fail    - The failure/error callback function to use.
  * Returns a dictionary with:
- *     accessToken
- *     refreshToken
- *     clientId
- *     userId
- *     orgId
- *     loginUrl
- *     instanceUrl
- *     userAgent
+ *   accessToken
+ *   refreshToken
+ *   clientId
+ *   userId
+ *   orgId
+ *   loginUrl
+ *   instanceUrl
+ *   userAgent
+ *   community id 
+ *   community url
  */
 var getAuthCredentials = function (success, fail) {
     exec(success, fail, "getAuthCredentials", {});
@@ -78,6 +100,7 @@ var logout = function () {
  * Part of the module that is public
  */
 module.exports = {
+    authenticate: authenticate,
     getAuthCredentials: getAuthCredentials,
     logout: logout
 };
