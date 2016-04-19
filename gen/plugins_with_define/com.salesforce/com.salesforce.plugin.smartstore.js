@@ -174,11 +174,11 @@ var registerSoup = function (soupName, indexSpecs, successCB, errorCB) {
         );
 };
 
-var registerSoupWithSpec = function (soupName, soupSpec, indexSpecs, successCB, errorCB) {
-    storeConsole.debug("SmartStore.registerSoupWithSpec: '" + soupName + "' soupSpec: " + soupSpec + "' indexSpecs: " + JSON.stringify(indexSpecs));
+var registerSoupWithSpec = function (soupName, indexSpecs, soupSpec, successCB, errorCB) {
+    storeConsole.debug("SmartStore.registerSoup: '" + soupName + "' indexSpecs: " + JSON.stringify(indexSpecs) + "' soupSpecs: " + soupSpec);
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
-         "pgRegisterSoupWithSpec",
-         [{"soupName": soupName, "soupSpec" : soupSpec, "indexes": indexSpecs}]
+         "pgRegisterSoup",
+         [{"soupName": soupName, "indexes": indexSpecs,  "soupSpecs" : soupSpec}]
         );
 };
 

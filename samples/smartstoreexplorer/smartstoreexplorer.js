@@ -79,8 +79,8 @@ function regLinkClickHandlers() {
       }
 
       sfSmartstore().registerSoupWithSpec(SAMPLE_SOUP_NAME,
-                                        soupSpecs,
                                         indexes,
+                                        soupSpecs,
                                         onSuccessRegSoup,
                                         onErrorRegSoup
         );
