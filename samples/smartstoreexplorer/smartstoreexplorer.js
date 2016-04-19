@@ -56,9 +56,37 @@ function regLinkClickHandlers() {
         );
       
     });
-                              
-                              
-    
+
+    $('#link_reg_soup_with_spec').click(function() {
+      logToConsole()("link_reg_soup_with_spec clicked");
+
+      var indexes = [
+                     {path:"Name",type:"string"},
+                     {path:"Id",type:"string"}
+                     ];
+
+      var soupSpec =  $('#select_soup_spec').val();
+
+      var soupSpecs = [];
+
+      if (soupSpec == null) {
+        soupSpecs.push({soupSpec:"externalStorage"});
+      } else {
+        for (i = 0; i < soupSpec.length; i++) {
+            var soupSpecEntry = {soupSpec: soupSpec[i]};
+            soupSpecs.push(soupSpecEntry);
+        }
+      }
+
+      sfSmartstore().registerSoupWithSpec(SAMPLE_SOUP_NAME,
+                                        soupSpecs,
+                                        indexes,
+                                        onSuccessRegSoup,
+                                        onErrorRegSoup
+        );
+
+    });
+
     $('#link_stuff_soup').click(function() {
         logToConsole()("link_stuff_soup clicked");
         runStuffSoup();
