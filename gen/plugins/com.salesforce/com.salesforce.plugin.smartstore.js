@@ -173,6 +173,14 @@ var registerSoup = function (soupName, indexSpecs, successCB, errorCB) {
         );
 };
 
+var registerSoupWithSpec = function (soupName, indexSpecs, soupSpec, successCB, errorCB) {
+    storeConsole.debug("SmartStore.registerSoup: '" + soupName + "' indexSpecs: " + JSON.stringify(indexSpecs) + "' soupSpecs: " + soupSpec);
+    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+         "pgRegisterSoup",
+         [{"soupName": soupName, "indexes": indexSpecs,  "soupSpecs" : soupSpec}]
+        );
+};
+
 var removeSoup = function (soupName, successCB, errorCB) {
     storeConsole.debug("SmartStore.removeSoup: " + soupName);
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
@@ -330,6 +338,7 @@ module.exports = {
     querySoup: querySoup,
     reIndexSoup: reIndexSoup,
     registerSoup: registerSoup,
+    registerSoupWithSpec: registerSoupWithSpec,
     removeFromSoup: removeFromSoup,
     removeSoup: removeSoup,
     retrieveSoupEntries: retrieveSoupEntries,
