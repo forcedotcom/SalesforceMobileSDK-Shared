@@ -469,6 +469,13 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
 
     var exec = require("com.salesforce.util.exec").exec;
 
+    /**
+     * SoupSpec constructor
+     */
+    var SoupSpec = function (soupName, features) {
+        this.soupName = soupName;
+        this.features = features;
+    };
 
     /**
      * SoupIndexSpec consturctor
@@ -609,6 +616,14 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgRegisterSoup",
              [{"soupName": soupName, "indexes": indexSpecs}]
+            );
+    };
+
+    var registerSoupWithSpec = function (soupSpec, indexSpecs, successCB, errorCB) {
+        storeConsole.debug("SmartStore.registerSoupWithSpec: '" + JSON.stringify(soupSpec) + "' indexSpecs: " + JSON.stringify(indexSpecs));
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgRegisterSoup",
+             [{"soupSpec": soupSpec, "indexes": indexSpecs}]
             );
     };
 
@@ -771,6 +786,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         registerSoup: registerSoup,
         removeFromSoup: removeFromSoup,
         removeSoup: removeSoup,
+        registerSoupWithSpec: registerSoupWithSpec,
         retrieveSoupEntries: retrieveSoupEntries,
         runSmartQuery: runSmartQuery,
         setLogLevel: setLogLevel,
@@ -780,6 +796,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         upsertSoupEntriesWithExternalId: upsertSoupEntriesWithExternalId,
 
         // Constructors
+        SoupSpec: SoupSpec,
         QuerySpec: QuerySpec,
         SoupIndexSpec: SoupIndexSpec,
         StoreCursor: StoreCursor

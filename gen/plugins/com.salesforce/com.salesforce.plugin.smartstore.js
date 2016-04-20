@@ -30,6 +30,13 @@ var SERVICE = "com.salesforce.smartstore";
 
 var exec = require("com.salesforce.util.exec").exec;
 
+/**
+ * SoupSpec constructor
+ */
+var SoupSpec = function (soupName, features) {
+    this.soupName = soupName;
+    this.features = features;
+};
 
 /**
  * SoupIndexSpec consturctor
@@ -173,11 +180,11 @@ var registerSoup = function (soupName, indexSpecs, successCB, errorCB) {
         );
 };
 
-var registerSoupWithSpec = function (soupName, indexSpecs, soupSpec, successCB, errorCB) {
-    storeConsole.debug("SmartStore.registerSoup: '" + soupName + "' indexSpecs: " + JSON.stringify(indexSpecs) + "' soupSpecs: " + soupSpec);
+var registerSoupWithSpec = function (soupSpec, indexSpecs, successCB, errorCB) {
+    storeConsole.debug("SmartStore.registerSoupWithSpec: '" + JSON.stringify(soupSpec) + "' indexSpecs: " + JSON.stringify(indexSpecs));
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgRegisterSoup",
-         [{"soupName": soupName, "indexes": indexSpecs,  "soupSpecs" : soupSpec}]
+         [{"soupSpec": soupSpec, "indexes": indexSpecs}]
         );
 };
 
@@ -350,6 +357,7 @@ module.exports = {
     upsertSoupEntriesWithExternalId: upsertSoupEntriesWithExternalId,
 
     // Constructors
+    SoupSpec: SoupSpec,
     QuerySpec: QuerySpec,
     SoupIndexSpec: SoupIndexSpec,
     StoreCursor: StoreCursor
