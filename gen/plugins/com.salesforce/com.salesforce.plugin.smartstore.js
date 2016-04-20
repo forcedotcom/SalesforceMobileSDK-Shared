@@ -31,7 +31,15 @@ var SERVICE = "com.salesforce.smartstore";
 var exec = require("com.salesforce.util.exec").exec;
 
 /**
- * SoupIndexSpec consturctor
+ * SoupSpec constructor
+ */
+var SoupSpec = function (soupName, features) {
+    this.soupName = soupName;
+    this.features = features;
+};
+
+/**
+ * SoupIndexSpec constructor
  */
 var SoupIndexSpec = function (path, type) {
     this.path = path;
@@ -192,6 +200,15 @@ var registerSoup = function (isGlobalStore, soupName, indexSpecs, successCB, err
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgRegisterSoup",
          [{"soupName": soupName, "indexes": indexSpecs, "isGlobalStore": isGlobalStore}]
+        );
+};
+
+var registerSoupWithSpec = function (isGlobalStore, soupSpec, indexSpecs, successCB, errorCB) {
+    if (checkFirstArg(arguments)) return;
+    storeConsole.debug("SmartStore.registerSoupWithSpec:isGlobalStore=" +isGlobalStore+ ",soupSpec=" + JSON.stringify(soupSpec) + ",indexSpecs=" + JSON.stringify(indexSpecs));
+    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+         "pgRegisterSoup",
+         [{"soupSpec": soupSpec, "indexes": indexSpecs, "isGlobalStore": isGlobalStore}]
         );
 };
 
@@ -368,6 +385,7 @@ module.exports = {
     querySoup: querySoup,
     reIndexSoup: reIndexSoup,
     registerSoup: registerSoup,
+    registerSoupWithSpec: registerSoupWithSpec,
     removeFromSoup: removeFromSoup,
     removeSoup: removeSoup,
     retrieveSoupEntries: retrieveSoupEntries,
@@ -379,7 +397,8 @@ module.exports = {
     upsertSoupEntriesWithExternalId: upsertSoupEntriesWithExternalId,
 
     // Constructors
-    QuerySpec: QuerySpec,
+    SoupSpec: SoupSpec,
     SoupIndexSpec: SoupIndexSpec,
+    QuerySpec: QuerySpec,
     StoreCursor: StoreCursor
 };
