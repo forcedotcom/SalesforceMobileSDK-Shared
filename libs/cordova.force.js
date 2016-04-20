@@ -474,7 +474,15 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     var exec = require("com.salesforce.util.exec").exec;
 
     /**
-     * SoupIndexSpec consturctor
+     * SoupSpec constructor
+     */
+    var SoupSpec = function (soupName, features) {
+        this.soupName = soupName;
+        this.features = features;
+    };
+
+    /**
+     * SoupIndexSpec constructor
      */
     var SoupIndexSpec = function (path, type) {
         this.path = path;
@@ -659,6 +667,15 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
             );
     };
 
+    var registerSoupWithSpec = function (isGlobalStore, soupSpec, indexSpecs, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        storeConsole.debug("SmartStore.registerSoupWithSpec:isGlobalStore=" +isGlobalStore+ ",soupSpec=" + JSON.stringify(soupSpec) + ",indexSpecs=" + JSON.stringify(indexSpecs));
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgRegisterSoup",
+             [{"soupSpec": soupSpec, "indexes": indexSpecs, "isGlobalStore": isGlobalStore}]
+            );
+    };
+
     var removeSoup = function (isGlobalStore, soupName, successCB, errorCB) {
         if (checkFirstArg(arguments)) return;
         storeConsole.debug("SmartStore.removeSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName);
@@ -834,6 +851,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         querySoup: querySoup,
         reIndexSoup: reIndexSoup,
         registerSoup: registerSoup,
+        registerSoupWithSpec: registerSoupWithSpec,
         removeFromSoup: removeFromSoup,
         removeSoup: removeSoup,
         retrieveSoupEntries: retrieveSoupEntries,
@@ -845,8 +863,9 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         upsertSoupEntriesWithExternalId: upsertSoupEntriesWithExternalId,
 
         // Constructors
-        QuerySpec: QuerySpec,
+        SoupSpec: SoupSpec,
         SoupIndexSpec: SoupIndexSpec,
+        QuerySpec: QuerySpec,
         StoreCursor: StoreCursor
     };
 });
