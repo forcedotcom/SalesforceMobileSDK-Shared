@@ -65,22 +65,18 @@ function regLinkClickHandlers() {
                      {path:"Id",type:"string"}
                      ];
 
-      var soupSpec =  $('#select_soup_spec').val();
+      var featuresSelect =  $('#select_soup_spec').val();
 
-      var soupSpecs = [];
+      var soupSpec = {name:SAMPLE_SOUP_NAME};
 
-      if (soupSpec == null) {
-        soupSpecs.push({soupSpec:"externalStorage"});
+      if (featuresSelect == null) {
+        soupSpec['features'] = ["externalStorage"];
       } else {
-        for (i = 0; i < soupSpec.length; i++) {
-            var soupSpecEntry = {soupSpec: soupSpec[i]};
-            soupSpecs.push(soupSpecEntry);
-        }
+        soupSpec['features'] = featuresSelect;
       }
 
-      sfSmartstore().registerSoupWithSpec(SAMPLE_SOUP_NAME,
+      sfSmartstore().registerSoupWithSpec(soupSpec,
                                         indexes,
-                                        soupSpecs,
                                         onSuccessRegSoup,
                                         onErrorRegSoup
         );
