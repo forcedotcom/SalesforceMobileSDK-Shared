@@ -1,6 +1,6 @@
 cordova.define("com.salesforce.plugin.smartsync", function(require, exports, module) {
 /*
- * Copyright (c) 2012-15, salesforce.com, inc.
+ * Copyright (c) 2012-present, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -49,7 +49,7 @@ var syncDown = function(isGlobalStore, target, soupName, options, successCB, err
     if (checkFirstArg(arguments)) return;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "syncDown",
-         [{"target": target, "soupName": soupName, "options": options, "isGlobalStore":isGlobalStore}]
+         [{"target": target, "soupName": soupName, "options": options, "isGlobalStore": isGlobalStore}]
         );        
 };
 
@@ -57,10 +57,17 @@ var reSync = function(isGlobalStore, syncId, successCB, errorCB) {
     if (checkFirstArg(arguments)) return;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "reSync",
-         [{"syncId": syncId, "isGlobalStore":isGlobalStore}]
+         [{"syncId": syncId, "isGlobalStore": isGlobalStore}]
         );        
 };
 
+var cleanReSyncGhosts = function(isGlobalStore, syncId, successCB, errorCB) {
+    if (checkFirstArg(arguments)) return;
+    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+         "cleanReSyncGhosts",
+         [{"syncId": syncId, "isGlobalStore": isGlobalStore}]
+        );        
+};
 
 var syncUp = function(isGlobalStore, target, soupName, options, successCB, errorCB) {
     var args = Array.prototype.slice.call(arguments);
@@ -112,6 +119,7 @@ module.exports = {
     syncDown: syncDown,
     syncUp: syncUp,
     getSyncStatus: getSyncStatus,
-    reSync: reSync
+    reSync: reSync,
+    cleanReSyncGhosts: cleanReSyncGhosts
 };
 });
