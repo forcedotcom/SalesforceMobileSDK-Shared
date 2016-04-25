@@ -1,6 +1,6 @@
 cordova.define("com.salesforce.plugin.smartstore", function(require, exports, module) {
 /*
- * Copyright (c) 2012-15, salesforce.com, inc.
+ * Copyright (c) 2012-present, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
