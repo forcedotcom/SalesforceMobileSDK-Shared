@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, salesforce.com, inc.
+ * Copyright (c) 2013-present, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -42,6 +42,7 @@ SmartSyncTestSuite.prototype = new SFTestSuite();
 SmartSyncTestSuite.prototype.constructor = SmartSyncTestSuite;
 
 // SmartSyncPlugin
+SmartSyncTestSuite.prototype.cleanReSyncGhosts = promiser(cordova.require("com.salesforce.plugin.smartsync"), "cleanReSyncGhosts");
 SmartSyncTestSuite.prototype.reSync = promiser(cordova.require("com.salesforce.plugin.smartsync"), "reSync");
 SmartSyncTestSuite.prototype.syncDown = promiser(cordova.require("com.salesforce.plugin.smartsync"), "syncDown");
 SmartSyncTestSuite.prototype.syncUp = promiser(cordova.require("com.salesforce.plugin.smartsync"), "syncUp");
@@ -80,7 +81,6 @@ SmartSyncTestSuite.prototype.testStoreCacheInit = function() {
         self.finalizeTest();
     });
 }
-
 
 /** 
  * TEST Force.StoreCache.retrieve
@@ -200,7 +200,6 @@ SmartSyncTestSuite.prototype.testStoreCacheSave = function() {
         self.finalizeTest();
     });
 }
-
 
 /** 
  * TEST Force.StoreCache.saveAll
@@ -527,7 +526,6 @@ SmartSyncTestSuite.prototype.testStoreCacheWithGlobalStore = function() {
         });
 }
 
-
 //-------------------------------------------------------------------------------------------------------
 //
 // Tests for Force.SObjectType
@@ -815,7 +813,6 @@ SmartSyncTestSuite.prototype.testSObjectTypeReset = function() {
     .then(function() {
         self.finalizeTest();
     });
-
 }
 
 //-------------------------------------------------------------------------------------------------------
@@ -913,7 +910,6 @@ SmartSyncTestSuite.prototype.testSyncRemoteObjectWithCacheCreate = function() {
     .then(function() {
         self.finalizeTest();
     });
-
 }
 
 /** 
@@ -2844,6 +2840,60 @@ SmartSyncTestSuite.prototype.testReSync = function() {
         });
 };
 
+/** 
+ * TEST smartsyncplugin cleanReSyncGhosts
+ */
+SmartSyncTestSuite.prototype.testCleanReSyncGhosts = function() {
+    console.log("# In SmartSyncTestSuite.testCleanReSyncGhosts");
+    var self = this;
+    var idToName = {};
+    var idToUpdatedName = {};
+    var soupName = "testCleanReSyncGhosts";
+    var cache;
+    var syncDownId;
+
+    Force.smartstoreClient.removeSoup(soupName)
+        .then(function() {
+            console.log("## Initialization of StoreCache's");
+            cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
+            return $.when(cache.init());
+        })
+        .then(function() {
+            console.log("## Direct creation against server");
+            return createRecords(idToName, "testSyncDown", 3);
+        })
+        .then(function() {
+            console.log("## Calling sync down");
+            return self.trySyncDown(cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.LEAVE_IF_CHANGED);
+        })
+        .then(function(syncId) {
+            syncDownId = syncId;
+            return timeoutPromiser(1000);
+        })
+        .then(function() {
+            console.log("## Deleting record: " + idToName[0]);
+            return deleteRecords(idToName[0]);
+        })
+        .then(function() {
+            console.log("## Calling cleanReSyncGhosts");
+            this.cleanReSyncGhosts(syncDownId);
+            return timeoutPromiser(1000);
+        })
+        .then(function() {
+            console.log("## Fetching records from SmartStore");
+            var querySpec = Force.smartstoreClient.buildAllQuerySpec("Id", null, 10);
+            return Force.smartstoreClient.querySoup(soupName, querySpec);
+        })
+        .then(function(cursor) {
+            QUnit.equals(cursor.totalEntries, 2, "Expected 2 records");
+        })
+        .then(function() {
+            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
 
 //-------------------------------------------------------------------------------------------------------
 //
@@ -3521,7 +3571,6 @@ SmartSyncTestSuite.prototype.trySyncDown = function(cache, soupName, idToName, m
         .then(function(event) {
             console.log("## Checking event");
             assertContains(event.detail, {type:"syncDown", target: target, status:"DONE", progress:100, totalSize: numberRecords, soupName: soupName, options:options, isGlobalStore:isGlobalStore});
-
             console.log("## Checking cache");
             return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:numberRecords});
         })
