@@ -47,7 +47,7 @@
         
         logToConsole("onDeviceReady: Cordova ready");
         //Call getAuthCredentials to get the initial session credentials
-        cordova.require("com.salesforce.plugin.oauth").getAuthCredentials(salesforceSessionRefreshed, getAuthCredentialsError);
+        cordova.require("com.salesforce.plugin.oauth").authenticate(salesforceSessionRefreshed, getAuthCredentialsError);
     }
 
     function salesforceSessionRefreshed(creds) {

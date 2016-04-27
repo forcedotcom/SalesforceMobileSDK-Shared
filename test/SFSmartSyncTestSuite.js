@@ -2847,10 +2847,12 @@ SmartSyncTestSuite.prototype.testCleanReSyncGhosts = function() {
     console.log("# In SmartSyncTestSuite.testCleanReSyncGhosts");
     var self = this;
     var idToName = {};
-    var idToUpdatedName = {};
+    var delRecordId;
     var soupName = "testCleanReSyncGhosts";
-    var cache;
     var syncDownId;
+    var cache;
+    var firstExpectedId;
+    var secondExpectedId;
 
     Force.smartstoreClient.removeSoup(soupName)
         .then(function() {
@@ -2860,7 +2862,7 @@ SmartSyncTestSuite.prototype.testCleanReSyncGhosts = function() {
         })
         .then(function() {
             console.log("## Direct creation against server");
-            return createRecords(idToName, "testSyncDown", 3);
+            return createRecords(idToName, "testCleanReSyncGhosts", 3);
         })
         .then(function() {
             console.log("## Calling sync down");
@@ -2871,21 +2873,36 @@ SmartSyncTestSuite.prototype.testCleanReSyncGhosts = function() {
             return timeoutPromiser(1000);
         })
         .then(function() {
-            console.log("## Deleting record: " + idToName[0]);
-            return deleteRecords(idToName[0]);
+            delRecordId = _.keys(idToName)[0];
+            firstExpectedId = _.keys(idToName)[1];
+            secondExpectedId = _.keys(idToName)[2];
+            var delRecord = {};
+            delRecord[delRecordId] = idToName[delRecordId];
+            console.log("## Deleting record: " + delRecord);
+            return deleteRecords(delRecord);
         })
         .then(function() {
             console.log("## Calling cleanReSyncGhosts");
-            this.cleanReSyncGhosts(syncDownId);
+            self.cleanReSyncGhosts(false, syncDownId);
             return timeoutPromiser(1000);
         })
         .then(function() {
             console.log("## Fetching records from SmartStore");
-            var querySpec = Force.smartstoreClient.buildAllQuerySpec("Id", null, 10);
+            var querySpec = {queryType:"range", indexPath:"Id", order:"ascending", pageSize:10};
             return Force.smartstoreClient.querySoup(soupName, querySpec);
         })
         .then(function(cursor) {
             QUnit.equals(cursor.totalEntries, 2, "Expected 2 records");
+            var entries = cursor["currentPageOrderedEntries"];
+            var firstEntry = entries[0];
+            var secondEntry = entries[1];
+            var firstId = firstEntry["Id"];
+            var secondId = secondEntry["Id"];
+                          console.log("## First ID: " + firstId);
+                                        console.log("## Second ID: " + secondId);
+            QUnit.equals(firstId, firstExpectedId, "ID should not still exist in SmartStore");
+            QUnit.equals(secondId, secondExpectedId, "ID should not still exist in SmartStore");
+              
         })
         .then(function() {
             return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
