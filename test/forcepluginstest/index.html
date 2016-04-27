@@ -54,7 +54,7 @@
         logToConsole("salesforceSessionRefreshed");
 		
         // Initializing SmartSync library
-        Force.init(creds, null, null, null);
+        Force.init(creds, null, null, cordova.require("com.salesforce.plugin.oauth").forcetkRefresh);
 
         // Now we are ready
         cordova.require("com.salesforce.plugin.testrunner").onReadyForTests();
