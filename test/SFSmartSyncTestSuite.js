@@ -2853,6 +2853,7 @@ SmartSyncTestSuite.prototype.testCleanReSyncGhosts = function() {
     var cache;
     var firstExpectedId;
     var secondExpectedId;
+    var mustDelRecords = {};
 
     Force.smartstoreClient.removeSoup(soupName)
         .then(function() {
@@ -2898,14 +2899,13 @@ SmartSyncTestSuite.prototype.testCleanReSyncGhosts = function() {
             var secondEntry = entries[1];
             var firstId = firstEntry["Id"];
             var secondId = secondEntry["Id"];
-                          console.log("## First ID: " + firstId);
-                                        console.log("## Second ID: " + secondId);
             QUnit.equals(firstId, firstExpectedId, "ID should not still exist in SmartStore");
             QUnit.equals(secondId, secondExpectedId, "ID should not still exist in SmartStore");
-              
+            mustDelRecords[firstId] = idToName[firstId];
+            mustDelRecords[secondId] = idToName[secondId];
         })
         .then(function() {
-            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
+            return $.when(deleteRecords(mustDelRecords), Force.smartstoreClient.removeSoup(soupName));
         })
         .then(function() {
             self.finalizeTest();

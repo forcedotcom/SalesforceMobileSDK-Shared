@@ -4,7 +4,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
 
-
     <!-- external libs -->
     <script src="dependencies/jquery/jquery.min.js"></script>
     <script src="dependencies/underscore/underscore-min.js"></script>
@@ -31,23 +30,24 @@
     <script src="test/SFSDKInfoTestSuite.js"></script>
     <script src="test/SFSmartSyncTestSuite.js"></script>
     <script src="test/SFForcetkTestSuite.js"></script>
-
     <script type="text/javascript" charset="utf-8">
+
     var debugMode = true;
     var logToConsole = cordova.require("com.salesforce.util.logger").logToConsole;
 
     $(function() {
-        //Add event listeners and so forth here
+
+        // Add event listeners and so forth here
         logToConsole("onLoad: jquery ready");
 		document.addEventListener("deviceready", onDeviceReady,false);
     });
 
     // When this function is called, Cordova has been initialized and is ready to roll 
     function onDeviceReady() {
-        
         logToConsole("onDeviceReady: Cordova ready");
-        //Call getAuthCredentials to get the initial session credentials
-        cordova.require("com.salesforce.plugin.oauth").authenticate(salesforceSessionRefreshed, getAuthCredentialsError);
+
+        // Call getAuthCredentials to get the initial session credentials
+        cordova.require("com.salesforce.plugin.oauth").getAuthCredentials(salesforceSessionRefreshed, getAuthCredentialsError);
     }
 
     function salesforceSessionRefreshed(creds) {
@@ -60,12 +60,10 @@
         cordova.require("com.salesforce.plugin.testrunner").onReadyForTests();
     }
 
-
     function getAuthCredentialsError(error) {
         logToConsole("getAuthCredentialsError: " + error);
     }
     </script>
-        
   </head>
   <body>
       <div data-role="page" data-theme="b" id="jqm-home"> 
