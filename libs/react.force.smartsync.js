@@ -41,8 +41,8 @@ var reSync = function(isGlobalStore, syncId, successCB, errorCB) {
     exec(successCB, errorCB, "reSync", {"syncId": syncId, "isGlobalStore":isGlobalStore});        
 };
 
-var cleanReSyncGhosts = function(isGlobalStore, syncId, successCB, errorCB) {
-    exec(successCB, errorCB, "cleanReSyncGhosts", {"syncId": syncId, "isGlobalStore":isGlobalStore});        
+var cleanResyncGhosts = function(isGlobalStore, syncId, successCB, errorCB) {
+    exec(successCB, errorCB, "cleanResyncGhosts", {"syncId": syncId, "isGlobalStore":isGlobalStore});        
 };
 
 var syncUp = function(isGlobalStore, target, soupName, options, successCB, errorCB) {
@@ -67,5 +67,5 @@ module.exports = {
     syncUp: syncUp,
     getSyncStatus: getSyncStatus,
     reSync: reSync,
-    cleanReSyncGhosts: cleanReSyncGhosts
+    cleanResyncGhosts: cleanResyncGhosts
 };

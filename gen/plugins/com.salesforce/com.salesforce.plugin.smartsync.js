@@ -60,10 +60,10 @@ var reSync = function(isGlobalStore, syncId, successCB, errorCB) {
         );        
 };
 
-var cleanReSyncGhosts = function(isGlobalStore, syncId, successCB, errorCB) {
+var cleanResyncGhosts = function(isGlobalStore, syncId, successCB, errorCB) {
     if (checkFirstArg(arguments)) return;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
-         "cleanReSyncGhosts",
+         "cleanResyncGhosts",
          [{"syncId": syncId, "isGlobalStore": isGlobalStore}]
         );        
 };
@@ -119,5 +119,5 @@ module.exports = {
     syncUp: syncUp,
     getSyncStatus: getSyncStatus,
     reSync: reSync,
-    cleanReSyncGhosts: cleanReSyncGhosts
+    cleanResyncGhosts: cleanResyncGhosts
 };
