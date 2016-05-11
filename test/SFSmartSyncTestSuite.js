@@ -42,7 +42,7 @@ SmartSyncTestSuite.prototype = new SFTestSuite();
 SmartSyncTestSuite.prototype.constructor = SmartSyncTestSuite;
 
 // SmartSyncPlugin
-SmartSyncTestSuite.prototype.cleanReSyncGhosts = promiser(cordova.require("com.salesforce.plugin.smartsync"), "cleanReSyncGhosts");
+SmartSyncTestSuite.prototype.cleanResyncGhosts = promiser(cordova.require("com.salesforce.plugin.smartsync"), "cleanResyncGhosts");
 SmartSyncTestSuite.prototype.reSync = promiser(cordova.require("com.salesforce.plugin.smartsync"), "reSync");
 SmartSyncTestSuite.prototype.syncDown = promiser(cordova.require("com.salesforce.plugin.smartsync"), "syncDown");
 SmartSyncTestSuite.prototype.syncUp = promiser(cordova.require("com.salesforce.plugin.smartsync"), "syncUp");
@@ -2841,14 +2841,14 @@ SmartSyncTestSuite.prototype.testReSync = function() {
 };
 
 /** 
- * TEST smartsyncplugin cleanReSyncGhosts
+ * TEST smartsyncplugin cleanResyncGhosts
  */
-SmartSyncTestSuite.prototype.testCleanReSyncGhosts = function() {
-    console.log("# In SmartSyncTestSuite.testCleanReSyncGhosts");
+SmartSyncTestSuite.prototype.testCleanResyncGhosts = function() {
+    console.log("# In SmartSyncTestSuite.testCleanResyncGhosts");
     var self = this;
     var idToName = {};
     var delRecordId;
-    var soupName = "testCleanReSyncGhosts";
+    var soupName = "testCleanResyncGhosts";
     var syncDownId;
     var cache;
     var firstExpectedId;
@@ -2863,7 +2863,7 @@ SmartSyncTestSuite.prototype.testCleanReSyncGhosts = function() {
         })
         .then(function() {
             console.log("## Direct creation against server");
-            return createRecords(idToName, "testCleanReSyncGhosts", 3);
+            return createRecords(idToName, "testCleanResyncGhosts", 3);
         })
         .then(function() {
             console.log("## Calling sync down");
@@ -2883,8 +2883,8 @@ SmartSyncTestSuite.prototype.testCleanReSyncGhosts = function() {
             return deleteRecords(delRecord);
         })
         .then(function() {
-            console.log("## Calling cleanReSyncGhosts");
-            self.cleanReSyncGhosts(false, syncDownId);
+            console.log("## Calling cleanResyncGhosts");
+            self.cleanResyncGhosts(false, syncDownId);
             return timeoutPromiser(1000);
         })
         .then(function() {
