@@ -69,9 +69,7 @@ function regLinkClickHandlers() {
 
       var soupSpec = {name:SAMPLE_SOUP_NAME};
 
-      if (featuresSelect == null) {
-        soupSpec['features'] = ["externalStorage"];
-      } else {
+      if (featuresSelect != null) {
         soupSpec['features'] = featuresSelect;
       }
 
@@ -102,8 +100,14 @@ function regLinkClickHandlers() {
                                                                  onSoupExistsDone,
                                                                  onSoupExistsDone);
                                  });
-    
-    
+
+    $('#link_soup_spec').click(function() {
+                                 sfSmartstore().getSoupSpec(SAMPLE_SOUP_NAME,
+                                                                 onGetSoupSpecDone,
+                                                                 onGetSoupSpecDone);
+                                 });
+
+
     $('#link_query_soup').click(function() {
         runQuerySoup();
     });
@@ -353,6 +357,11 @@ function onErrorRemoveSoup(param) {
 function onSoupExistsDone(param) {
     logToConsole()("onSoupExistsDone: " + param);
     $("#div_soup_status_line").html("Soup exists: " + param);
+}
+
+function onGetSoupSpecDone(param) {
+    logToConsole()("onGetSoupSpecDone: " + JSON.stringify(param));
+    $("#div_soup_status_line").html("Soup spec: " + JSON.stringify(param));
 }
 
 

@@ -643,6 +643,14 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
             );
     };
 
+    var getSoupSpec = function(soupName, successCB, errorCB) {
+        storeConsole.debug("SmartStore.getSoupSpec: " + soupName);
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgGetSoupSpec",
+             [{"soupName": soupName}]
+            );
+    };
+
     var alterSoup = function (soupName, indexSpecs, reIndexData, successCB, errorCB) {
         storeConsole.debug("SmartStore.alterSoup: '" + soupName + "' indexSpecs: " + JSON.stringify(indexSpecs));
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
@@ -778,6 +786,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         getDatabaseSize: getDatabaseSize,
         getLogLevel: getLogLevel,
         getSoupIndexSpecs: getSoupIndexSpecs,
+        getSoupSpec: getSoupSpec,
         moveCursorToNextPage: moveCursorToNextPage,
         moveCursorToPageIndex: moveCursorToPageIndex,
         moveCursorToPreviousPage: moveCursorToPreviousPage,
