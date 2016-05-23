@@ -664,7 +664,8 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     };
 
     var registerSoupWithSpec = function (isGlobalStore, soupSpec, indexSpecs, successCB, errorCB) {
-        storeConsole.debug("SmartStore.registerSoupWithSpec:isGlobalStore=" +isGlobalStore+ ",soupSpec="+ JSON.stringify(soupSpec) + ",indexSpecs: " + JSON.stringify(indexSpecs));
+        if (checkFirstArg(arguments)) return;
+        storeConsole.debug("SmartStore.registerSoupWithSpec:isGlobalStore=" +isGlobalStore+ ",soupSpec="+ JSON.stringify(soupSpec) + ",indexSpecs=" + JSON.stringify(indexSpecs));
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgRegisterSoup",
              [{"soupSpec": soupSpec, "indexes": indexSpecs, "isGlobalStore": isGlobalStore}]
@@ -690,6 +691,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     };
 
     var getSoupSpec = function(isGlobalStore, soupName, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
         storeConsole.debug("SmartStore.getSoupSpec:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgGetSoupSpec",
