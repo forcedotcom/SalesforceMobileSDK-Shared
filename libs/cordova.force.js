@@ -763,13 +763,15 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
             );
     };
 
-    var removeFromSoup = function (isGlobalStore, soupName, entryIds, successCB, errorCB) {
+    var removeFromSoup = function (isGlobalStore, soupName, entryIdsOrQuerySpec, successCB, errorCB) {
         if (checkFirstArg(arguments)) return;
-        storeConsole.debug("SmartStore.removeFromSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",entryIds=" + entryIds);
+        storeConsole.debug("SmartStore.removeFromSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",entryIdsOrQuerySpec=" + entryIdsOrQuerySpec);
         isGlobalStore = isGlobalStore || false;
+        var execArgs = {"soupName": soupName, "isGlobalStore": isGlobalStore};
+        execArgs[entryIdsOrQuerySpec instanceof Array ? "entryIds":"querySpec"] = entryIdsOrQuerySpec;
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgRemoveFromSoup",
-             [{"soupName": soupName, "entryIds": entryIds, "isGlobalStore": isGlobalStore}]
+             [execArgs]
             );
     };
 

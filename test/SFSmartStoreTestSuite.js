@@ -387,7 +387,7 @@ SmartStoreTestSuite.prototype.testRetrieveSoupEntries = function()  {
 
 
 /**
- * TEST removeFromSoup
+ * TEST removeFromSoup by ids
  */
 SmartStoreTestSuite.prototype.testRemoveFromSoup = function()  {
     console.log("In SFSmartStoreTestSuite.testRemoveFromSoup");    
@@ -414,6 +414,65 @@ SmartStoreTestSuite.prototype.testRemoveFromSoup = function()  {
         .pipe(function(cursor) {
             var nEntries = cursor.currentPageOrderedEntries.length;
             QUnit.equal(nEntries, 0, "currentPageOrderedEntries correct");
+            return self.closeCursor(cursor);
+        })
+        .done(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            self.finalizeTest(); 
+        });
+};
+
+/**
+ * TEST removeFromSoup by query
+ */
+SmartStoreTestSuite.prototype.testRemoveFromSoupByQuery = function()  {
+    console.log("In SFSmartStoreTestSuite.testRemoveFromSoupByQuery");    
+    
+    var self = this; 
+    self.stuffTestSoup()
+        .pipe(function(entries) {
+            QUnit.equal(entries.length, 3);
+            var querySpecForRemove = navigator.smartstore.buildExactQuerySpec("Name", "Robot");
+            return self.removeFromSoup(self.defaultSoupName, querySpecForRemove);
+        })
+        .pipe(function(status) {
+            QUnit.equal(status, "OK", "removeFromSoup OK");
+            var querySpec = navigator.smartstore.buildAllQuerySpec("Id", "ascending");
+            return self.querySoup(self.defaultSoupName, querySpec);
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(cursor.currentPageOrderedEntries.length, 2, "check currentPageOrderedEntries");
+            QUnit.equal(cursor.currentPageOrderedEntries[0].Name,"Todd Stellanova","verify first entry");
+            QUnit.equal(cursor.currentPageOrderedEntries[1].Name,"Pro Bono Bonobo","verify second entry");
+            return self.closeCursor(cursor);
+        })
+        .pipe(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            var querySpecForRemove = navigator.smartstore.buildLikeQuerySpec("Name", "%Stella%");
+            return self.removeFromSoup(self.defaultSoupName, querySpecForRemove);
+        })
+        .pipe(function(status) {
+            QUnit.equal(status, "OK", "removeFromSoup OK");
+            var querySpec = navigator.smartstore.buildAllQuerySpec("Id", "ascending");
+            return self.querySoup(self.defaultSoupName, querySpec);
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(cursor.currentPageOrderedEntries.length, 1, "check currentPageOrderedEntries");
+            QUnit.equal(cursor.currentPageOrderedEntries[0].Name,"Pro Bono Bonobo","verify only entry");
+            return self.closeCursor(cursor);
+        })
+        .pipe(function(param) { 
+            QUnit.ok(true,"closeCursor ok"); 
+            var querySpecForRemove = navigator.smartstore.buildAllQuerySpec("Name");
+            return self.removeFromSoup(self.defaultSoupName, querySpecForRemove);
+        })
+        .pipe(function(status) {
+            QUnit.equal(status, "OK", "removeFromSoup OK");
+            var querySpec = navigator.smartstore.buildAllQuerySpec("Id");
+            return self.querySoup(self.defaultSoupName, querySpec);
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(cursor.currentPageOrderedEntries.length, 0, "check currentPageOrderedEntries");
             return self.closeCursor(cursor);
         })
         .done(function(param) { 
