@@ -31,6 +31,14 @@ var SERVICE = "com.salesforce.smartstore";
 var exec = require("com.salesforce.util.exec").exec;
 
 /**
+ * SoupSpec constructor
+ */
+var SoupSpec = function (soupName, features) {
+    this.soupName = soupName;
+    this.features = features;
+};
+
+/**
  * SoupIndexSpec consturctor
  */
 var SoupIndexSpec = function (path, type) {
@@ -216,6 +224,15 @@ var registerSoup = function (isGlobalStore, soupName, indexSpecs, successCB, err
         );
 };
 
+var registerSoupWithSpec = function (isGlobalStore, soupSpec, indexSpecs, successCB, errorCB) {
+    if (checkFirstArg(arguments)) return;
+    storeConsole.debug("SmartStore.registerSoupWithSpec:isGlobalStore=" +isGlobalStore+ ",soupSpec="+ JSON.stringify(soupSpec) + ",indexSpecs=" + JSON.stringify(indexSpecs));
+    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+         "pgRegisterSoup",
+         [{"soupSpec": soupSpec, "indexes": indexSpecs, "isGlobalStore": isGlobalStore}]
+        );
+};
+
 var removeSoup = function (isGlobalStore, soupName, successCB, errorCB) {
     if (checkFirstArg(arguments)) return;
     storeConsole.debug("SmartStore.removeSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName);
@@ -230,6 +247,15 @@ var getSoupIndexSpecs = function(isGlobalStore, soupName, successCB, errorCB) {
     storeConsole.debug("SmartStore.getSoupIndexSpecs:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName);
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgGetSoupIndexSpecs",
+         [{"soupName": soupName, "isGlobalStore": isGlobalStore}]
+        );
+};
+
+var getSoupSpec = function(isGlobalStore, soupName, successCB, errorCB) {
+	if (checkFirstArg(arguments)) return;
+    storeConsole.debug("SmartStore.getSoupSpec:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName);
+    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+         "pgGetSoupSpec",
          [{"soupName": soupName, "isGlobalStore": isGlobalStore}]
         );
 };
@@ -385,12 +411,14 @@ module.exports = {
     getDatabaseSize: getDatabaseSize,
     getLogLevel: getLogLevel,
     getSoupIndexSpecs: getSoupIndexSpecs,
+    getSoupSpec: getSoupSpec,
     moveCursorToNextPage: moveCursorToNextPage,
     moveCursorToPageIndex: moveCursorToPageIndex,
     moveCursorToPreviousPage: moveCursorToPreviousPage,
     querySoup: querySoup,
     reIndexSoup: reIndexSoup,
     registerSoup: registerSoup,
+    registerSoupWithSpec: registerSoupWithSpec,
     removeFromSoup: removeFromSoup,
     removeSoup: removeSoup,
     retrieveSoupEntries: retrieveSoupEntries,
@@ -402,6 +430,7 @@ module.exports = {
     upsertSoupEntriesWithExternalId: upsertSoupEntriesWithExternalId,
 
     // Constructors
+    SoupSpec: SoupSpec,
     QuerySpec: QuerySpec,
     SoupIndexSpec: SoupIndexSpec,
     StoreCursor: StoreCursor
