@@ -223,9 +223,11 @@ var upsertSoupEntriesWithExternalId = function (isGlobalStore, soupName, entries
     exec(successCB, errorCB, "upsertSoupEntries", {"soupName": soupName, "entries": entries, "externalIdPath": externalIdPath, "isGlobalStore": isGlobalStore});
 };
 
-var removeFromSoup = function (isGlobalStore, soupName, entryIds, successCB, errorCB) {
+var removeFromSoup = function (isGlobalStore, soupName, entryIdsOrQuerySpec, successCB, errorCB) {
     isGlobalStore = isGlobalStore || false;
-    exec(successCB, errorCB, "removeFromSoup", {"soupName": soupName, "entryIds": entryIds, "isGlobalStore": isGlobalStore});
+    var execArgs = {"soupName": soupName, "isGlobalStore": isGlobalStore};
+    execArgs[entryIdsOrQuerySpec instanceof Array ? "entryIds":"querySpec"] = entryIdsOrQuerySpec;
+    exec(successCB, errorCB, "removeFromSoup", execArgs);
 };
 
 //====== Cursor manipulation ======
