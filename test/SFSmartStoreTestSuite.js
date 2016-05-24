@@ -387,7 +387,7 @@ SmartStoreTestSuite.prototype.testRetrieveSoupEntries = function()  {
 
 
 /**
- * TEST removeFromSoup
+ * TEST removeFromSoup by ids
  */
 SmartStoreTestSuite.prototype.testRemoveFromSoup = function()  {
     console.log("In SFSmartStoreTestSuite.testRemoveFromSoup");    
