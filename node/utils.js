@@ -1,3 +1,4 @@
+var fs = require('fs');
 /**
  * Creates a comparable version number from a version string in the format x[.y[.ignored]].
  * Currently only looks for major and minor version numbers.
@@ -26,4 +27,22 @@ var getVersionNumberFromString = function (versionString) {
 	}
 };
 
+/** 
+* Replaces text in a file
+*
+* @param {String} fileName The file in which the text needs to be replaced
+* @param {String} textInFile Text in the file to be replaced
+* @param {String} replacementText Text used to replace the text in file
+*/
+var replaceTextInFile = function (fileName, textInFile, replacementText) {
+    var contents = fs.readFileSync(fileName, 'utf8');
+    var lines = contents.split(/\r*\n/);
+    var result = lines.map(function (line) {
+      return line.replace(textInFile, replacementText);
+    }).join('\n');
+
+    fs.writeFileSync(fileName, result, 'utf8'); 
+}
+
 module.exports.getVersionNumberFromString = getVersionNumberFromString;
+module.exports.replaceTextInFile = replaceTextInFile;
