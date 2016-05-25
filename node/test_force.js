@@ -242,7 +242,7 @@ function createCompileApp(tmpDir, appType, os) {
             runProcessThrowError('pod update', appDir);    
             runProcessCatchError('xcodebuild -workspace ' + workspacePath 
                                  + ' -scheme ' + appName
-                                 + ' clean build', 
+                                 + ' clean build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO', 
                                  'COMPILING ' + target); 
         }
         else {
@@ -279,7 +279,7 @@ function updatePluginRepo(tmpDir, pluginRepoDir, branch) {
 //
 function editForceScriptToUseLocalPluginRepo(tmpDir, os) {
     log('Editing  ' + forcePackageNameForOs(os) + '.js to use local cordova plugin', COLOR.green);
-    miscUtils.replaceTextInFile(path.join(tmpDir, 'node_modules', forcePackageNameForOs(os), 'node', forcePackageNameForOs(os) + '.js'), 'cordova plugin add .*',\'cordova plugin add ../SalesforceMobileSDK-CordovaPlugin\'');
+    miscUtils.replaceTextInFile(path.join(tmpDir, 'node_modules', forcePackageNameForOs(os), 'node', forcePackageNameForOs(os) + '.js'), 'cordova plugin add .*', '\'cordova plugin add ../SalesforceMobileSDK-CordovaPlugin\'');
 }
 
 //
