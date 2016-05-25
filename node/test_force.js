@@ -27,21 +27,11 @@ var APP_TYPE = {
 var execSync = require('child_process').execSync,
     path = require('path'),
     commandLineUtils = require('./commandLineUtils'),
+    miscUtils = require('./utils'),
     shelljs
 ;
 
-try {
-    shelljs = require('shelljs');
-    var version = require('shelljs/package.json').version
-    if (version !== '0.7.0') {
-        console.log('The version 0.7.0 of the node package shelljs is required to use this script. Run \'npm install shelljs@0.7.0\' before running this script.');
-        process.exit(1);
-    }
-
-} catch(e) {
-    console.log('The node package shelljs is required to use this script. Run \'npm install shelljs@0.7.0\' before running this script.');
-    process.exit(1);
-}
+shelljs = require('shelljs');
 
 // Calling main
 main(process.argv);
@@ -289,16 +279,16 @@ function updatePluginRepo(tmpDir, pluginRepoDir, branch) {
 //
 function editForceScriptToUseLocalPluginRepo(tmpDir, os) {
     log('Editing  ' + forcePackageNameForOs(os) + '.js to use local cordova plugin', COLOR.green);
-    shelljs.sed('-i', /'cordova plugin add .*'/g, '\'cordova plugin add ../SalesforceMobileSDK-CordovaPlugin\'', path.join(tmpDir, 'node_modules', forcePackageNameForOs(os), 'node', forcePackageNameForOs(os) + '.js'));
-}    
+    miscUtils.replaceTextInFile(path.join(tmpDir, 'node_modules', forcePackageNameForOs(os), 'node', forcePackageNameForOs(os) + '.js'), 'cordova plugin add .*',\'cordova plugin add ../SalesforceMobileSDK-CordovaPlugin\'');
+}
 
 //
 // Update podfile to use local ios repo
 // 
 function editPodfileToUseLocalRepo(appDir) {
     log('Editing podfile to use local ios repo', COLOR.green);
-    shelljs.sed('-i', /pod ('Salesforce.*')/g, 'pod $1, :path => \'../SalesforceMobileSDK-iOS\'', path.join(appDir, 'Podfile'));
-    shelljs.sed('-i', /pod ('Smart.*')/g, 'pod $1, :path => \'../SalesforceMobileSDK-iOS\'', path.join(appDir, 'Podfile'));
+    miscUtils.replaceTextInFile(path.join(appDir, 'Podfile'), 'pod (\'Salesforce.*\')', 'pod $1, :path => \'../SalesforceMobileSDK-iOS\'');
+    miscUtils.replaceTextInFile(path.join(appDir, 'Podfile'), 'pod (\'Smart.*\')', 'pod $1, :path => \'../SalesforceMobileSDK-iOS\'')
 }
 
 //
