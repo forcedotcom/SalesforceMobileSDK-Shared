@@ -491,7 +491,6 @@ SmartStoreTestSuite.prototype.testQuerySoupWithExactQuery = function()  {
     self.stuffTestSoup()
         .pipe(function(entries) {
             QUnit.equal(entries.length, 3);
-            
             var querySpec = navigator.smartstore.buildExactQuerySpec("Name","Robot");
             return self.querySoup(self.defaultSoupName, querySpec);
         })
@@ -499,7 +498,22 @@ SmartStoreTestSuite.prototype.testQuerySoupWithExactQuery = function()  {
             QUnit.equal(cursor.totalEntries, 1, "totalEntries correct");
             QUnit.equal(cursor.totalPages, 1, "totalPages correct");
             var nEntries = cursor.currentPageOrderedEntries.length;
-            QUnit.equal(nEntries, 1, "currentPageOrderedEntries correct");
+            QUnit.equal(nEntries, 1, "wrong number of results");
+            QUnit.equal(cursor.currentPageOrderedEntries[0]["Name"], "Robot", "wrong name");
+            return self.closeCursor(cursor);
+        })
+        .pipe(function(param) { 
+            // Now querying with select paths
+            var querySpec = navigator.smartstore.buildExactQuerySpec("Name","Robot",null,null,null,["Name", "Id"]);
+            return self.querySoup(self.defaultSoupName, querySpec);
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(cursor.totalEntries, 1, "totalEntries correct");
+            QUnit.equal(cursor.totalPages, 1, "totalPages correct");
+            var nEntries = cursor.currentPageOrderedEntries.length;
+            QUnit.equal(nEntries, 1, "wrong number of results");
+            QUnit.equal(cursor.currentPageOrderedEntries[0][0], "Robot", "wrong name");
+            QUnit.equal(cursor.currentPageOrderedEntries[0][1], "00300C", "wrong id");
             return self.closeCursor(cursor);
         })
         .done(function(param) { 
@@ -528,7 +542,26 @@ SmartStoreTestSuite.prototype.testQuerySoupWithAllQueryDescending = function()  
             QUnit.equal(cursor.totalPages, 1, "totalPages correct");
             QUnit.equal(cursor.currentPageOrderedEntries.length, 3, "check currentPageOrderedEntries");
             QUnit.equal(cursor.currentPageOrderedEntries[0].Name,"Todd Stellanova","verify first entry");
-            QUnit.equal(cursor.currentPageOrderedEntries[2].Name,"Pro Bono Bonobo","verify last entry");
+            QUnit.equal(cursor.currentPageOrderedEntries[1].Name,"Robot","verify second entry");
+            QUnit.equal(cursor.currentPageOrderedEntries[2].Name,"Pro Bono Bonobo","verify third entry");
+            return self.closeCursor(cursor);
+        })
+        .pipe(function(param) { 
+            // Now querying with select paths
+            var querySpec = navigator.smartstore.buildAllQuerySpec("Name", "descending", null, ["Name", "Id"]);
+            return self.querySoup(self.defaultSoupName, querySpec);
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(cursor.totalEntries, 3, "totalEntries correct");
+            QUnit.equal(cursor.totalPages, 1, "totalPages correct");
+            QUnit.equal(cursor.currentPageOrderedEntries.length, 3, "check currentPageOrderedEntries");
+            QUnit.equal(cursor.currentPageOrderedEntries[0][0],"Todd Stellanova","verify first entry");
+            QUnit.equal(cursor.currentPageOrderedEntries[1][0],"Robot","verify second entry");
+            QUnit.equal(cursor.currentPageOrderedEntries[2][0],"Pro Bono Bonobo","verify third entry");
+            QUnit.equal(cursor.currentPageOrderedEntries[0][1],"00300A","verify first entry");
+            QUnit.equal(cursor.currentPageOrderedEntries[1][1],"00300C","verify second entry");
+            QUnit.equal(cursor.currentPageOrderedEntries[2][1],"00300B","verify third entry");
+
             return self.closeCursor(cursor);
         })
         .done(function(param) { 
@@ -559,6 +592,22 @@ SmartStoreTestSuite.prototype.testQuerySoupWithRangeQueryWithOrderPath = functio
             QUnit.equal(cursor.currentPageOrderedEntries[0].Id,"00300B","verify first entry");
             QUnit.equal(cursor.currentPageOrderedEntries[1].Name,"Todd Stellanova","verify last entry");
             QUnit.equal(cursor.currentPageOrderedEntries[1].Id,"00300A","verify last entry");
+
+            return self.closeCursor(cursor);
+        })
+        .pipe(function(param) { 
+            // Now querying with select paths
+            var querySpec = navigator.smartstore.buildRangeQuerySpec("Id", null, "00300B", "ascending", 3, "Name", ["Name", "Id"]);
+            return self.querySoup(self.defaultSoupName, querySpec);
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(cursor.totalEntries, 2, "totalEntries correct");
+            QUnit.equal(cursor.totalPages, 1, "totalPages correct");
+            QUnit.equal(cursor.currentPageOrderedEntries.length, 2, "check currentPageOrderedEntries");
+            QUnit.equal(cursor.currentPageOrderedEntries[0][0],"Pro Bono Bonobo","verify first entry");
+            QUnit.equal(cursor.currentPageOrderedEntries[1][0],"Todd Stellanova","verify second entry");
+            QUnit.equal(cursor.currentPageOrderedEntries[0][1],"00300B","verify first entry");
+            QUnit.equal(cursor.currentPageOrderedEntries[1][1],"00300A","verify second entry");
 
             return self.closeCursor(cursor);
         })
@@ -799,42 +848,115 @@ SmartStoreTestSuite.prototype.testQuerySpecFactories = function() {
     var self = this;
     
     var path = "Name";
-    var beginKey = "Qbert";
-    var endKey = "Zzzzbert";
+    var matchKey = "matchKeyValue";
+    var beginKey = "beginKeyValue";
+    var endKey = "endKeyValue";
     var order = "descending";
     var pageSize = 17;
-    var query =  navigator.smartstore.buildExactQuerySpec(path,beginKey,pageSize);
+    var orderPath = "orderPathValue";
+    var selectPaths = ["x","y"];
+
+    // Exact query with all args
+    var query =  navigator.smartstore.buildExactQuerySpec(path,matchKey,pageSize,order,orderPath,selectPaths);
     QUnit.equal(query.queryType,"exact","check queryType");
     QUnit.equal(query.indexPath,path,"check indexPath");
-    QUnit.equal(query.orderPath,path,"check orderPath");
-    QUnit.equal(query.matchKey,beginKey,"check matchKey");
+    QUnit.equal(query.matchKey,matchKey,"check matchKey");
+    QUnit.equal(query.order,order, "check order");
     QUnit.equal(query.pageSize,pageSize,"check pageSize");
+    QUnit.equal(query.orderPath,orderPath,"check orderPath");
+    QUnit.equal(JSON.stringify(query.selectPaths),JSON.stringify(selectPaths),"check selectPaths");
+
+    // Exact query with min args
+    query = navigator.smartstore.buildExactQuerySpec(path,matchKey);
+    QUnit.equal(query.queryType,"exact","check queryType");
+    QUnit.equal(query.indexPath,path,"check indexPath");
+    QUnit.equal(query.matchKey,matchKey,"check matchKey");
+    QUnit.equal(query.pageSize,10,"check pageSize");
+    QUnit.equal(query.order,"ascending", "check order");
+    QUnit.equal(query.orderPath,path,"check orderPath");
+    QUnit.ok(query.selectPaths == null,"check selectPaths");    
     
-    query =  navigator.smartstore.buildRangeQuerySpec(path,beginKey,endKey,order,pageSize);
+    // Range query with all args
+    query = navigator.smartstore.buildRangeQuerySpec(path,beginKey,endKey,order,pageSize,orderPath,selectPaths);
     QUnit.equal(query.queryType,"range","check queryType");
     QUnit.equal(query.indexPath,path,"check indexPath");
-    QUnit.equal(query.orderPath,path,"check orderPath");
     QUnit.equal(query.beginKey,beginKey,"check beginKey");
     QUnit.equal(query.endKey,endKey,"check endKey");
     QUnit.equal(query.order,order,"check order");
     QUnit.equal(query.pageSize,pageSize,"check pageSize");
+    QUnit.equal(query.orderPath,orderPath,"check orderPath");
+    QUnit.equal(JSON.stringify(query.selectPaths),JSON.stringify(selectPaths),"check selectPaths");
+
+    // Range query with min args
+    query = navigator.smartstore.buildRangeQuerySpec(path,beginKey);
+    QUnit.equal(query.queryType,"range","check queryType");
+    QUnit.equal(query.indexPath,path,"check indexPath");
+    QUnit.equal(query.beginKey,beginKey,"check beginKey");
+    QUnit.ok(query.endKey == null,"check endKey");
+    QUnit.equal(query.order,"ascending", "check order");
+    QUnit.equal(query.pageSize,10,"check pageSize");
+    QUnit.equal(query.orderPath,path,"check orderPath");
+    QUnit.ok(query.selectPaths == null,"check selectPaths");    
     
-    query =  navigator.smartstore.buildLikeQuerySpec(path,beginKey,order,pageSize);
+    // Like query with all args
+    query = navigator.smartstore.buildLikeQuerySpec(path,beginKey,order,pageSize,orderPath,selectPaths);
     QUnit.equal(query.queryType,"like","check queryType");
     QUnit.equal(query.indexPath,path,"check indexPath");
-    QUnit.equal(query.orderPath,path,"check orderPath");
     QUnit.equal(query.likeKey,beginKey,"check likeKey");
     QUnit.equal(query.order,order,"check order");
     QUnit.equal(query.pageSize,pageSize,"check pageSize");
+    QUnit.equal(query.orderPath,orderPath,"check orderPath");
+    QUnit.equal(JSON.stringify(query.selectPaths),JSON.stringify(selectPaths),"check selectPaths");
     
-    var query =  navigator.smartstore.buildAllQuerySpec(path,order,pageSize);
+    // Like query with min args
+    query = navigator.smartstore.buildLikeQuerySpec(path,beginKey);
+    QUnit.equal(query.queryType,"like","check queryType");
+    QUnit.equal(query.indexPath,path,"check indexPath");
+    QUnit.equal(query.likeKey,beginKey,"check likeKey");
+    QUnit.equal(query.order,"ascending", "check order");
+    QUnit.equal(query.pageSize,10,"check pageSize");
+    QUnit.equal(query.orderPath,path,"check orderPath");
+    QUnit.ok(query.selectPaths == null,"check selectPaths");    
+    
+    // All query with all args
+    query = navigator.smartstore.buildAllQuerySpec(path,order,pageSize,selectPaths);
     QUnit.equal(query.queryType,"range","check queryType");
     QUnit.equal(query.indexPath,path,"check indexPath");
     QUnit.equal(query.orderPath,path,"check orderPath");
-    QUnit.equal(query.beginKey,null,"check beginKey");
-    QUnit.equal(query.endKey,null,"check endKey");
     QUnit.equal(query.order,order,"check order");
     QUnit.equal(query.pageSize,pageSize,"check pageSize");
+    QUnit.equal(query.orderPath,path,"check orderPath");
+    QUnit.equal(JSON.stringify(query.selectPaths),JSON.stringify(selectPaths),"check selectPaths");
+
+    // All query with min args
+    query = navigator.smartstore.buildAllQuerySpec(path);
+    QUnit.equal(query.queryType,"range","check queryType");
+    QUnit.equal(query.indexPath,path,"check indexPath");
+    QUnit.equal(query.orderPath,path,"check orderPath");
+    QUnit.equal(query.order,"ascending", "check order");
+    QUnit.equal(query.pageSize,10,"check pageSize");
+    QUnit.equal(query.orderPath,path,"check orderPath");
+    QUnit.ok(query.selectPaths == null,"check selectPaths");    
+
+    // Match query with all args
+    query = navigator.smartstore.buildMatchQuerySpec(path, matchKey, order, pageSize, orderPath, selectPaths);
+    QUnit.equal(query.queryType,"match","check queryType");
+    QUnit.equal(query.indexPath,path,"check indexPath");
+    QUnit.equal(query.matchKey,matchKey,"check matchKey");
+    QUnit.equal(query.order,order,"check order");
+    QUnit.equal(query.pageSize,pageSize,"check pageSize");
+    QUnit.equal(query.orderPath,orderPath,"check orderPath");
+    QUnit.equal(JSON.stringify(query.selectPaths),JSON.stringify(selectPaths),"check selectPaths");
+    
+    // Match query with min args
+    query = navigator.smartstore.buildMatchQuerySpec(path, matchKey);
+    QUnit.equal(query.queryType,"match","check queryType");
+    QUnit.equal(query.indexPath,path,"check indexPath");
+    QUnit.equal(query.matchKey,matchKey,"check matchKey");
+    QUnit.equal(query.order,"ascending", "check order");
+    QUnit.equal(query.pageSize,10,"check pageSize");
+    QUnit.equal(query.orderPath,path,"check orderPath");
+    QUnit.ok(query.selectPaths == null,"check selectPaths");    
     
     self.finalizeTest();
 };
@@ -858,9 +980,23 @@ SmartStoreTestSuite.prototype.testLikeQuerySpecStartsWith  = function() {
             QUnit.equal(cursor.currentPageOrderedEntries[0].Name,"Todd Stellanova","verify entry");
             return self.closeCursor(cursor);
         })
+        .pipe(function(param) { 
+            // Now querying with select paths
+            var querySpec = navigator.smartstore.buildLikeQuerySpec("Name","Todd%", null, null, null, ["Name", "Id"]);
+            return self.querySoup(self.defaultSoupName, querySpec);
+        })
+        .pipe(function(cursor) {
+            QUnit.equal(cursor.totalEntries, 1, "totalEntries correct");
+            QUnit.equal(cursor.totalPages, 1, "totalPages correct");
+            QUnit.equal(cursor.currentPageOrderedEntries.length, 1, "check currentPageOrderedEntries");
+            QUnit.equal(cursor.currentPageOrderedEntries[0][0],"Todd Stellanova","verify second entry");
+            QUnit.equal(cursor.currentPageOrderedEntries[0][1],"00300A","verify second entry");
+
+            return self.closeCursor(cursor);
+        })
         .done(function(param) { 
             QUnit.ok(true,"closeCursor ok"); 
-            self.finalizeTest();
+            self.finalizeTest(); 
         });
 };
 
@@ -992,9 +1128,25 @@ SmartStoreTestSuite.prototype.tryQuery = function(soupName, querySpec, expectedN
     var self = this;
     return self.querySoup(soupName, querySpec)
         .pipe(function(cursor) {
-            QUnit.equal(cursor.currentPageOrderedEntries.length, expectedNames.length, "check currentPageOrderedEntries when trying match '" + querySpec.matchKey + "'");
-            for (var i=0; i<cursor.currentPageOrderedEntries.length; i++) {
-                QUnit.equal(cursor.currentPageOrderedEntries[i].name,expectedNames[i],"verify that entry " + i + " is " + expectedNames[i] + " when trying match '" + querySpec.matchKey + "'");
+            var results = cursor.currentPageOrderedEntries;
+            QUnit.equal(results.length, expectedNames.length, "check currentPageOrderedEntries when trying match '" + querySpec.matchKey + "'");
+            for (var i=0; i<results.length; i++) {
+                QUnit.equal(results[i].name,expectedNames[i],"verify that entry " + i + " is " + expectedNames[i] + " when trying match '" + querySpec.matchKey + "'");
+            }
+            return self.closeCursor(cursor);
+        })
+        .pipe(function(param) {
+            // Now running query with select paths
+            var querySpecWithSelectPaths= JSON.parse(JSON.stringify(querySpec));
+            querySpecWithSelectPaths.selectPaths = ["name", "name"];
+            return self.querySoup(soupName, querySpecWithSelectPaths);
+        })
+        .pipe(function(cursor) {
+            var results = cursor.currentPageOrderedEntries;
+            QUnit.equal(results.length, expectedNames.length, "check currentPageOrderedEntries when trying match '" + querySpec.matchKey + "' with select paths param");
+            for (var i=0; i<results.length; i++) {
+                QUnit.equal(results[i][0],expectedNames[i],"verify that entry " + i + " is " + expectedNames[i] + " when trying match '" + querySpec.matchKey + "' with select paths param");
+                QUnit.equal(results[i][1],expectedNames[i],"verify that entry " + i + " is " + expectedNames[i] + " when trying match '" + querySpec.matchKey + "' with select paths param");
             }
             return self.closeCursor(cursor);
         })
@@ -1115,7 +1267,7 @@ SmartStoreTestSuite.prototype.testSmartQueryAgainstArrayNode  = function() {
             return self.upsertSoupEntries(soupName,rawEntries);
         })
         .pipe(function(entries) {
-            var querySpec = navigator.smartstore.buildSmartQuerySpec("SELECt {" + soupName + ":_soup} FROM {" + soupName + "} where {" + soupName + ":attributes.color} LIKE '%grey%' ORDER BY LOWER({" + soupName + ":name})" , 5);
+            var querySpec = navigator.smartstore.buildSmartQuerySpec("SELECT {" + soupName + ":_soup} FROM {" + soupName + "} where {" + soupName + ":attributes.color} LIKE '%grey%' ORDER BY LOWER({" + soupName + ":name})" , 5);
             return self.runSmartQuery(querySpec);
         })
         .pipe(function(cursor) {

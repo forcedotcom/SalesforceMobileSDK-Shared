@@ -558,27 +558,29 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     // ====== querySpec factory methods
     // Returns a query spec that will page through all soup entries in order by the given path value
     // Internally it simply does a range query with null begin and end keys
-    var buildAllQuerySpec = function (path, order, pageSize) {
+    var buildAllQuerySpec = function (path, order, pageSize, selectPaths) {
         var inst = new QuerySpec(path);
         inst.queryType = "range";
         inst.orderPath = path;
         if (order) { inst.order = order; } // override default only if a value was specified
         if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+        if (selectPaths) { inst.selectPaths = selectPaths; }
         return inst;
     };
 
     // Returns a query spec that will page all entries exactly matching the matchKey value for path
-    var buildExactQuerySpec = function (path, matchKey, pageSize, order, orderPath) {
+    var buildExactQuerySpec = function (path, matchKey, pageSize, order, orderPath, selectPaths) {
         var inst = new QuerySpec(path);
         inst.matchKey = matchKey;
         if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
         if (order) { inst.order = order; } // override default only if a value was specified
         inst.orderPath = orderPath ? orderPath : path;
+        if (selectPaths) { inst.selectPaths = selectPaths; }
         return inst;
     };
 
     // Returns a query spec that will page all entries in the range beginKey ...endKey for path
-    var buildRangeQuerySpec = function (path, beginKey, endKey, order, pageSize, orderPath) {
+    var buildRangeQuerySpec = function (path, beginKey, endKey, order, pageSize, orderPath, selectPaths) {
         var inst = new QuerySpec(path);
         inst.queryType = "range";
         inst.beginKey = beginKey;
@@ -586,23 +588,25 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         if (order) { inst.order = order; } // override default only if a value was specified
         if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
         inst.orderPath = orderPath ? orderPath : path;
+        if (selectPaths) { inst.selectPaths = selectPaths; }
         return inst;
     };
 
     // Returns a query spec that will page all entries matching the given likeKey value for path
-    var buildLikeQuerySpec = function (path, likeKey, order, pageSize, orderPath) {
+    var buildLikeQuerySpec = function (path, likeKey, order, pageSize, orderPath, selectPaths) {
         var inst = new QuerySpec(path);
         inst.queryType = "like";
         inst.likeKey = likeKey;
         if (order) { inst.order = order; } // override default only if a value was specified
         if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
         inst.orderPath = orderPath ? orderPath : path;
+        if (selectPaths) { inst.selectPaths = selectPaths; }
         return inst;
     };
 
     // Returns a query spec that will page all entries matching the given full-text search matchKey value for path
     // Pass null for path to match matchKey across all full-text indexed fields
-    var buildMatchQuerySpec = function (path, matchKey, order, pageSize, orderPath) {
+    var buildMatchQuerySpec = function (path, matchKey, order, pageSize, orderPath, selectPaths) {
         var inst = new QuerySpec(path);
         inst.queryType = "match";
         inst.matchKey = matchKey;
@@ -610,6 +614,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         if (order) { inst.order = order; } // override default only if a value was specified
         if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
         inst.orderPath = orderPath ? orderPath : path;
+        if (selectPaths) { inst.selectPaths = selectPaths; }
         return inst;
     };
 

@@ -566,7 +566,25 @@ var MockSmartStore = (function(window) {
                 }
             }
 
-            return this.sortResults(results, querySpec);
+            return this.applySelectPaths(this.sortResults(results, querySpec), querySpec.selectPaths);
+        },
+
+        applySelectPaths: function(soupElts, selectPaths) {
+            if (selectPaths == null) {
+                return soupElts;
+            }
+            else {
+                var results = [];
+                for (var i=0; i<soupElts.length; i++) {
+                    var soupElt = soupElts[i];
+                    var result = [];
+                    for (var j=0; j<selectPaths.length; j++) {
+                        result.push(soupElt[selectPaths[j]]);
+                    }
+                    results.push(result);
+                }
+                return results;
+            }
         },
 
         typeForPath: function(soupName, path) {
@@ -717,7 +735,7 @@ var MockSmartStore = (function(window) {
                 }
             }
 
-            return this.sortResults(results, querySpec);
+            return this.applySelectPaths(this.sortResults(results, querySpec), querySpec.selectPaths);
         },
 
         sortResults: function(results, querySpec) {
