@@ -515,6 +515,9 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
 
         //the number of entries to copy from native to javascript per each cursor page
         this.pageSize = 10;
+
+        //selectPaths - null means return soup elements
+        this.selectPaths = null;
     };
     
     /**
