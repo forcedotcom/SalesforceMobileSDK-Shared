@@ -88,7 +88,8 @@ function main(args) {
     // Get cordova plugin repo if any hybrid testing requested
     if (testingHybrid) {
         var pluginRepoDir = cloneRepo(tmpDir, pluginFork, 'SalesforceMobileSDK-CordovaPlugin', pluginBranch);
-        updatePluginRepo(tmpDir, pluginRepoDir, branch);
+        if (testingIOS) updatePluginRepo(tmpDir, pluginRepoDir, branch, OS.ios);
+        if (testingAndroid) updatePluginRepo(tmpDir, pluginRepoDir, branch, OS.android);
         if (testingIOS) editForceScriptToUseLocalPluginRepo(tmpDir, OS.ios);
         if (testingAndroid) editForceScriptToUseLocalPluginRepo(tmpDir, OS.android);
     }
@@ -267,10 +268,10 @@ function createCompileApp(tmpDir, appType, os) {
 //
 // Update cordova plugin repo
 //
-function updatePluginRepo(tmpDir, pluginRepoDir, branch) {
+function updatePluginRepo(tmpDir, pluginRepoDir, branch, os) {
     log('Updating cordova plugin at ' + branch, COLOR.green);
     shelljs.pushd(pluginRepoDir);
-    runProcessThrowError(path.join('tools', 'update.sh') + ' -b ' + branch);    
+    runProcessThrowError(path.join('tools', 'update.sh') + ' -b ' + branch + ' -o ' + os);
     shelljs.popd();
 }
 
