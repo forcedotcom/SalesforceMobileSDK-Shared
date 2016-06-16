@@ -75,6 +75,7 @@ function main(args) {
     if (testingIOS) {
         var repoName = 'SalesforceMobileSDK-iOS';
         var repoDir = cloneRepo(tmpDir, fork, repoName, branch);
+        runProcessThrowError('sh install.sh', repoDir);
         createDeployForcePackage(repoDir, tmpDir, OS.ios, version);
     }
 
@@ -82,6 +83,7 @@ function main(args) {
     if (testingAndroid) {
         var repoName = 'SalesforceMobileSDK-Android';
         var repoDir = cloneRepo(tmpDir, fork, repoName, branch);
+        runProcessThrowError((require('os').platform() == 'win32' ? 'cscript install.vbs' : 'sh install.sh'), repoDir);
         createDeployForcePackage(repoDir, tmpDir, OS.android, version);
     }
 
@@ -124,11 +126,13 @@ function usage() {
         + '\n'
         + '  If ios is targeted:\n'
         + '  - clones https://github.com/FORK/SalesforceMobileSDK-iOS at branch BRANCH\n'
+        + '  - runs install.sh\n'
         + '  - generates forceios package and deploys it to a temporary directory\n'
         + '  - creates and compile the application types selected\n'
         + '\n'
         + '  If android is targeted:\n'
         + '  - clones https://github.com/FORK/SalesforceMobileSDK-Android at branch BRANCH\n'
+        + '  - runs install.sh or install.vbs\n'
         + '  - generates forcedroid package and deploys it to a temporary directory\n'
         + '  - creates and compile the application types selected\n'
         + '\n'
@@ -270,9 +274,7 @@ function createCompileApp(tmpDir, appType, os) {
 //
 function updatePluginRepo(tmpDir, pluginRepoDir, branch, os) {
     log('Updating cordova plugin at ' + branch, COLOR.green);
-    shelljs.pushd(pluginRepoDir);
-    runProcessThrowError(path.join('tools', 'update.sh') + ' -b ' + branch + ' -o ' + os);
-    shelljs.popd();
+    runProcessThrowError(path.join('tools', 'update.sh') + ' -b ' + branch + ' -o ' + os, pluginRepoDir);
 }
 
 //
@@ -280,7 +282,7 @@ function updatePluginRepo(tmpDir, pluginRepoDir, branch, os) {
 //
 function editForceScriptToUseLocalPluginRepo(tmpDir, os) {
     log('Editing  ' + forcePackageNameForOs(os) + '.js to use local cordova plugin', COLOR.green);
-    miscUtils.replaceTextInFile(path.join(tmpDir, 'node_modules', forcePackageNameForOs(os), 'node', forcePackageNameForOs(os) + '.js'), 'cordova plugin add .*', '\'cordova plugin add ../SalesforceMobileSDK-CordovaPlugin\'');
+    miscUtils.replaceTextInFile(path.join(tmpDir, 'node_modules', forcePackageNameForOs(os), 'node', forcePackageNameForOs(os) + '.js'), new RegExp('\'cordova plugin add .*\'', 'g'), '\'cordova plugin add ../SalesforceMobileSDK-CordovaPlugin\'');
 }
 
 //
@@ -288,8 +290,8 @@ function editForceScriptToUseLocalPluginRepo(tmpDir, os) {
 // 
 function editPodfileToUseLocalRepo(appDir) {
     log('Editing podfile to use local ios repo', COLOR.green);
-    miscUtils.replaceTextInFile(path.join(appDir, 'Podfile'), 'pod (\'Salesforce.*\')', 'pod $1, :path => \'../SalesforceMobileSDK-iOS\'');
-    miscUtils.replaceTextInFile(path.join(appDir, 'Podfile'), 'pod (\'Smart.*\')', 'pod $1, :path => \'../SalesforceMobileSDK-iOS\'')
+    miscUtils.replaceTextInFile(path.join(appDir, 'Podfile'), new RegExp('pod (\'Salesforce.*\')', 'g'), 'pod $1, :path => \'../SalesforceMobileSDK-iOS\'');
+    miscUtils.replaceTextInFile(path.join(appDir, 'Podfile'), new RegExp('pod (\'Smart.*\')', 'g'), 'pod $1, :path => \'../SalesforceMobileSDK-iOS\'')
 }
 
 //
