@@ -270,14 +270,26 @@ var MockSmartStore = (function(window) {
             return entries;
         },
 
-        removeFromSoup: function(soupName, entryIds) {
+        removeFromSoup: function(soupName, entryIdsOrQuerySpec) {
             this.checkSoup(soupName); 
             var soup = this._soups[soupName];
             var soupIndexedData = this._soupIndexedData[soupName];
-            for (var i=0; i<entryIds.length; i++) {
-                var entryId = entryIds[i];
-                delete soup[entryId];
-                delete soupIndexedData[entryId];
+            if (entryIdsOrQuerySpec instanceof Array) {
+                var entryIds = entryIdsOrQuerySpec;
+                for (var i=0; i<entryIds.length; i++) {
+                    var entryId = entryIds[i];
+                    delete soup[entryId];
+                    delete soupIndexedData[entryId];
+                }
+            }
+            else {
+                var querySpec = entryIdsOrQuerySpec;
+                var results = this.querySoup(soupName, querySpec).currentPageOrderedEntries;
+                for (var i=0; i<results.length; i++) {
+                    var entryId = results[i]["_soupEntryId"];
+                    delete soup[entryId];
+                    delete soupIndexedData[entryId];
+                }
             }
         },
 
