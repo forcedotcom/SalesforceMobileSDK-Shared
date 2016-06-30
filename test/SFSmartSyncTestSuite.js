@@ -1560,7 +1560,9 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictCreate = function() {
         })
         .then(function(data) {
             console.log("## Cleaning up");
-            return $.when(Force.forcetkClient.del("account", id), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
+            return $.when(Force.forcetkClient.del("account", id), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals),
+                          Force.forcetkClient.del("account", id2), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
+
         })
         .then(function() {
             self.finalizeTest();
