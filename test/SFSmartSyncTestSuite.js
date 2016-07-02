@@ -2849,13 +2849,13 @@ SmartSyncTestSuite.prototype.testCleanResyncGhosts = function() {
     console.log("# In SmartSyncTestSuite.testCleanResyncGhosts");
     var self = this;
     var idToName = {};
-    var delRecordId;
+    var ids;
+    var delRecordId
     var soupName = "testCleanResyncGhosts";
     var syncDownId;
     var cache;
-    var firstExpectedId;
-    var secondExpectedId;
     var mustDelRecords = {};
+    var stayRecordIdsSorted;
 
     Force.smartstoreClient.removeSoup(soupName)
         .then(function() {
@@ -2876,9 +2876,10 @@ SmartSyncTestSuite.prototype.testCleanResyncGhosts = function() {
             return timeoutPromiser(1000);
         })
         .then(function() {
-            delRecordId = _.keys(idToName)[0];
-            firstExpectedId = _.keys(idToName)[1];
-            secondExpectedId = _.keys(idToName)[2];
+            ids = _.keys(idToName);
+            delRecordId = ids[0];
+            //make sure record id is in ascending order
+            stayRecordIdsSorted = ids.slice(1).sort();
             var delRecord = {};
             delRecord[delRecordId] = idToName[delRecordId];
             console.log("## Deleting record: " + delRecord);
@@ -2901,8 +2902,8 @@ SmartSyncTestSuite.prototype.testCleanResyncGhosts = function() {
             var secondEntry = entries[1];
             var firstId = firstEntry["Id"];
             var secondId = secondEntry["Id"];
-            QUnit.equals(firstId, firstExpectedId, "ID should not still exist in SmartStore");
-            QUnit.equals(secondId, secondExpectedId, "ID should not still exist in SmartStore");
+            QUnit.equals(firstId, stayRecordIdsSorted[0], "ID should not still exist in SmartStore");
+            QUnit.equals(secondId, stayRecordIdsSorted[1], "ID should not still exist in SmartStore");
             mustDelRecords[firstId] = idToName[firstId];
             mustDelRecords[secondId] = idToName[secondId];
         })
