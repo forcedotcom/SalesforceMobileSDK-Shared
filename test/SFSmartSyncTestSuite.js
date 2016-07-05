@@ -2850,7 +2850,7 @@ SmartSyncTestSuite.prototype.testCleanResyncGhosts = function() {
     var self = this;
     var idToName = {};
     var ids;
-    var delRecordId
+    var delRecordId;
     var soupName = "testCleanResyncGhosts";
     var syncDownId;
     var cache;
@@ -2902,6 +2902,8 @@ SmartSyncTestSuite.prototype.testCleanResyncGhosts = function() {
             var secondEntry = entries[1];
             var firstId = firstEntry["Id"];
             var secondId = secondEntry["Id"];
+            Console.log(“## Actual records Ids are ” + firstId + “ and ” + secondId);
+            Console.log(“## Expected records Ids are ” + stayRecordIdsSorted[0] + “ and ” + stayRecordIdsSorted[1]);
             QUnit.equals(firstId, stayRecordIdsSorted[0], "ID should not still exist in SmartStore");
             QUnit.equals(secondId, stayRecordIdsSorted[1], "ID should not still exist in SmartStore");
             mustDelRecords[firstId] = idToName[firstId];
