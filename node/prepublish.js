@@ -43,7 +43,7 @@ var repoUtils = require('./repoUtils');
 // Use npm.md as the README for the package.
 var absGitRepoPath = path.resolve(path.join(__dirname, '..', '..', '..'));
 var readmePath = path.join(absGitRepoPath, 'README.md');
-var readmeBackupPath = 'ORIGINAL.md';
+var readmeBackupPath = path.join(absGitRepoPath, 'ORIGINAL.md');
 var npmMdPath = path.join(absGitRepoPath, 'npm.md');
 console.log('Using ' + npmMdPath + ' as the README.md file for the package.');
 exec('mv "' + readmePath + '" "' + readmeBackupPath + '"', function (error, stdout, stderr) {
