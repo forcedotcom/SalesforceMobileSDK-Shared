@@ -38,7 +38,7 @@ var symLinkEntries = repoUtils.readSymLinkInput(fullInputPath);
 // Move the original README back into place.
 var absGitRepoPath = path.resolve(path.join(__dirname, '..', '..', '..'));
 var readmePath = path.join(absGitRepoPath, 'README.md');
-var readmeBackupPath = 'ORIGINAL.md';
+var readmeBackupPath = path.join(absGitRepoPath, 'ORIGINAL.md');
 console.log('Moving original repo README file back into place.');
 exec('mv "' + readmeBackupPath + '" "' + readmePath + '"', function (error, stdout, stderr) {
 	if (error) {
