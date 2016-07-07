@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /*
- * Copyright (c) 2013-2014, salesforce.com, inc.
+ * Copyright (c) 2013-2016, salesforce.com, inc.
  * All rights reserved.
  * Redistribution and use of this software in source and binary forms, with or
  * without modification, are permitted provided that the following conditions
@@ -43,7 +43,7 @@ var repoUtils = require('./repoUtils');
 // Use npm.md as the README for the package.
 var absGitRepoPath = path.resolve(path.join(__dirname, '..', '..', '..'));
 var readmePath = path.join(absGitRepoPath, 'README.md');
-var readmeBackupPath = readmePath + '.orig';
+var readmeBackupPath = 'ORIGINAL.md';
 var npmMdPath = path.join(absGitRepoPath, 'npm.md');
 console.log('Using ' + npmMdPath + ' as the README.md file for the package.');
 exec('mv "' + readmePath + '" "' + readmeBackupPath + '"', function (error, stdout, stderr) {
@@ -51,7 +51,6 @@ exec('mv "' + readmePath + '" "' + readmeBackupPath + '"', function (error, stdo
 		console.log('FATAL: Could not move ' + readmePath + ' to ' + readmeBackupPath + '.');
 		process.exit(3);
 	}
-
 	exec('cp "' + npmMdPath + '" "' + readmePath + '"', function (error, stdout, stderr) {
 		if (error) {
 			console.log('FATAL: Could not copy ' + npmMdPath + ' to ' + readmePath + '.');
