@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /*
- * Copyright (c) 2013-2014, salesforce.com, inc.
+ * Copyright (c) 2013-2016, salesforce.com, inc.
  * All rights reserved.
  * Redistribution and use of this software in source and binary forms, with or
  * without modification, are permitted provided that the following conditions
@@ -38,7 +38,7 @@ var symLinkEntries = repoUtils.readSymLinkInput(fullInputPath);
 // Move the original README back into place.
 var absGitRepoPath = path.resolve(path.join(__dirname, '..', '..', '..'));
 var readmePath = path.join(absGitRepoPath, 'README.md');
-var readmeBackupPath = readmePath + '.orig';
+var readmeBackupPath = path.join(absGitRepoPath, 'ORIGINAL.md');
 console.log('Moving original repo README file back into place.');
 exec('mv "' + readmeBackupPath + '" "' + readmePath + '"', function (error, stdout, stderr) {
 	if (error) {
@@ -47,7 +47,6 @@ exec('mv "' + readmeBackupPath + '" "' + readmePath + '"', function (error, stdo
 
 	// Revert symlinks from the root of the git repo.
 	process.chdir(absGitRepoPath);
-
 	repoUtils.revertSymLinks(symLinkEntries, absGitRepoPath, function() {
 		console.log('Finished reverting symlink files in git.');
 		fs.unlinkSync(fullInputPath);

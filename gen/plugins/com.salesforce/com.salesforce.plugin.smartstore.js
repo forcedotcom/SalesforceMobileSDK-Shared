@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-15, salesforce.com, inc.
+ * Copyright (c) 2012-present, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "4.1.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "4.2.0";
 var SERVICE = "com.salesforce.smartstore";
 
 var exec = require("com.salesforce.util.exec").exec;
@@ -72,6 +72,9 @@ var QuerySpec = function (path) {
 
     //the number of entries to copy from native to javascript per each cursor page
     this.pageSize = 10;
+
+    //selectPaths - null means return soup elements
+    this.selectPaths = null;
 };
 
 /**
@@ -115,27 +118,29 @@ var getLogLevel = function () {
 // ====== querySpec factory methods
 // Returns a query spec that will page through all soup entries in order by the given path value
 // Internally it simply does a range query with null begin and end keys
-var buildAllQuerySpec = function (path, order, pageSize) {
+var buildAllQuerySpec = function (path, order, pageSize, selectPaths) {
     var inst = new QuerySpec(path);
     inst.queryType = "range";
     inst.orderPath = path;
     if (order) { inst.order = order; } // override default only if a value was specified
     if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+    if (selectPaths) { inst.selectPaths = selectPaths; }
     return inst;
 };
 
 // Returns a query spec that will page all entries exactly matching the matchKey value for path
-var buildExactQuerySpec = function (path, matchKey, pageSize, order, orderPath) {
+var buildExactQuerySpec = function (path, matchKey, pageSize, order, orderPath, selectPaths) {
     var inst = new QuerySpec(path);
     inst.matchKey = matchKey;
     if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
     if (order) { inst.order = order; } // override default only if a value was specified
     inst.orderPath = orderPath ? orderPath : path;
+    if (selectPaths) { inst.selectPaths = selectPaths; }
     return inst;
 };
 
 // Returns a query spec that will page all entries in the range beginKey ...endKey for path
-var buildRangeQuerySpec = function (path, beginKey, endKey, order, pageSize, orderPath) {
+var buildRangeQuerySpec = function (path, beginKey, endKey, order, pageSize, orderPath, selectPaths) {
     var inst = new QuerySpec(path);
     inst.queryType = "range";
     inst.beginKey = beginKey;
@@ -143,23 +148,25 @@ var buildRangeQuerySpec = function (path, beginKey, endKey, order, pageSize, ord
     if (order) { inst.order = order; } // override default only if a value was specified
     if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
     inst.orderPath = orderPath ? orderPath : path;
+    if (selectPaths) { inst.selectPaths = selectPaths; }
     return inst;
 };
 
 // Returns a query spec that will page all entries matching the given likeKey value for path
-var buildLikeQuerySpec = function (path, likeKey, order, pageSize, orderPath) {
+var buildLikeQuerySpec = function (path, likeKey, order, pageSize, orderPath, selectPaths) {
     var inst = new QuerySpec(path);
     inst.queryType = "like";
     inst.likeKey = likeKey;
     if (order) { inst.order = order; } // override default only if a value was specified
     if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
     inst.orderPath = orderPath ? orderPath : path;
+    if (selectPaths) { inst.selectPaths = selectPaths; }
     return inst;
 };
 
 // Returns a query spec that will page all entries matching the given full-text search matchKey value for path
 // Pass null for path to match matchKey across all full-text indexed fields
-var buildMatchQuerySpec = function (path, matchKey, order, pageSize, orderPath) {
+var buildMatchQuerySpec = function (path, matchKey, order, pageSize, orderPath, selectPaths) {
     var inst = new QuerySpec(path);
     inst.queryType = "match";
     inst.matchKey = matchKey;
@@ -167,6 +174,7 @@ var buildMatchQuerySpec = function (path, matchKey, order, pageSize, orderPath) 
     if (order) { inst.order = order; } // override default only if a value was specified
     if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
     inst.orderPath = orderPath ? orderPath : path;
+    if (selectPaths) { inst.selectPaths = selectPaths; }
     return inst;
 };
 
@@ -320,13 +328,15 @@ var upsertSoupEntriesWithExternalId = function (isGlobalStore, soupName, entries
         );
 };
 
-var removeFromSoup = function (isGlobalStore, soupName, entryIds, successCB, errorCB) {
+var removeFromSoup = function (isGlobalStore, soupName, entryIdsOrQuerySpec, successCB, errorCB) {
     if (checkFirstArg(arguments)) return;
-    storeConsole.debug("SmartStore.removeFromSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",entryIds=" + entryIds);
+    storeConsole.debug("SmartStore.removeFromSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",entryIdsOrQuerySpec=" + entryIdsOrQuerySpec);
     isGlobalStore = isGlobalStore || false;
+    var execArgs = {"soupName": soupName, "isGlobalStore": isGlobalStore};
+    execArgs[entryIdsOrQuerySpec instanceof Array ? "entryIds":"querySpec"] = entryIdsOrQuerySpec;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgRemoveFromSoup",
-         [{"soupName": soupName, "entryIds": entryIds, "isGlobalStore": isGlobalStore}]
+         [execArgs]
         );
 };
 

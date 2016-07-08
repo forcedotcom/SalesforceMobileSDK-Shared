@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-15, salesforce.com, inc.
+ * Copyright (c) 2012-present, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "4.1.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "4.2.0";
 
 /**
  * Utilify functions for logging
@@ -268,14 +268,16 @@ cordova.define("com.salesforce.plugin.oauth", function (require, exports, module
      *   success - The success callback function to use.
      *   fail    - The failure/error callback function to use.
      * cordova returns a dictionary with:
-     *     accessToken
-     *     refreshToken
-     *  clientId
-     *     userId
-     *     orgId
-     *  loginUrl
-     *     instanceUrl
-     *     userAgent
+     *   accessToken
+     *   refreshToken
+     *   clientId
+     *   userId
+     *   orgId
+     *   loginUrl
+     *   instanceUrl
+     *   userAgent
+     *   community id 
+     *   community url
      */
     var getAuthCredentials = function (success, fail) {
         exec(SALESFORCE_MOBILE_SDK_VERSION, success, fail, SERVICE, "getAuthCredentials", []);
@@ -294,6 +296,8 @@ cordova.define("com.salesforce.plugin.oauth", function (require, exports, module
      *   loginUrl
      *   instanceUrl
      *   userAgent
+     *   community id 
+     *   community url
      */
     var authenticate = function (success, fail) {
         exec(SALESFORCE_MOBILE_SDK_VERSION, success, fail, SERVICE, "authenticate", []);
@@ -511,6 +515,9 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
 
         //the number of entries to copy from native to javascript per each cursor page
         this.pageSize = 10;
+
+        //selectPaths - null means return soup elements
+        this.selectPaths = null;
     };
     
     /**
@@ -554,27 +561,29 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     // ====== querySpec factory methods
     // Returns a query spec that will page through all soup entries in order by the given path value
     // Internally it simply does a range query with null begin and end keys
-    var buildAllQuerySpec = function (path, order, pageSize) {
+    var buildAllQuerySpec = function (path, order, pageSize, selectPaths) {
         var inst = new QuerySpec(path);
         inst.queryType = "range";
         inst.orderPath = path;
         if (order) { inst.order = order; } // override default only if a value was specified
         if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+        if (selectPaths) { inst.selectPaths = selectPaths; }
         return inst;
     };
 
     // Returns a query spec that will page all entries exactly matching the matchKey value for path
-    var buildExactQuerySpec = function (path, matchKey, pageSize, order, orderPath) {
+    var buildExactQuerySpec = function (path, matchKey, pageSize, order, orderPath, selectPaths) {
         var inst = new QuerySpec(path);
         inst.matchKey = matchKey;
         if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
         if (order) { inst.order = order; } // override default only if a value was specified
         inst.orderPath = orderPath ? orderPath : path;
+        if (selectPaths) { inst.selectPaths = selectPaths; }
         return inst;
     };
 
     // Returns a query spec that will page all entries in the range beginKey ...endKey for path
-    var buildRangeQuerySpec = function (path, beginKey, endKey, order, pageSize, orderPath) {
+    var buildRangeQuerySpec = function (path, beginKey, endKey, order, pageSize, orderPath, selectPaths) {
         var inst = new QuerySpec(path);
         inst.queryType = "range";
         inst.beginKey = beginKey;
@@ -582,23 +591,25 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         if (order) { inst.order = order; } // override default only if a value was specified
         if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
         inst.orderPath = orderPath ? orderPath : path;
+        if (selectPaths) { inst.selectPaths = selectPaths; }
         return inst;
     };
 
     // Returns a query spec that will page all entries matching the given likeKey value for path
-    var buildLikeQuerySpec = function (path, likeKey, order, pageSize, orderPath) {
+    var buildLikeQuerySpec = function (path, likeKey, order, pageSize, orderPath, selectPaths) {
         var inst = new QuerySpec(path);
         inst.queryType = "like";
         inst.likeKey = likeKey;
         if (order) { inst.order = order; } // override default only if a value was specified
         if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
         inst.orderPath = orderPath ? orderPath : path;
+        if (selectPaths) { inst.selectPaths = selectPaths; }
         return inst;
     };
 
     // Returns a query spec that will page all entries matching the given full-text search matchKey value for path
     // Pass null for path to match matchKey across all full-text indexed fields
-    var buildMatchQuerySpec = function (path, matchKey, order, pageSize, orderPath) {
+    var buildMatchQuerySpec = function (path, matchKey, order, pageSize, orderPath, selectPaths) {
         var inst = new QuerySpec(path);
         inst.queryType = "match";
         inst.matchKey = matchKey;
@@ -606,6 +617,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         if (order) { inst.order = order; } // override default only if a value was specified
         if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
         inst.orderPath = orderPath ? orderPath : path;
+        if (selectPaths) { inst.selectPaths = selectPaths; }
         return inst;
     };
 
@@ -759,13 +771,15 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
             );
     };
 
-    var removeFromSoup = function (isGlobalStore, soupName, entryIds, successCB, errorCB) {
+    var removeFromSoup = function (isGlobalStore, soupName, entryIdsOrQuerySpec, successCB, errorCB) {
         if (checkFirstArg(arguments)) return;
-        storeConsole.debug("SmartStore.removeFromSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",entryIds=" + entryIds);
+        storeConsole.debug("SmartStore.removeFromSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",entryIdsOrQuerySpec=" + entryIdsOrQuerySpec);
         isGlobalStore = isGlobalStore || false;
+        var execArgs = {"soupName": soupName, "isGlobalStore": isGlobalStore};
+        execArgs[entryIdsOrQuerySpec instanceof Array ? "entryIds":"querySpec"] = entryIdsOrQuerySpec;
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgRemoveFromSoup",
-             [{"soupName": soupName, "entryIds": entryIds, "isGlobalStore": isGlobalStore}]
+             [execArgs]
             );
     };
 
@@ -876,7 +890,7 @@ cordova.define("com.salesforce.plugin.smartsync", function (require, exports, mo
         if (checkFirstArg(arguments)) return;
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "syncDown",
-             [{"target": target, "soupName": soupName, "options": options, "isGlobalStore":isGlobalStore}]
+             [{"target": target, "soupName": soupName, "options": options, "isGlobalStore": isGlobalStore}]
             );        
     };
 
@@ -884,10 +898,17 @@ cordova.define("com.salesforce.plugin.smartsync", function (require, exports, mo
         if (checkFirstArg(arguments)) return;
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "reSync",
-             [{"syncId": syncId, "isGlobalStore":isGlobalStore}]
+             [{"syncId": syncId, "isGlobalStore": isGlobalStore}]
             );        
     };
 
+    var cleanResyncGhosts = function(isGlobalStore, syncId, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "cleanResyncGhosts",
+             [{"syncId": syncId, "isGlobalStore": isGlobalStore}]
+            );        
+    };
 
     var syncUp = function(isGlobalStore, target, soupName, options, successCB, errorCB) {
         var args = Array.prototype.slice.call(arguments);
@@ -939,7 +960,8 @@ cordova.define("com.salesforce.plugin.smartsync", function (require, exports, mo
         syncDown: syncDown,
         syncUp: syncUp,
         getSyncStatus: getSyncStatus,
-        reSync: reSync
+        reSync: reSync,
+        cleanResyncGhosts: cleanResyncGhosts
     };
 });
 
@@ -949,61 +971,45 @@ cordova.define("com.salesforce.util.push", function(require, exports, module) {
      * Register push notification handler
      */
     var registerPushNotificationHandler = function(notificationHandler, fail) {
-        if (!window.plugins || !window.plugins.pushNotification) {
+        if (!window.PushNotification) {
             console.error("PushPlugin not found");
             fail("PushPlugin not found");
             return;
         }
 
-        var isAndroid  = device.platform == 'android' || device.platform == 'Android' || device.platform == "amazon-fireos";
+        cordova.require("com.salesforce.plugin.sdkinfo").getInfo(function(info) {
+            var bootconfig = info.bootConfig;
 
-        var notificationHandlerName = "onNotification" + (Math.round(Math.random()*100000));
-        window[notificationHandlerName] = function(message) {
-            console.log("Received notification " + JSON.stringify(message));
-            if (message.event == "message" || !isAndroid) {
-                notificationHandler(message);
-            }
-        };
-        
-        var registrationSuccess = function(result) {
-            console.log("Registration successful " + JSON.stringify(result));
-        };
-
-        var registrationFail = function(err) {
-            console.error("Registration failed " + JSON.stringify(err));
-            fail(err);
-        };
-
-        // Android
-        if (isAndroid)
-        {
-            console.log("Registering for Android");
-            cordova.require("com.salesforce.plugin.sdkinfo").getInfo(function(info) {
-                var bootconfig = info.bootConfig;
-                window.plugins.pushNotification.register(
-                    registrationSuccess,
-                    registrationFail,
-                    {
-                        "senderID": bootconfig.androidPushNotificationClientId,
-                        "ecb":notificationHandlerName
-                    });
-            });
-        } 
-
-        // iOS
-        else 
-        {
-            console.debug("Registering for ios");
-            window.plugins.pushNotification.register(
-                registrationSuccess,
-                registrationFail,
-                {
-                    "badge":"true",
-                    "sound":"true",
-                    "alert":"true",
-                    "ecb":notificationHandlerName
+            var push = PushNotification.init({
+                    "android": {
+                        "senderID": bootconfig.androidPushNotificationClientId
+                    },
+                    "ios": {"alert": "true", "badge": "true", "sound": "true"},
+                    "windows": {}
                 });
-        }
+
+            push.on('registration', function(data) {
+                console.log("registration event " + JSON.stringify(data));
+                console.log(JSON.stringify(data));
+            });
+
+            push.on('notification', function(data) {
+              console.log("notification event");
+              console.log(JSON.stringify(data));
+              if (data.event == "message") {
+                notificationHandler(message);
+              }
+              push.finish(function () {
+                  console.log('finish successfully called');
+              });
+            });
+
+            push.on('error', function(e) {
+                console.log("push error");
+                console.error("push error " + JSON.stringify(e));
+                fail(err);
+            });
+        });
     };
 
     /**

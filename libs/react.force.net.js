@@ -48,11 +48,14 @@ var getApiVersion = function() {
 /** 
  * Send arbitray force.com request
  */
-var sendRequest = function(endPoint, path, successCB, errorCB, method, payload, headerParams) {
+var sendRequest = function(endPoint, path, successCB, errorCB, method, payload, headerParams, fileParams) {
     method = method || "GET";
     payload = payload || {};
     headerParams = headerParams || {};
-    var args = {endPoint: endPoint, path:path, method:method, queryParams:payload, headerParams:headerParams};
+    // File params expected to be of the form:
+    // {<fileParamNameInPost>: {fileMimeType:<someMimeType>, fileUrl:<fileUrl>, fileName:<fileNameForPost>}}
+    fileParams = fileParams || {}; 
+    var args = {endPoint: endPoint, path:path, method:method, queryParams:payload, headerParams:headerParams, fileParams: fileParams};
     forceCommon.exec("SFNetReactBridge", "SalesforceNetReactBridge", SFNetReactBridge, SalesforceNetReactBridge, successCB, errorCB, "sendRequest", args);
 };
 

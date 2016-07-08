@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-15, salesforce.com, inc.
+ * Copyright (c) 2012-present, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "4.1.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "4.2.0";
 var SERVICE = "com.salesforce.oauth";
 
 var exec = require("com.salesforce.util.exec").exec;
@@ -43,14 +43,16 @@ var logoutInitiated = false;
  *   success - The success callback function to use.
  *   fail    - The failure/error callback function to use.
  * cordova returns a dictionary with:
- *     accessToken
- *     refreshToken
- *  clientId
- *     userId
- *     orgId
- *  loginUrl
- *     instanceUrl
- *     userAgent
+ *   accessToken
+ *   refreshToken
+ *   clientId
+ *   userId
+ *   orgId
+ *   loginUrl
+ *   instanceUrl
+ *   userAgent
+ *   community id 
+ *   community url
  */
 var getAuthCredentials = function (success, fail) {
     exec(SALESFORCE_MOBILE_SDK_VERSION, success, fail, SERVICE, "getAuthCredentials", []);
@@ -69,6 +71,8 @@ var getAuthCredentials = function (success, fail) {
  *   loginUrl
  *   instanceUrl
  *   userAgent
+ *   community id 
+ *   community url
  */
 var authenticate = function (success, fail) {
     exec(SALESFORCE_MOBILE_SDK_VERSION, success, fail, SERVICE, "authenticate", []);

@@ -270,14 +270,26 @@ var MockSmartStore = (function(window) {
             return entries;
         },
 
-        removeFromSoup: function(soupName, entryIds) {
+        removeFromSoup: function(soupName, entryIdsOrQuerySpec) {
             this.checkSoup(soupName); 
             var soup = this._soups[soupName];
             var soupIndexedData = this._soupIndexedData[soupName];
-            for (var i=0; i<entryIds.length; i++) {
-                var entryId = entryIds[i];
-                delete soup[entryId];
-                delete soupIndexedData[entryId];
+            if (entryIdsOrQuerySpec instanceof Array) {
+                var entryIds = entryIdsOrQuerySpec;
+                for (var i=0; i<entryIds.length; i++) {
+                    var entryId = entryIds[i];
+                    delete soup[entryId];
+                    delete soupIndexedData[entryId];
+                }
+            }
+            else {
+                var querySpec = entryIdsOrQuerySpec;
+                var results = this.querySoup(soupName, querySpec).currentPageOrderedEntries;
+                for (var i=0; i<results.length; i++) {
+                    var entryId = results[i]["_soupEntryId"];
+                    delete soup[entryId];
+                    delete soupIndexedData[entryId];
+                }
             }
         },
 
@@ -554,7 +566,25 @@ var MockSmartStore = (function(window) {
                 }
             }
 
-            return this.sortResults(results, querySpec);
+            return this.applySelectPaths(this.sortResults(results, querySpec), querySpec.selectPaths);
+        },
+
+        applySelectPaths: function(soupElts, selectPaths) {
+            if (selectPaths == null) {
+                return soupElts;
+            }
+            else {
+                var results = [];
+                for (var i=0; i<soupElts.length; i++) {
+                    var soupElt = soupElts[i];
+                    var result = [];
+                    for (var j=0; j<selectPaths.length; j++) {
+                        result.push(soupElt[selectPaths[j]]);
+                    }
+                    results.push(result);
+                }
+                return results;
+            }
         },
 
         typeForPath: function(soupName, path) {
@@ -705,7 +735,7 @@ var MockSmartStore = (function(window) {
                 }
             }
 
-            return this.sortResults(results, querySpec);
+            return this.applySelectPaths(this.sortResults(results, querySpec), querySpec.selectPaths);
         },
 
         sortResults: function(results, querySpec) {
@@ -867,7 +897,8 @@ var mockGlobalStore = new MockSmartStore(true);
         var targetStore = args[0].isGlobalStore ? globalStore : store;
         var soupName = args[0].soupName;
         var entryIds = args[0].entryIds;
-        targetStore.removeFromSoup(soupName, entryIds);
+        var querySpec = args[0].querySpec;
+        targetStore.removeFromSoup(soupName, entryIds || querySpec);
         successCB("OK");
     });
 

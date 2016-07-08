@@ -1,6 +1,6 @@
 cordova.define("com.salesforce.util.event", function(require, exports, module) {
 /*
- * Copyright (c) 2012-15, salesforce.com, inc.
+ * Copyright (c) 2012-present, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -26,7 +26,7 @@ cordova.define("com.salesforce.util.event", function(require, exports, module) {
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "4.1.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "4.2.0";
 
 var logger = require("com.salesforce.util.logger");
 

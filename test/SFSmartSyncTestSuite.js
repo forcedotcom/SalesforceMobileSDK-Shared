@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, salesforce.com, inc.
+ * Copyright (c) 2013-present, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -42,6 +42,7 @@ SmartSyncTestSuite.prototype = new SFTestSuite();
 SmartSyncTestSuite.prototype.constructor = SmartSyncTestSuite;
 
 // SmartSyncPlugin
+SmartSyncTestSuite.prototype.cleanResyncGhosts = promiser(cordova.require("com.salesforce.plugin.smartsync"), "cleanResyncGhosts");
 SmartSyncTestSuite.prototype.reSync = promiser(cordova.require("com.salesforce.plugin.smartsync"), "reSync");
 SmartSyncTestSuite.prototype.syncDown = promiser(cordova.require("com.salesforce.plugin.smartsync"), "syncDown");
 SmartSyncTestSuite.prototype.syncUp = promiser(cordova.require("com.salesforce.plugin.smartsync"), "syncUp");
@@ -80,7 +81,6 @@ SmartSyncTestSuite.prototype.testStoreCacheInit = function() {
         self.finalizeTest();
     });
 }
-
 
 /** 
  * TEST Force.StoreCache.retrieve
@@ -200,7 +200,6 @@ SmartSyncTestSuite.prototype.testStoreCacheSave = function() {
         self.finalizeTest();
     });
 }
-
 
 /** 
  * TEST Force.StoreCache.saveAll
@@ -527,7 +526,6 @@ SmartSyncTestSuite.prototype.testStoreCacheWithGlobalStore = function() {
         });
 }
 
-
 //-------------------------------------------------------------------------------------------------------
 //
 // Tests for Force.SObjectType
@@ -815,7 +813,6 @@ SmartSyncTestSuite.prototype.testSObjectTypeReset = function() {
     .then(function() {
         self.finalizeTest();
     });
-
 }
 
 //-------------------------------------------------------------------------------------------------------
@@ -913,7 +910,6 @@ SmartSyncTestSuite.prototype.testSyncRemoteObjectWithCacheCreate = function() {
     .then(function() {
         self.finalizeTest();
     });
-
 }
 
 /** 
@@ -1564,7 +1560,9 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictCreate = function() {
         })
         .then(function(data) {
             console.log("## Cleaning up");
-            return $.when(Force.forcetkClient.del("account", id), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
+            return $.when(Force.forcetkClient.del("account", id), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals),
+                          Force.forcetkClient.del("account", id2), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
+
         })
         .then(function() {
             self.finalizeTest();
@@ -2844,6 +2842,80 @@ SmartSyncTestSuite.prototype.testReSync = function() {
         });
 };
 
+/** 
+ * TEST smartsyncplugin cleanResyncGhosts
+ */
+SmartSyncTestSuite.prototype.testCleanResyncGhosts = function() {
+    console.log("# In SmartSyncTestSuite.testCleanResyncGhosts");
+    var self = this;
+    var idToName = {};
+    var ids;
+    var delRecordId;
+    var soupName = "testCleanResyncGhosts";
+    var syncDownId;
+    var cache;
+    var mustDelRecords = {};
+    var stayRecordIdsSorted;
+
+    Force.smartstoreClient.removeSoup(soupName)
+        .then(function() {
+            console.log("## Initialization of StoreCache's");
+            cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
+            return $.when(cache.init());
+        })
+        .then(function() {
+            console.log("## Direct creation against server");
+            return createRecords(idToName, "testCleanResyncGhosts", 3);
+        })
+        .then(function() {
+            console.log("## Calling sync down");
+            return self.trySyncDown(cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.LEAVE_IF_CHANGED);
+        })
+        .then(function(syncId) {
+            syncDownId = syncId;
+            return timeoutPromiser(1000);
+        })
+        .then(function() {
+            ids = _.keys(idToName);
+            delRecordId = ids[0];
+            //make sure record id is in ascending order
+            stayRecordIdsSorted = ids.slice(1).sort();
+            var delRecord = {};
+            delRecord[delRecordId] = idToName[delRecordId];
+            console.log("## Deleting record: " + delRecord);
+            return deleteRecords(delRecord);
+        })
+        .then(function() {
+            console.log("## Calling cleanResyncGhosts");
+            self.cleanResyncGhosts(false, syncDownId);
+            return timeoutPromiser(1000);
+        })
+        .then(function() {
+            console.log("## Fetching records from SmartStore");
+            var querySpec = {queryType:"range", indexPath:"Id", order:"ascending", pageSize:10};
+            return Force.smartstoreClient.querySoup(soupName, querySpec);
+        })
+        .then(function(cursor) {
+            QUnit.equals(cursor.totalEntries, 2, "Expected 2 records");
+            var entries = cursor["currentPageOrderedEntries"];
+            var firstEntry = entries[0];
+            var secondEntry = entries[1];
+            var firstId = firstEntry["Id"];
+            var secondId = secondEntry["Id"];
+            console.log("## Actual records Ids are " + firstId + " and " + secondId);
+            console.log("## Expected records Ids are " + stayRecordIdsSorted[0] + " and " + stayRecordIdsSorted[1]);
+            QUnit.equals(firstId, stayRecordIdsSorted[0], "ID should not still exist in SmartStore");
+            QUnit.equals(secondId, stayRecordIdsSorted[1], "ID should not still exist in SmartStore");
+            mustDelRecords[firstId] = idToName[firstId];
+            mustDelRecords[secondId] = idToName[secondId];
+        })
+        .then(function() {
+            return $.when(deleteRecords(mustDelRecords), Force.smartstoreClient.removeSoup(soupName));
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
 
 //-------------------------------------------------------------------------------------------------------
 //
@@ -3521,7 +3593,6 @@ SmartSyncTestSuite.prototype.trySyncDown = function(cache, soupName, idToName, m
         .then(function(event) {
             console.log("## Checking event");
             assertContains(event.detail, {type:"syncDown", target: target, status:"DONE", progress:100, totalSize: numberRecords, soupName: soupName, options:options, isGlobalStore:isGlobalStore});
-
             console.log("## Checking cache");
             return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:numberRecords});
         })
