@@ -260,7 +260,7 @@ var getSoupIndexSpecs = function(isGlobalStore, soupName, successCB, errorCB) {
 };
 
 var getSoupSpec = function(isGlobalStore, soupName, successCB, errorCB) {
-	if (checkFirstArg(arguments)) return;
+    if (checkFirstArg(arguments)) return;
     storeConsole.debug("SmartStore.getSoupSpec:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName);
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgGetSoupSpec",
@@ -270,10 +270,19 @@ var getSoupSpec = function(isGlobalStore, soupName, successCB, errorCB) {
 
 var alterSoup = function (isGlobalStore, soupName, indexSpecs, reIndexData, successCB, errorCB) {
     if (checkFirstArg(arguments)) return;
-    storeConsole.debug("SmartStore.alterSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",indexSpecs=" + JSON.stringify(indexSpecs));
+    storeConsole.debug("SmartStore.alterSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",indexSpecs=" + JSON.stringify(indexSpecs) + ",reIndexData=" + reIndexData);
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgAlterSoup",
          [{"soupName": soupName, "indexes": indexSpecs, "reIndexData": reIndexData, "isGlobalStore": isGlobalStore}]
+        );
+};
+
+var alterSoupWithSpec = function (isGlobalStore, soupSpec, indexSpecs, reIndexData, successCB, errorCB) {
+    if (checkFirstArg(arguments)) return;
+    storeConsole.debug("SmartStore.alterSoupWithSpec:isGlobalStore=" +isGlobalStore+ ",soupSpec=" + JSON.stringify(soupSpec) + ",indexSpecs=" + JSON.stringify(indexSpecs) + ",reIndexData=" + reIndexData);
+    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+         "pgAlterSoup",
+         [{"soupspec": soupSpec, "indexes": indexSpecs, "reIndexData": reIndexData, "isGlobalStore": isGlobalStore}]
         );
 };
 
@@ -410,6 +419,7 @@ var closeCursor = function (isGlobalStore, cursor, successCB, errorCB) {
  */
 module.exports = {
     alterSoup: alterSoup,
+    alterSoupWithSpec: alterSoupWithSpec,
     buildAllQuerySpec: buildAllQuerySpec,
     buildExactQuerySpec: buildExactQuerySpec,
     buildLikeQuerySpec: buildLikeQuerySpec,

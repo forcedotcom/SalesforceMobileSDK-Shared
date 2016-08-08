@@ -713,10 +713,19 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
 
     var alterSoup = function (isGlobalStore, soupName, indexSpecs, reIndexData, successCB, errorCB) {
         if (checkFirstArg(arguments)) return;
-        storeConsole.debug("SmartStore.alterSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",indexSpecs=" + JSON.stringify(indexSpecs));
+        storeConsole.debug("SmartStore.alterSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",indexSpecs=" + JSON.stringify(indexSpecs) + ",reIndexData=" + reIndexData);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgAlterSoup",
              [{"soupName": soupName, "indexes": indexSpecs, "reIndexData": reIndexData, "isGlobalStore": isGlobalStore}]
+            );
+    };
+
+    var alterSoupWithSpec = function (isGlobalStore, soupSpec, indexSpecs, reIndexData, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        storeConsole.debug("SmartStore.alterSoupWithSpec:isGlobalStore=" +isGlobalStore+ ",soupSpec=" + JSON.stringify(soupSpec) + ",indexSpecs=" + JSON.stringify(indexSpecs) + ",reIndexData=" + reIndexData);
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgAlterSoup",
+             [{"soupspec": soupSpec, "indexes": indexSpecs, "reIndexData": reIndexData, "isGlobalStore": isGlobalStore}]
             );
     };
 
@@ -853,6 +862,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
      */
     module.exports = {
         alterSoup: alterSoup,
+        alterSoupWithSpec: alterSoupWithSpec,
         buildAllQuerySpec: buildAllQuerySpec,
         buildExactQuerySpec: buildExactQuerySpec,
         buildLikeQuerySpec: buildLikeQuerySpec,
