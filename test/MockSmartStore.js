@@ -814,7 +814,8 @@ var mockGlobalStore = new MockSmartStore(true);
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgRegisterSoup", function (successCB, errorCB, args) {
         var targetStore = args[0].isGlobalStore ? globalStore : store;
-        var soupName = args[0].soupName;
+        var soupSpec = args[0].soupSpec;
+        var soupName = args[0].soupName == null ? (soupSpec != null ? soupSpec.soupName : null) : args[0].soupName;
         var indexSpecs = args[0].indexes;
         if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
         if (indexSpecs !== undefined && indexSpecs.length == 0) {errorCB("No indexSpecs specified for soup: " + soupName); return;}
@@ -844,7 +845,8 @@ var mockGlobalStore = new MockSmartStore(true);
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgAlterSoup", function (successCB, errorCB, args) {
         var targetStore = args[0].isGlobalStore ? globalStore : store;
-        var soupName = args[0].soupName;
+        var soupSpec = args[0].soupSpec;
+        var soupName = args[0].soupName == null ? (soupSpec != null ? soupSpec.soupName : null) : args[0].soupName;
         var indexSpecs = args[0].indexes;
         var reIndexData = args[0].reIndexData;
         if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
