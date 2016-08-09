@@ -37,7 +37,7 @@ var exec = function(successCB, errorCB, methodName, args) {
  * SoupSpec consturctor
  */
 var SoupSpec = function (soupName, features) {
-    this.soupName = soupName;
+    this.name = soupName;
     this.features = features;
 };
 

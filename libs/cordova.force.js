@@ -477,7 +477,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
      * SoupSpec constructor
      */
     var SoupSpec = function (soupName, features) {
-        this.soupName = soupName;
+        this.name = soupName;
         this.features = features;
     };
 

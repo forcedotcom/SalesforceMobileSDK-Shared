@@ -34,7 +34,7 @@ var exec = require("com.salesforce.util.exec").exec;
  * SoupSpec constructor
  */
 var SoupSpec = function (soupName, features) {
-    this.soupName = soupName;
+    this.name = soupName;
     this.features = features;
 };
 
