@@ -277,12 +277,12 @@ var alterSoup = function (isGlobalStore, soupName, indexSpecs, reIndexData, succ
         );
 };
 
-var alterSoupWithSpec = function (isGlobalStore, soupSpec, indexSpecs, reIndexData, successCB, errorCB) {
+var alterSoupWithSpec = function (isGlobalStore, soupName, soupSpec, indexSpecs, reIndexData, successCB, errorCB) {
     if (checkFirstArg(arguments)) return;
-    storeConsole.debug("SmartStore.alterSoupWithSpec:isGlobalStore=" +isGlobalStore+ ",soupSpec=" + JSON.stringify(soupSpec) + ",indexSpecs=" + JSON.stringify(indexSpecs) + ",reIndexData=" + reIndexData);
+    storeConsole.debug("SmartStore.alterSoupWithSpec:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",soupSpec=" + JSON.stringify(soupSpec) + ",indexSpecs=" + JSON.stringify(indexSpecs) + ",reIndexData=" + reIndexData);
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgAlterSoup",
-         [{"soupspec": soupSpec, "indexes": indexSpecs, "reIndexData": reIndexData, "isGlobalStore": isGlobalStore}]
+         [{"soupName": soupName, "soupSpec": soupSpec, "indexes": indexSpecs, "reIndexData": reIndexData, "isGlobalStore": isGlobalStore}]
         );
 };
 

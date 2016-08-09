@@ -207,8 +207,8 @@ var alterSoup = function (isGlobalStore, soupName, indexSpecs, reIndexData, succ
     exec(successCB, errorCB, "alterSoup", {"soupName": soupName, "indexes": indexSpecs, "reIndexData": reIndexData, "isGlobalStore": isGlobalStore});
 };
 
-var alterSoupWithSpec = function (isGlobalStore, soupSpec, indexSpecs, reIndexData, successCB, errorCB) {
-    exec(successCB, errorCB, "alterSoup", {"soupSpec": soupSpec, "indexes": indexSpecs, "reIndexData": reIndexData, "isGlobalStore": isGlobalStore});
+var alterSoupWithSpec = function (isGlobalStore, soupName, soupSpec, indexSpecs, reIndexData, successCB, errorCB) {
+    exec(successCB, errorCB, "alterSoup", {"soupName": soupName, "soupSpec": soupSpec, "indexes": indexSpecs, "reIndexData": reIndexData, "isGlobalStore": isGlobalStore});
 };
 
 var reIndexSoup = function (isGlobalStore, soupName, paths, successCB, errorCB) {
