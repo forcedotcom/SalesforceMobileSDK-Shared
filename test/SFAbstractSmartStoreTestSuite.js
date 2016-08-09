@@ -60,15 +60,18 @@ AbstractSmartStoreTestSuite.prototype.runTest= function (methName) {
  * Helper methods to do smartstore operations using promises
  */
 AbstractSmartStoreTestSuite.prototype.alterSoup = promiser(navigator.smartstore, "alterSoup");
+AbstractSmartStoreTestSuite.prototype.alterSoupWithSpec = promiser(navigator.smartstore, "alterSoupWithSpec");
 AbstractSmartStoreTestSuite.prototype.clearSoup = promiser(navigator.smartstore, "clearSoup");
 AbstractSmartStoreTestSuite.prototype.closeCursor = promiser(navigator.smartstore, "closeCursor");
 AbstractSmartStoreTestSuite.prototype.getDatabaseSize = promiser(navigator.smartstore, "getDatabaseSize");
 AbstractSmartStoreTestSuite.prototype.getSoupIndexSpecs = promiser(navigator.smartstore, "getSoupIndexSpecs");
+AbstractSmartStoreTestSuite.prototype.getSoupSpec = promiser(navigator.smartstore, "getSoupSpec");
 AbstractSmartStoreTestSuite.prototype.moveCursorToNextPage = promiser(navigator.smartstore, "moveCursorToNextPage");
 AbstractSmartStoreTestSuite.prototype.moveCursorToPreviousPage = promiser(navigator.smartstore, "moveCursorToPreviousPage");
 AbstractSmartStoreTestSuite.prototype.querySoup = promiser(navigator.smartstore, "querySoup");
 AbstractSmartStoreTestSuite.prototype.reIndexSoup = promiser(navigator.smartstore, "reIndexSoup");
 AbstractSmartStoreTestSuite.prototype.registerSoup = promiser(navigator.smartstore, "registerSoup");
+AbstractSmartStoreTestSuite.prototype.registerSoupWithSpec = promiser(navigator.smartstore, "registerSoupWithSpec");
 AbstractSmartStoreTestSuite.prototype.removeFromSoup = promiser(navigator.smartstore, "removeFromSoup");
 AbstractSmartStoreTestSuite.prototype.removeSoup = promiser(navigator.smartstore, "removeSoup");
 AbstractSmartStoreTestSuite.prototype.retrieveSoupEntries = promiser(navigator.smartstore, "retrieveSoupEntries");

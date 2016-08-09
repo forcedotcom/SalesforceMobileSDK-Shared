@@ -207,6 +207,10 @@ var alterSoup = function (isGlobalStore, soupName, indexSpecs, reIndexData, succ
     exec(successCB, errorCB, "alterSoup", {"soupName": soupName, "indexes": indexSpecs, "reIndexData": reIndexData, "isGlobalStore": isGlobalStore});
 };
 
+var alterSoupWithSpec = function (isGlobalStore, soupName, soupSpec, indexSpecs, reIndexData, successCB, errorCB) {
+    exec(successCB, errorCB, "alterSoup", {"soupName": soupName, "soupSpec": soupSpec, "indexes": indexSpecs, "reIndexData": reIndexData, "isGlobalStore": isGlobalStore});
+};
+
 var reIndexSoup = function (isGlobalStore, soupName, paths, successCB, errorCB) {
     exec(successCB, errorCB, "reIndexSoup", {"soupName": soupName, "paths": paths, "isGlobalStore": isGlobalStore});
 };
@@ -286,6 +290,7 @@ var closeCursor = function (isGlobalStore, cursor, successCB, errorCB) {
  */
 module.exports = {
     alterSoup: alterSoup,
+    alterSoupWithSpec: alterSoupWithSpec,
     buildAllQuerySpec: buildAllQuerySpec,
     buildExactQuerySpec: buildExactQuerySpec,
     buildLikeQuerySpec: buildLikeQuerySpec,
