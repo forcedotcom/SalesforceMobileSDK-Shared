@@ -207,6 +207,50 @@ SmartStoreTestSuite.prototype.testRegisterRemoveSoup = function()  {
         });
 }; 
 
+/** 
+ * TEST registerSoupWithSpec / getSoupSpec / removeSoup 
+ */
+SmartStoreTestSuite.prototype.testRegisterWithSpec = function()  {
+    console.log("In SFSmartStoreTestSuite.testRegisterWithSpec");
+    var soupName = "soupForTestRegisterWithSpec";
+
+    var self = this;
+
+    // Start clean
+    self.removeSoup(soupName)
+        .pipe(function() {
+            // Check soup does not exist
+            return self.soupExists(soupName);
+        })
+        .pipe(function(exists) {
+            QUnit.equals(exists, false, "soup should not already exist");
+            // Create soup
+            return self.registerSoupWithSpec({soupName:soupName, features:["externalStorage"]}, self.defaultSoupIndexes);
+        })
+        .pipe(function(soupName2) {
+            QUnit.equals(soupName2,soupName,"registered soup OK");
+            // Check soup now exists
+            return self.soupExists(soupName);
+        }, function(err) {QUnit.ok(false,"self.registerSoupWithSpec failed " + err);})
+        .pipe(function(exists) {
+            QUnit.equals(exists, true, "soup should now exist");
+            // Check soup spec
+            return self.checkSoupSpec(soupName, {soupName:soupName, features:["externalStorage"]});
+        })
+        .pipe(function() {
+            // Remove soup
+            return self.removeSoup(soupName);
+        }, function(err) {QUnit.ok(false,"self.getSoupSpec failed " + err);})
+        .pipe(function() {
+            // Check soup no longer exists
+            return self.soupExists(soupName);
+        })
+        .done(function(exists) {
+            QUnit.equals(exists, false, "soup should no longer exist");
+            self.finalizeTest();
+        });
+}; 
+
 
 /** 
  * TEST registerSoup with bogus soup
@@ -1704,22 +1748,47 @@ SmartStoreTestSuite.prototype.testAlterSoupWithReIndexing  = function() {
 };
 
 /**
+ * TEST alterSoupWithSpecNoReIndexing
+ */
+SmartStoreTestSuite.prototype.testAlterSoupWithSpecNoReIndexing  = function() {
+    this.tryAlterSoup(false, {soupName:this.defaultSoupName, features:["externalStorage"]});
+};
+
+/**
+ * TEST alterSoupWithSpecWithReIndexing
+ */
+SmartStoreTestSuite.prototype.testAlterSoupWithSpecWithReIndexing  = function() {
+    this.tryAlterSoup(true, {soupName:this.defaultSoupName, features:["externalStorage"]});
+};
+
+
+/**
  * Helper method for alterSoup tests
  */
-SmartStoreTestSuite.prototype.tryAlterSoup = function(reIndexData) {
+SmartStoreTestSuite.prototype.tryAlterSoup = function(reIndexData, newSoupSpec) {
     var self = this;
     var alteredIndexes = [{path:"Name", type:"string"}, {path:"attributes.type", type:"string"}];
+    var alteredSoupSpec = newSoupSpec == null ? {soupName: self.defaultSoupName, features: []} : newSoupSpec;
 
     // Populate soup
     return self.stuffTestSoup()
         .pipe(function(entries) {
             QUnit.equal(entries.length, 3,"check stuffTestSoup result");
             // Alter soup
-            return self.alterSoup(self.defaultSoupName, alteredIndexes, reIndexData);
+            if (newSoupSpec != null) {
+                return self.alterSoupWithSpec(self.defaultSoupName, newSoupSpec, alteredIndexes, reIndexData);
+            }
+            else {
+                return self.alterSoup(self.defaultSoupName, alteredIndexes, reIndexData);
+            }
         })
         .pipe(function() {
             // Checking altered soup indexes 
             return self.checkSoupIndexes(self.defaultSoupName, alteredIndexes);
+        })
+        .pipe(function() {
+            // Checking altered soup spec
+            return self.checkSoupSpec(self.defaultSoupName, alteredSoupSpec);
         })
         .pipe(function() {
             // Query by a new indexed field
@@ -1838,6 +1907,21 @@ SmartStoreTestSuite.prototype.checkSoupIndexes = function(soupName, expectedInde
         });
 };
 
+/**
+ * Helper method checkSoupSpec
+ */
+SmartStoreTestSuite.prototype.checkSoupSpec = function(soupName, expectedSoupSpec) {
+    return this.getSoupSpec(soupName)
+        .done(function(soupSpec) {
+            QUnit.equals(expectedSoupSpec.soupName, soupSpec.soupName, "Check soup name in soup spec");
+            QUnit.equals(expectedSoupSpec.features.length, soupSpec.features.length, "Check features in soup spec");
+            for (i = 0; i< expectedSoupSpec.features.length; i++) {
+                QUnit.equals(expectedSoupSpec.features[i], soupSpec.features[i], "Check path");
+            }
+        });
+};
+
+
 
 /**
  * TEST clearSoup
@@ -1864,8 +1948,8 @@ SmartStoreTestSuite.prototype.testClearSoup = function()  {
         })
         .done(function(param) { 
             QUnit.ok(true,"closeCursor ok"); 
-            self.finalizeTest(); 
-        });
+            self.finalizeTest();  
+       });
 };
 
 }
