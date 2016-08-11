@@ -37,7 +37,6 @@ if (typeof SmartStoreTestSuite === 'undefined') {
 var SmartStoreTestSuite = function () {
     AbstractSmartStoreTestSuite.call(this, 
                                      "smartstore", 
-                                     "myPeopleSoup", 
                                      [
                                          {path:"Name", type:"string"}, 
                                          {path:"Id", type:"string"}
@@ -1422,7 +1421,7 @@ SmartStoreTestSuite.prototype.testSmartQueryWithCount  = function() {
     self.stuffTestSoup()
         .pipe(function(entries) {
             QUnit.equal(entries.length, 3,"check stuffTestSoup result");
-            var querySpec = navigator.smartstore.buildSmartQuerySpec("select count(*) from {myPeopleSoup}", 1);
+            var querySpec = navigator.smartstore.buildSmartQuerySpec("select count(*) from {" + self.defaultSoupName + "}", 1);
             return self.runSmartQuery(querySpec);
         })
         .pipe(function(cursor) {
@@ -1533,7 +1532,7 @@ SmartStoreTestSuite.prototype.testSmartQueryWithWhereLikeClause  = function() {
         .pipe(function(entries) {
             testEntries = entries;
             QUnit.equal(entries.length, 3, "check stuffTestSoup result");
-            var querySpec = navigator.smartstore.buildSmartQuerySpec("SELECT {myPeopleSoup:_soup} FROM {myPeopleSoup} WHERE {myPeopleSoup:Name} LIKE '%bo%'", 10);
+            var querySpec = navigator.smartstore.buildSmartQuerySpec("SELECT {" + self.defaultSoupName + ":_soup} FROM {" + self.defaultSoupName + "} WHERE {" + self.defaultSoupName + ":Name} LIKE '%bo%'", 10);
             return self.runSmartQuery(querySpec);
         })
         .pipe(function(cursor) {
@@ -1565,7 +1564,7 @@ SmartStoreTestSuite.prototype.testSmartQueryWithWhereLikeClauseOrdered  = functi
         .pipe(function(entries) {
             testEntries = entries;
             QUnit.equal(entries.length, 3, "check stuffTestSoup result");
-            var querySpec = navigator.smartstore.buildSmartQuerySpec("SELECT {myPeopleSoup:_soup} FROM {myPeopleSoup} WHERE {myPeopleSoup:Name} LIKE '%o%' ORDER BY LOWER({myPeopleSoup:Name})", 10);
+            var querySpec = navigator.smartstore.buildSmartQuerySpec("SELECT {" + self.defaultSoupName + ":_soup} FROM {" + self.defaultSoupName + "} WHERE {" + self.defaultSoupName + ":Name} LIKE '%o%' ORDER BY LOWER({" + self.defaultSoupName + ":Name})", 10);
             return self.runSmartQuery(querySpec);
         })
         .pipe(function(cursor) {
@@ -1597,7 +1596,7 @@ SmartStoreTestSuite.prototype.testSmartQueryWithSingleFieldAndWhereInClause  = f
         .pipe(function(entries) {
             testEntries = entries;
             QUnit.equal(entries.length, 3, "check stuffTestSoup result");
-            var querySpec = navigator.smartstore.buildSmartQuerySpec("SELECT {myPeopleSoup:Name} FROM {myPeopleSoup} WHERE {myPeopleSoup:Id} IN ('00300A', '00300B')", 10);
+            var querySpec = navigator.smartstore.buildSmartQuerySpec("SELECT {" + self.defaultSoupName + ":Name} FROM {" + self.defaultSoupName + "} WHERE {" + self.defaultSoupName + ":Id} IN ('00300A', '00300B')", 10);
             return self.runSmartQuery(querySpec);
         })
         .pipe(function(cursor) {
@@ -1627,7 +1626,7 @@ SmartStoreTestSuite.prototype.testSmartQueryWithMultipleFieldsAndWhereInClause  
         .pipe(function(entries) {
             testEntries = entries;
             QUnit.equal(entries.length, 3, "check stuffTestSoup result");
-            var querySpec = navigator.smartstore.buildSmartQuerySpec("SELECT {myPeopleSoup:Name}, {myPeopleSoup:Id} FROM {myPeopleSoup} WHERE {myPeopleSoup:Id} IN ('00300A', '00300C')", 10);
+            var querySpec = navigator.smartstore.buildSmartQuerySpec("SELECT {" + self.defaultSoupName + ":Name}, {" + self.defaultSoupName + ":Id} FROM {" + self.defaultSoupName + "} WHERE {" + self.defaultSoupName + ":Id} IN ('00300A', '00300C')", 10);
             return self.runSmartQuery(querySpec);
         })
         .pipe(function(cursor) {
@@ -1665,7 +1664,7 @@ SmartStoreTestSuite.prototype.testSmartQueryWithSpecialFields  = function() {
         .pipe(function(entries) {
             QUnit.equal(entries.length, 3,"check stuffTestSoup result");
             expectedEntry = entries[0];
-            var sql = "select {myPeopleSoup:_soup}, {myPeopleSoup:_soupEntryId}, {myPeopleSoup:_soupLastModifiedDate} from {myPeopleSoup} where {myPeopleSoup:Id} = '" + expectedEntry.Id + "'";
+            var sql = "select {" + self.defaultSoupName + ":_soup}, {" + self.defaultSoupName + ":_soupEntryId}, {" + self.defaultSoupName + ":_soupLastModifiedDate} from {" + self.defaultSoupName + "} where {" + self.defaultSoupName + ":Id} = '" + expectedEntry.Id + "'";
             var querySpec = navigator.smartstore.buildSmartQuerySpec(sql, 1);
             return self.runSmartQuery(querySpec);
         })
