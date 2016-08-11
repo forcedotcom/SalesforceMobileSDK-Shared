@@ -1811,7 +1811,7 @@ SmartStoreTestSuite.prototype.tryAlterSoup = function(reIndexData) {
 SmartStoreTestSuite.prototype.tryAlterSoupWithSpec = function(reIndexData) {
     var self = this;
     var alteredIndexes1 = [{path:"Name", type:"string"}, {path:"attributes.type", type:"string"}];
-    var alteredSoupSpec1 = {name: self.defaultSoupName, features: "externalStorage"};
+    var alteredSoupSpec1 = {name: self.defaultSoupName, features: ["externalStorage"]};
     var alteredIndexes2 = [{path:"Name", type:"string"}, {path:"department", type:"string"}];
     var alteredSoupSpec2 = {name: self.defaultSoupName, features: []};
 
@@ -1986,7 +1986,7 @@ SmartStoreTestSuite.prototype.checkSoupSpec = function(soupName, expectedSoupSpe
             QUnit.equals(expectedSoupSpec.name, soupSpec.name, "Check soup name in soup spec");
             QUnit.equals(expectedSoupSpec.features.length, soupSpec.features.length, "Check features in soup spec");
             for (i = 0; i< expectedSoupSpec.features.length; i++) {
-                QUnit.equals(expectedSoupSpec.features[i], soupSpec.features[i], "Check path");
+                QUnit.equals(expectedSoupSpec.features[i], soupSpec.features[i], "Check feature");
             }
         });
 };
