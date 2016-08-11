@@ -33,9 +33,8 @@ if (typeof AbstractSmartStoreTestSuite === 'undefined') {
 /**
  * Constructor
  */
-var AbstractSmartStoreTestSuite = function (module, defaultSoupName, defaultSoupIndexes) {
+var AbstractSmartStoreTestSuite = function (module, defaultSoupIndexes) {
     SFTestSuite.call(this, module);
-    this.defaultSoupName = defaultSoupName;
     this.defaultSoupIndexes = defaultSoupIndexes;
 };
 
@@ -49,6 +48,7 @@ AbstractSmartStoreTestSuite.prototype.constructor = AbstractSmartStoreTestSuite;
 AbstractSmartStoreTestSuite.prototype.runTest= function (methName) {
     console.log("In runTest: methName=" + methName);
     var self = this;
+    this.defaultSoupName = "soupFor" + methName;
     self.removeAndRecreateSoup(this.defaultSoupName, this.defaultSoupIndexes)
         .done(
             function() {
