@@ -1847,7 +1847,7 @@ SmartStoreTestSuite.prototype.tryAlterSoupWithSpec = function(reIndexData) {
             QUnit.equal(cursor.currentPageOrderedEntries.length, 1, "check number of rows returned");
             return self.closeCursor(cursor);
         })
-        .done(function(param) { 
+        .pipe(function(param) { 
             QUnit.ok(true,"closeCursor ok"); 
             // Alter soup external -> internal
             return self.alterSoupWithSpec(self.defaultSoupName, alteredSoupSpec2, alteredIndexes2, reIndexData);
