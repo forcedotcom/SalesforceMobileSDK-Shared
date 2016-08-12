@@ -1671,11 +1671,11 @@ SmartStoreTestSuite.prototype.testSmartQueryWithSpecialFields  = function() {
         .pipe(function(cursor) {
             QUnit.equal(1, cursor.currentPageOrderedEntries.length, "check number of rows returned");
             QUnit.equal(3, cursor.currentPageOrderedEntries[0].length, "check number of fields returned");
-            QUnit.equal(expectedEntry._soupEntryId, cursor.currentPageOrderedEntries[0][0]._soupEntryId, "check _soup's soupEntryId returned");
-            QUnit.equal(expectedEntry.Id, cursor.currentPageOrderedEntries[0][0].Id, "check _soup's Id returned");
-            QUnit.equal(expectedEntry.Name, cursor.currentPageOrderedEntries[0][0].Name, "check _soup's Name returned");
-            QUnit.equal(expectedEntry._soupEntryId, cursor.currentPageOrderedEntries[0][1], "check _soupEntryId returned");
-            QUnit.equal(expectedEntry._soupLastModifiedDate, cursor.currentPageOrderedEntries[0][2], "check _soupLastModifieddate returned");
+            QUnit.equal(cursor.currentPageOrderedEntries[0][0]._soupEntryId, expectedEntry._soupEntryId, "check _soup's soupEntryId returned");
+            QUnit.equal(cursor.currentPageOrderedEntries[0][0].Id, expectedEntry.Id, "check _soup's Id returned");
+            QUnit.equal(cursor.currentPageOrderedEntries[0][0].Name, expectedEntry.Name, "check _soup's Name returned");
+            QUnit.equal(cursor.currentPageOrderedEntries[0][1], expectedEntry._soupEntryId, "check _soupEntryId returned");
+            QUnit.equal(cursor.currentPageOrderedEntries[0][2], expectedEntry._soupLastModifiedDate, "check _soupLastModifieddate returned");
             return self.closeCursor(cursor);
         })
         .done(function(param) { 
@@ -1968,10 +1968,10 @@ SmartStoreTestSuite.prototype.testReIndexSoup = function() {
 SmartStoreTestSuite.prototype.checkSoupIndexes = function(soupName, expectedIndexes) {
     return this.getSoupIndexSpecs(soupName)
         .done(function(soupIndexes) {
-            QUnit.equals(expectedIndexes.length, soupIndexes.length, "Check number of soup indices");
+            QUnit.equals(soupIndexes.length, expectedIndexes.length, "Check number of soup indices");
             for (i = 0; i< expectedIndexes.length; i++) {
-                QUnit.equals(expectedIndexes[i].path, soupIndexes[i].path, "Check path");
-                QUnit.equals(expectedIndexes[i].type, soupIndexes[i].type, "Check type");
+                QUnit.equals(soupIndexes[i].path, expectedIndexes[i].path, "Check path");
+                QUnit.equals(soupIndexes[i].type, expectedIndexes[i].type, "Check type");
             }
         });
 };
@@ -1982,10 +1982,10 @@ SmartStoreTestSuite.prototype.checkSoupIndexes = function(soupName, expectedInde
 SmartStoreTestSuite.prototype.checkSoupSpec = function(soupName, expectedSoupSpec) {
     return this.getSoupSpec(soupName)
         .done(function(soupSpec) {
-            QUnit.equals(expectedSoupSpec.name, soupSpec.name, "Check soup name in soup spec");
-            QUnit.equals(expectedSoupSpec.features.length, soupSpec.features.length, "Check features in soup spec");
+            QUnit.equals(soupSpec.name, expectedSoupSpec.name, "Check soup name in soup spec");
+            QUnit.equals(soupSpec.features.length, expectedSoupSpec.features.length, "Check features in soup spec");
             for (i = 0; i< expectedSoupSpec.features.length; i++) {
-                QUnit.equals(expectedSoupSpec.features[i], soupSpec.features[i], "Check feature");
+                QUnit.equals(soupSpec.features[i], expectedSoupSpec.features[i], "Check feature");
             }
         });
 };
