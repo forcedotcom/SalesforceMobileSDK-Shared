@@ -328,7 +328,7 @@ app.views.OfflineToggler = Backbone.View.extend({
 
     toggle: function(event) {
         event.preventDefault();
-        this.model.set("isOnline", !this.model.get("isOnline"))
+        this.model.set("isOnline", !this.model.get("isOnline"));
         if (this.model.get("isOnline")) {
             app.router.navigate("#sync", {trigger:true});        
         }
@@ -417,6 +417,7 @@ app.views.EditAccountPage = Backbone.View.extend({
     },
 
     render: function(eventName) {
+        if (this.model == null) return;
         this.action = (null == this.model.id) ? "Add" : "Edit";
         if (this.action == "Add") { this.model.set({__local__: false, Name:"", Industry:"", Phone:"", LastModifiedDate:"", attributes : { type: "Account"}}); }
         this.backAction = app.router.getLastPage() || "#";
@@ -586,9 +587,18 @@ app.Router = Backbone.StackRouter.extend({
     },
 
     sync: function() {
-        app.localAccounts.fetch();
-        // Show page right away - list will redraw when data comes in
-        this.slidePage(app.syncPage);
+        var that = this;
+        app.localAccounts.fetch({
+            success: function(data) {
+                // Only go to sync screen if there are records to sync
+                if (app.localAccounts.length > 0) {
+                    that.slidePage(app.syncPage);
+                }
+                else {
+                    app.router.navigate(that.getLastPage(), {trigger:true});
+                }
+            }
+        });
     }
 });
 </script>
