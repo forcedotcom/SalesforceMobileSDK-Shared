@@ -62,7 +62,7 @@ SDKInfoTestSuite.prototype.testGetInfo = function()  {
             // appName
             QUnit.ok(sdkInfo.appName == "SalesforceHybridSDKTestApp" || sdkInfo.appName == "SalesforceHybridTest", "expected different app name");
             // appVersion
-            QUnit.equal(sdkInfo.appVersion, "1.0", "expected different app version");
+            QUnit.ok((cordova.platformId == "ios" && sdkInfo.appVersion == "1.0 (1.0)") || (cordova.platformId == "android" && sdkInfo.appVersion == "1.0"), "expected different app version");
             // forcePluginsAvailable
             QUnit.equal(sdkInfo.forcePluginsAvailable.length, 6, "wrong force plugins");
             sdkInfo.forcePluginsAvailable.sort();
