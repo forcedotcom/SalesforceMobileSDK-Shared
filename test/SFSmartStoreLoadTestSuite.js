@@ -37,7 +37,6 @@ if (typeof SmartStoreLoadTestSuite === 'undefined') {
 var SmartStoreLoadTestSuite = function () {
     AbstractSmartStoreTestSuite.call(this, 
                                      "smartstoreload",
-                                     "PerfTestSoup",
                                      [
 		                                 {path:"key", type:"string"}, 
 		                                 {path:"Id", type:"string"}

@@ -34,6 +34,14 @@ var exec = function(successCB, errorCB, methodName, args) {
 };
 
 /**
+ * SoupSpec consturctor
+ */
+var SoupSpec = function (soupName, features) {
+    this.name = soupName;
+    this.features = features;
+};
+
+/**
  * SoupIndexSpec consturctor
  */
 var SoupIndexSpec = function (path, type) {
@@ -179,6 +187,10 @@ var registerSoup = function (isGlobalStore, soupName, indexSpecs, successCB, err
     exec(successCB, errorCB, "registerSoup", {"soupName": soupName, "indexes": indexSpecs, "isGlobalStore": isGlobalStore});
 };
 
+var registerSoupWithSpec = function (isGlobalStore, soupSpec, indexSpecs, successCB, errorCB) {
+    exec(successCB, errorCB, "registerSoup", {"soupSpec": soupSpec, "indexes": indexSpecs, "isGlobalStore": isGlobalStore});
+};
+
 var removeSoup = function (isGlobalStore, soupName, successCB, errorCB) {
     exec(successCB, errorCB, "removeSoup", {"soupName": soupName, "isGlobalStore": isGlobalStore});
 };
@@ -187,8 +199,16 @@ var getSoupIndexSpecs = function(isGlobalStore, soupName, successCB, errorCB) {
     exec(successCB, errorCB, "getSoupIndexSpecs", {"soupName": soupName, "isGlobalStore": isGlobalStore});
 };
 
+var getSoupSpec = function(isGlobalStore, soupName, successCB, errorCB) {
+    exec(successCB, errorCB, "getSoupSpec", {"soupName": soupName, "isGlobalStore": isGlobalStore});
+};
+
 var alterSoup = function (isGlobalStore, soupName, indexSpecs, reIndexData, successCB, errorCB) {
     exec(successCB, errorCB, "alterSoup", {"soupName": soupName, "indexes": indexSpecs, "reIndexData": reIndexData, "isGlobalStore": isGlobalStore});
+};
+
+var alterSoupWithSpec = function (isGlobalStore, soupName, soupSpec, indexSpecs, reIndexData, successCB, errorCB) {
+    exec(successCB, errorCB, "alterSoup", {"soupName": soupName, "soupSpec": soupSpec, "indexes": indexSpecs, "reIndexData": reIndexData, "isGlobalStore": isGlobalStore});
 };
 
 var reIndexSoup = function (isGlobalStore, soupName, paths, successCB, errorCB) {
@@ -270,6 +290,7 @@ var closeCursor = function (isGlobalStore, cursor, successCB, errorCB) {
  */
 module.exports = {
     alterSoup: alterSoup,
+    alterSoupWithSpec: alterSoupWithSpec,
     buildAllQuerySpec: buildAllQuerySpec,
     buildExactQuerySpec: buildExactQuerySpec,
     buildLikeQuerySpec: buildLikeQuerySpec,
@@ -280,12 +301,14 @@ module.exports = {
     closeCursor: closeCursor,
     getDatabaseSize: getDatabaseSize,
     getSoupIndexSpecs: getSoupIndexSpecs,
+    getSoupSpec: getSoupSpec,
     moveCursorToNextPage: moveCursorToNextPage,
     moveCursorToPageIndex: moveCursorToPageIndex,
     moveCursorToPreviousPage: moveCursorToPreviousPage,
     querySoup: querySoup,
     reIndexSoup: reIndexSoup,
     registerSoup: registerSoup,
+    registerSoupWithSpec: registerSoupWithSpec,
     removeFromSoup: removeFromSoup,
     removeSoup: removeSoup,
     retrieveSoupEntries: retrieveSoupEntries,
@@ -296,6 +319,7 @@ module.exports = {
     upsertSoupEntriesWithExternalId: upsertSoupEntriesWithExternalId,
 
     // Constructors
+    SoupSpec: SoupSpec,
     QuerySpec: QuerySpec,
     SoupIndexSpec: SoupIndexSpec,
     StoreCursor: StoreCursor

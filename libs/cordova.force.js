@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "4.2.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "4.3.0";
 
 /**
  * Utilify functions for logging
@@ -474,6 +474,14 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     var exec = require("com.salesforce.util.exec").exec;
 
     /**
+     * SoupSpec constructor
+     */
+    var SoupSpec = function (soupName, features) {
+        this.name = soupName;
+        this.features = features;
+    };
+
+    /**
      * SoupIndexSpec consturctor
      */
     var SoupIndexSpec = function (path, type) {
@@ -667,6 +675,15 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
             );
     };
 
+    var registerSoupWithSpec = function (isGlobalStore, soupSpec, indexSpecs, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        storeConsole.debug("SmartStore.registerSoupWithSpec:isGlobalStore=" +isGlobalStore+ ",soupSpec="+ JSON.stringify(soupSpec) + ",indexSpecs=" + JSON.stringify(indexSpecs));
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgRegisterSoup",
+             [{"soupSpec": soupSpec, "indexes": indexSpecs, "isGlobalStore": isGlobalStore}]
+            );
+    };
+
     var removeSoup = function (isGlobalStore, soupName, successCB, errorCB) {
         if (checkFirstArg(arguments)) return;
         storeConsole.debug("SmartStore.removeSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName);
@@ -685,12 +702,30 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
             );
     };
 
+    var getSoupSpec = function(isGlobalStore, soupName, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        storeConsole.debug("SmartStore.getSoupSpec:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName);
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgGetSoupSpec",
+             [{"soupName": soupName, "isGlobalStore": isGlobalStore}]
+            );
+    };
+
     var alterSoup = function (isGlobalStore, soupName, indexSpecs, reIndexData, successCB, errorCB) {
         if (checkFirstArg(arguments)) return;
-        storeConsole.debug("SmartStore.alterSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",indexSpecs=" + JSON.stringify(indexSpecs));
+        storeConsole.debug("SmartStore.alterSoup:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",indexSpecs=" + JSON.stringify(indexSpecs) + ",reIndexData=" + reIndexData);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgAlterSoup",
              [{"soupName": soupName, "indexes": indexSpecs, "reIndexData": reIndexData, "isGlobalStore": isGlobalStore}]
+            );
+    };
+
+    var alterSoupWithSpec = function (isGlobalStore, soupName, soupSpec, indexSpecs, reIndexData, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        storeConsole.debug("SmartStore.alterSoupWithSpec:isGlobalStore=" +isGlobalStore+ ",soupName=" + soupName + ",soupSpec=" + JSON.stringify(soupSpec) + ",indexSpecs=" + JSON.stringify(indexSpecs) + ",reIndexData=" + reIndexData);
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgAlterSoup",
+             [{"soupName": soupName, "soupSpec": soupSpec, "indexes": indexSpecs, "reIndexData": reIndexData, "isGlobalStore": isGlobalStore}]
             );
     };
 
@@ -827,6 +862,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
      */
     module.exports = {
         alterSoup: alterSoup,
+        alterSoupWithSpec: alterSoupWithSpec,
         buildAllQuerySpec: buildAllQuerySpec,
         buildExactQuerySpec: buildExactQuerySpec,
         buildLikeQuerySpec: buildLikeQuerySpec,
@@ -838,12 +874,14 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         getDatabaseSize: getDatabaseSize,
         getLogLevel: getLogLevel,
         getSoupIndexSpecs: getSoupIndexSpecs,
+        getSoupSpec: getSoupSpec,
         moveCursorToNextPage: moveCursorToNextPage,
         moveCursorToPageIndex: moveCursorToPageIndex,
         moveCursorToPreviousPage: moveCursorToPreviousPage,
         querySoup: querySoup,
         reIndexSoup: reIndexSoup,
         registerSoup: registerSoup,
+        registerSoupWithSpec: registerSoupWithSpec,
         removeFromSoup: removeFromSoup,
         removeSoup: removeSoup,
         retrieveSoupEntries: retrieveSoupEntries,
@@ -855,6 +893,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         upsertSoupEntriesWithExternalId: upsertSoupEntriesWithExternalId,
 
         // Constructors
+        SoupSpec: SoupSpec,
         QuerySpec: QuerySpec,
         SoupIndexSpec: SoupIndexSpec,
         StoreCursor: StoreCursor

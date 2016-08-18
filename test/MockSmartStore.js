@@ -38,6 +38,7 @@ var MockSmartStore = (function(window) {
         this._soups = {};     
         this._soupIndexedData = {}; 
         this._soupIndexSpecs = {};
+        this._soupSpecs = {};
         this._cursors = {};
         this._nextSoupEltIds = {};
         this._nextCursorId = 1;
@@ -51,6 +52,7 @@ var MockSmartStore = (function(window) {
             this._soups = {};
             this._soupIndexedData = {};
             this._soupIndexSpecs = {};
+            this._soupSpecs = {};
             this._cursors = {};
             this._nextSoupEltIds = {};
             this._nextCursorId = 1;
@@ -81,6 +83,7 @@ var MockSmartStore = (function(window) {
                 soups: this._soups,
                 soupIndexedData: this._soupIndexedData,
                 soupIndexSpecs: this._soupIndexSpecs,
+                soupSpecs: this._soupSpecs,
                 cursors: this._cursors,
                 nextSoupEltIds: this._nextSoupEltIds,
                 nextCursorId: this._nextCursorId
@@ -92,6 +95,7 @@ var MockSmartStore = (function(window) {
             this._soups = obj.soups;
             this._soupIndexedData = obj.soupIndexedData;
             this._soupIndexSpecs = obj.soupIndexSpecs;
+            this._soupSpecs = obj.soupSpecs;
             this._cursors = obj.cursors;
             this._nextSoupEltIds = obj.nextSoupEltIds;
             this._nextCursorId = obj.nextCursorId;
@@ -122,10 +126,11 @@ var MockSmartStore = (function(window) {
             return false;
         },
 
-        registerSoup: function(soupName, indexSpecs) {
+        registerSoup: function(soupName, soupSpec, indexSpecs) {
             if (!this.soupExists(soupName)) {
                 this._soups[soupName] = {};
                 this._soupIndexSpecs[soupName] = indexSpecs;
+                this._soupSpecs[soupName] = soupSpec;
                 this._soupIndexedData[soupName] = {};
             }
             return soupName;
@@ -134,6 +139,7 @@ var MockSmartStore = (function(window) {
         removeSoup: function(soupName) {
             delete this._soups[soupName];
             delete this._soupIndexSpecs[soupName];
+            delete this._soupSpecs[soupName];
             delete this._nextSoupEltIds[soupName];
         },
 
@@ -142,7 +148,12 @@ var MockSmartStore = (function(window) {
             return this._soupIndexSpecs[soupName];
         },
 
-        alterSoup: function(soupName, indexSpecs, reIndexData) {
+        getSoupSpec: function(soupName) {
+            this.checkSoup(soupName);
+            return this._soupSpecs[soupName];
+        },
+
+        alterSoup: function(soupName, soupSpec, indexSpecs, reIndexData) {
             this.checkSoup(soupName); 
 
             // Gather path---type of old index specs
@@ -155,6 +166,9 @@ var MockSmartStore = (function(window) {
 
             // Update this._soupIndexSpecs
             this._soupIndexSpecs[soupName] = indexSpecs;
+
+            // Update this._soupSpecs
+            this._soupSpecs[soupName] = soupSpec;
 
             // Update soupIndexedData
             var soup = this._soups[soupName];
@@ -814,11 +828,12 @@ var mockGlobalStore = new MockSmartStore(true);
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgRegisterSoup", function (successCB, errorCB, args) {
         var targetStore = args[0].isGlobalStore ? globalStore : store;
-        var soupName = args[0].soupName;
+        var soupSpec = args[0].soupSpec == null ? {name: args[0].soupName, features: []} : args[0].soupSpec;
+        var soupName = args[0].soupName == null ? soupSpec.name : args[0].soupName;
         var indexSpecs = args[0].indexes;
         if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
         if (indexSpecs !== undefined && indexSpecs.length == 0) {errorCB("No indexSpecs specified for soup: " + soupName); return;}
-        successCB(targetStore.registerSoup(soupName, indexSpecs));
+        successCB(targetStore.registerSoup(soupName, soupSpec, indexSpecs));
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgRemoveSoup", function (successCB, errorCB, args) {
@@ -844,11 +859,12 @@ var mockGlobalStore = new MockSmartStore(true);
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgAlterSoup", function (successCB, errorCB, args) {
         var targetStore = args[0].isGlobalStore ? globalStore : store;
-        var soupName = args[0].soupName;
+        var soupSpec = args[0].soupSpec == null ? {name: args[0].soupName, features: []} : args[0].soupSpec;
+        var soupName = args[0].soupName == null ? soupSpec.name : args[0].soupName;
         var indexSpecs = args[0].indexes;
         var reIndexData = args[0].reIndexData;
         if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
-        successCB(targetStore.alterSoup(soupName, indexSpecs, reIndexData));
+        successCB(targetStore.alterSoup(soupName, soupSpec, indexSpecs, reIndexData));
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgReIndexSoup", function (successCB, errorCB, args) {
@@ -916,6 +932,12 @@ var mockGlobalStore = new MockSmartStore(true);
         if (successCB) {
             successCB("OK");
         }
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgGetSoupSpec", function (successCB, errorCB, args) {
+        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var soupName = args[0].soupName;
+        successCB(targetStore.getSoupSpec(soupName));
     });
 
 })(cordova, mockStore, mockGlobalStore);
