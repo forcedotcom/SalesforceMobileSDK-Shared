@@ -45,7 +45,7 @@ function main(args) {
 
     // Args extraction
     var usageRequested = parsedArgs.hasOwnProperty('usage');
-    var version = parsedArgs.version || '4.3.0';
+    var version = parsedArgs.version || '5.0.0';
     var chosenOperatingSystems = cleanSplit(parsedArgs.os, ',');
     var fork = parsedArgs.fork || 'forcedotcom';
     var branch = parsedArgs.branch || 'unstable';
@@ -118,7 +118,7 @@ function usage() {
         + '      where osN are : ios, android\n'
         + '    --test=appType1,appType2,etc\n'
         + '      where appTypeN are in: native, native_swift, react_native, hybrid_local, hybrid_remote\n'
-        + '    [--version=x.y.z (defaults to 4.3.0)]\n'
+        + '    [--version=x.y.z (defaults to 5.0.0)]\n'
         + '    [--fork=FORK (defaults to forcedotcom)]\n'
         + '    [--branch=BRANCH (defaults to unstable)]\n'
         + '    [--plugin_fork=PLUGIN_FORK (defaults to forcedotcom)]\n'
