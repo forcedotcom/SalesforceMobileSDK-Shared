@@ -11,7 +11,7 @@ var getCordovaCliVersion = function() {
         return null;
     }
 
-    var cordovaCliVersion = cordovaVersionResult.stdout.replace('\n', '');
+    var cordovaCliVersion = cordovaVersionResult.stdout.replace(/\r?\n|\r/, '');
     return cordovaCliVersion;
 };
 
