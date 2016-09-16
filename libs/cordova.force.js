@@ -366,7 +366,7 @@ cordova.define("com.salesforce.plugin.network", function(require, exports, modul
     var exec = require("com.salesforce.util.exec").exec;
 
     /**
-     * Returns a populated SDKInfo object (via a callback).
+     * Sends a network request using the native network stack.
      */
     var sendRequest = function(endPoint, path, successCB, errorCB, method, payload, headerParams, fileParams) {
         method = method || "GET";

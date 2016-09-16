@@ -107,6 +107,9 @@ if (forcetk.Client === undefined) {
         this.asyncAjax = true;
         this.userAgentString = this.computeWebAppSdkAgent(navigator.userAgent);
         this.authCallback = authCallback;
+        if (typeof useNativeNetworking === 'undefined') {
+            useNativeNetworking = true;
+        }
         this.useNativeNetworking = useNativeNetworking;
     }
 
