@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, salesforce.com, inc.
+ * Copyright (c) 2013-present, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -73,13 +73,30 @@ if (forcetk.Client === undefined) {
      * @constructor
      */
     forcetk.Client = function(clientId, loginUrl, proxyUrl, authCallback) {
+        forcetk.Client(clientId, loginUrl, proxyUrl, null, true);
+    }
+
+    /**
+     * The Client provides a convenient wrapper for the Force.com REST API,
+     * allowing JavaScript in Visualforce pages to use the API via the Ajax
+     * Proxy.
+     * @param [clientId=null] 'Consumer Key' in the Remote Access app settings
+     * @param [loginUrl='https://login.salesforce.com/'] Login endpoint
+     * @param [proxyUrl=null] Proxy URL. Omit if running on Visualforce or
+     *                  Cordova etc
+     * @param authCallback Callback method to perform authentication when 401 is received.
+     * @param useNativeNetworking True - if native network stack should be used, False - otherwise.
+     * @constructor
+     */
+    forcetk.Client = function(clientId, loginUrl, proxyUrl, authCallback, useNativeNetworking) {
         this.clientId = clientId;
         this.loginUrl = loginUrl || 'https://login.salesforce.com/';
         if (typeof proxyUrl === 'undefined' || proxyUrl === null) {
             this.proxyUrl = null;
             this.authzHeader = "Authorization";
         } else {
-            // On an external proxy service
+
+            // On an external proxy service.
             this.proxyUrl = proxyUrl;
             this.authzHeader = "X-Authorization";
         }
@@ -90,27 +107,27 @@ if (forcetk.Client === undefined) {
         this.asyncAjax = true;
         this.userAgentString = this.computeWebAppSdkAgent(navigator.userAgent);
         this.authCallback = authCallback;
+        this.useNativeNetworking = useNativeNetworking;
     }
 
     /**
-    * Set a User-Agent to use in the client.
-    * @param uaString A User-Agent string to use for all requests.
-    */
+     * Set a User-Agent to use in the client.
+     * @param uaString A User-Agent string to use for all requests.
+     */
     forcetk.Client.prototype.setUserAgentString = function(uaString) {
         this.userAgentString = uaString;
     }
 
     /**
-    * Get User-Agent used by this client.
-    */
+     * Get User-Agent used by this client.
+     */
     forcetk.Client.prototype.getUserAgentString = function() {
         return this.userAgentString;
     }
 
-
     /**
-    * Compute SalesforceMobileSDK for web app
-    */
+     * Compute SalesforceMobileSDK for web app.
+     */
     forcetk.Client.prototype.computeWebAppSdkAgent = function(navigatorUserAgent) {
         var sdkVersion = SALESFORCE_MOBILE_SDK_VERSION;
         var model = "Unknown"
@@ -299,56 +316,61 @@ if (forcetk.Client === undefined) {
      */
     var ajaxRequestId = 0;
     forcetk.Client.prototype.ajax = function(path, callback, error, method, payload, headerParams) {
-        var tag = "";
-        var that = this;
-        var retryCount = 0;
-        var url = (path.indexOf(this.instanceUrl) == 0 ? path : this.instanceUrl + (path.indexOf('/services/data') == 0 ? path : '/services/data' + path));
-        return $j.ajax({
-            type: method || "GET",
-            async: this.asyncAjax,
-            url: (this.proxyUrl !== null) ? this.proxyUrl: url,
-            contentType: method == "DELETE" || method == "GET" ? null : 'application/json',
-            cache: false,
-            processData: false,
-            dataType: "json",
-            data: payload,
-            headers: getRequestHeaders(this),
-            success: function() {
-                console.timeEnd(tag);
-                callback.apply(null, arguments);
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.timeEnd(tag);
-                var xhr = this;
-                var errorCallback = function() {
-                    if (typeof error == 'function') {
-                        error(jqXHR, textStatus, errorThrown);
+        if (this.useNativeNetworking) {
+            cordova.require("com.salesforce.plugin.network").sendRequest('/services/data', path, callback, error, method, payload, headerParams);
+        } else {
+            var tag = "";
+            var that = this;
+            var retryCount = 0;
+            var url = (path.indexOf(this.instanceUrl) == 0 ? path : this.instanceUrl + (path.indexOf('/services/data') == 0 ? path : '/services/data' + path));
+            return $j.ajax({
+                type: method || "GET",
+                async: this.asyncAjax,
+                url: (this.proxyUrl !== null) ? this.proxyUrl: url,
+                contentType: method == "DELETE" || method == "GET" ? null : 'application/json',
+                cache: false,
+                processData: false,
+                dataType: "json",
+                data: payload,
+                headers: getRequestHeaders(this),
+                success: function() {
+                    console.timeEnd(tag);
+                    callback.apply(null, arguments);
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.timeEnd(tag);
+                    var xhr = this;
+                    var errorCallback = function() {
+                        if (typeof error == 'function') {
+                            error(jqXHR, textStatus, errorThrown);
+                        }
+                    }
+                    if (jqXHR.status === 401 && retryCount++ == 0) {
+                        that.refreshAccessToken(function() {
+                            that.replay(xhr);
+                        },
+                        errorCallback);
+                    } else errorCallback();
+                },
+                beforeSend: function(xhr) {
+
+                    // Timing.
+                    ajaxRequestId++;
+                    var a = document.createElement("a");
+                    a.href = url;
+                    tag = "TIMING " + a.pathname + "(#" + ajaxRequestId + ")";
+                    console.time(tag);
+                    if (that.proxyUrl !== null) {
+                        xhr.setRequestHeader('SalesforceProxy-Endpoint', url);
+                    }
+
+                    //Add any custom headers.
+                    for (paramName in (headerParams || {})) {
+                        xhr.setRequestHeader(paramName, headerParams[paramName]);
                     }
                 }
-                if (jqXHR.status === 401 && retryCount++ == 0) {
-                    that.refreshAccessToken(function() {
-                        that.replay(xhr);
-                    },
-                    errorCallback);
-                } else errorCallback();
-            },
-            beforeSend: function(xhr) {
-                // Timing
-                ajaxRequestId++;
-                var a = document.createElement("a");
-                a.href = url;
-                tag = "TIMING " + a.pathname + "(#" + ajaxRequestId + ")";
-                console.time(tag);
-
-                if (that.proxyUrl !== null) {
-                    xhr.setRequestHeader('SalesforceProxy-Endpoint', url);
-                }
-                //Add any custom headers
-                for (paramName in (headerParams || {})) {
-                    xhr.setRequestHeader(paramName, headerParams[paramName]);
-                }
-            }
-        });
+            });
+        }
     }
 
     /*
