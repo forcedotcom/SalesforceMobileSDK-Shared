@@ -42,6 +42,10 @@ module.exports = [
     {
         "file": "plugins/com.salesforce/com.salesforce.util.push.js",
         "id": "com.salesforce.util.push"
+    },
+    {
+        "file": "plugins/com.salesforce/com.salesforce.plugin.network.js",
+        "id": "com.salesforce.plugin.network"
     }
 ];
 module.exports.metadata = 
