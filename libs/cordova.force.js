@@ -361,6 +361,35 @@ cordova.define("com.salesforce.plugin.oauth", function (require, exports, module
 // For backward compatibility
 var SalesforceOAuthPlugin = cordova.require("com.salesforce.plugin.oauth");
 
+cordova.define("com.salesforce.plugin.network", function(require, exports, module) {
+    var SERVICE = "com.salesforce.network";
+    var exec = require("com.salesforce.util.exec").exec;
+
+    /**
+     * Sends a network request using the native network stack.
+     */
+    var sendRequest = function(endPoint, path, successCB, errorCB, method, payload, headerParams, fileParams) {
+        method = method || "GET";
+        payload = payload || {};
+        headerParams = headerParams || {};
+
+        /*
+         * File params expected to be of the form:
+         * {<fileParamNameInPost>: {fileMimeType:<someMimeType>, fileUrl:<fileUrl>, fileName:<fileNameForPost>}}.
+         */
+        fileParams = fileParams || {}; 
+        var args = {endPoint: endPoint, path:path, method:method, queryParams:payload, headerParams:headerParams, fileParams: fileParams};
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE, "pgSendRequest", [args]);
+    };
+
+    /**
+     * Part of the module that is public.
+     */
+    module.exports = {
+        sendRequest: sendRequest
+    };
+});
+
 cordova.define("com.salesforce.plugin.sfaccountmanager", function (require, exports, module) {
     var SERVICE = "com.salesforce.sfaccountmanager";
 
