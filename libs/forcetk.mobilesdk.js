@@ -73,7 +73,7 @@ if (forcetk.Client === undefined) {
      * @constructor
      */
     forcetk.Client = function(clientId, loginUrl, proxyUrl, authCallback) {
-        forcetk.Client(clientId, loginUrl, proxyUrl, null, true);
+        forcetk.Client(clientId, loginUrl, proxyUrl, null, false);
     }
 
     /**
@@ -85,10 +85,10 @@ if (forcetk.Client === undefined) {
      * @param [proxyUrl=null] Proxy URL. Omit if running on Visualforce or
      *                  Cordova etc
      * @param authCallback Callback method to perform authentication when 401 is received.
-     * @param useNativeNetworking True - if native network stack should be used, False - otherwise.
+     * @param useXhrNetworking True - is XHR should be used, False - if native network stack should be used.
      * @constructor
      */
-    forcetk.Client = function(clientId, loginUrl, proxyUrl, authCallback, useNativeNetworking) {
+    forcetk.Client = function(clientId, loginUrl, proxyUrl, authCallback, useXhrNetworking) {
         this.clientId = clientId;
         this.loginUrl = loginUrl || 'https://login.salesforce.com/';
         if (typeof proxyUrl === 'undefined' || proxyUrl === null) {
@@ -107,10 +107,7 @@ if (forcetk.Client === undefined) {
         this.asyncAjax = true;
         this.userAgentString = this.computeWebAppSdkAgent(navigator.userAgent);
         this.authCallback = authCallback;
-        if (typeof useNativeNetworking === 'undefined') {
-            useNativeNetworking = true;
-        }
-        this.useNativeNetworking = useNativeNetworking;
+        this.useXhrNetworking = useXhrNetworking;
     }
 
     /**
@@ -319,9 +316,7 @@ if (forcetk.Client === undefined) {
      */
     var ajaxRequestId = 0;
     forcetk.Client.prototype.ajax = function(path, callback, error, method, payload, headerParams) {
-        if (this.useNativeNetworking) {
-            cordova.require("com.salesforce.plugin.network").sendRequest('/services/data', path, callback, error, method, payload, headerParams);
-        } else {
+        if (this.useXhrNetworking) {
             var tag = "";
             var that = this;
             var retryCount = 0;
@@ -373,6 +368,8 @@ if (forcetk.Client === undefined) {
                     }
                 }
             });
+        } else {
+            cordova.require("com.salesforce.plugin.network").sendRequest('/services/data', path, callback, error, method, payload, headerParams);
         }
     }
 
