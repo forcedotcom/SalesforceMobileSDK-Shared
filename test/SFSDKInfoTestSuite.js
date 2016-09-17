@@ -64,7 +64,7 @@ SDKInfoTestSuite.prototype.testGetInfo = function()  {
             // appVersion
             QUnit.ok((cordova.platformId == "ios" && sdkInfo.appVersion == "1.0(1.0)") || (cordova.platformId == "android" && sdkInfo.appVersion == "1.0"), "expected different app version");
             // forcePluginsAvailable
-            QUnit.equal(sdkInfo.forcePluginsAvailable.length, 6, "wrong force plugins");
+            QUnit.equal(sdkInfo.forcePluginsAvailable.length, 7, "wrong force plugins");
             sdkInfo.forcePluginsAvailable.sort();
             QUnit.equal(sdkInfo.forcePluginsAvailable[0], "com.salesforce.network", "wrong force plugins");
             QUnit.equal(sdkInfo.forcePluginsAvailable[1], "com.salesforce.oauth", "wrong force plugins");
