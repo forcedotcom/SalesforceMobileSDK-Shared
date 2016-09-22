@@ -27,6 +27,7 @@
 /**
  * MockSmartSyncPlugin
  * Meant for development and testing only, the data is stored in SessionStorage, queries do full scans.
+ * NB Only supports soql-sync-down.
  */
 
 var MockSmartSyncPlugin = (function(window) {
@@ -124,6 +125,31 @@ var MockSmartSyncPlugin = (function(window) {
 
         reSync: function(syncId, successCB, errorCB) {
             this.actualSyncDown(syncId, successCB, errorCB);
+        },
+
+        cleanResyncGhosts: function(syncId, successCB, errorCB) {
+            var self = this;
+            var sync = this.syncs[syncId];
+            var target = sync.target;
+            var soupName = sync.soupName;
+            var cache = new Force.StoreCache(soupName, null, null, this.isGlobalStore);
+            cache.find({queryType:"range", orderPath:cache.keyField, pageSize:500}) // XXX not handling case with more than 500 local ids
+                .then(function(result) {
+                    var localIds = _.pluck(result.records, cache.keyField);
+                    var collection = new Force.SObjectCollection();
+                    var soqlTemplate = "SELECT " + cache.keyField + " $1 WHERE " + cache.keyField + " IN ('" + localIds.join("','") + "')";
+                    var soql = target.query.replace(/.*( [fF][rR][oO][mM][ ]+[^ ]*[ ]).*/, soqlTemplate); 
+                    collection.config = {type:"soql", query:soql};
+                    collection.fetch({
+                        success: function() {
+                            var remoteIds = _.pluck(_.pluck(collection.models, "attributes"), cache.keyField);
+                            var idsToRemove = _.difference(localIds, remoteIds);
+                            _.each(idsToRemove, function(id) { cache.remove(id); });
+                            successCB();
+                        },
+                        error: errorCB
+                    });
+                });
         },
 
         addFilterForReSync: function(query, maxTimeStamp) {
@@ -240,6 +266,12 @@ var mockGlobalSyncManager = new MockSmartSyncPlugin(true);
         var mgr = args[0].isGlobalStore ? globalSyncManager : syncManager;
         mgr.reSync(args[0].syncId, successCB, errorCB); 
     });
+
+    cordova.interceptExec(SMARTSYNC_SERVICE, "cleanResyncGhosts", function (successCB, errorCB, args) {
+        var mgr = args[0].isGlobalStore ? globalSyncManager : syncManager;
+        mgr.cleanResyncGhosts(args[0].syncId, successCB, errorCB); 
+    });
+
 
 })(cordova, mockSyncManager, mockGlobalSyncManager);
 
