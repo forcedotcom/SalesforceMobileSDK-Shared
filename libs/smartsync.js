@@ -92,13 +92,14 @@
     // * apiVersion: apiVersion to use, when null, v36.0 (Spring '16) is used
     // * innerForcetkClient: [Optional] A fully initialized forcetkClient to be re-used internally in the SmartSync library
     // * reauth: auth module for the refresh flow
-    Force.init = function(creds, apiVersion, innerForcetkClient, reauth) {
+    // * useXhrNetworking True - is XHR should be used, False - if native network stack should be used.
+    Force.init = function(creds, apiVersion, innerForcetkClient, reauth, useXhrNetworking) {
         if (!apiVersion || apiVersion == null) {
             apiVersion = "v36.0";
         }
 
         if(!innerForcetkClient || innerForcetkClient == null) {
-            innerForcetkClient = new forcetk.Client(creds.clientId, creds.loginUrl, creds.proxyUrl, reauth);
+            innerForcetkClient = new forcetk.Client(creds.clientId, creds.loginUrl, creds.proxyUrl, reauth, useXhrNetworking);
             innerForcetkClient.setSessionToken(creds.accessToken, apiVersion, creds.instanceUrl);
             innerForcetkClient.setRefreshToken(creds.refreshToken);
             innerForcetkClient.setUserAgentString(patchUserAgent(creds.userAgent || innerForcetkClient.getUserAgentString()));

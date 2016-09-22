@@ -50,7 +50,7 @@
                                              accessToken: oauthClient.oauthResponse.access_token,
                                              instanceUrl: oauthClient.oauthResponse.instance_url
                                          };
-                                         Force.init(creds, null, null, null);
+                                         Force.init(creds, null, null, null, true /* use xhr networking */);
                                      },
                                      function forceOAuthUI_errorHandler(error) { // errorCallback
                                          console.log('OAuth error!');
