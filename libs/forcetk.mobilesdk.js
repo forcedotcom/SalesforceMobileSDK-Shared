@@ -578,7 +578,7 @@ if (forcetk.Client === undefined) {
      */
     forcetk.Client.prototype.upsert = function(objtype, externalIdField, externalId, fields, callback, error) {
         return this.ajax('/' + this.apiVersion + '/sobjects/' + objtype + '/' + externalIdField + '/' + externalId
-        + '?_HttpMethod=PATCH', callback, error, "POST", JSON.stringify(fields));
+                         , callback, error, "PATCH", JSON.stringify(fields));
     }
 
     /*
@@ -593,7 +593,7 @@ if (forcetk.Client === undefined) {
      */
     forcetk.Client.prototype.update = function(objtype, id, fields, callback, error) {
         return this.ajax('/' + this.apiVersion + '/sobjects/' + objtype + '/' + id
-        + '?_HttpMethod=PATCH', callback, error, "POST", JSON.stringify(fields));
+                         , callback, error, "PATCH", JSON.stringify(fields));
     }
 
     /*
