@@ -731,14 +731,16 @@ var MockSmartStore = (function(window) {
             for (var soupEntryId in soup) {
                 var soupElt = soup[soupEntryId];
                 var projection = querySpec.indexPath == null ? null : this.getTypedIndexedData(soupName, querySpec.indexPath, soupEntryId);
+                var type = this.typeForPath(soupName, querySpec.indexPath);                
+
                 if (querySpec.queryType === "exact") {
-                    if (projection == querySpec.matchKey) {
+                    if (projection == this.asType(type, querySpec.matchKey)) {
                         results.push(soupElt);
                     }
                 }
                 else if (querySpec.queryType === "range") {
-                    if ((querySpec.beginKey == null || projection >= querySpec.beginKey)
-                        && (querySpec.endKey == null || projection <= querySpec.endKey)) {
+                    if ((querySpec.beginKey == null || projection >= this.asType(type, querySpec.beginKey))
+                        && (querySpec.endKey == null || projection <= this.asType(type, querySpec.endKey))) {
                         results.push(soupElt);
                     }
                 }
