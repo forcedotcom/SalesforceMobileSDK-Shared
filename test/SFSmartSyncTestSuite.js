@@ -2357,12 +2357,13 @@ SmartSyncTestSuite.prototype.testFetchApexRestObjectsFromServer = function() {
     console.log("# In SmartSyncTestSuite.testFetchApexRestObjectsFromServer");
     var self = this;
     var idToName = {};
+    var accountNamePrefix = "testFetchApexRestObjectsFromServer" + (new Date()).getTime(); // because we query by name, we don't want to pick up records created by another test run
 
     console.log("## Direct creation against server");    
-    createRecords(idToName, "testFetchApexRestObjectsFromServer", 3)
+    createRecords(idToName, accountNamePrefix, 3)
         .then(function() {
             console.log("## Trying fetch with apex rest end point");
-            var config = {apexRestPath: "/simpleAccounts", params: {namePattern:"testFetchApexRestObjectsFromServer%"}};
+            var config = {apexRestPath: "/simpleAccounts", params: {namePattern:accountNamePrefix + "%"}};
             return Force.fetchApexRestObjectsFromServer(config);
         })
         .then(function(result) {
@@ -2694,7 +2695,7 @@ SmartSyncTestSuite.prototype.testSyncDownToGlobalStore = function() {
         })
         .then(function() { 
             console.log("## Direct creation against server");    
-            return createRecords(idToName, "testSyncDown", 3);
+            return createRecords(idToName, "testSyncDownToGlobalStore", 3);
         })
         .then(function() {
             console.log("## Calling sync down");
@@ -2735,7 +2736,7 @@ SmartSyncTestSuite.prototype.testSyncDownWithNoOverwrite = function() {
         })
         .then(function() { 
             console.log("## Direct creation against server");    
-            return createRecords(idToName, "testFetchSObjects", 3);
+            return createRecords(idToName, "testSyncDownWithNoOverwrite", 3);
         })
         .then(function() {
             console.log("## Calling sync down");
@@ -2810,7 +2811,7 @@ SmartSyncTestSuite.prototype.testReSync = function() {
         })
         .then(function() { 
             console.log("## Direct creation against server");    
-            return createRecords(idToName, "testSyncDown", 3);
+            return createRecords(idToName, "testReSync", 3);
         })
         .then(function() {
             console.log("## Calling sync down");
