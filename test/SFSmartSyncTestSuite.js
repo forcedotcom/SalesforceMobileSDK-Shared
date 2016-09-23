@@ -2792,6 +2792,55 @@ SmartSyncTestSuite.prototype.testSyncDownWithNoOverwrite = function() {
 };
 
 /** 
+ * TEST smartsyncplugin sync down with refresh-sync-down
+ */
+SmartSyncTestSuite.prototype.testRefreshSyncDown = function() {
+    console.log("# In SmartSyncTestSuite.testRefreshSyncDown");
+    var self = this;
+    var idToName = {};
+    var idToUpdatedName = {};
+    var soupName = "testRefreshSyncDown";
+    var cache;
+
+    Force.smartstoreClient.removeSoup(soupName)
+        .then(function() {
+            console.log("## Initialization of StoreCache's");
+            cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
+            return $.when(cache.init());
+        })
+        .then(function() { 
+            console.log("## Direct creation against server");    
+            return createRecords(idToName, "testSyncDown", 3);
+        })
+        .then(function() {
+            console.log("## Calling sync down");
+            return self.trySyncDown(cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
+        })
+        .then(function() {
+            console.log("## Updating records on server");
+            idToUpdatedName = {};
+            var ids = [_.keys(idToName)[0], _.keys(idToName)[2]];
+            _.each(ids, function(id) {
+                idToUpdatedName[id] = idToName[id] + "Updated";
+            });
+            return updateRecords(idToUpdatedName);
+        })
+        .then(function() {
+            console.log("## Calling refresh sync down");
+            idToName = _.extend(idToName, idToUpdatedName);
+            var target = {type:"refresh", objectType:"Account", fieldlist:["Id", "Name"]};
+            return self.trySyncDown(cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE, target);
+        })
+        .then(function() {
+            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
+
+/** 
  * TEST smartsyncplugin reSync
  */
 SmartSyncTestSuite.prototype.testReSync = function() {
@@ -3578,10 +3627,10 @@ var tryConflictDetection = function(message, cache, cacheForOriginals, theirs, y
 /**
  Helper function to run sync down and consume all status updates until done
  */
-SmartSyncTestSuite.prototype.trySyncDown = function(cache, soupName, idToName, mergeMode) {
+SmartSyncTestSuite.prototype.trySyncDown = function(cache, soupName, idToName, mergeMode, target) {
     var isGlobalStore = cache.isGlobalStore;
     var options = {mergeMode: mergeMode};
-    var target = {type:"soql", query:"SELECT Id, Name, LastModifiedDate FROM Account WHERE Id IN ('" +  _.keys(idToName).join("','") + "') ORDER BY Name"};
+    target = target || {type:"soql", query:"SELECT Id, Name, LastModifiedDate FROM Account WHERE Id IN ('" +  _.keys(idToName).join("','") + "') ORDER BY Name"};
     var numberRecords = _.keys(idToName).length;
     var syncDownId;
     return this.syncDown(isGlobalStore, target, soupName, options)
