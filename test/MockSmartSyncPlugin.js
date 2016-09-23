@@ -27,7 +27,7 @@
 /**
  * MockSmartSyncPlugin
  * Meant for development and testing only, the data is stored in SessionStorage, queries do full scans.
- * NB Only supports soql-sync-down.
+ * NB: cleanResyncGhosts only works for soql sync down
  */
 
 var MockSmartSyncPlugin = (function(window) {
@@ -68,7 +68,6 @@ var MockSmartSyncPlugin = (function(window) {
                 errorCB("Wrong target type: " + target.type);
                 return;
             }
-
             var syncId = this.recordSync("syncDown", target, soupName, options);
             this.actualSyncDown(syncId, successCB, errorCB);
         },
@@ -110,16 +109,33 @@ var MockSmartSyncPlugin = (function(window) {
 
 
             self.sendUpdate(syncId, "RUNNING", 0);
+
+            var fetchOptions = {
+                success: onFetch,
+                error: function() {
+                    self.sendUpdate(syncId, "FAILED", 0);
+                },
+                mergeMode: options.mergeMode
+            };
+            
             cache.init().then(function() {
                 successCB(sync);
 
-                collection.fetch({
-                    success: onFetch,
-                    error: function() {
-                        self.sendUpdate(syncId, "FAILED", 0);
-                    },
-                    mergeMode: options.mergeMode
-                });
+                if (target.type == "refresh") {
+                    // smartsync.js doesn't have something equivalent to the (new in 5.0) refresh sync down
+                    // So we need to get the local ids, build a soql query out of them
+                    // And use that for the collection
+                    cache.find({queryType:"range", orderPath:cache.keyField, pageSize:500}) // XXX not handling case with more than 500 local ids
+                        .then(function(result) {
+                            var localIds = _.pluck(result.records, cache.keyField);
+                            var soql = "SELECT " + target.fieldlist.join(",") + " FROM " + target.objectType + " WHERE Id IN ('" + localIds.join("','") + "')";
+                            collection.config = {type:"soql", query: soql};
+                            collection.fetch(fetchOptions);
+                        });
+                }
+                else {
+                    collection.fetch(fetchOptions);
+                }
             });
         },
 
@@ -138,6 +154,7 @@ var MockSmartSyncPlugin = (function(window) {
                     var localIds = _.pluck(result.records, cache.keyField);
                     var collection = new Force.SObjectCollection();
                     var soqlTemplate = "SELECT " + cache.keyField + " $1 WHERE " + cache.keyField + " IN ('" + localIds.join("','") + "')";
+                    // We need the object type -- that will only works with soql sync down target
                     var soql = target.query.replace(/.*( [fF][rR][oO][mM][ ]+[^ ]*[ ]).*/, soqlTemplate); 
                     collection.config = {type:"soql", query:soql};
                     collection.fetch({
