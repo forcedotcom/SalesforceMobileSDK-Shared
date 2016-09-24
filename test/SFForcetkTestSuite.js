@@ -324,7 +324,7 @@ ForcetkTestSuite.prototype.tryUserAgent = function(expectedPlatform, expectedPla
 ForcetkTestSuite.prototype.getTestForcetkClient = function() {
     var forcetkClient = new forcetk.Client();
     forcetkClient.apiVersion = this.apiVersion;
-    forcetkClient.ajax = function(path, callback, error, method, payload) { return {path:path, method:method, payload:payload}; }
+    forcetkClient.ajax = function(endPoint, path, callback, error, method, payload) { return {path:path, method:method, payload:payload}; }
     return forcetkClient;
 };
 
@@ -334,7 +334,7 @@ ForcetkTestSuite.prototype.getTestForcetkClient = function() {
 ForcetkTestSuite.prototype.getTestForcetkClientForGet = function() {
     var forcetkClient = new forcetk.Client();
     forcetkClient.apiVersion = this.apiVersion;
-    forcetkClient.ajax = function(path, callback, error, method, payload) {
+    forcetkClient.ajax = function(endPoint, path, callback, error, method, payload) {
         var encodedData = Object.keys(payload || {}).map(function(key) {
             return [key, payload[key]].map(encodeURIComponent).join("=");
         }).join("&")
