@@ -2828,7 +2828,7 @@ SmartSyncTestSuite.prototype.testRefreshSyncDown = function() {
         .then(function() {
             console.log("## Calling refresh sync down");
             idToName = _.extend(idToName, idToUpdatedName);
-            var target = {type:"refresh", objectType:"Account", fieldlist:["Id", "Name"]};
+            var target = {type:"refresh", sobjectType:"Account", fieldlist:["Id", "Name"]};
             return self.trySyncDown(cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE, target);
         })
         .then(function() {

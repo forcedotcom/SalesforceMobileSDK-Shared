@@ -128,7 +128,7 @@ var MockSmartSyncPlugin = (function(window) {
                     cache.find({queryType:"range", orderPath:cache.keyField, pageSize:500}) // XXX not handling case with more than 500 local ids
                         .then(function(result) {
                             var localIds = _.pluck(result.records, cache.keyField);
-                            var soql = "SELECT " + target.fieldlist.join(",") + " FROM " + target.objectType + " WHERE Id IN ('" + localIds.join("','") + "')";
+                            var soql = "SELECT " + target.fieldlist.join(",") + " FROM " + target.sobjectType + " WHERE Id IN ('" + localIds.join("','") + "')";
                             collection.config = {type:"soql", query: soql};
                             collection.fetch(fetchOptions);
                         });
