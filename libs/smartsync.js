@@ -763,8 +763,7 @@
         };
 
         var serverRetrieve = function() {
-            var fields = fieldlist ? '?fields=' + fieldlist : '';
-            return forcetkClient.apexrest(path + "/" + id + fields, "GET", null, null);
+            return forcetkClient.apexrest(path + "/" + id, "GET", {fields:fieldlist.join(",")}, null);
         };
 
         var serverUpdate   = function() {
