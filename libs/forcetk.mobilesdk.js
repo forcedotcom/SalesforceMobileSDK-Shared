@@ -305,6 +305,13 @@ if (forcetk.Client === undefined) {
         return headers;
     }
 
+    // Internal method to encode payload on query string
+    var encodeData = function(payload) {
+        return Object.keys(payload || {}).map(function(key) {
+            return [key, payload[key]].map(encodeURIComponent).join("=");
+        }).join("&");
+    }
+    
     /*
      * Low level utility function to call the Salesforce endpoint.
      * @param path resource path relative to /services/data or fully qualified url (to Salesforce)
@@ -329,7 +336,7 @@ if (forcetk.Client === undefined) {
                 cache: false,
                 processData: false,
                 dataType: "json",
-                data: payload,
+                data: method == "DELETE" || method == "GET" ? encodeData(payload) : payload,
                 headers: getRequestHeaders(this),
                 success: function() {
                     console.timeEnd(tag);
@@ -395,6 +402,11 @@ if (forcetk.Client === undefined) {
      * @param [error=null] function to which request will be passed in case of error
      * @param retry true if we've already tried refresh token flow once
      **/
+
+    //
+    // FIXME using ajax directly - won't work with WKWebView
+    //
+
     forcetk.Client.prototype.getChatterFile = function(path,mimeType,callback,error,retry) {
         var that = this;
         var url = this.instanceUrl + '/services/data' + path;
@@ -566,7 +578,7 @@ if (forcetk.Client === undefined) {
      */
     forcetk.Client.prototype.upsert = function(objtype, externalIdField, externalId, fields, callback, error) {
         return this.ajax('/' + this.apiVersion + '/sobjects/' + objtype + '/' + externalIdField + '/' + externalId
-        + '?_HttpMethod=PATCH', callback, error, "POST", JSON.stringify(fields));
+                         , callback, error, "PATCH", JSON.stringify(fields));
     }
 
     /*
@@ -581,7 +593,7 @@ if (forcetk.Client === undefined) {
      */
     forcetk.Client.prototype.update = function(objtype, id, fields, callback, error) {
         return this.ajax('/' + this.apiVersion + '/sobjects/' + objtype + '/' + id
-        + '?_HttpMethod=PATCH', callback, error, "POST", JSON.stringify(fields));
+                         , callback, error, "PATCH", JSON.stringify(fields));
     }
 
     /*
@@ -605,8 +617,8 @@ if (forcetk.Client === undefined) {
      * @param [error=null] function to which jqXHR will be passed in case of error
      */
     forcetk.Client.prototype.query = function(soql, callback, error) {
-        return this.ajax('/' + this.apiVersion + '/query?q=' + encodeURI(soql)
-        , callback, error);
+        return this.ajax('/' + this.apiVersion + '/query'
+                         , callback, error, 'GET', {q:soql});
     }
 
     /*
@@ -631,8 +643,8 @@ if (forcetk.Client === undefined) {
      * @param [error=null] function to which jqXHR will be passed in case of error
      */
     forcetk.Client.prototype.search = function(sosl, callback, error) {
-        return this.ajax('/' + this.apiVersion + '/search?q=' + encodeURI(sosl)
-        , callback, error);
+        return this.ajax('/' + this.apiVersion + '/search'
+                         , callback, error, 'GET', {q:sosl});
     }
 
     /*
@@ -643,8 +655,8 @@ if (forcetk.Client === undefined) {
      * @param [error=null] function to which jqXHR will be passed in case of error
      */
     forcetk.Client.prototype.ownedFilesList = function(userId, page, callback, error) {
-        return this.ajax('/' + this.apiVersion + '/chatter/users/' + (userId == null ? 'me' : userId) +  '/files' + (page != null ? '?page=' + page : '')
-        , callback, error);
+        return this.ajax('/' + this.apiVersion + '/chatter/users/' + (userId == null ? 'me' : userId) +  '/files'
+                         , callback, error, 'GET', (page!=null ? {page:page} : {}));
     }
 
     /*
@@ -655,8 +667,8 @@ if (forcetk.Client === undefined) {
      * @param [error=null] function to which jqXHR will be passed in case of error
      */
     forcetk.Client.prototype.filesInUsersGroups = function(userId, page, callback, error) {
-        return this.ajax('/' + this.apiVersion + '/chatter/users/' + (userId == null ? 'me' : userId) +  '/files/filter/groups' + (page != null ? '?page=' + page : '')
-        , callback, error);
+        return this.ajax('/' + this.apiVersion + '/chatter/users/' + (userId == null ? 'me' : userId) +  '/files/filter/groups' 
+                         , callback, error, 'GET', (page!=null ? {page:page} : {}));
     }
 
     /*
@@ -667,8 +679,8 @@ if (forcetk.Client === undefined) {
      * @param [error=null] function to which jqXHR will be passed in case of error
      */
     forcetk.Client.prototype.filesSharedWithUser = function(userId, page, callback, error) {
-        return this.ajax('/' + this.apiVersion + '/chatter/users/' + (userId == null ? 'me' : userId) +  '/files/filter/sharedwithme' + (page != null ? '?page=' + page : '')
-        , callback, error);
+        return this.ajax('/' + this.apiVersion + '/chatter/users/' + (userId == null ? 'me' : userId) +  '/files/filter/sharedwithme'
+                         , callback, error, 'GET', (page!=null ? {page:page} : {}));
     }
 
     /*
@@ -679,8 +691,8 @@ if (forcetk.Client === undefined) {
      * @param [error=null] function to which jqXHR will be passed in case of error
      */
     forcetk.Client.prototype.fileDetails = function(fileId, version, callback, error) {
-        return this.ajax('/' + this.apiVersion + '/chatter/files/' + fileId + (version != null ? '?versionNumber=' + version : '')
-        , callback, error);
+        return this.ajax('/' + this.apiVersion + '/chatter/files/' + fileId
+                         , callback, error, 'GET', (version != null ? {versionNumber: version} : {}));
     }
 
     /*
@@ -752,8 +764,8 @@ if (forcetk.Client === undefined) {
      * @param [error=null] function to which jqXHR will be passed in case of error
      */
     forcetk.Client.prototype.fileShares = function(fileId, page, callback, error) {
-        return this.ajax('/' + this.apiVersion + '/chatter/files/' + fileId + '/file-shares' + (page != null ? '?page=' + page : '')
-        , callback, error);
+        return this.ajax('/' + this.apiVersion + '/chatter/files/' + fileId + '/file-shares'
+                         , callback, error, 'GET', (page!=null ? {page:page} : {}));
     }
 
     /**

@@ -334,7 +334,12 @@ ForcetkTestSuite.prototype.getTestForcetkClient = function() {
 ForcetkTestSuite.prototype.getTestForcetkClientForGet = function() {
     var forcetkClient = new forcetk.Client();
     forcetkClient.apiVersion = this.apiVersion;
-    forcetkClient.ajax = function(path) { return path; }
+    forcetkClient.ajax = function(path, callback, error, method, payload) {
+        var encodedData = Object.keys(payload || {}).map(function(key) {
+            return [key, payload[key]].map(encodeURIComponent).join("=");
+        }).join("&")
+        return path + (encodedData === "" ? "" : "?" + encodedData);
+    };
     return forcetkClient;
 };
 
