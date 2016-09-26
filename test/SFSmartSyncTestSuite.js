@@ -2687,7 +2687,7 @@ SmartSyncTestSuite.prototype.testSyncDownToGlobalStore = function() {
     var soupName = "testSyncDownToGlobalStore";
     var cache;
 
-    Force.smartstoreClient.removeSoup(soupName)
+    Force.smartstoreClient.removeSoup(true /* global */, soupName)
         .then(function() {
             console.log("## Initialization of StoreCache's");
             cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ], null /* default id */, true /* global */);
@@ -3046,7 +3046,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithGlobalStore = function(
     var soupName = "testSyncUpLocallyUpdatedWithGlobalStore";
     var cache;
 
-    Force.smartstoreClient.removeSoup(soupName)
+    Force.smartstoreClient.removeSoup(true /* global */, soupName)
         .then(function() {
             console.log("## Initialization of StoreCache's");
             cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ], null /* default id*/, true /* global */);
