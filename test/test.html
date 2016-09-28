@@ -12,10 +12,9 @@
     <script src="MockCordova.js"></script>
 
     <!-- sfdc libs -->
-    <script src="../libs/forcetk.ui.js"></script>
-    <script src="../libs/forcetk.mobilesdk.js"></script>
+    <script src="../libs/force.js"></script>
     <script src="../libs/cordova.force.js"></script>
-    <script src="../libs/smartsync.js"></script>
+<!--    <script src="../libs/smartsync.js"></script> -->
 
     <!-- mock for native implementations -->
     <script src="MockSmartStore.js"></script>
@@ -38,26 +37,30 @@
     <script charset="utf-8">
     var debugMode = true;
 
-    var loginUrl = "https://test.salesforce.com/";
-    var consumerKey = "3MVG98dostKihXN53TYStBIiS8HkwJJ.hsRQPcdchz8X9k16IRCU4KpvmoRuPRgAsWhy2cwXyX0JUr21qQ.mX";
-    var callbackUrl = "https://sfdc-sobject-editor.herokuapp.com/oauth/success";
+    force.init({loginURL: "https://test.salesforce.com/",
+                appId: "3MVG98dostKihXN53TYStBIiS8BTFb20jwWfFcShqfABb3c.HH3CkmA00FuCmc0aM3v4LZOGR5QBnEi77fotN",
+                oauthCallbackURL: "https://localhost:4200/test/oauthcallback.html",
+                useCordova: false /* running in browser with mock cordova - so do oauth through browser and network through xhr */
+               });
     
-    // Instantiating forcetk ClientUI
-    var oauthClient = new ForceOAuth(loginUrl, consumerKey, callbackUrl,
-                                     function forceOAuthUI_successHandler(forcetkClient) { // successCallback
-                                         console.log('OAuth success!');
-                                         creds = {
-                                             accessToken: oauthClient.oauthResponse.access_token,
-                                             instanceUrl: oauthClient.oauthResponse.instance_url
-                                         };
-                                         Force.init(creds, null, null, null, true /* use xhr networking */);
-                                     },
-                                     function forceOAuthUI_errorHandler(error) { // errorCallback
-                                         console.log('OAuth error!');
-                                         if (confirm("Authentication Failed. Try again?")) oauthClient.login();
-                                     });
+    function doLogin() {
+        force.login(
+            function() {
+                console.log('OAuth success!');
+                // creds = {
+                //     accessToken: oauthClient.oauthResponse.access_token,
+                //     instanceUrl: oauthClient.oauthResponse.instance_url
+                // };
+                // Force.init(creds, null, null, null, true /* use xhr networking */);
+            }, 
+            function(error) {
+                console.log('OAuth error!');
+                if (confirm("Authentication Failed. Try again?")) doLogin();
+            });
+        
+    }
     
-    oauthClient.login();
+    doLogin();
 
     window.addEventListener("load", function() {
         document.getElementById("link_sdkinfo_test_suite")
