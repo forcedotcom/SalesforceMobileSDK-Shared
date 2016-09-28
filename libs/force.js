@@ -75,7 +75,10 @@ var force = (function () {
 
     // Whether or not to use a CORS proxy. Defaults to false if app running in Cordova, in a VF page,
     // or using the Salesforce console. Can be overriden in init()
-        useProxy = (window.cordova || window.SfdcApp || window.sforce) ? false : true;
+        useProxy = (window.cordova || window.SfdcApp || window.sforce) ? false : true,
+
+    // Where or not to use cordova for oauth and network calls
+        useCordova = window.cordova;
 
     /*
      * Determines the request base URL.
@@ -208,6 +211,7 @@ var force = (function () {
      *  accessToken (optional)
      *  instanceURL (optional)
      *  refreshToken (optional)
+     *  useCordova (optional)
      */
     function init(params) {
 
@@ -218,6 +222,7 @@ var force = (function () {
             oauthCallbackURL = params.oauthCallbackURL || oauthCallbackURL;
             proxyURL = params.proxyURL || proxyURL;
             useProxy = params.useProxy === undefined ? useProxy : params.useProxy;
+            useCordova = params.useCordova === undefined ? useCordova : params.useCordova;
 
             if (params.accessToken) {
                 if (!oauth) oauth = {};
@@ -285,7 +290,7 @@ var force = (function () {
      * @param errorHandler - function to call back when login fails
      */
     function login(successHandler, errorHandler) {
-        if (window.cordova) {
+        if (useCordova) {
             loginWithPlugin(successHandler, errorHandler);
         } else {
             loginWithBrowser(successHandler, errorHandler);
