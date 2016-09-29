@@ -1,4 +1,4 @@
-(function($, _, Backbone, forcetk) {
+(function($, _, Backbone, innerForcetkClient) {
 
     "use strict";
 
@@ -87,24 +87,10 @@
         }
     };
 
-    // Init function
-    // * creds: credentials returned by authenticate call
-    // * apiVersion: apiVersion to use, when null, v36.0 (Spring '16) is used
-    // * innerForcetkClient: [Optional] A fully initialized forcetkClient to be re-used internally in the SmartSync library
-    // * reauth: auth module for the refresh flow
-    // * useXhrNetworking True - is XHR should be used, False - if native network stack should be used.
-    Force.init = function(creds, apiVersion, innerForcetkClient, reauth, useXhrNetworking) {
-        if (!apiVersion || apiVersion == null) {
-            apiVersion = "v36.0";
-        }
+    // FIXME todo
+    // innerForcetkClient.setUserAgentString(patchUserAgent(creds.userAgent || innerForcetkClient.getUserAgentString()));
 
-        if(!innerForcetkClient || innerForcetkClient == null) {
-            innerForcetkClient = new forcetk.Client(creds.clientId, creds.loginUrl, creds.proxyUrl, reauth, useXhrNetworking);
-            innerForcetkClient.setSessionToken(creds.accessToken, apiVersion, creds.instanceUrl);
-            innerForcetkClient.setRefreshToken(creds.refreshToken);
-            innerForcetkClient.setUserAgentString(patchUserAgent(creds.userAgent || innerForcetkClient.getUserAgentString()));
-        }
-
+    Force.init = function() {
         forcetkClient = new Object();
         forcetkClient.impl = innerForcetkClient;
         forcetkClient.create = promiser(innerForcetkClient, "create", "forcetkClient");
@@ -122,9 +108,6 @@
         forcetkClient.filesSharedWithUser = promiser(innerForcetkClient, "filesSharedWithUser", "forcetkClient");
         forcetkClient.fileDetails = promiser(innerForcetkClient, "fileDetails", "forcetkClient");
         forcetkClient.apexrest = promiser(innerForcetkClient, "apexrest", "forcetkClient");
-
-        // Exposing outside
-        Force.forcetkClient = forcetkClient;
 
         if (navigator.smartstore)
         {
@@ -1637,4 +1620,4 @@
 
     } // if (!_.isUndefined(Backbone)) {
 })
-.call(this, jQuery, _, window.Backbone, forcetk);
+.call(this, jQuery, _, window.Backbone. window.force);

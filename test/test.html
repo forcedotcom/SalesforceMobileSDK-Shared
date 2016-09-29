@@ -14,7 +14,7 @@
     <!-- sfdc libs -->
     <script src="../libs/force.js"></script>
     <script src="../libs/cordova.force.js"></script>
-<!--    <script src="../libs/smartsync.js"></script> -->
+    <script src="../libs/smartsync.js"></script> 
 
     <!-- mock for native implementations -->
     <script src="MockSmartStore.js"></script>
@@ -39,7 +39,7 @@
 
     force.init({loginURL: "https://test.salesforce.com/",
                 appId: "3MVG98dostKihXN53TYStBIiS8BTFb20jwWfFcShqfABb3c.HH3CkmA00FuCmc0aM3v4LZOGR5QBnEi77fotN",
-                oauthCallbackURL: "https://localhost:4200/test/oauthcallback.html",
+                oauthCallbackURL: "http://localhost:4200/test/oauthcallback.html",
                 useCordova: false /* running in browser with mock cordova - so do oauth through browser and network through xhr */
                });
     
@@ -47,11 +47,7 @@
         force.login(
             function() {
                 console.log('OAuth success!');
-                // creds = {
-                //     accessToken: oauthClient.oauthResponse.access_token,
-                //     instanceUrl: oauthClient.oauthResponse.instance_url
-                // };
-                // Force.init(creds, null, null, null, true /* use xhr networking */);
+                Force.init();
             }, 
             function(error) {
                 console.log('OAuth error!');
