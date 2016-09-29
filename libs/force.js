@@ -350,7 +350,8 @@ var force = (function () {
      * Lets you make any Salesforce REST API request.
      * @param obj - Request configuration object. Can include:
      *  method:  HTTP method: GET, POST, etc. Optional - Default is 'GET'
-     *  path:    path in to the Salesforce endpoint - Required
+     *  endPoint: path of Salesforce endpoint e.g. /serviecs/data - Required
+     *  path:    path relative to the Salesforce endpoint - Required
      *  params:  queryString parameters as a map - Optional
      *  data:  JSON object to send in the request body - Optional
      * @param successHandler - function to call back when request succeeds - Optional
@@ -369,12 +370,11 @@ var force = (function () {
             xhr = new XMLHttpRequest(),
             url = getRequestBaseURL();
 
-        // dev friendly API: Add leading '/' if missing so url + path concat always works
-        if (obj.path.charAt(0) !== '/') {
-            obj.path = '/' + obj.path;
-        }
+        // dev friendly API: Add leading '/' if missing so url + endPoint + path concat always works
+        obj.endPoint = (obj.endPoint.charAt(0) !== '/' ? '/' : '') + obj.endPoint;
+        obj.path = (obj.path.charAt(0) !== '/' ? '/' : '') + obj.path;
 
-        url = url + obj.path;
+        url = url + obj.endPoint + obj.path;
 
         if (obj.params) {
             url += '?' + toQueryString(obj.params);
@@ -431,7 +431,8 @@ var force = (function () {
     function query(soql, successHandler, errorHandler) {
         request(
             {
-                path: '/services/data/' + apiVersion + '/query',
+                endPoint: '/services/data',
+                path: '/' + apiVersion + '/query',
                 params: {q: soql}
             },
             successHandler,
@@ -451,7 +452,8 @@ var force = (function () {
 
         request(
             {
-                path: '/services/data/' + apiVersion + '/sobjects/' + objectName + '/' + id,
+                endPoint: '/services/data',
+                path: '/' + apiVersion + '/sobjects/' + objectName + '/' + id,
                 params: fields ? {fields: fields} : undefined
             },
             success,
@@ -469,7 +471,8 @@ var force = (function () {
     function getAttachment(id, successHandler, errorHandler){
         requestBinary(
             {
-                path: '/services/data/' + apiVersion + '/sobjects/Attachment/' + id + '/Body'
+                endPoint: '/services/data',                
+                path: '/' + apiVersion + '/sobjects/Attachment/' + id + '/Body'
             },
             successHandler,
             errorHandler
@@ -485,7 +488,8 @@ var force = (function () {
     function getPickListValues(objectName, successHandler, errorHandler){
         request(
             {
-                path: '/services/data/' + apiVersion + '/sobjects/' + objectName + '/describe'
+                endPoint: '/services/data',
+                path: '/' + apiVersion + '/sobjects/' + objectName + '/describe'
             },
             successHandler,
             errorHandler
@@ -505,7 +509,8 @@ var force = (function () {
             {
                 method: 'POST',
                 contentType: 'application/json',
-                path: '/services/data/' + apiVersion + '/sobjects/' + objectName + '/',
+                endPoint: '/services/data',
+                path: '/' + apiVersion + '/sobjects/' + objectName + '/',
                 data: data
             },
             successHandler,
@@ -533,7 +538,8 @@ var force = (function () {
             {
                 method: 'POST',
                 contentType: 'application/json',
-                path: '/services/data/' + apiVersion + '/sobjects/' + objectName + '/' + id,
+                endPoint: '/services/data',
+                path: '/' + apiVersion + '/sobjects/' + objectName + '/' + id,
                 params: {'_HttpMethod': 'PATCH'},
                 data: fields
             },
@@ -554,7 +560,8 @@ var force = (function () {
         request(
             {
                 method: 'DELETE',
-                path: '/services/data/' + apiVersion + '/sobjects/' + objectName + '/' + id
+                endPoint: '/services/data',                
+                path: '/' + apiVersion + '/sobjects/' + objectName + '/' + id
             },
             successHandler,
             errorHandler
@@ -576,7 +583,8 @@ var force = (function () {
             {
                 method: 'PATCH',
                 contentType: 'application/json',
-                path: '/services/data/' + apiVersion + '/sobjects/' + objectName + '/' + externalIdField + '/' + externalId,
+                endPoint: '/services/data',
+                path: '/' + apiVersion + '/sobjects/' + objectName + '/' + externalIdField + '/' + externalId,
                 data: data
             },
             successHandler,
@@ -619,7 +627,7 @@ var force = (function () {
      */
     function chatter(params, successHandler, errorHandler) {
 
-        var base = "/services/data/" + apiVersion + "/chatter";
+        var base = "/" + apiVersion + "/chatter";
 
         if (!params || !params.path) {
             errorHandler("You must specify a path for the request");
@@ -630,6 +638,7 @@ var force = (function () {
             params.path = "/" + params.path;
         }
 
+        params.endPoint = '/services/data';
         params.path = base + params.path;
 
         request(params, successHandler, errorHandler);
