@@ -1620,4 +1620,4 @@
 
     } // if (!_.isUndefined(Backbone)) {
 })
-.call(this, jQuery, _, window.Backbone. window.force);
+.call(this, jQuery, _, window.Backbone, window.force);
