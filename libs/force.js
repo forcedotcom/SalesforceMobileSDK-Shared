@@ -470,8 +470,8 @@ var force = (function () {
      * Lists summary information about each Salesforce.com version currently
      * available, including the version, label, and a link to each version's
      * root.
-     * @param callback function to which response will be passed
-     * @param [error=null] function to which jqXHR will be passed in case of error
+     * @param successHandler
+     * @param errorHandler
      */
     function versions(successHandler, errorHandler) {
         request(
@@ -486,8 +486,8 @@ var force = (function () {
     /*
      * Lists available resources for the client's API version, including
      * resource name and URI.
-     * @param callback function to which response will be passed
-     * @param [error=null] function to which jqXHR will be passed in case of error
+     * @param successHandler
+     * @param errorHandler
      */
     function resources(successHandler, errorHandler) {
         request(
@@ -502,8 +502,8 @@ var force = (function () {
     /*
      * Lists the available objects and their metadata for your organization's
      * data.
-     * @param callback function to which response will be passed
-     * @param [error=null] function to which jqXHR will be passed in case of error
+     * @param successHandler
+     * @param errorHandler
      */
     function describeGlobal(successHandler, errorHandler) {
         request(
@@ -517,9 +517,9 @@ var force = (function () {
 
     /*
      * Describes the individual metadata for the specified object.
-     * @param objectName object type; e.g. "Account"
-     * @param callback function to which response will be passed
-     * @param [error=null] function to which jqXHR will be passed in case of error
+     * @param objectName object name; e.g. "Account"
+     * @param successHandler
+     * @param errorHandler
      */
     function metadata(objectName, successHandler, errorHandler) {
         request(
@@ -534,9 +534,9 @@ var force = (function () {
     /*
      * Completely describes the individual metadata at all levels for the
      * specified object.
-     * @param objectName object type; e.g. "Account"
-     * @param callback function to which response will be passed
-     * @param [error=null] function to which jqXHR will be passed in case of error
+     * @param objectName object name; e.g. "Account"
+     * @param successHandler
+     * @param errorHandler
      */
     function describe(objectName, successHandler, errorHandler) {
         request(
@@ -549,11 +549,11 @@ var force = (function () {
     }
 
     /*
-     * Fetches the layout configuration for a particular sobject type and record type id.
-     * @param objectName object type; e.g. "Account"
+     * Fetches the layout configuration for a particular sobject name and record type id.
+     * @param objectName object name; e.g. "Account"
      * @param (Optional) recordTypeId Id of the layout's associated record type
-     * @param callback function to which response will be passed
-     * @param [error=null] function to which jqXHR will be passed in case of error
+     * @param successHandler
+     * @param errorHandler
      */
     function describeLayout(objectName, recordTypeId, successHandler, errorHandler) {
         recordTypeId = recordTypeId || '';
@@ -588,18 +588,18 @@ var force = (function () {
      * @param objectName
      * @param id
      * @param fields
-     * @param success
-     * @param error
+     * @param successHandler
+     * @param errorHandler
      */
-    function retrieve(objectName, id, fields, success, error) {
+    function retrieve(objectName, id, fields, successHandler, errorHandler) {
 
         request(
             {
                 path: '/services/data/' + apiVersion + '/sobjects/' + objectName + '/' + id,
-                params: fields ? {fields: fields} : undefined
+                params: fields ? {fields: (typeof fields === "string" ? fields : fields.join(","))} : undefined
             },
-            success,
-            error
+            successHandler,
+            errorHandler
         );
 
     }
