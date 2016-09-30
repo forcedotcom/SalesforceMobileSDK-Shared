@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, salesforce.com, inc.
+ * Copyright (c) 2013-present, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -114,7 +114,7 @@ ForcetkTestSuite.prototype.testComputeWebAppSdkAgentForDesktopUserAgents = funct
  */
 ForcetkTestSuite.prototype.testOwnedFilesList = function()  {
     console.log("In SFForcetkTestSuite.testOwnedFilesList");
-    var forcetkClient = this.getTestForcetkClientForGet();
+    this.setupTestForceForGet();
     QUnit.equals(forcetkClient.ownedFilesList(), "/" + this.apiVersion + "/chatter/users/me/files");
     QUnit.equals(forcetkClient.ownedFilesList("me"), "/" + this.apiVersion + "/chatter/users/me/files");
     QUnit.equals(forcetkClient.ownedFilesList("someUserId"), "/" + this.apiVersion + "/chatter/users/someUserId/files");
@@ -130,7 +130,7 @@ ForcetkTestSuite.prototype.testOwnedFilesList = function()  {
  */
 ForcetkTestSuite.prototype.testFilesInUsersGroups = function()  {
     console.log("In SFForcetkTestSuite.testFilesInUsersGroups");
-    var forcetkClient = this.getTestForcetkClientForGet();
+    this.setupTestForceForGet();
     QUnit.equals(forcetkClient.filesInUsersGroups(), "/" + this.apiVersion + "/chatter/users/me/files/filter/groups");
     QUnit.equals(forcetkClient.filesInUsersGroups("me"), "/" + this.apiVersion + "/chatter/users/me/files/filter/groups");
     QUnit.equals(forcetkClient.filesInUsersGroups("someUserId"), "/" + this.apiVersion + "/chatter/users/someUserId/files/filter/groups");
@@ -145,7 +145,7 @@ ForcetkTestSuite.prototype.testFilesInUsersGroups = function()  {
  */
 ForcetkTestSuite.prototype.testFilesSharedWithUser = function()  {
     console.log("In SFForcetkTestSuite.testFilesInUsersGroups");
-    var forcetkClient = this.getTestForcetkClientForGet();
+    this.setupTestForceForGet();
     QUnit.equals(forcetkClient.filesSharedWithUser(), "/" + this.apiVersion + "/chatter/users/me/files/filter/sharedwithme");
     QUnit.equals(forcetkClient.filesSharedWithUser("me"), "/" + this.apiVersion + "/chatter/users/me/files/filter/sharedwithme");
     QUnit.equals(forcetkClient.filesSharedWithUser("someUserId"), "/" + this.apiVersion + "/chatter/users/someUserId/files/filter/sharedwithme");
@@ -160,7 +160,7 @@ ForcetkTestSuite.prototype.testFilesSharedWithUser = function()  {
  */
 ForcetkTestSuite.prototype.testFileDetails = function()  {
     console.log("In SFForcetkTestSuite.testFileDetails");
-    var forcetkClient = this.getTestForcetkClientForGet();
+    this.setupTestForceForGet();
     QUnit.equals(forcetkClient.fileDetails("someFileId"), "/" + this.apiVersion + "/chatter/files/someFileId");
     QUnit.equals(forcetkClient.fileDetails("someFileId", "someVersionNumber"), "/" + this.apiVersion + "/chatter/files/someFileId?versionNumber=someVersionNumber");
     this.finalizeTest();
@@ -171,7 +171,7 @@ ForcetkTestSuite.prototype.testFileDetails = function()  {
  */
 ForcetkTestSuite.prototype.testBatchFileDetails = function()  {
     console.log("In SFForcetkTestSuite.testBatchFileDetails");
-    var forcetkClient = this.getTestForcetkClientForGet();
+    this.setupTestForceForGet();
     QUnit.equals(forcetkClient.batchFileDetails(["someFileId"]), "/" + this.apiVersion + "/chatter/files/batch/someFileId");
     QUnit.equals(forcetkClient.batchFileDetails(["someFileId", "otherFileId"]), "/" + this.apiVersion + "/chatter/files/batch/someFileId,otherFileId");
     QUnit.equals(forcetkClient.batchFileDetails(["someFileId", "otherFileId", "thirdFileId"]), "/" + this.apiVersion + "/chatter/files/batch/someFileId,otherFileId,thirdFileId");
@@ -183,7 +183,7 @@ ForcetkTestSuite.prototype.testBatchFileDetails = function()  {
  */
 ForcetkTestSuite.prototype.testFileRenditionPath = function()  {
     console.log("In SFForcetkTestSuite.testFileRenditionPath");
-    var forcetkClient = this.getTestForcetkClientForBinary();
+    this.setupTestForceForBinary();
     // only rendition type provided
     QUnit.equals(forcetkClient.fileRenditionPath("someFileId", null, "FLASH"), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=FLASH");
     QUnit.equals(forcetkClient.fileRenditionPath("someFileId", null, "PDF"), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=PDF");
@@ -217,7 +217,7 @@ ForcetkTestSuite.prototype.testFileRenditionPath = function()  {
  */
 ForcetkTestSuite.prototype.testFileRendition = function()  {
     console.log("In SFForcetkTestSuite.testFileRendition");
-    var forcetkClient = this.getTestForcetkClientForBinary();
+    this.setupTestForceForBinary();
     // only rendition type provided
     QUnit.deepEqual(forcetkClient.fileRendition("someFileId", null, "FLASH"), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=FLASH", "application/x-shockwave-flash"]);
     QUnit.deepEqual(forcetkClient.fileRendition("someFileId", null, "PDF"), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=PDF", "application/pdf"]);
@@ -251,7 +251,7 @@ ForcetkTestSuite.prototype.testFileRendition = function()  {
  */
 ForcetkTestSuite.prototype.testFileContentsPath = function()  {
     console.log("In SFForcetkTestSuite.testFileContentsPath");
-    var forcetkClient = this.getTestForcetkClientForBinary();
+    this.setupTestForceForBinary();
     QUnit.equals(forcetkClient.fileContentsPath("someFileId"), "/" + this.apiVersion + "/chatter/files/someFileId/content");
     QUnit.deepEqual(forcetkClient.fileContentsPath("someFileId", "someVersionNumber"), "/" + this.apiVersion + "/chatter/files/someFileId/content?versionNumber=someVersionNumber");
     this.finalizeTest();
@@ -262,7 +262,7 @@ ForcetkTestSuite.prototype.testFileContentsPath = function()  {
  */
 ForcetkTestSuite.prototype.testFileContents = function()  {
     console.log("In SFForcetkTestSuite.testFileContents");
-    var forcetkClient = this.getTestForcetkClientForBinary();
+    this.setupTestForceForBinary();
     QUnit.deepEqual(forcetkClient.fileContents("someFileId"), ["/" + this.apiVersion + "/chatter/files/someFileId/content", null]);
     QUnit.deepEqual(forcetkClient.fileContents("someFileId", "someVersionNumber"), ["/" + this.apiVersion + "/chatter/files/someFileId/content?versionNumber=someVersionNumber", null]);
     this.finalizeTest();
@@ -273,7 +273,7 @@ ForcetkTestSuite.prototype.testFileContents = function()  {
  */
 ForcetkTestSuite.prototype.testFileShares = function()  {
     console.log("In SFForcetkTestSuite.testFileShares");
-    var forcetkClient = this.getTestForcetkClientForGet();
+    this.setupTestForceForGet();
     QUnit.equals(forcetkClient.fileShares("fileId"), "/" + this.apiVersion + "/chatter/files/fileId/file-shares");
     QUnit.equals(forcetkClient.fileShares("fileId", 2), "/" + this.apiVersion + "/chatter/files/fileId/file-shares?page=2");
     this.finalizeTest();
@@ -284,7 +284,7 @@ ForcetkTestSuite.prototype.testFileShares = function()  {
  */
 ForcetkTestSuite.prototype.testAddFileShare = function()  {
     console.log("In SFForcetkTestSuite.testAddFileShare");
-    var forcetkClient = this.getTestForcetkClient();
+    this.setupTestForce();
     QUnit.deepEqual(forcetkClient.addFileShare("fileId", "entityId", "shareType"), {path:"/" + this.apiVersion + "/sobjects/ContentDocumentLink/", method:"POST", payload:'{"ContentDocumentId":"fileId","LinkedEntityId":"entityId","ShareType":"shareType"}'});
     this.finalizeTest();
 }; 
@@ -294,7 +294,7 @@ ForcetkTestSuite.prototype.testAddFileShare = function()  {
  */
 ForcetkTestSuite.prototype.testDeleteFileShare = function()  {
     console.log("In SFForcetkTestSuite.testDeleteFileShare");
-    var forcetkClient = this.getTestForcetkClient();
+    this.setupTestForce();
     QUnit.deepEqual(forcetkClient.deleteFileShare("shareId"), {path:"/" + this.apiVersion + "/sobjects/ContentDocumentLink/shareId", method:"DELETE", payload: undefined});
     this.finalizeTest();
 }; 
@@ -303,8 +303,7 @@ ForcetkTestSuite.prototype.testDeleteFileShare = function()  {
  * Helper function for user agent testing
  */
 ForcetkTestSuite.prototype.tryUserAgent = function(expectedPlatform, expectedPlatformVersion, expectedModel, userAgent) {
-    var forcetkClient = new forcetk.Client();
-    var webAppSdkAgent = forcetkClient.computeWebAppSdkAgent(userAgent);
+    var webAppSdkAgent = force.computeWebAppSdkAgent(userAgent);
     var match = /SalesforceMobileSDK\/5.0.0 ([^\/]*)\/([^\ ]*) \(([^\)]*)\) ([^\/]*)\/1.0 Web (.*)/.exec(webAppSdkAgent);
     if (match != null && match.length == 6) {
         QUnit.equals(match[1], expectedPlatform, "Wrong platform for user agent [" + userAgent + "]");
@@ -319,38 +318,32 @@ ForcetkTestSuite.prototype.tryUserAgent = function(expectedPlatform, expectedPla
 };
 
 /**
- * Helper function to get a forcetk client that doesn't actually send requests
+ * Helper function to setup window.force for testing
  */
-ForcetkTestSuite.prototype.getTestForcetkClient = function() {
-    var forcetkClient = new forcetk.Client();
-    forcetkClient.apiVersion = this.apiVersion;
-    forcetkClient.ajax = function(endPoint, path, callback, error, method, payload) { return {path:path, method:method, payload:payload}; }
-    return forcetkClient;
+ForcetkTestSuite.prototype.setupTestForce = function() {
+    force.init({apiVersion: this.apiVersion});
+    force.request = function(obj, success, error) { return obj; }
 };
 
 /**
- * Helper function to get a forcetk client that doesn't actually send requests when testing get requests
+ * Helper function to setup window.force for testing get requests
  */
-ForcetkTestSuite.prototype.getTestForcetkClientForGet = function() {
-    var forcetkClient = new forcetk.Client();
-    forcetkClient.apiVersion = this.apiVersion;
-    forcetkClient.ajax = function(endPoint, path, callback, error, method, payload) {
-        var encodedData = Object.keys(payload || {}).map(function(key) {
+ForcetkTestSuite.prototype.setupTestForceForGet = function() {
+    force.init({apiVersion: this.apiVersion});
+    force.request = function(obj, success, error) {
+        var encodedData = Object.keys(obj.params || {}).map(function(key) {
             return [key, payload[key]].map(encodeURIComponent).join("=");
         }).join("&")
         return path + (encodedData === "" ? "" : "?" + encodedData);
     };
-    return forcetkClient;
 };
 
 /**
- * Helper function to get a forcetk client that doesn't actually send requests when testing requests that fetch binary
+ * Helper function to setup window.force for testing binary fetching
  */
-ForcetkTestSuite.prototype.getTestForcetkClientForBinary = function() {
-    var forcetkClient = new forcetk.Client();
-    forcetkClient.apiVersion = this.apiVersion;
-    forcetkClient.getChatterFile = function(path, mimeType) { return [path, mimeType]; }
-    return forcetkClient;
+ForcetkTestSuite.prototype.setupTestForceForBinary = function() {
+    force.init({apiVersion: this.apiVersion});
+    force.getChatterFile = function(path, mimeType) { return [path, mimeType]; }
 };
 
 }

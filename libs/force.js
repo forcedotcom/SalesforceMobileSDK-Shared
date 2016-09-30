@@ -44,7 +44,7 @@ var force = (function () {
 
     // The force.com API version to use.
     // To override default, pass apiVersion in init(props)
-        apiVersion = 'v33.0',
+        apiVersion = 'v36.0',
 
     // Keep track of OAuth data (access_token, refresh_token, and instance_url)
         oauth,
@@ -1003,7 +1003,10 @@ var force = (function () {
         discardToken: discardToken,
         oauthCallback: oauthCallback,
         getPickListValues: getPickListValues,
-        getAttachment: getAttachment
+        getAttachment: getAttachment,
+
+        // For testing only
+        computeWebAppSdkAgent: computeWebAppSdkAgent
     };
 
 }());
