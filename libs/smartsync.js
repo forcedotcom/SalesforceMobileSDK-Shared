@@ -695,8 +695,8 @@
         };
 
         var serverUpdate   = function() {
-            var attributesToSave = _.pick(attributes, fieldlist);
-            return forcetkClient.update(sobjectType, id, _.omit(attributesToSave, "Id"))
+            var attributesToSave = _.extend(_.pick(attributes, fieldlist), {Id: id});
+            return forcetkClient.update(sobjectType, attributesToSave)
                 .then(function(resp) {
                     return attributes;
                 })
