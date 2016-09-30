@@ -377,6 +377,7 @@ var force = (function () {
      *  path:    path in to the Salesforce endpoint - Required
      *  params:  queryString parameters as a map - Optional
      *  data:  JSON object to send in the request body - Optional
+     *  headerParams: parameters to send as header values for POST/PATCH etc - Optional
      * @param successHandler - function to call back when request succeeds - Optional
      * @param errorHandler - function to call back when request fails - Optional
      */
@@ -414,7 +415,7 @@ var force = (function () {
 
     function requestWithPlugin(obj, successHandler, errorHandler) {
         var obj2 = computeEndPointIfMissing(obj.endPoint, obj.path);
-        networkPlugin.sendRequest(obj2.endPoint, obj2.path, successHandler, errorHandler, obj.method, obj.data || obj.params, {});        
+        networkPlugin.sendRequest(obj2.endPoint, obj2.path, successHandler, errorHandler, obj.method, obj.data || obj.params, obj.headerParams);        
     }
 
     function requestWithBrowser(obj, successHandler, errorHandler) {
@@ -475,6 +476,12 @@ var force = (function () {
         xhr.setRequestHeader("Authorization", "Bearer " + oauth.access_token);
         if (obj.contentType) {
             xhr.setRequestHeader("Content-Type", obj.contentType);
+        }
+        if (obj.headerParams) {
+            for (var headerName in obj.headerParams.getOwnPropertyNames()) {
+                var headerValue = obj.headerParams[headerName];
+                xhr.setRequestHeader(headerName, headerValue);
+            }
         }
         if (useProxy) {
             xhr.setRequestHeader("Target-URL", oauth.instance_url);
