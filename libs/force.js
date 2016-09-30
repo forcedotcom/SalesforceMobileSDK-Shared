@@ -675,10 +675,9 @@ var force = (function () {
 
         request(
             {
-                method: 'POST',
+                method: 'PATCH',
                 contentType: 'application/json',
                 path: '/services/data/' + apiVersion + '/sobjects/' + objectName + '/' + id,
-                params: {'_HttpMethod': 'PATCH'},
                 data: fields
             },
             successHandler,
