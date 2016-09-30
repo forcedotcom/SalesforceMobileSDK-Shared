@@ -793,23 +793,27 @@ var force = (function () {
      */
     function apexrest(pathOrParams, successHandler, errorHandler) {
 
-        var params;
+        var obj;
 
         if (typeof pathOrParams === "string") {
-            params = {path: pathOrParams};
+            obj = {path: pathOrParams, method: "GET"};
         } else {
-            params = pathOrParams;
+            obj = pathOrParams;
 
-            if (params.path.charAt(0) !== "/") {
-                params.path = "/" + params.path;
+            if (obj.path.charAt(0) !== "/") {
+                obj.path = "/" + obj.path;
             }
 
-            if (params.path.substr(0, 18) !== "/services/apexrest") {
-                params.path = "/services/apexrest" + params.path;
+            if (obj.path.substr(0, 18) !== "/services/apexrest") {
+                obj.path = "/services/apexrest" + obj.path;
             }
         }
 
-        request(params, successHandler, errorHandler);
+        if (!obj.contentType) {
+            obj.contentType = (obj.method == "DELETE" || obj.method == "GET" ? null : 'application/json');
+        }
+
+        request(obj, successHandler, errorHandler);
     }
 
     /**
