@@ -3444,7 +3444,7 @@ var updateRecords = function(idToUpdatedName) {
     return $.when.apply(null, (_.map(_.keys(idToUpdatedName), function(id) {
         var updatedName = idToUpdatedName[id];
         console.log("Updating " + updatedName);
-        return Force.forcetkClient.update("Account", id, {Name:updatedName})
+        return Force.forcetkClient.update("Account",{Id:id, Name:updatedName})
             .then(function(resp) {
                 console.log("Updated " + updatedName);
             });
