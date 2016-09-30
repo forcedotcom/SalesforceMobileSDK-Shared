@@ -422,6 +422,106 @@ var force = (function () {
         xhr.send(obj.data ? JSON.stringify(obj.data) : undefined);
     }
 
+    /*
+     * Lists summary information about each Salesforce.com version currently
+     * available, including the version, label, and a link to each version's
+     * root.
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    function versions(successHandler, errorHandler) {
+        request(
+            {
+                path: '/services/data/',
+            },
+            successHandler,
+            errorHandler
+        );
+    }
+
+    /*
+     * Lists available resources for the client's API version, including
+     * resource name and URI.
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    function resources(successHandler, errorHandler) {
+        request(
+            {
+                path: '/services/data/' + apiVersion,
+            },
+            successHandler,
+            errorHandler
+        );
+    }
+
+    /*
+     * Lists the available objects and their metadata for your organization's
+     * data.
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    function describeGlobal(successHandler, errorHandler) {
+        request(
+            {
+                path: '/services/data/' + apiVersion + '/sobjects',
+            },
+            successHandler,
+            errorHandler
+        );
+    }
+
+    /*
+     * Describes the individual metadata for the specified object.
+     * @param objectName object type; e.g. "Account"
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    function metadata(objectName, successHandler, errorHandler) {
+        request(
+            {
+                path: '/services/data/' + apiVersion + '/sobjects/' + objectName,
+            },
+            successHandler,
+            errorHandler
+        );
+    }
+
+    /*
+     * Completely describes the individual metadata at all levels for the
+     * specified object.
+     * @param objectName object type; e.g. "Account"
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    function describe(objectName, successHandler, errorHandler) {
+        request(
+            {
+                path: '/services/data/' + apiVersion + '/sobjects/' + objectName + '/describe',
+            },
+            successHandler,
+            errorHandler
+        );
+    }
+
+    /*
+     * Fetches the layout configuration for a particular sobject type and record type id.
+     * @param objectName object type; e.g. "Account"
+     * @param (Optional) recordTypeId Id of the layout's associated record type
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    function describeLayout(objectName, recordTypeId, successHandler, errorHandler) {
+        recordTypeId = recordTypeId || '';
+        request(
+            {
+                path: '/services/data/' + apiVersion + '/sobjects/' + objectName + '/describe/layouts/' + recordTypeId,
+            },
+            successHandler,
+            errorHandler
+        );
+    }
+
     /**
      * Convenience function to execute a SOQL query
      * @param soql
@@ -643,6 +743,12 @@ var force = (function () {
         getUserId: getUserId,
         isAuthenticated: isAuthenticated,
         request: request,
+        versions: versions,
+        resources: resources,
+        describeGlobal: describeGlobal,
+        metadata: metadata,
+        describe: describe,
+        describeLayout: describeLayout,
         query: query,
         create: create,
         update: update,
