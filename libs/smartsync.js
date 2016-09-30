@@ -740,7 +740,7 @@
         // Server actions helper
         var serverCreate   = function() {
             var attributesToSave = _.pick(attributes, fieldlist);
-            return forcetkClient.apexrest(path, "POST", JSON.stringify(_.omit(attributesToSave, idField)), null)
+            return forcetkClient.apexrest({path:path, method:"POST", data:_.omit(attributesToSave, idField)})
                 .then(function(resp) {
                     var idMap = {};
                     idMap[idField] = resp[idField];
@@ -749,19 +749,19 @@
         };
 
         var serverRetrieve = function() {
-            return forcetkClient.apexrest(path + "/" + id, "GET", {fields:fieldlist.join(",")}, null);
+            return forcetkClient.apexrest({path:path + "/" + id, method:"GET", params:{fields:fieldlist.join(",")}});
         };
 
         var serverUpdate   = function() {
             var attributesToSave = _.pick(attributes, fieldlist);
-            return forcetkClient.apexrest(path + "/" + id, "PATCH", JSON.stringify(attributesToSave), null)
+            return forcetkClient.apexrest({path:path + "/" + id, method:"PATCH", data:attributesToSave})
                 .then(function(resp) {
                     return attributes;
                 })
         };
 
         var serverDelete   = function() {
-            return forcetkClient.apexrest(path + "/" + id, "DELETE", null, null)
+            return forcetkClient.apexrest({path:path + "/" + id, method:"DELETE"})
                 .then(function(resp) {
                     return null;
                 })
@@ -1197,8 +1197,7 @@
 
         // Server actions helper
         var serverFetch = function(apexRestPath) {
-            var path = apexRestPath + "?" + $.param(config.params);
-            return forcetkClient.apexrest(path, "GET", null, null)
+            return forcetkClient.apexrest({path:apexRestPath, params:config.params})
                 .then(function(resp) {
                     var nextRecordsUrl = resp.nextRecordsUrl;
                     return {
