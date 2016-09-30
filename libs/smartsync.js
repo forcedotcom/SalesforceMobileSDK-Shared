@@ -109,6 +109,9 @@
         forcetkClient.fileDetails = promiser(innerForcetkClient, "fileDetails", "forcetkClient");
         forcetkClient.apexrest = promiser(innerForcetkClient, "apexrest", "forcetkClient");
 
+        // Exposing outside
+        Force.forcetkClient = forcetkClient;
+
         if (navigator.smartstore)
         {
             smartstoreClient = new Object();
