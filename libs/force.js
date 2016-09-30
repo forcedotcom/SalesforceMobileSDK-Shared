@@ -111,13 +111,16 @@ var force = (function () {
     }
 
     function parseQueryString(queryString) {
+        queryString = queryString.charAt(0) === '?' ? queryString.substring(1) : queryString;
         var qs = decodeURIComponent(queryString),
             obj = {},
             params = qs.split('&');
-        params.forEach(function (param) {
-            var splitter = param.split('=');
-            obj[splitter[0]] = splitter[1];
-        });
+            params.forEach(function (param) {
+                var splitter = param.split('=');
+                if (splitter.length == 2) {
+                    obj[splitter[0]] = splitter[1];
+                }
+            });
         return obj;
     }
 
@@ -130,6 +133,19 @@ var force = (function () {
             }
         }
         return parts.join("&");
+    }
+
+    function parseUrl(url) {
+        var match = url.match(/^(https?\:)\/\/(([^:\/?#]*)(?:\:([0-9]+))?)(\/[^?#]*)(\?[^#]*|)(#.*|)$/);
+        return match && {
+            protocol: match[1],
+            host: match[2],
+            hostname: match[3],
+            port: match[4],
+            path: match[5],
+            params: parseQueryString(match[6]),
+            hash: match[7]
+        }
     }
 
     function refreshTokenWithPlugin(success, error) {
@@ -583,6 +599,48 @@ var force = (function () {
         );
     }
 
+    /*
+     * Queries the next set of records based on pagination.
+     * <p>This should be used if performing a query that retrieves more than can be returned
+     * in accordance with http://www.salesforce.com/us/developer/docs/api_rest/Content/dome_query.htm</p>
+     * <p>Ex: forcetkClient.queryMore( successResponse.nextRecordsUrl, successHandler, failureHandler )</p>
+     *
+     * @param url - the url retrieved from nextRecordsUrl or prevRecordsUrl
+     * @param successHandler
+     * @param errorHandler
+     */
+    function queryMore(url, successHandler, errorHandler){
+
+        var obj = parseUrl(url);
+
+        request(
+            {
+                path: obj.path,
+                params: obj.parans
+            },
+            successHandler,
+            errorHandler
+        );
+    }
+
+    /*
+     * Executes the specified SOSL search.
+     * @param sosl a string containing the search to execute - e.g. "FIND
+     *             {needle}"
+     * @param successHandler
+     * @param errorHandler
+     */
+    function search(sosl, successHandler, errorHandler) {
+        request(
+            {
+                path: '/services/data/' + apiVersion + '/search',
+                params: {q: sosl}
+            },
+            successHandler,
+            errorHandler
+        );
+    }
+    
     /**
      * Convenience function to retrieve a single record based on its Id
      * @param objectName
@@ -737,7 +795,7 @@ var force = (function () {
 
         var params;
 
-        if (pathOrParams.substring) {
+        if (typeof pathOrParams === "string") {
             params = {path: pathOrParams};
         } else {
             params = pathOrParams;
@@ -793,6 +851,8 @@ var force = (function () {
         describe: describe,
         describeLayout: describeLayout,
         query: query,
+        queryMore: queryMore,
+        search: search,
         create: create,
         update: update,
         del: del,
