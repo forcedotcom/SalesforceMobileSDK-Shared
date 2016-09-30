@@ -138,13 +138,13 @@ var force = (function () {
             function (response) {
                 oauth.access_token = response.accessToken;
                 tokenStore.forceOAuth = JSON.stringify(oauth);
-                if (success) {
+                if (typeof success === "function") {
                     success();
                 }
             },
             function () {
                 console.error('Error refreshing oauth access token using the oauth plugin');
-                if (error) {
+                if (typeof error === "function") {
                     error();
                 }
             }
@@ -155,7 +155,7 @@ var force = (function () {
 
         if (!oauth.refresh_token) {
             console.log('ERROR: refresh token does not exist');
-            if (error) {
+            if (typeof error === "function") {
                 error();
             }
             return;
@@ -180,12 +180,12 @@ var force = (function () {
                     var res = JSON.parse(xhr.responseText);
                     oauth.access_token = res.access_token;
                     tokenStore.forceOAuth = JSON.stringify(oauth);
-                    if (success) {
+                    if (typeof success === "function") {
                         success();
                     }
                 } else {
                     console.log('Error while trying to refresh token: ' + xhr.responseText);
-                    if (error) {
+                    if (typeof error === "function") {
                         error();
                     }
                 }
@@ -317,11 +317,11 @@ var force = (function () {
                 function (creds) {
                     // Initialize ForceJS
                     init({accessToken: creds.accessToken, instanceURL: creds.instanceUrl, refreshToken: creds.refreshToken});
-                    if (successHandler) successHandler();
+                    if (typeof successHandler === "function") successHandler();
                 },
                 function (error) {
                     console.log(error);
-                    if (errorHandler) errorHandler(error);
+                    if (typeof errorHandler === "function") errorHandler(error);
                 }
             );
         }, false);
@@ -403,7 +403,7 @@ var force = (function () {
 
     function requestWithBrowser(obj, successHandler, errorHandler) {
         if (!oauth || (!oauth.access_token && !oauth.refresh_token)) {
-            if (errorHandler) {
+            if (typeof errorHandler === "function") {
                 errorHandler('No access token. Login and try again.');
             }
             return;
@@ -427,7 +427,7 @@ var force = (function () {
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
                 if (xhr.status > 199 && xhr.status < 300) {
-                    if (successHandler) {
+                    if (typeof successHandler === "function") {
                         successHandler(xhr.responseText ? JSON.parse(xhr.responseText) : undefined);
                     }
                 } else if (xhr.status === 401 && oauth.refresh_token) {
@@ -439,7 +439,7 @@ var force = (function () {
                         function () {
                             console.error(xhr.responseText);
                             var error = xhr.responseText ? JSON.parse(xhr.responseText) : {message: 'An error has occurred'};
-                            if (errorHandler) {
+                            if (typeof errorHandler === "function") {
                                 errorHandler(error);
                             }
                         }
@@ -447,7 +447,7 @@ var force = (function () {
                 } else {
                     console.error(xhr.responseText);
                     var error = xhr.responseText ? JSON.parse(xhr.responseText) : {message: 'An error has occurred'};
-                    if (errorHandler) {
+                    if (typeof errorHandler === "function") {
                         errorHandler(error);
                     }
                 }
