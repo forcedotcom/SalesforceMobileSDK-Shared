@@ -24,6 +24,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Based on: https://github.com/ccoenraets/forcejs/blob/a9348b90a046e12aac9b56864359c24e5b246abe/force.js
+ *
+ * ForceJS - REST toolkit for Salesforce.com
+ * Author: Christophe Coenraets @ccoenraets
+ * Version: 1.0
  */
 var force = (function () {
 
@@ -72,6 +76,9 @@ var force = (function () {
 
     // Reference to the Salesforce OAuth plugin
         oauthPlugin,
+
+    // Reference to the Salesforce Network plugin
+        networkPlugin,
 
     // Whether or not to use a CORS proxy. Defaults to false if app running in Cordova, in a VF page,
     // or using the Salesforce console. Can be overriden in init()
@@ -300,6 +307,7 @@ var force = (function () {
     function loginWithPlugin(successHandler, errorHandler) {
         document.addEventListener("deviceready", function () {
             oauthPlugin = cordova.require("com.salesforce.plugin.oauth");
+            networkPlugin = cordova.require("com.salesforce.plugin.network");
             if (!oauthPlugin) {
                 console.error('Salesforce Mobile SDK OAuth plugin not available');
                 errorHandler('Salesforce Mobile SDK OAuth plugin not available');
@@ -357,7 +365,43 @@ var force = (function () {
      * @param errorHandler - function to call back when request fails - Optional
      */
     function request(obj, successHandler, errorHandler) {
+        // NB: networkPlugin will be defined only if login was done through plugin and container is using Mobile SDK 5.0 or above
+        if (useCordova && networkPlugin) { 
+            requestWithPlugin(obj, successHandler, errorHandler);
+        } else {
+            requestWithBrowser(obj, successHandler, errorHandler);
+        }
+    }        
 
+    /**
+     * @param path: full path or path relative to end point - required
+     * @param endPoint: undefined or endpoint - optional
+     * @return object with {endPoint:XX, path:relativePathToXX}
+     *
+     * For instance for undefined, '/services/data'     => {endPoint:'/services/data', path:'/'}
+     *                  undefined, '/services/apex/abc' => {endPoint:'/services/apex', path:'/abc'}
+     */
+    function computeEndPointIfMissing(endPoint, path) {
+        if (endPoint !== undefined) {
+            return {endPoint:endPoint, path:path};
+        }
+        else {
+            var parts = path.split('/').filter(function(s) { return s !== ""; });
+            if (parts.length >= 2) {
+                return {endPoint: '/' + parts.slice(0,2).join('/'), path: '/' + parts.slice(2).join('/')};
+            }
+            else {
+                return {endPoint: '', path:path};
+            }
+        }
+    }
+
+    function requestWithPlugin(obj, successHandler, errorHandler) {
+        var obj2 = computeEndPointIfMissing(obj.endPoint, obj.path);
+        networkPlugin.sendRequest(obj2.endPoint, obj2.path, successHandler, errorHandler, obj.method, obj.data || obj.params, {});        
+    }
+
+    function requestWithBrowser(obj, successHandler, errorHandler) {
         if (!oauth || (!oauth.access_token && !oauth.refresh_token)) {
             if (errorHandler) {
                 errorHandler('No access token. Login and try again.');
