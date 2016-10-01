@@ -88,7 +88,11 @@ var force = (function () {
         useProxy = (window.cordova || window.SfdcApp || window.sforce) ? false : true,
 
     // Where or not to use cordova for oauth and network calls
-        useCordova = window.cordova;
+        useCordova = window.cordova,
+
+    // Testing only
+       requestHandler;
+        
 
 
     /**
@@ -339,6 +343,7 @@ var force = (function () {
      *  refreshToken (optional)
      *  useCordova (optional)
      *  userAgent (optional)
+     *  requestHandler (testing only)
      */
     function init(params) {
 
@@ -365,6 +370,11 @@ var force = (function () {
             if (params.refreshToken) {
                 if (!oauth) oauth = {};
                 oauth.refresh_token = params.refreshToken;
+            }
+
+            // Testing only
+            if (params.requestHandler) {
+                requestHandler = params.requestHandler;
             }
         }
 
@@ -502,8 +512,12 @@ var force = (function () {
      * @param errorHandler - function to call back when request fails - Optional
      */
     function request(obj, successHandler, errorHandler) {
+        if (typeof requestHandler === "function") {
+            return requestHandler(obj);
+        }
+        
         // NB: networkPlugin will be defined only if login was done through plugin and container is using Mobile SDK 5.0 or above
-        if (useCordova && networkPlugin) { 
+        if (networkPlugin) { 
             requestWithPlugin(obj, successHandler, errorHandler);
         } else {
             requestWithBrowser(obj, successHandler, errorHandler);
@@ -624,7 +638,7 @@ var force = (function () {
      * @param errorHandler
      */
     function versions(successHandler, errorHandler) {
-        request(
+        return request(
             {
                 path: '/services/data/',
             },
@@ -640,7 +654,7 @@ var force = (function () {
      * @param errorHandler
      */
     function resources(successHandler, errorHandler) {
-        request(
+        return request(
             {
                 path: '/services/data/' + apiVersion,
             },
@@ -656,7 +670,7 @@ var force = (function () {
      * @param errorHandler
      */
     function describeGlobal(successHandler, errorHandler) {
-        request(
+        return request(
             {
                 path: '/services/data/' + apiVersion + '/sobjects',
             },
@@ -672,7 +686,7 @@ var force = (function () {
      * @param errorHandler
      */
     function metadata(objectName, successHandler, errorHandler) {
-        request(
+        return request(
             {
                 path: '/services/data/' + apiVersion + '/sobjects/' + objectName,
             },
@@ -689,7 +703,7 @@ var force = (function () {
      * @param errorHandler
      */
     function describe(objectName, successHandler, errorHandler) {
-        request(
+        return request(
             {
                 path: '/services/data/' + apiVersion + '/sobjects/' + objectName + '/describe',
             },
@@ -707,7 +721,7 @@ var force = (function () {
      */
     function describeLayout(objectName, recordTypeId, successHandler, errorHandler) {
         recordTypeId = recordTypeId || '';
-        request(
+        return request(
             {
                 path: '/services/data/' + apiVersion + '/sobjects/' + objectName + '/describe/layouts/' + recordTypeId,
             },
@@ -723,7 +737,7 @@ var force = (function () {
      * @param errorHandler
      */
     function query(soql, successHandler, errorHandler) {
-        request(
+        return request(
             {
                 path: '/services/data/' + apiVersion + '/query',
                 params: {q: soql}
@@ -735,9 +749,8 @@ var force = (function () {
 
     /*
      * Queries the next set of records based on pagination.
-     * <p>This should be used if performing a query that retrieves more than can be returned
-     * in accordance with http://www.salesforce.com/us/developer/docs/api_rest/Content/dome_query.htm</p>
-     * <p>Ex: forcetkClient.queryMore( successResponse.nextRecordsUrl, successHandler, failureHandler )</p>
+     * This should be used if performing a query that retrieves more than can be returned
+     * in accordance with http://www.salesforce.com/us/developer/docs/api_rest/Content/dome_query.htm
      *
      * @param url - the url retrieved from nextRecordsUrl or prevRecordsUrl
      * @param successHandler
@@ -747,7 +760,7 @@ var force = (function () {
 
         var obj = parseUrl(url);
 
-        request(
+        return request(
             {
                 path: obj.path,
                 params: obj.parans
@@ -765,7 +778,7 @@ var force = (function () {
      * @param errorHandler
      */
     function search(sosl, successHandler, errorHandler) {
-        request(
+        return request(
             {
                 path: '/services/data/' + apiVersion + '/search',
                 params: {q: sosl}
@@ -785,7 +798,7 @@ var force = (function () {
      */
     function retrieve(objectName, id, fields, successHandler, errorHandler) {
 
-        request(
+        return request(
             {
                 path: '/services/data/' + apiVersion + '/sobjects/' + objectName + '/' + id,
                 params: fields ? {fields: (typeof fields === "string" ? fields : fields.join(","))} : undefined
@@ -819,7 +832,7 @@ var force = (function () {
      * @param errorHandler
      */
     function getPickListValues(objectName, successHandler, errorHandler){
-        request(
+        return request(
             {
                 path: '/services/data/' + apiVersion + '/sobjects/' + objectName + '/describe'
             },
@@ -837,7 +850,7 @@ var force = (function () {
      * @param error
      */
     function create(objectName, data, successHandler, errorHandler) {
-        request(
+        return request(
             {
                 method: 'POST',
                 contentType: 'application/json',
@@ -865,7 +878,7 @@ var force = (function () {
         delete fields.Id;
         delete fields.id;
 
-        request(
+        return request(
             {
                 method: 'PATCH',
                 contentType: 'application/json',
@@ -886,7 +899,7 @@ var force = (function () {
      */
     function del(objectName, id, successHandler, errorHandler) {
 
-        request(
+        return request(
             {
                 method: 'DELETE',
                 path: '/services/data/' + apiVersion + '/sobjects/' + objectName + '/' + id
@@ -907,7 +920,7 @@ var force = (function () {
      */
     function upsert(objectName, externalIdField, externalId, data, successHandler, errorHandler) {
 
-        request(
+        return request(
             {
                 method: 'PATCH',
                 contentType: 'application/json',
@@ -947,7 +960,7 @@ var force = (function () {
             obj.contentType = (obj.method == "DELETE" || obj.method == "GET" ? null : 'application/json');
         }
 
-        request(obj, successHandler, errorHandler);
+        return request(obj, successHandler, errorHandler);
     }
 
     /**
@@ -971,10 +984,151 @@ var force = (function () {
 
         params.path = base + params.path;
 
-        request(params, successHandler, errorHandler);
+        return request(params, successHandler, errorHandler);
 
     }
 
+    /*
+     * Returns a page from the list of files owned by the specified user
+     * @param userId a user id or 'me' - when null uses current user
+     * @param page page number - when null fetches first page
+     * @param successHandler
+     * @param errorHandler
+     */
+    function ownedFilesList(userId, page, successHandler, errorHandler) {
+        return request(
+            {
+                path:'/services/data/' + apiVersion + '/chatter/users/' + (userId == null ? 'me' : userId) +  '/files',
+                params: (page!=null ? {page:page} : {})
+            },
+            successHandler,
+            errorHandler
+        );
+    }
+
+    /*
+     * Returns a page from the list of files from groups that the specified user is a member of
+     * @param userId a user id or 'me' - when null uses current user
+     * @param page page number - when null fetches first page
+     * @param successHandler
+     * @param errorHandler
+     */
+    function filesInUsersGroups(userId, page, successHandler, errorHandler) {
+        return request(
+            {
+                path:'/services/data/' + apiVersion + '/chatter/users/' + (userId == null ? 'me' : userId) +  '/files/filter/groups',
+                params: (page!=null ? {page:page} : {})
+            },
+            successHandler,
+            errorHandler
+        );
+     }
+
+    /*
+     * Returns a page from the list of files shared with the specified user
+     * @param userId a user id or 'me' - when null uses current user
+     * @param page page number - when null fetches first page
+     * @param successHandler
+     * @param errorHandler
+     */
+    function filesSharedWithUser(userId, page, successHandler, errorHandler) {
+        return request(
+            {
+                path:'/services/data/' + apiVersion + '/chatter/users/' + (userId == null ? 'me' : userId) +  '/files/filter/sharedwithme',
+                params: (page!=null ? {page:page} : {})                
+            },
+            successHandler,
+            errorHandler
+        );
+    }
+
+    /*
+     * Returns file details
+     * @param fileId file's Id
+     * @param version - when null fetches details of most recent version
+     * @param successHandler
+     * @param errorHandler
+     */
+    function fileDetails(fileId, version, successHandler, errorHandler) {
+        return request(
+            {
+                path: '/services/data/' + apiVersion + '/chatter/files/' + fileId,
+                params: (version != null ? {versionNumber: version} : {})
+            },
+            successHandler,
+            errorHandler
+        );
+
+    }
+
+    /*
+     * Returns file details for multiple files
+     * @param fileIds file ids
+     * @param successHandler
+     * @param errorHandler
+     */
+    function batchFileDetails(fileIds, successHandler, errorHandler) {
+        return request(
+            {
+                path: '/services/data/' + apiVersion + '/chatter/files/batch/' + fileIds.join(',')
+            },
+            successHandler,
+            errorHandler
+        );
+    }
+
+    /**
+     * Returns a page from the list of entities that this file is shared to
+     *
+     * @param fileId file's Id
+     * @param page page number - when null fetches first page
+     * @param successHandler
+     * @param errorHandler
+     */
+    function fileShares(fileId, page, successHandler, errorHandler) {
+        return request(
+            {
+                path: '/services/data/' + apiVersion + '/chatter/files/' + fileId + '/file-shares',
+                params: (page!=null ? {page:page} : {})                
+            },
+            successHandler,
+            errorHandler
+        );
+
+    }
+
+    /**
+     * Adds a file share for the specified fileId to the specified entityId
+     *
+     * @param fileId file's Id
+     * @param entityId Id of the entity to share the file to (e.g. a user or a group)
+     * @param shareType the type of share (V - View, C - Collaboration)
+     * @param successHandler
+     * @param errorHandler
+     */
+    function addFileShare(fileId, entityId, shareType, successHandler, errorHandler) {
+        return create("ContentDocumentLink",
+                      {
+                          ContentDocumentId:fileId,
+                          LinkedEntityId:entityId,
+                          ShareType:shareType},
+                      successHandler,
+                      errorHandler);
+    }
+
+    /**
+     * Deletes the specified file share.
+     * @param shareId Id of the file share record (aka ContentDocumentLink)
+     * @param successHandler
+     * @param errorHandler
+     */
+    function deleteFileShare(sharedId, successHandler, errorHandler) {
+        return del("ContentDocumentLink",
+                   sharedId,
+                   successHandler,
+                   errorHandler);
+    }
+    
     // The public API
     return {
         init: init,
@@ -1004,9 +1158,18 @@ var force = (function () {
         oauthCallback: oauthCallback,
         getPickListValues: getPickListValues,
         getAttachment: getAttachment,
+        ownedFilesList: ownedFilesList,
+        filesInUsersGroups: filesInUsersGroups,
+        filesSharedWithUser:  filesSharedWithUser,
+        batchFileDetails: batchFileDetails,
+        fileShares: fileShares,
+        addFileShare: addFileShare,
+        deleteFileShare: deleteFileShare,
 
         // For testing only
-        computeWebAppSdkAgent: computeWebAppSdkAgent
+        computeWebAppSdkAgent: computeWebAppSdkAgent,
+        computeEndPointIfMissing: computeEndPointIfMissing,
+        parseUrl: parseUrl
     };
 
 }());

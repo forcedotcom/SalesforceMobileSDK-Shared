@@ -321,21 +321,29 @@ ForceJSTestSuite.prototype.tryUserAgent = function(expectedPlatform, expectedPla
  * Helper function to setup window.force for testing
  */
 ForceJSTestSuite.prototype.setupTestForce = function() {
-    force.init({apiVersion: this.apiVersion});
-    force.request = function(obj, success, error) { return obj; }
+    force.init({
+        apiVersion: this.apiVersion,
+        requestHandler: function(obj) {
+            var obj2 = force.computeEndPointIfMissing(obj.endPoint, obj.path);
+            return {path:obj2.path, method:obj.method, payload:obj.data};
+        }
+    });
 };
 
 /**
  * Helper function to setup window.force for testing get requests
  */
 ForceJSTestSuite.prototype.setupTestForceForGet = function() {
-    force.init({apiVersion: this.apiVersion});
-    force.request = function(obj, success, error) {
-        var encodedData = Object.keys(obj.params || {}).map(function(key) {
-            return [key, payload[key]].map(encodeURIComponent).join("=");
-        }).join("&")
-        return path + (encodedData === "" ? "" : "?" + encodedData);
-    };
+    force.init({
+        apiVersion: this.apiVersion,
+        requestHandler: function(obj) {
+            var obj2 = force.computeEndPointIfMissing(obj.endPoint, obj.path);
+            var encodedData = Object.keys(obj.params || {}).map(function(key) {
+                return [key, obj.params[key]].map(encodeURIComponent).join("=");
+            }).join("&")
+            return obj2.path + (encodedData === "" ? "" : "?" + encodedData);
+        }
+    });
 };
 
 /**
