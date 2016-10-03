@@ -43,6 +43,15 @@ var ForceJSTestSuite = function () {
 ForceJSTestSuite.prototype = new SFTestSuite();
 ForceJSTestSuite.prototype.constructor = ForceJSTestSuite;
 
+ForceJSTestSuite.prototype.finalizeTest = function() {
+    // Unset requestHandler
+    force.init({});
+
+    // Call super.finalizeTest()
+    SFTestSuite.prototype.finalizeTest.call(this);
+};
+
+
 /** 
  * TEST computeWebAppSdkAgent for unrecognized user agents
  */
@@ -179,96 +188,6 @@ ForceJSTestSuite.prototype.testBatchFileDetails = function()  {
 }; 
 
 /** 
- * TEST fileRenditionPath
- */
-ForceJSTestSuite.prototype.testFileRenditionPath = function()  {
-    console.log("In SFForceJSTestSuite.testFileRenditionPath");
-    this.setupTestForceForBinary();
-    // only rendition type provided
-    QUnit.equals(force.fileRenditionPath("someFileId", null, "FLASH"), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=FLASH");
-    QUnit.equals(force.fileRenditionPath("someFileId", null, "PDF"), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=PDF");
-    QUnit.equals(force.fileRenditionPath("someFileId", null, "THUMB120BY90"), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB120BY90");
-    QUnit.equals(force.fileRenditionPath("someFileId", null, "THUMB240BY180"), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB240BY180");
-    QUnit.equals(force.fileRenditionPath("someFileId", null, "THUMB720BY480"), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB720BY480");
-    // rendition type and version provided
-    QUnit.equals(force.fileRenditionPath("someFileId", "someVersionNumber", "FLASH"), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=FLASH&versionNumber=someVersionNumber");
-    QUnit.equals(force.fileRenditionPath("someFileId", "someVersionNumber", "PDF"), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=PDF&versionNumber=someVersionNumber");
-    QUnit.equals(force.fileRenditionPath("someFileId", "someVersionNumber", "THUMB120BY90"), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB120BY90&versionNumber=someVersionNumber");
-    QUnit.equals(force.fileRenditionPath("someFileId", "someVersionNumber", "THUMB240BY180"), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB240BY180&versionNumber=someVersionNumber");
-    QUnit.equals(force.fileRenditionPath("someFileId", "someVersionNumber", "THUMB720BY480"), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB720BY480&versionNumber=someVersionNumber");
-    // rendition type and page number provided
-    QUnit.equals(force.fileRenditionPath("someFileId", null, "FLASH", 3), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=FLASH&page=3");
-    QUnit.equals(force.fileRenditionPath("someFileId", null, "PDF", 3), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=PDF&page=3");
-    QUnit.equals(force.fileRenditionPath("someFileId", null, "THUMB120BY90", 3), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB120BY90&page=3");
-    QUnit.equals(force.fileRenditionPath("someFileId", null, "THUMB240BY180", 3), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB240BY180&page=3");
-    QUnit.equals(force.fileRenditionPath("someFileId", null, "THUMB720BY480", 3), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB720BY480&page=3");
-    // rendition type, version and page number provided
-    QUnit.equals(force.fileRenditionPath("someFileId", "someVersionNumber", "FLASH", 3), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=FLASH&versionNumber=someVersionNumber&page=3");
-    QUnit.equals(force.fileRenditionPath("someFileId", "someVersionNumber", "PDF", 3), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=PDF&versionNumber=someVersionNumber&page=3");
-    QUnit.equals(force.fileRenditionPath("someFileId", "someVersionNumber", "THUMB120BY90", 3), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB120BY90&versionNumber=someVersionNumber&page=3");
-    QUnit.equals(force.fileRenditionPath("someFileId", "someVersionNumber", "THUMB240BY180", 3), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB240BY180&versionNumber=someVersionNumber&page=3");
-    QUnit.equals(force.fileRenditionPath("someFileId", "someVersionNumber", "THUMB720BY480", 3), "/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB720BY480&versionNumber=someVersionNumber&page=3");
-
-    this.finalizeTest();
-}; 
-
-/** 
- * TEST fileRendition
- */
-ForceJSTestSuite.prototype.testFileRendition = function()  {
-    console.log("In SFForceJSTestSuite.testFileRendition");
-    this.setupTestForceForBinary();
-    // only rendition type provided
-    QUnit.deepEqual(force.fileRendition("someFileId", null, "FLASH"), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=FLASH", "application/x-shockwave-flash"]);
-    QUnit.deepEqual(force.fileRendition("someFileId", null, "PDF"), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=PDF", "application/pdf"]);
-    QUnit.deepEqual(force.fileRendition("someFileId", null, "THUMB120BY90"), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB120BY90", "image/jpeg"]);
-    QUnit.deepEqual(force.fileRendition("someFileId", null, "THUMB240BY180"), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB240BY180", "image/jpeg"]);
-    QUnit.deepEqual(force.fileRendition("someFileId", null, "THUMB720BY480"), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB720BY480", "image/jpeg"]);
-    // rendition type and version provided
-    QUnit.deepEqual(force.fileRendition("someFileId", "someVersionNumber", "FLASH"), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=FLASH&versionNumber=someVersionNumber", "application/x-shockwave-flash"]);
-    QUnit.deepEqual(force.fileRendition("someFileId", "someVersionNumber", "PDF"), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=PDF&versionNumber=someVersionNumber", "application/pdf"]);
-    QUnit.deepEqual(force.fileRendition("someFileId", "someVersionNumber", "THUMB120BY90"), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB120BY90&versionNumber=someVersionNumber", "image/jpeg"]);
-    QUnit.deepEqual(force.fileRendition("someFileId", "someVersionNumber", "THUMB240BY180"), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB240BY180&versionNumber=someVersionNumber", "image/jpeg"]);
-    QUnit.deepEqual(force.fileRendition("someFileId", "someVersionNumber", "THUMB720BY480"), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB720BY480&versionNumber=someVersionNumber", "image/jpeg"]);
-    // rendition type and page number provided
-    QUnit.deepEqual(force.fileRendition("someFileId", null, "FLASH", 3), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=FLASH&page=3", "application/x-shockwave-flash"]);
-    QUnit.deepEqual(force.fileRendition("someFileId", null, "PDF", 3), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=PDF&page=3", "application/pdf"]);
-    QUnit.deepEqual(force.fileRendition("someFileId", null, "THUMB120BY90", 3), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB120BY90&page=3", "image/jpeg"]);
-    QUnit.deepEqual(force.fileRendition("someFileId", null, "THUMB240BY180", 3), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB240BY180&page=3", "image/jpeg"]);
-    QUnit.deepEqual(force.fileRendition("someFileId", null, "THUMB720BY480", 3), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB720BY480&page=3", "image/jpeg"]);
-    // rendition type, version and page number provided
-    QUnit.deepEqual(force.fileRendition("someFileId", "someVersionNumber", "FLASH", 3), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=FLASH&versionNumber=someVersionNumber&page=3", "application/x-shockwave-flash"]);
-    QUnit.deepEqual(force.fileRendition("someFileId", "someVersionNumber", "PDF", 3), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=PDF&versionNumber=someVersionNumber&page=3", "application/pdf"]);
-    QUnit.deepEqual(force.fileRendition("someFileId", "someVersionNumber", "THUMB120BY90", 3), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB120BY90&versionNumber=someVersionNumber&page=3", "image/jpeg"]);
-    QUnit.deepEqual(force.fileRendition("someFileId", "someVersionNumber", "THUMB240BY180", 3), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB240BY180&versionNumber=someVersionNumber&page=3", "image/jpeg"]);
-    QUnit.deepEqual(force.fileRendition("someFileId", "someVersionNumber", "THUMB720BY480", 3), ["/" + this.apiVersion + "/chatter/files/someFileId/rendition?type=THUMB720BY480&versionNumber=someVersionNumber&page=3", "image/jpeg"]);
-
-    this.finalizeTest();
-}; 
-
-/** 
- * TEST fileContentsPath
- */
-ForceJSTestSuite.prototype.testFileContentsPath = function()  {
-    console.log("In SFForceJSTestSuite.testFileContentsPath");
-    this.setupTestForceForBinary();
-    QUnit.equals(force.fileContentsPath("someFileId"), "/" + this.apiVersion + "/chatter/files/someFileId/content");
-    QUnit.deepEqual(force.fileContentsPath("someFileId", "someVersionNumber"), "/" + this.apiVersion + "/chatter/files/someFileId/content?versionNumber=someVersionNumber");
-    this.finalizeTest();
-}; 
-
-/** 
- * TEST fileContents
- */
-ForceJSTestSuite.prototype.testFileContents = function()  {
-    console.log("In SFForceJSTestSuite.testFileContents");
-    this.setupTestForceForBinary();
-    QUnit.deepEqual(force.fileContents("someFileId"), ["/" + this.apiVersion + "/chatter/files/someFileId/content", null]);
-    QUnit.deepEqual(force.fileContents("someFileId", "someVersionNumber"), ["/" + this.apiVersion + "/chatter/files/someFileId/content?versionNumber=someVersionNumber", null]);
-    this.finalizeTest();
-}; 
-
-/** 
  * TEST fileShares
  */
 ForceJSTestSuite.prototype.testFileShares = function()  {
@@ -285,7 +204,7 @@ ForceJSTestSuite.prototype.testFileShares = function()  {
 ForceJSTestSuite.prototype.testAddFileShare = function()  {
     console.log("In SFForceJSTestSuite.testAddFileShare");
     this.setupTestForce();
-    QUnit.deepEqual(force.addFileShare("fileId", "entityId", "shareType"), {path:"/" + this.apiVersion + "/sobjects/ContentDocumentLink/", method:"POST", payload:'{"ContentDocumentId":"fileId","LinkedEntityId":"entityId","ShareType":"shareType"}'});
+    QUnit.deepEqual(force.addFileShare("fileId", "entityId", "shareType"), {path:"/" + this.apiVersion + "/sobjects/ContentDocumentLink", method:"POST", payload:{ContentDocumentId:"fileId", LinkedEntityId:"entityId", ShareType:"shareType"}});
     this.finalizeTest();
 }; 
 
@@ -344,14 +263,6 @@ ForceJSTestSuite.prototype.setupTestForceForGet = function() {
             return obj2.path + (encodedData === "" ? "" : "?" + encodedData);
         }
     });
-};
-
-/**
- * Helper function to setup window.force for testing binary fetching
- */
-ForceJSTestSuite.prototype.setupTestForceForBinary = function() {
-    force.init({apiVersion: this.apiVersion});
-    force.getChatterFile = function(path, mimeType) { return [path, mimeType]; }
 };
 
 }

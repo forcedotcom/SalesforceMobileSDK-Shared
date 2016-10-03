@@ -373,8 +373,8 @@ var force = (function () {
             }
 
             // Testing only - to set (or unset) requestHandler
-                requestHandler = params.requestHandler;
-            }
+            requestHandler = params.requestHandler;
+        }
 
         console.log("useProxy: " + useProxy);
 
@@ -1156,9 +1156,12 @@ var force = (function () {
         oauthCallback: oauthCallback,
         getPickListValues: getPickListValues,
         getAttachment: getAttachment,
+        
+        //Files
         ownedFilesList: ownedFilesList,
         filesInUsersGroups: filesInUsersGroups,
         filesSharedWithUser:  filesSharedWithUser,
+        fileDetails: fileDetails,
         batchFileDetails: batchFileDetails,
         fileShares: fileShares,
         addFileShare: addFileShare,
