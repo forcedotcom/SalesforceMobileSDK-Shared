@@ -372,11 +372,9 @@ var force = (function () {
                 oauth.refresh_token = params.refreshToken;
             }
 
-            // Testing only
-            if (params.requestHandler) {
+            // Testing only - to set (or unset) requestHandler
                 requestHandler = params.requestHandler;
             }
-        }
 
         console.log("useProxy: " + useProxy);
 
