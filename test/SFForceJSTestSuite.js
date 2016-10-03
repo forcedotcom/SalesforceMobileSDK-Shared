@@ -51,6 +51,44 @@ ForceJSTestSuite.prototype.finalizeTest = function() {
     SFTestSuite.prototype.finalizeTest.call(this);
 };
 
+/** 
+ * TEST parseUrl
+ */
+ForceJSTestSuite.prototype.testParseUrl = function() {
+    console.log("In SFForceJSTestSuite.testParseQueryString");
+
+    // No port, no path, no params, no hash
+    QUnit.deepEqual(force.parseUrl("https://server.com"),
+                    {"protocol":"https:","host":"server.com","hostname":"server.com","port":undefined,"path":"","params":{},"hash":""})
+
+    // Port
+    QUnit.deepEqual(force.parseUrl("https://server.com:1234"),
+                    {"protocol":"https:","host":"server.com:1234","hostname":"server.com","port":"1234","path":"","params":{},"hash":""})
+
+    // Path
+    QUnit.deepEqual(force.parseUrl("https://server.com/path1/path2"),
+                    {"protocol":"https:","host":"server.com","hostname":"server.com","port":undefined,"path":"/path1/path2","params":{},"hash":""})
+
+    // Hash
+    QUnit.deepEqual(force.parseUrl("https://server.com#hashhash"),
+                    {"protocol":"https:","host":"server.com","hostname":"server.com","port":undefined,"path":"","params":{},"hash":"#hashhash"})
+
+    // Params
+    QUnit.deepEqual(force.parseUrl("https://server.com?a=b&c=%20d"),
+                    {"protocol":"https:","host":"server.com","hostname":"server.com","port":undefined,"path":"","params":{a:"b",c:" d"},"hash":""})
+
+    // Port, path, params, hash
+    QUnit.deepEqual(force.parseUrl("https://server.com:1234/path1/path2?a=b&c=%20d#hashhash"),
+                    {"protocol":"https:","host":"server.com:1234","hostname":"server.com","port":"1234","path":"/path1/path2","params":{a:"b",c:" d"},"hash":"#hashhash"})
+
+    // Real life examples
+    QUnit.deepEqual(force.parseUrl("https://cs1.salesforce.com/services/data/v36.0/query?q=select%20Id%2CName%20from%20Account%20where%20Id%20%3D%20'001S000000p8dcrIAA'"),
+                    {"protocol":"https:","host":"cs1.salesforce.com","hostname":"cs1.salesforce.com","port":undefined,"path":"/services/data/v36.0/query","params":{"q":"select Id,Name from Account where Id = '001S000000p8dcrIAA'"},"hash":""});
+    QUnit.deepEqual(force.parseUrl("https://cs1.salesforce.com/services/data/v36.0/sobjects/Account/001S000000p8dccIAA?fields=Id%2CName"),
+                    {"protocol":"https:","host":"cs1.salesforce.com","hostname":"cs1.salesforce.com","port":undefined,"path":"/services/data/v36.0/sobjects/Account/001S000000p8dccIAA","params":{"fields":"Id,Name"},"hash":""});
+
+    this.finalizeTest();
+};
 
 /** 
  * TEST computeWebAppSdkAgent for unrecognized user agents
@@ -116,6 +154,24 @@ ForceJSTestSuite.prototype.testComputeWebAppSdkAgentForDesktopUserAgents = funct
     this.tryUserAgent("Unknown", "Unknown", "Unknown", "Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.93 Safari/537.36");
     this.finalizeTest();
 }; 
+
+/** 
+ * TEST computeEndPointIfMissing
+ */
+ForceJSTestSuite.prototype.testComputeEndPointIfMissing = function() {
+    console.log("In SFForceJSTestSuite.testComputeEndPointIfMissing");
+
+    QUnit.deepEqual(force.computeEndPointIfMissing(undefined, "/services/data"),
+                    {endPoint: "/services/data", path:"/"});
+
+    QUnit.deepEqual(force.computeEndPointIfMissing(undefined, "/services/apex/abc"),
+                    {endPoint: "/services/apex", path:"/abc"});
+
+    QUnit.deepEqual(force.computeEndPointIfMissing("/services/data", "/versions"),
+                    {endPoint: "/services/data", path:"/versions"});
+
+    this.finalizeTest();
+}
 
 
 /** 

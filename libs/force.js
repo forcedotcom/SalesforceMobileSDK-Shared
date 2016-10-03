@@ -218,16 +218,19 @@ var force = (function () {
     }
 
     function parseQueryString(queryString) {
-        queryString = queryString.charAt(0) === '?' ? queryString.substring(1) : queryString;
-        var qs = decodeURIComponent(queryString),
-            obj = {},
-            params = qs.split('&');
-            params.forEach(function (param) {
-                var splitter = param.split('=');
-                if (splitter.length == 2) {
-                    obj[splitter[0]] = splitter[1];
-                }
-            });
+        if ((queryString || '') === '') {
+            return {};
+        }
+
+        var qs = queryString.charAt(0) === '?' ? queryString.substring(1) : queryString;
+        var obj = {};
+        var params = qs.split('&');
+        params.forEach(function (param) {
+            var splitter = param.split('=');
+            if (splitter.length == 2) {
+                obj[decodeURIComponent(splitter[0])] = decodeURIComponent(splitter[1]);
+            }
+        });
         return obj;
     }
 
@@ -243,7 +246,7 @@ var force = (function () {
     }
 
     function parseUrl(url) {
-        var match = url.match(/^(https?\:)\/\/(([^:\/?#]*)(?:\:([0-9]+))?)(\/[^?#]*)(\?[^#]*|)(#.*|)$/);
+        var match = url.match(/^(https?\:)\/\/(([^:\/?#]*)(?:\:([0-9]+))?)([^?#]*)(\?[^#]*|)(#.*|)$/);
         return match && {
             protocol: match[1],
             host: match[2],
@@ -252,7 +255,7 @@ var force = (function () {
             path: match[5],
             params: parseQueryString(match[6]),
             hash: match[7]
-        }
+        };
     }
 
     function refreshTokenWithPlugin(success, error) {
@@ -529,6 +532,7 @@ var force = (function () {
      *
      * For instance for undefined, '/services/data'     => {endPoint:'/services/data', path:'/'}
      *                  undefined, '/services/apex/abc' => {endPoint:'/services/apex', path:'/abc'}
+     *                  '/services/data, '/versions'    => {endPoint:'/services/data', path:'/versions'}
      */
     function computeEndPointIfMissing(endPoint, path) {
         if (endPoint !== undefined) {
@@ -1167,7 +1171,7 @@ var force = (function () {
         addFileShare: addFileShare,
         deleteFileShare: deleteFileShare,
 
-        // For testing only
+        // Exposed for testing only
         computeWebAppSdkAgent: computeWebAppSdkAgent,
         computeEndPointIfMissing: computeEndPointIfMissing,
         parseUrl: parseUrl
