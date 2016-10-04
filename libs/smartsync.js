@@ -25,7 +25,7 @@
  *
  */
 
-(function($, _, Backbone, innerForcetkClient) {
+(function($, _, Backbone, forceJs) {
 
     "use strict";
 
@@ -97,7 +97,7 @@
     };
 
     // Private forcetk client with promise-wrapped methods
-    var forcetkClient = null;
+    var forceJsClient = null;
 
     // Private smartstore client with promise-wrapped methods
     var smartstoreClient = null;
@@ -114,29 +114,29 @@
         }
     };
 
-    innerForcetkClient.setUserAgent(patchUserAgent(innerForcetkClient.getUserAgent()));
+    forceJs.setUserAgent(patchUserAgent(forceJs.getUserAgent()));
 
     Force.init = function() {
-        forcetkClient = new Object();
-        forcetkClient.impl = innerForcetkClient;
-        forcetkClient.create = promiser(innerForcetkClient, "create", "forcetkClient");
-        forcetkClient.retrieve = promiser(innerForcetkClient, "retrieve", "forcetkClient");
-        forcetkClient.update = promiser(innerForcetkClient, "update", "forcetkClient");
-        forcetkClient.del = promiser(innerForcetkClient, "del", "forcetkClient");
-        forcetkClient.query = promiser(innerForcetkClient, "query", "forcetkClient");
-        forcetkClient.queryMore = promiser(innerForcetkClient, "queryMore", "forcetkClient");
-        forcetkClient.search = promiser(innerForcetkClient, "search", "forcetkClient");
-        forcetkClient.metadata = promiser(innerForcetkClient, "metadata", "forcetkClient");
-        forcetkClient.describe = promiser(innerForcetkClient, "describe", "forcetkClient");
-        forcetkClient.describeLayout = promiser(innerForcetkClient, "describeLayout", "forcetkClient");
-        forcetkClient.ownedFilesList = promiser(innerForcetkClient, "ownedFilesList", "forcetkClient");
-        forcetkClient.filesInUsersGroups = promiser(innerForcetkClient, "filesInUsersGroups", "forcetkClient");
-        forcetkClient.filesSharedWithUser = promiser(innerForcetkClient, "filesSharedWithUser", "forcetkClient");
-        forcetkClient.fileDetails = promiser(innerForcetkClient, "fileDetails", "forcetkClient");
-        forcetkClient.apexrest = promiser(innerForcetkClient, "apexrest", "forcetkClient");
+        forceJsClient = new Object();
+        forceJsClient.impl = forceJs;
+        forceJsClient.create = promiser(forceJs, "create", "forceJsClient");
+        forceJsClient.retrieve = promiser(forceJs, "retrieve", "forceJsClient");
+        forceJsClient.update = promiser(forceJs, "update", "forceJsClient");
+        forceJsClient.del = promiser(forceJs, "del", "forceJsClient");
+        forceJsClient.query = promiser(forceJs, "query", "forceJsClient");
+        forceJsClient.queryMore = promiser(forceJs, "queryMore", "forceJsClient");
+        forceJsClient.search = promiser(forceJs, "search", "forceJsClient");
+        forceJsClient.metadata = promiser(forceJs, "metadata", "forceJsClient");
+        forceJsClient.describe = promiser(forceJs, "describe", "forceJsClient");
+        forceJsClient.describeLayout = promiser(forceJs, "describeLayout", "forceJsClient");
+        forceJsClient.ownedFilesList = promiser(forceJs, "ownedFilesList", "forceJsClient");
+        forceJsClient.filesInUsersGroups = promiser(forceJs, "filesInUsersGroups", "forceJsClient");
+        forceJsClient.filesSharedWithUser = promiser(forceJs, "filesSharedWithUser", "forceJsClient");
+        forceJsClient.fileDetails = promiser(forceJs, "fileDetails", "forceJsClient");
+        forceJsClient.apexrest = promiser(forceJs, "apexrest", "forceJsClient");
 
         // Exposing outside
-        Force.forcetkClient = forcetkClient;
+        Force.forceJsClient = forceJsClient;
 
         if (navigator.smartstore)
         {
@@ -523,7 +523,7 @@
         var serverDescribeUnlessCached = function(that) {
             var cacheMode = _.result(that, 'cacheMode');
             if(!that._data.describeResult && cacheMode != Force.CACHE_MODE.CACHE_ONLY) {
-                return forcetkClient.describe(that.sobjectType)
+                return forceJsClient.describe(that.sobjectType)
                         .then(function(describeResult) {
                             that._data.describeResult = describeResult;
                             that._cacheSynced = false;
@@ -536,7 +536,7 @@
         var serverMetadataUnlessCached = function(that) {
             var cacheMode = _.result(that, 'cacheMode');
             if(!that._data.metadataResult && cacheMode != Force.CACHE_MODE.CACHE_ONLY) {
-                return forcetkClient.metadata(that.sobjectType)
+                return forceJsClient.metadata(that.sobjectType)
                         .then(function(metadataResult) {
                             that._data.metadataResult = metadataResult;
                             that._cacheSynced = false;
@@ -550,7 +550,7 @@
         var serverDescribeLayoutUnlessCached = function(that, recordTypeId) {
             var cacheMode = _.result(that, 'cacheMode');
             if(!that._data["layoutInfo_" + recordTypeId] && cacheMode != Force.CACHE_MODE.CACHE_ONLY) {
-                return forcetkClient.describeLayout(that.sobjectType, recordTypeId)
+                return forceJsClient.describeLayout(that.sobjectType, recordTypeId)
                         .then(function(layoutResult) {
                             that._data["layoutInfo_" + recordTypeId] = layoutResult;
                             that._cacheSynced = false;
@@ -710,26 +710,26 @@
         // Server actions helper
         var serverCreate   = function() {
             var attributesToSave = _.pick(attributes, fieldlist);
-            return forcetkClient.create(sobjectType, _.omit(attributesToSave, "Id"))
+            return forceJsClient.create(sobjectType, _.omit(attributesToSave, "Id"))
                 .then(function(resp) {
                     return _.extend(attributes, {Id: resp.id});
                 })
         };
 
         var serverRetrieve = function() {
-            return forcetkClient.retrieve(sobjectType, id, fieldlist);
+            return forceJsClient.retrieve(sobjectType, id, fieldlist);
         };
 
         var serverUpdate   = function() {
             var attributesToSave = _.extend(_.pick(attributes, fieldlist), {Id: id});
-            return forcetkClient.update(sobjectType, attributesToSave)
+            return forceJsClient.update(sobjectType, attributesToSave)
                 .then(function(resp) {
                     return attributes;
                 })
         };
 
         var serverDelete   = function() {
-            return forcetkClient.del(sobjectType, id)
+            return forceJsClient.del(sobjectType, id)
                 .then(function(resp) {
                     return null;
                 })
@@ -766,7 +766,7 @@
         // Server actions helper
         var serverCreate   = function() {
             var attributesToSave = _.pick(attributes, fieldlist);
-            return forcetkClient.apexrest({path:path, method:"POST", data:_.omit(attributesToSave, idField)})
+            return forceJsClient.apexrest({path:path, method:"POST", data:_.omit(attributesToSave, idField)})
                 .then(function(resp) {
                     var idMap = {};
                     idMap[idField] = resp[idField];
@@ -775,19 +775,19 @@
         };
 
         var serverRetrieve = function() {
-            return forcetkClient.apexrest({path:path + "/" + id, method:"GET", params:{fields:fieldlist.join(",")}});
+            return forceJsClient.apexrest({path:path + "/" + id, method:"GET", params:{fields:fieldlist.join(",")}});
         };
 
         var serverUpdate   = function() {
             var attributesToSave = _.pick(attributes, fieldlist);
-            return forcetkClient.apexrest({path:path + "/" + id, method:"PATCH", data:attributesToSave})
+            return forceJsClient.apexrest({path:path + "/" + id, method:"PATCH", data:attributesToSave})
                 .then(function(resp) {
                     return attributes;
                 })
         };
 
         var serverDelete   = function() {
-            return forcetkClient.apexrest({path:path + "/" + id, method:"DELETE"})
+            return forceJsClient.apexrest({path:path + "/" + id, method:"DELETE"})
                 .then(function(resp) {
                     return null;
                 })
@@ -1131,7 +1131,7 @@
 
         // Server actions helper
         var serverSoql = function(soql) {
-            return forcetkClient.query(soql)
+            return forceJsClient.query(soql)
                 .then(function(resp) {
                     var nextRecordsUrl = resp.nextRecordsUrl;
                     return {
@@ -1141,7 +1141,7 @@
                         getMore: function() {
                             var that = this;
                             if (!nextRecordsUrl) return null;
-                            return forcetkClient.queryMore(nextRecordsUrl).then(function(resp) {
+                            return forceJsClient.queryMore(nextRecordsUrl).then(function(resp) {
                                 nextRecordsUrl = resp.nextRecordsUrl;
                                 that.records = _.union(that.records, resp.records);
                                 return resp.records;
@@ -1155,7 +1155,7 @@
         };
 
         var serverSosl = function(sosl) {
-            return forcetkClient.search(sosl).then(function(resp) {
+            return forceJsClient.search(sosl).then(function(resp) {
                 return {
                     records: resp,
                     totalSize: resp.length,
@@ -1166,7 +1166,7 @@
         };
 
         var serverMru = function(sobjectType, fieldlist, orderBy, orderDirection) {
-            return forcetkClient.metadata(sobjectType)
+            return forceJsClient.metadata(sobjectType)
                 .then(function(resp) {
                     //Only do query if the fieldList is provided.
                     if (fieldlist) {
@@ -1223,7 +1223,7 @@
 
         // Server actions helper
         var serverFetch = function(apexRestPath) {
-            return forcetkClient.apexrest({path:apexRestPath, params:config.params})
+            return forceJsClient.apexrest({path:apexRestPath, params:config.params})
                 .then(function(resp) {
                     var nextRecordsUrl = resp.nextRecordsUrl;
                     return {
@@ -1233,7 +1233,7 @@
                         getMore: function() {
                             var that = this;
                             if (!nextRecordsUrl) return null;
-                            return forcetkClient.queryMore(nextRecordsUrl).then(function(resp) {
+                            return forceJsClient.queryMore(nextRecordsUrl).then(function(resp) {
                                 nextRecordsUrl = resp.nextRecordsUrl;
                                 that.records = _.union(that.records, resp.records);
                                 return resp.records;

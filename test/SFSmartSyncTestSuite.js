@@ -1149,14 +1149,14 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithServerCreate = function() {
         assertContains(data, {Name:"TestAccount"});
 
         console.log("## Direct retrieve from server");
-        return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
+        return Force.forceJsClient.retrieve("Account", id, ["Id", "Name"]);
     })
     .then(function(data) {
         console.log("## Checking data returned from server");
         assertContains(data, {Id:id, Name:"TestAccount"});
 
         console.log("## Cleaning up");
-        return Force.forcetkClient.del("account", id);
+        return Force.forceJsClient.del("account", id);
     })
     .then(function() {
         self.finalizeTest();
@@ -1173,7 +1173,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithServerRead = function() {
     var id;
 
     console.log("## Direct creation against server");    
-    Force.forcetkClient.create("Account", {Name:"TestAccount"})
+    Force.forceJsClient.create("Account", {Name:"TestAccount"})
         .then(function(resp) {
             id = resp.id;
 
@@ -1185,7 +1185,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithServerRead = function() {
             assertContains(data, {Id:id, Name:"TestAccount"});
 
             console.log("## Cleaning up");
-            return Force.forcetkClient.del("account", id);
+            return Force.forceJsClient.del("account", id);
         })
         .then(function() {
             self.finalizeTest();
@@ -1201,7 +1201,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithServerUpdate = function() {
     var id;
 
     console.log("## Direct creation against server");    
-    Force.forcetkClient.create("Account", {Name:"TestAccount"})
+    Force.forceJsClient.create("Account", {Name:"TestAccount"})
         .then(function(resp) {
             id = resp.id;
 
@@ -1213,14 +1213,14 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithServerUpdate = function() {
             assertContains(data, {Name:"TestAccount2"});
 
             console.log("## Direct retrieve from server");
-            return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
+            return Force.forceJsClient.retrieve("Account", id, ["Id", "Name"]);
         })
         .then(function(data) {
             console.log("## Checking data returned from server");
             assertContains(data, {Id:id, Name:"TestAccount2"});
 
             console.log("## Cleaning up");
-            return Force.forcetkClient.del("account", id);
+            return Force.forceJsClient.del("account", id);
         })
         .then(function() {
             self.finalizeTest();
@@ -1236,7 +1236,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithServerDelete = function() {
     var id;
 
     console.log("## Direct creation against server");    
-    Force.forcetkClient.create("Account", {Name:"TestAccount"})
+    Force.forceJsClient.create("Account", {Name:"TestAccount"})
         .then(function(resp) {
             id = resp.id;
 
@@ -1302,7 +1302,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectCreate = function() {
         })
         .then(function() {
             console.log("## Cleaning up");
-            return $.when(Force.forcetkClient.del("account", id), Force.forcetkClient.del("account", id2), Force.smartstoreClient.removeSoup(soupName));
+            return $.when(Force.forceJsClient.del("account", id), Force.forceJsClient.del("account", id2), Force.smartstoreClient.removeSoup(soupName));
         })
         .then(function() {
             self.finalizeTest();
@@ -1329,7 +1329,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectRetrieve = function() {
         })
         .then(function() {
             console.log("## Direct creation against server");    
-            return Force.forcetkClient.create("Account", {Name:"TestAccount"});
+            return Force.forceJsClient.create("Account", {Name:"TestAccount"});
         })
         .then(function(resp) {
             id = resp.id;
@@ -1372,7 +1372,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectRetrieve = function() {
         })
         .then(function() {
             console.log("## Direct creation against server");    
-            return Force.forcetkClient.create("Account", {Name:"TestAccount2"});
+            return Force.forceJsClient.create("Account", {Name:"TestAccount2"});
         })
         .then(function(resp) {
             id2 = resp.id;
@@ -1385,7 +1385,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectRetrieve = function() {
         })
         .then(function() {
             console.log("## Cleaning up");
-            return $.when(Force.forcetkClient.del("account", id), Force.forcetkClient.del("account", id2), Force.smartstoreClient.removeSoup(soupName));
+            return $.when(Force.forceJsClient.del("account", id), Force.forceJsClient.del("account", id2), Force.smartstoreClient.removeSoup(soupName));
         })
         .then(function() {
             self.finalizeTest();
@@ -1410,7 +1410,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectUpdate = function() {
         })
         .then(function() {
             console.log("## Direct creation against server");    
-            return Force.forcetkClient.create("Account", {Name:"TestAccount"});
+            return Force.forceJsClient.create("Account", {Name:"TestAccount"});
         })
         .then(function(data) {
             id = data.id;
@@ -1442,7 +1442,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectUpdate = function() {
         })
         .then(function() {
             console.log("## Cleaning up");
-            return $.when(Force.forcetkClient.del("account", id), Force.smartstoreClient.removeSoup(soupName));
+            return $.when(Force.forceJsClient.del("account", id), Force.smartstoreClient.removeSoup(soupName));
         })
         .then(function() {
             self.finalizeTest();
@@ -1467,7 +1467,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectDelete = function() {
         })
         .then(function() {
             console.log("## Direct creation against server");    
-            return Force.forcetkClient.create("Account", {Name:"TestAccount"});
+            return Force.forceJsClient.create("Account", {Name:"TestAccount"});
         })
         .then(function(data) {
             id = data.id;
@@ -1479,7 +1479,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectDelete = function() {
         })
         .then(function() {
             console.log("## Direct creation against server");    
-            return Force.forcetkClient.create("Account", {Name:"TestAccount"});
+            return Force.forceJsClient.create("Account", {Name:"TestAccount"});
         })
         .then(function(data) {
             id2 = data.id;
@@ -1560,8 +1560,8 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictCreate = function() {
         })
         .then(function(data) {
             console.log("## Cleaning up");
-            return $.when(Force.forcetkClient.del("account", id), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals),
-                          Force.forcetkClient.del("account", id2), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
+            return $.when(Force.forceJsClient.del("account", id), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals),
+                          Force.forceJsClient.del("account", id2), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
 
         })
         .then(function() {
@@ -1590,7 +1590,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictRetrieve = function() 
         })
         .then(function() {
             console.log("## Direct creation against server");    
-            return Force.forcetkClient.create("Account", {Name:"TestAccount"});
+            return Force.forceJsClient.create("Account", {Name:"TestAccount"});
         })
         .then(function(resp) {
             id = resp.id;
@@ -1633,7 +1633,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictRetrieve = function() 
         })
         .then(function() {
             console.log("## Direct creation against server");    
-            return Force.forcetkClient.create("Account", {Name:"TestAccount2"});
+            return Force.forceJsClient.create("Account", {Name:"TestAccount2"});
         })
         .then(function(resp) {
             id2 = resp.id;
@@ -1646,7 +1646,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictRetrieve = function() 
         })
         .then(function() {
             console.log("## Cleaning up");
-            return $.when(Force.forcetkClient.del("account", id), Force.forcetkClient.del("account", id2), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
+            return $.when(Force.forceJsClient.del("account", id), Force.forceJsClient.del("account", id2), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
         })
         .then(function() {
             self.finalizeTest();
@@ -1673,7 +1673,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() {
         })
         .then(function() {
             console.log("## Direct creation against server");    
-            return Force.forcetkClient.create("Account", {Name:"TestAccount"});
+            return Force.forceJsClient.create("Account", {Name:"TestAccount"});
         })
         .then(function(data) {
             id = data.id;
@@ -1823,7 +1823,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() {
         })
         .then(function() {
             console.log("## Cleaning up");
-            return $.when(Force.forcetkClient.del("account", id), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
+            return $.when(Force.forceJsClient.del("account", id), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
         })
         .then(function() {
             self.finalizeTest();
@@ -1850,7 +1850,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() {
         })
         .then(function() {
             console.log("## Direct creation against server");    
-            return Force.forcetkClient.create("Account", {Name:"TestAccount"});
+            return Force.forceJsClient.create("Account", {Name:"TestAccount"});
         })
         .then(function(data) {
             id = data.id;
@@ -1862,7 +1862,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() {
         })
         .then(function() {
             console.log("## Direct creation against server");    
-            return Force.forcetkClient.create("Account", {Name:"TestAccount"});
+            return Force.forceJsClient.create("Account", {Name:"TestAccount"});
         })
         .then(function(data) {
             id2 = data.id;
@@ -2040,7 +2040,7 @@ SmartSyncTestSuite.prototype.testSObjectFetch = function() {
         })
         .then(function() {
             console.log("## Direct creation against server");    
-            return Force.forcetkClient.create("Account", {Name:"TestAccount"});
+            return Force.forceJsClient.create("Account", {Name:"TestAccount"});
         })
         .then(function(data) {
             id = data.id;
@@ -2054,7 +2054,7 @@ SmartSyncTestSuite.prototype.testSObjectFetch = function() {
         })
         .then(function() {
             console.log("## Cleaning up");
-            return $.when(Force.forcetkClient.del("account", id), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
+            return $.when(Force.forceJsClient.del("account", id), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
         })
         .then(function() {
             self.finalizeTest();
@@ -2094,7 +2094,7 @@ SmartSyncTestSuite.prototype.testSObjectSave = function() {
         })
         .then(function() {
             console.log("## Cleaning up");
-            return $.when(Force.forcetkClient.del("account", id), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
+            return $.when(Force.forceJsClient.del("account", id), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
         })
         .then(function() {
             self.finalizeTest();
@@ -2206,14 +2206,14 @@ SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerCreate = function()
         assertContains(data, {accountName:"TestAccount"});
 
         console.log("## Direct retrieve from server");
-        return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
+        return Force.forceJsClient.retrieve("Account", id, ["Id", "Name"]);
     })
     .then(function(data) {
         console.log("## Checking data returned from server");
         assertContains(data, {Id:id, Name:"TestAccount"});
 
         console.log("## Cleaning up");
-        return Force.forcetkClient.del("account", id);
+        return Force.forceJsClient.del("account", id);
     })
     .then(function() {
         self.finalizeTest();
@@ -2230,7 +2230,7 @@ SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerRead = function() {
     var id;
 
     console.log("## Direct creation against server");    
-    Force.forcetkClient.create("Account", {Name:"TestAccount"})
+    Force.forceJsClient.create("Account", {Name:"TestAccount"})
         .then(function(resp) {
             id = resp.id;
 
@@ -2242,7 +2242,7 @@ SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerRead = function() {
             assertContains(data, {accountId:id, accountName:"TestAccount"});
 
             console.log("## Cleaning up");
-            return Force.forcetkClient.del("account", id);
+            return Force.forceJsClient.del("account", id);
         })
         .then(function() {
             self.finalizeTest();
@@ -2258,7 +2258,7 @@ SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerUpdate = function()
     var id;
 
     console.log("## Direct creation against server");    
-    Force.forcetkClient.create("Account", {Name:"TestAccount"})
+    Force.forceJsClient.create("Account", {Name:"TestAccount"})
         .then(function(resp) {
             id = resp.id;
 
@@ -2270,14 +2270,14 @@ SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerUpdate = function()
             assertContains(data, {accountName:"TestAccount2"});
 
             console.log("## Direct retrieve from server");
-            return Force.forcetkClient.retrieve("Account", id, ["Id", "Name"]);
+            return Force.forceJsClient.retrieve("Account", id, ["Id", "Name"]);
         })
         .then(function(data) {
             console.log("## Checking data returned from server");
             assertContains(data, {Id:id, Name:"TestAccount2"});
 
             console.log("## Cleaning up");
-            return Force.forcetkClient.del("account", id);
+            return Force.forceJsClient.del("account", id);
         })
         .then(function() {
             self.finalizeTest();
@@ -2293,7 +2293,7 @@ SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerDelete = function()
     var id;
 
     console.log("## Direct creation against server");    
-    Force.forcetkClient.create("Account", {Name:"TestAccount"})
+    Force.forceJsClient.create("Account", {Name:"TestAccount"})
         .then(function(resp) {
             id = resp.id;
 
@@ -3164,7 +3164,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithNoOverwrite = function(
                 QUnit.ok(record.__locally_updated__, "Record should still be marked as updated");
             });
             console.log("## Checking server");
-            return Force.forcetkClient.query("select Id, Name from Account where Id in ('" + _.keys(idToName)[0] + "', '" + _.keys(idToName)[1] + "', '" + _.keys(idToName)[2] + "')");
+            return Force.forceJsClient.query("select Id, Name from Account where Id in ('" + _.keys(idToName)[0] + "', '" + _.keys(idToName)[1] + "', '" + _.keys(idToName)[2] + "')");
         })
         .then(function(result) {
             QUnit.equals(result.records.length, 3, "Expected 3 records");
@@ -3221,7 +3221,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
             console.log("## Checking data returned from cache");
             QUnit.equals(result.records.length, 0, "Expected 0 records");
             console.log("## Checking server");
-            return Force.forcetkClient.query("select Id from Account where Id in ('" + _.pluck(deletedRecords, "Id").join("','") + "')");
+            return Force.forceJsClient.query("select Id from Account where Id in ('" + _.pluck(deletedRecords, "Id").join("','") + "')");
         })
         .then(function(resp) {
             console.log("## Checking data returned from server");
@@ -3298,7 +3298,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeletedWithNoOverwrite = function(
                 QUnit.ok(record.__locally_deleted__, "Record should still be marked as deleted");
             });
             console.log("## Checking server");
-            return Force.forcetkClient.query("select Id from Account where Id in ('" + _.pluck(deletedRecords, "Id").join("','") + "')");
+            return Force.forceJsClient.query("select Id from Account where Id in ('" + _.pluck(deletedRecords, "Id").join("','") + "')");
         })
         .then(function(resp) {
             console.log("## Checking data returned from server");
@@ -3429,7 +3429,7 @@ var createRecords = function(idToName, prefix, count) {
     return $.when.apply(null, (_.map(_.range(count), function(i) {
         var name = prefix + i;
         console.log("Creating " + name);
-        return Force.forcetkClient.create("Account", {Name:name})
+        return Force.forceJsClient.create("Account", {Name:name})
             .then(function(resp) {
                 console.log("Created" + name);
                 idToName[resp.id] = name;
@@ -3444,7 +3444,7 @@ var updateRecords = function(idToUpdatedName) {
     return $.when.apply(null, (_.map(_.keys(idToUpdatedName), function(id) {
         var updatedName = idToUpdatedName[id];
         console.log("Updating " + updatedName);
-        return Force.forcetkClient.update("Account",{Id:id, Name:updatedName})
+        return Force.forceJsClient.update("Account",{Id:id, Name:updatedName})
             .then(function(resp) {
                 console.log("Updated " + updatedName);
             });
@@ -3458,7 +3458,7 @@ var deleteRecords = function(idToName) {
     return $.when.apply(null, (_.map(_.keys(idToName), function(id) {
         var name = idToName[id];
         console.log("Deleting " + name);
-        return Force.forcetkClient.del("account", id)
+        return Force.forceJsClient.del("account", id)
                     .then(function() {
                         console.log("Deleted " + name);
                     });
@@ -3557,7 +3557,7 @@ var checkServer = function(id, expectedServerRecord, caller) {
     }
     console.log("## Direct retrieve from server");
     var fields = expectedServerRecord == null ? "Id" : _.select(_.keys(expectedServerRecord), function(field) { return field.indexOf("__local") == -1; }).join(",");
-    return Force.forcetkClient.query("select " + fields + " from Account where Id = '" + id + "'")
+    return Force.forceJsClient.query("select " + fields + " from Account where Id = '" + id + "'")
         .then(function(resp) {
             console.log("## Checking data returned from server");
             assertContains(resp.records.length == 0 ? null : resp.records[0], expectedServerRecord, caller);
@@ -3598,7 +3598,7 @@ var tryConflictDetection = function(message, cache, cacheForOriginals, theirs, y
     var caller = getCaller();
     var id;
     console.log("## Direct creation on server");    
-    return Force.forcetkClient.create("Account", theirs)
+    return Force.forceJsClient.create("Account", theirs)
     .then(function(data) {
         id = data.id;
         console.log("## Direct insertion in cache");    
@@ -3617,7 +3617,7 @@ var tryConflictDetection = function(message, cache, cacheForOriginals, theirs, y
         if (expectedResult.success) return checkResultServerAndCaches(result.result, newTheirs, id, newTheirs, newYours, cache, newBase, cacheForOriginals, caller);
     })
     .then(function() {
-        if (cleanup) return $.when(Force.forcetkClient.del("account", id));
+        if (cleanup) return $.when(Force.forceJsClient.del("account", id));
     });
 };
 
