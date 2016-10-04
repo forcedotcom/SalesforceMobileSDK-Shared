@@ -11,50 +11,30 @@ jQuery(document).ready(function() {
     // FastClick
     new FastClick(document.body);
 
-    // Container
-    if (window.cordova && !cordova.interceptExec) {
-        document.addEventListener("deviceready", function() {
-            console.log("onDeviceReady: cordova ready");
-
-            //Call getAuthCredentials to get the initial session credentials
-            cordova.require("com.salesforce.plugin.oauth").getAuthCredentials(
-                function(creds) {
-                    appStart( _.extend(creds, {userAgent: navigator.userAgent}), cordova.require("com.salesforce.plugin.oauth").forcetkRefresh);
-                }, 
-                function(error) { 
-                    console.log("Auth failed: " + error); 
-                });
-        });
-    }
     // Browser
-    else {
-        var loginUrl = "https://login.salesforce.com/";
-        var consumerKey = "3MVG98dostKihXN53TYStBIiS8HkwJJ.hsRQPcdchz8X9k16IRCU4KpvmoRuPRgAsWhy2cwXyX0JUr21qQ.mX";
-        var callbackUrl = "https://sfdc-sobject-editor.herokuapp.com/oauth/success";
-
-        // Instantiating forcetk ClientUI
-        var oauthClient = new ForceOAuth(loginUrl, consumerKey, callbackUrl,
-                                         function forceOAuthUI_successHandler(forcetkClient) { // successCallback
-                                             console.log('OAuth success!');
-                                             creds = {
-                                                 accessToken: oauthClient.oauthResponse.access_token,
-                                                 instanceUrl: oauthClient.oauthResponse.instance_url
-                                             };
-                                             appStart(creds);
-                                         },
-                                         function forceOAuthUI_errorHandler(error) { // errorCallback
-                                             console.log('OAuth error!');
-                                             if (confirm("Authentication Failed. Try again?")) oauthClient.login();
-                                         });
-
-        oauthClient.login();
+    if (cordova.interceptExec) {
+        force.init({loginURL: "https://test.salesforce.com/",
+                    appId: "3MVG98dostKihXN53TYStBIiS8BTFb20jwWfFcShqfABb3c.HH3CkmA00FuCmc0aM3v4LZOGR5QBnEi77fotN",
+                    oauthCallbackURL: "http://localhost:8200/test/oauthcallback.html",
+                    useCordova: false /* running in browser with mock cordova - so do oauth through browser and network through xhr */
+                   });
     }
+       
+    force.login(
+        function() {
+            console.log("Auth succeeded"); 
+            appStart();
+        },
+        function(error) {
+            console.log("Auth failed: " + error); 
+        }
+    );
 });
 
 function appStart(creds, refresh)
 {
     // Force init
-    Force.init(creds, null, null, refresh);
+    Force.init();
 
 
     // Register for push
