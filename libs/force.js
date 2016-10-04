@@ -1000,7 +1000,7 @@ var force = (function () {
     function ownedFilesList(userId, page, successHandler, errorHandler) {
         return request(
             {
-                path:'/services/data/' + apiVersion + '/chatter/users/' + (userId == null ? 'me' : userId) +  '/files',
+                path:'/services/data/' + apiVersion + '/connect/files/users/' + (userId == null ? 'me' : userId),
                 params: (page!=null ? {page:page} : {})
             },
             successHandler,
@@ -1018,7 +1018,7 @@ var force = (function () {
     function filesInUsersGroups(userId, page, successHandler, errorHandler) {
         return request(
             {
-                path:'/services/data/' + apiVersion + '/chatter/users/' + (userId == null ? 'me' : userId) +  '/files/filter/groups',
+                path:'/services/data/' + apiVersion + '/connect/files/users/' + (userId == null ? 'me' : userId) +  '/filter/groups',
                 params: (page!=null ? {page:page} : {})
             },
             successHandler,
@@ -1036,7 +1036,7 @@ var force = (function () {
     function filesSharedWithUser(userId, page, successHandler, errorHandler) {
         return request(
             {
-                path:'/services/data/' + apiVersion + '/chatter/users/' + (userId == null ? 'me' : userId) +  '/files/filter/sharedwithme',
+                path:'/services/data/' + apiVersion + '/connect/files/users/' + (userId == null ? 'me' : userId) +  '/filter/sharedwithme',
                 params: (page!=null ? {page:page} : {})                
             },
             successHandler,
@@ -1054,7 +1054,7 @@ var force = (function () {
     function fileDetails(fileId, version, successHandler, errorHandler) {
         return request(
             {
-                path: '/services/data/' + apiVersion + '/chatter/files/' + fileId,
+                path: '/services/data/' + apiVersion + '/connect/files/' + fileId,
                 params: (version != null ? {versionNumber: version} : {})
             },
             successHandler,
@@ -1072,7 +1072,7 @@ var force = (function () {
     function batchFileDetails(fileIds, successHandler, errorHandler) {
         return request(
             {
-                path: '/services/data/' + apiVersion + '/chatter/files/batch/' + fileIds.join(',')
+                path: '/services/data/' + apiVersion + '/connect/files/batch/' + fileIds.join(',')
             },
             successHandler,
             errorHandler
@@ -1090,7 +1090,7 @@ var force = (function () {
     function fileShares(fileId, page, successHandler, errorHandler) {
         return request(
             {
-                path: '/services/data/' + apiVersion + '/chatter/files/' + fileId + '/file-shares',
+                path: '/services/data/' + apiVersion + '/connect/files/' + fileId + '/file-shares',
                 params: (page!=null ? {page:page} : {})                
             },
             successHandler,
@@ -1160,7 +1160,8 @@ var force = (function () {
         oauthCallback: oauthCallback,
         getPickListValues: getPickListValues,
         getAttachment: getAttachment,
-        
+        getRequestBaseURL: getRequestBaseURL,
+
         //Files
         ownedFilesList: ownedFilesList,
         filesInUsersGroups: filesInUsersGroups,

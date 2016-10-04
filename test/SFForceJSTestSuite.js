@@ -180,12 +180,12 @@ ForceJSTestSuite.prototype.testComputeEndPointIfMissing = function() {
 ForceJSTestSuite.prototype.testOwnedFilesList = function()  {
     console.log("In SFForceJSTestSuite.testOwnedFilesList");
     this.setupTestForceForGet();
-    QUnit.equals(force.ownedFilesList(), "/" + this.apiVersion + "/chatter/users/me/files");
-    QUnit.equals(force.ownedFilesList("me"), "/" + this.apiVersion + "/chatter/users/me/files");
-    QUnit.equals(force.ownedFilesList("someUserId"), "/" + this.apiVersion + "/chatter/users/someUserId/files");
-    QUnit.equals(force.ownedFilesList(null, 1), "/" + this.apiVersion + "/chatter/users/me/files?page=1");
-    QUnit.equals(force.ownedFilesList("me", 2), "/" + this.apiVersion + "/chatter/users/me/files?page=2");
-    QUnit.equals(force.ownedFilesList("someUserId", 3), "/" + this.apiVersion + "/chatter/users/someUserId/files?page=3");
+    QUnit.equals(force.ownedFilesList(), "/" + this.apiVersion + "/connect/files/users/me");
+    QUnit.equals(force.ownedFilesList("me"), "/" + this.apiVersion + "/connect/files/users/me");
+    QUnit.equals(force.ownedFilesList("someUserId"), "/" + this.apiVersion + "/connect/files/users/someUserId");
+    QUnit.equals(force.ownedFilesList(null, 1), "/" + this.apiVersion + "/connect/files/users/me?page=1");
+    QUnit.equals(force.ownedFilesList("me", 2), "/" + this.apiVersion + "/connect/files/users/me?page=2");
+    QUnit.equals(force.ownedFilesList("someUserId", 3), "/" + this.apiVersion + "/connect/files/users/someUserId?page=3");
 
     this.finalizeTest();
 }; 
@@ -196,12 +196,12 @@ ForceJSTestSuite.prototype.testOwnedFilesList = function()  {
 ForceJSTestSuite.prototype.testFilesInUsersGroups = function()  {
     console.log("In SFForceJSTestSuite.testFilesInUsersGroups");
     this.setupTestForceForGet();
-    QUnit.equals(force.filesInUsersGroups(), "/" + this.apiVersion + "/chatter/users/me/files/filter/groups");
-    QUnit.equals(force.filesInUsersGroups("me"), "/" + this.apiVersion + "/chatter/users/me/files/filter/groups");
-    QUnit.equals(force.filesInUsersGroups("someUserId"), "/" + this.apiVersion + "/chatter/users/someUserId/files/filter/groups");
-    QUnit.equals(force.filesInUsersGroups(null, 1), "/" + this.apiVersion + "/chatter/users/me/files/filter/groups?page=1");
-    QUnit.equals(force.filesInUsersGroups("me", 2), "/" + this.apiVersion + "/chatter/users/me/files/filter/groups?page=2");
-    QUnit.equals(force.filesInUsersGroups("someUserId", 3), "/" + this.apiVersion + "/chatter/users/someUserId/files/filter/groups?page=3");
+    QUnit.equals(force.filesInUsersGroups(), "/" + this.apiVersion + "/connect/files/users/me/filter/groups");
+    QUnit.equals(force.filesInUsersGroups("me"), "/" + this.apiVersion + "/connect/files/users/me/filter/groups");
+    QUnit.equals(force.filesInUsersGroups("someUserId"), "/" + this.apiVersion + "/connect/files/users/someUserId/filter/groups");
+    QUnit.equals(force.filesInUsersGroups(null, 1), "/" + this.apiVersion + "/connect/files/users/me/filter/groups?page=1");
+    QUnit.equals(force.filesInUsersGroups("me", 2), "/" + this.apiVersion + "/connect/files/users/me/filter/groups?page=2");
+    QUnit.equals(force.filesInUsersGroups("someUserId", 3), "/" + this.apiVersion + "/connect/files/users/someUserId/filter/groups?page=3");
     this.finalizeTest();
 }; 
 
@@ -211,12 +211,12 @@ ForceJSTestSuite.prototype.testFilesInUsersGroups = function()  {
 ForceJSTestSuite.prototype.testFilesSharedWithUser = function()  {
     console.log("In SFForceJSTestSuite.testFilesInUsersGroups");
     this.setupTestForceForGet();
-    QUnit.equals(force.filesSharedWithUser(), "/" + this.apiVersion + "/chatter/users/me/files/filter/sharedwithme");
-    QUnit.equals(force.filesSharedWithUser("me"), "/" + this.apiVersion + "/chatter/users/me/files/filter/sharedwithme");
-    QUnit.equals(force.filesSharedWithUser("someUserId"), "/" + this.apiVersion + "/chatter/users/someUserId/files/filter/sharedwithme");
-    QUnit.equals(force.filesSharedWithUser(null, 1), "/" + this.apiVersion + "/chatter/users/me/files/filter/sharedwithme?page=1");
-    QUnit.equals(force.filesSharedWithUser("me", 2), "/" + this.apiVersion + "/chatter/users/me/files/filter/sharedwithme?page=2");
-    QUnit.equals(force.filesSharedWithUser("someUserId", 3), "/" + this.apiVersion + "/chatter/users/someUserId/files/filter/sharedwithme?page=3");
+    QUnit.equals(force.filesSharedWithUser(), "/" + this.apiVersion + "/connect/files/users/me/filter/sharedwithme");
+    QUnit.equals(force.filesSharedWithUser("me"), "/" + this.apiVersion + "/connect/files/users/me/filter/sharedwithme");
+    QUnit.equals(force.filesSharedWithUser("someUserId"), "/" + this.apiVersion + "/connect/files/users/someUserId/filter/sharedwithme");
+    QUnit.equals(force.filesSharedWithUser(null, 1), "/" + this.apiVersion + "/connect/files/users/me/filter/sharedwithme?page=1");
+    QUnit.equals(force.filesSharedWithUser("me", 2), "/" + this.apiVersion + "/connect/files/users/me/filter/sharedwithme?page=2");
+    QUnit.equals(force.filesSharedWithUser("someUserId", 3), "/" + this.apiVersion + "/connect/files/users/someUserId/filter/sharedwithme?page=3");
     this.finalizeTest();
 }; 
 
@@ -226,8 +226,8 @@ ForceJSTestSuite.prototype.testFilesSharedWithUser = function()  {
 ForceJSTestSuite.prototype.testFileDetails = function()  {
     console.log("In SFForceJSTestSuite.testFileDetails");
     this.setupTestForceForGet();
-    QUnit.equals(force.fileDetails("someFileId"), "/" + this.apiVersion + "/chatter/files/someFileId");
-    QUnit.equals(force.fileDetails("someFileId", "someVersionNumber"), "/" + this.apiVersion + "/chatter/files/someFileId?versionNumber=someVersionNumber");
+    QUnit.equals(force.fileDetails("someFileId"), "/" + this.apiVersion + "/connect/files/someFileId");
+    QUnit.equals(force.fileDetails("someFileId", "someVersionNumber"), "/" + this.apiVersion + "/connect/files/someFileId?versionNumber=someVersionNumber");
     this.finalizeTest();
 }; 
 
@@ -237,9 +237,9 @@ ForceJSTestSuite.prototype.testFileDetails = function()  {
 ForceJSTestSuite.prototype.testBatchFileDetails = function()  {
     console.log("In SFForceJSTestSuite.testBatchFileDetails");
     this.setupTestForceForGet();
-    QUnit.equals(force.batchFileDetails(["someFileId"]), "/" + this.apiVersion + "/chatter/files/batch/someFileId");
-    QUnit.equals(force.batchFileDetails(["someFileId", "otherFileId"]), "/" + this.apiVersion + "/chatter/files/batch/someFileId,otherFileId");
-    QUnit.equals(force.batchFileDetails(["someFileId", "otherFileId", "thirdFileId"]), "/" + this.apiVersion + "/chatter/files/batch/someFileId,otherFileId,thirdFileId");
+    QUnit.equals(force.batchFileDetails(["someFileId"]), "/" + this.apiVersion + "/connect/files/batch/someFileId");
+    QUnit.equals(force.batchFileDetails(["someFileId", "otherFileId"]), "/" + this.apiVersion + "/connect/files/batch/someFileId,otherFileId");
+    QUnit.equals(force.batchFileDetails(["someFileId", "otherFileId", "thirdFileId"]), "/" + this.apiVersion + "/connect/files/batch/someFileId,otherFileId,thirdFileId");
     this.finalizeTest();
 }; 
 
@@ -249,8 +249,8 @@ ForceJSTestSuite.prototype.testBatchFileDetails = function()  {
 ForceJSTestSuite.prototype.testFileShares = function()  {
     console.log("In SFForceJSTestSuite.testFileShares");
     this.setupTestForceForGet();
-    QUnit.equals(force.fileShares("fileId"), "/" + this.apiVersion + "/chatter/files/fileId/file-shares");
-    QUnit.equals(force.fileShares("fileId", 2), "/" + this.apiVersion + "/chatter/files/fileId/file-shares?page=2");
+    QUnit.equals(force.fileShares("fileId"), "/" + this.apiVersion + "/connect/files/fileId/file-shares");
+    QUnit.equals(force.fileShares("fileId", 2), "/" + this.apiVersion + "/connect/files/fileId/file-shares?page=2");
     this.finalizeTest();
 }; 
 
