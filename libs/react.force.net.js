@@ -222,15 +222,14 @@ var query = function(soql, callback, error) {
  * Queries the next set of records based on pagination.
  * <p>This should be used if performing a query that retrieves more than can be returned
  * in accordance with http://www.salesforce.com/us/developer/docs/api_rest/Content/dome_query.htm</p>
- * <p>Ex: forcetkClient.queryMore( successResponse.nextRecordsUrl, successHandler, failureHandler )</p>
- *
+
  * @param url - the url retrieved from nextRecordsUrl or prevRecordsUrl
  * @param callback function to which response will be passed
  * @param [error=null] function called in case of error
  */
 var queryMore = function( url, callback, error ){
     var pathFromUrl = url.match(/https:\/\/[^/]*(.*)/)[1];
-return sendRequest('',  pathFromUrl, callback, error );
+    return sendRequest('',  pathFromUrl, callback, error );
 };
 
 /*

@@ -332,29 +332,13 @@ cordova.define("com.salesforce.plugin.oauth", function (require, exports, module
     };
 
     /**
-     * Goes through the refresh flow, and sets the new session token in the supplied forcetkClient.
-     */
-    var forcetkRefresh = function (forcetkClient, success, fail) {
-        authenticate(function(oauthResponse) {
-            var oauthResponseData = oauthResponse;
-            if (oauthResponse.data)  {
-                oauthResponseData = oauthResponse.data;
-            }
-            forcetkClient.setSessionToken(oauthResponseData.accessToken, null, oauthResponseData.instanceUrl);
-            success();
-        },
-        fail);
-    };
-
-    /**
      * Part of the module that is public
      */
     module.exports = {
         getAuthCredentials: getAuthCredentials,
         authenticate: authenticate,
         logout: logout,
-        getAppHomeUrl: getAppHomeUrl,
-        forcetkRefresh: forcetkRefresh
+        getAppHomeUrl: getAppHomeUrl
     };
 });
 

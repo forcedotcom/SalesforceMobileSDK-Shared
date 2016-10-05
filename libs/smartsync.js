@@ -96,7 +96,7 @@
         return retfn;
     };
 
-    // Private forcetk client with promise-wrapped methods
+    // Private force client with promise-wrapped methods
     var forceJsClient = null;
 
     // Private smartstore client with promise-wrapped methods
