@@ -16,7 +16,7 @@ function regLinkClickHandlers() {
     
     $('#link_fetch_sfdc_contacts').click(function() {
                                          logToConsole()("link_fetch_sfdc_contacts clicked");
-                                         forcetkClient.query("SELECT Name,Id FROM Contact", onSuccessSfdcContacts, onErrorSfdc); 
+                                         force.query("SELECT Name,Id FROM Contact", onSuccessSfdcContacts, onErrorSfdc); 
                                          });
     
 
