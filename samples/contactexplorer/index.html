@@ -9,11 +9,17 @@
     <script src="js/jquery.min.js"></script>
     <script src="js/jquery.mobile.min.js"></script>
         
-    <!-- Include cordova. -->
-	<script src="cordova.js"></script>
+   <!-- Local Testing -/->
+   <script src="js/MockCordova.js"></script>
+   <script src="js/cordova.force.js"></script>
+   <!-- End Local Testing -->
 
-    <!-- include forcetk.mobilesdk for REST transaction support -->
-    <script src="js/forcetk.mobilesdk.js"></script>
+   <!-- Container -->
+   <script src="cordova.js"></script>
+   <!-- End Container -->
+
+    <!-- include force.js for REST transaction support -->
+    <script src="js/force.js"></script>
 
     <!-- log window styling -->
     <style>
@@ -46,49 +52,30 @@
 	}
 	*/
 	
-    var forcetkClient;
     var debugMode = true;
 
     jQuery(document).ready(function() {
-        //Add event listeners and so forth here
-		document.addEventListener("deviceready", onDeviceReady,false);
-
+    /* This will only be true when testing in a browser with MockCordova */
+        if (cordova.interceptExec) {
+            force.init({loginURL: "https://test.salesforce.com/",
+                        appId: "3MVG98dostKihXN53TYStBIiS8BTFb20jwWfFcShqfABb3c.HH3CkmA00FuCmc0aM3v4LZOGR5QBnEi77fotN",
+                        oauthCallbackURL: "http://localhost:8200/test/oauthcallback.html",
+                        useCordova: false /* running in browser with mock cordova - so do oauth through browser and network through xhr */
+                       });
+        }
+        
+        /* Do login */
+        force.login(
+            function() {
+                console.log("Auth succeeded"); 
+                regLinkClickHandlers();
+            },
+            function(error) {
+                console.log("Auth failed: " + error); 
+            }
+        );
     });
 
-    // When this function is called, Cordova has been initialized and is ready to roll 
-    function onDeviceReady() {
-        cordova.require("com.salesforce.util.logger").logToConsole("onDeviceReady: Cordova ready");
-		//Call getAuthCredentials to get the initial session credentials
-        cordova.require("com.salesforce.plugin.oauth").getAuthCredentials(salesforceSessionRefreshed, getAuthCredentialsError);
-
-        //register to receive notifications when autoRefreshOnForeground refreshes the sfdc session
-        document.addEventListener("salesforceSessionRefresh",salesforceSessionRefreshed,false);
-
-        //enable buttons
-        regLinkClickHandlers();
-    }
-        
-
-    function salesforceSessionRefreshed(creds) {
-        cordova.require("com.salesforce.util.logger").logToConsole("salesforceSessionRefreshed");
-        
-        // Depending on how we come into this method, `creds` may be callback data from the auth
-        // plugin, or an event fired from the plugin.  The data is different between the two.
-        var credsData = creds;
-        if (creds.data)  // Event sets the `data` object with the auth data.
-            credsData = creds.data;
-
-        forcetkClient = new forcetk.Client(credsData.clientId, credsData.loginUrl, null,
-            cordova.require("com.salesforce.plugin.oauth").forcetkRefresh);
-        forcetkClient.setSessionToken(credsData.accessToken, apiVersion, credsData.instanceUrl);
-        forcetkClient.setRefreshToken(credsData.refreshToken);
-        forcetkClient.setUserAgentString(credsData.userAgent);
-    }
-
-    function getAuthCredentialsError(error) {
-        cordova.require("com.salesforce.util.logger").logToConsole("getAuthCredentialsError: " + error);
-    }
-        
     </script>
         
 	<!-- load our app-specific code -->
