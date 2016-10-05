@@ -67,31 +67,32 @@
     // Utility Function to turn methods with callbacks into jQuery promises
     var promiser = function(object, methodName, objectName) {
         var retfn = function () {
-            var args = $.makeArray(arguments);
-            var d = $.Deferred();
-            args.push(function() {
-                Force.console.debug("------> Calling successCB for " + objectName + ":" + methodName);
-                try {
-                    d.resolve.apply(d, arguments);
-                }
-                catch (err) {
-                    Force.console.error("------> Error when calling successCB for " + objectName + ":" + methodName);
-                    Force.console.error(err.stack);
-                }
-            });
-            args.push(function() {
-                Force.console.debug("------> Calling errorCB for " + objectName + ":" + methodName);
-                try {
-                    d.reject.apply(d, arguments);
-                }
-                catch (err) {
-                    Force.console.error("------> Error when calling errorCB for " + objectName + ":" + methodName);
-                    Force.console.error(err.stack);
-                }
+            var args = Array.from(arguments);
+            var d = new Promise(function(resolve, reject) {
+                args.push(function() {
+                    Force.console.debug("------> Calling successCB for " + objectName + ":" + methodName);
+                    try {
+                        resolve.apply(d, arguments);
+                    }
+                    catch (err) {
+                        Force.console.error("------> Error when calling successCB for " + objectName + ":" + methodName);
+                        Force.console.error(err.stack);
+                    }
+                });
+                args.push(function() {
+                    Force.console.debug("------> Calling errorCB for " + objectName + ":" + methodName);
+                    try {
+                        reject.apply(d, arguments);
+                    }
+                    catch (err) {
+                        Force.console.error("------> Error when calling errorCB for " + objectName + ":" + methodName);
+                        Force.console.error(err.stack);
+                    }
+                });
             });
             Force.console.debug("-----> Calling " + objectName + ":" + methodName);
             object[methodName].apply(object, args);
-            return d.promise();
+            return d;
         };
         return retfn;
     };
@@ -268,7 +269,7 @@
 
             var mergeIfRequested = function() {
                 if (mergeMode == Force.MERGE_MODE_DOWNLOAD.OVERWRITE) {
-                    return $.when(record);
+                    return Promise.resolve(record);
                 }
                 else if (mergeMode == Force.MERGE_MODE_DOWNLOAD.MERGE_ACCEPT_THEIRS) {
                     return that.retrieve(record[that.keyField])
@@ -303,7 +304,7 @@
 
             var mergeIfRequested = function() {
                 if (mergeMode == Force.MERGE_MODE_DOWNLOAD.OVERWRITE) {
-                    return $.when(records);
+                    return Promise.resolve(records);
                 }
                 else {
                     if (_.any(records, function(record) { return !_.has(record, that.keyField); })) {
@@ -566,28 +567,28 @@
             describe: function() {
                 var that = this;
                 if (!that._data.describeResult) {
-                    that._data.describeResult =  $.when(cacheRetrieve(that, "describeResult"))
+                    that._data.describeResult =  Promise.resolve(cacheRetrieve(that, "describeResult"))
                         .then(serverDescribeUnlessCached)
                         .then(cacheSave)
                         .then(function(cacheRow) {
                             return cacheRow._data.describeResult;
                         });
                 }
-                return $.when(that._data.describeResult);
+                return Promise.resolve(that._data.describeResult);
             },
             // Returns a promise, which once resolved
             // returns metadata of the sobject.
             getMetadata: function() {
                 var that = this;
                 if (!that._data.metadataResult) {
-                    that._data.metadataResult = $.when(cacheRetrieve(that, "metadataResult"))
+                    that._data.metadataResult = Promise.resolve(cacheRetrieve(that, "metadataResult"))
                         .then(serverMetadataUnlessCached)
                         .then(cacheSave)
                         .then(function(cacheRow) {
                             return cacheRow._data.metadataResult;
                         });
                 }
-                return $.when(that._data.metadataResult);
+                return Promise.resolve(that._data.metadataResult);
             },
             // Returns a promise, which once resolved
             // returns layout information associated
@@ -600,14 +601,14 @@
 
                 var layoutInfoId = "layoutInfo_" + recordTypeId;
                 if (!that._data[layoutInfoId]) {
-                    that._data[layoutInfoId] = $.when(cacheRetrieve(that, layoutInfoId), recordTypeId)
+                    that._data[layoutInfoId] = Promise.resolve(cacheRetrieve(that, layoutInfoId), recordTypeId)
                         .then(serverDescribeLayoutUnlessCached)
                         .then(cacheSave)
                         .then(function(cacheRow) {
                             return cacheRow._data[layoutInfoId];
                         });
                 }
-                return $.when(that._data[layoutInfoId]);
+                return Promise.resolve(that._data[layoutInfoId]);
             },
             // Returns a promise, which once resolved clears
             // the cached data for the current sobject type.
@@ -615,7 +616,7 @@
                 var that = this;
                 that._cacheSynced = true;
                 that._data = {};
-                return $.when(cacheClear(that));
+                return Promise.resolve(cacheClear(that));
             }
         }
     })());
@@ -1071,7 +1072,7 @@
                         }
                         if (shouldFail) {
                             var conflictDetails = {base: originalAttributes, theirs: remoteAttributes, yours:attributes, remoteChanges:remoteChanges, localChanges:localChanges, conflictingChanges:conflictingChanges};
-                            return $.Deferred().reject(conflictDetails);
+                            return Promise.reject(conflictDetails);
                         }
                         else {
                             var mergedAttributes = _.extend(attributes, _.pick(remoteAttributes, nonConflictingRemoteChanges));
@@ -1148,7 +1149,7 @@
                             });
                         },
                         closeCursor: function() {
-                            return $.when(function() { nextRecordsUrl = null; });
+                            return Promise.resolve(function() { nextRecordsUrl = null; });
                         }
                     };
                 });
@@ -1240,7 +1241,7 @@
                             });
                         },
                         closeCursor: function() {
-                            return $.when(function() { nextRecordsUrl = null; });
+                            return Promise.resolve(function() { nextRecordsUrl = null; });
                         }
                     };
                 });
@@ -1360,7 +1361,7 @@
 
             // To be defined in concrete subclass
             syncRemoteObjectWithServer: function(method, id, attributes, fieldlist) {
-                return $.when([]);
+                return Promise.resolve([]);
             },
 
             // Overriding Backbone sync method (responsible for all server interactions)
@@ -1395,11 +1396,11 @@
                 console.time(tag);
 
                 Force.syncRemoteObjectDetectConflict(method, model.id, model.attributes, fieldlist, cache, cacheMode, cacheForOriginals, mergeMode, syncWithServer)
-                    .done(function() {
+                    .then(function() {
                         console.timeEnd(tag);
                         options.success.apply(null, arguments);
                     })
-                    .fail(function() {
+                    .catch(function() {
                         console.timeEnd(tag);
                         options.error.apply(null, arguments);
                     });
@@ -1466,7 +1467,7 @@
 
             // To be defined in concrete subclass
             fetchRemoteObjectFromServer: function(config) {
-                return $.when([]);
+                return Promise.resolve([]);
             },
 
             // Method to fetch remote objects from cache
@@ -1488,12 +1489,12 @@
                             that.add(records);
                             return records;
                         });
-                else return $.when([]);
+                else return Promise.resolve([]);
             },
 
             // Close any open cursors to fetch more records.
             closeCursor: function() {
-                return $.when(!this.hasMore() || that._fetchResponse.closeCursor());
+                return Promise.resolve(!this.hasMore() || that._fetchResponse.closeCursor());
             },
 
             // Overriding Backbone sync method (responsible for all server interactions)
@@ -1542,7 +1543,7 @@
                             }
                             else {
                                 ignoreRequest = true;
-                                return $.Deferred().reject();
+                                return Promise.reject();
                             }
                     });
                 };
@@ -1564,11 +1565,11 @@
                         if (config.closeCursorImmediate) that.closeCursor();
                         return resp.records;
                     })
-                    .done(function() {
+                    .then(function() {
                         console.timeEnd(tag);
                         options.success.apply(null, arguments);
                     })
-                    .fail(function() {
+                    .catch(function() {
                         console.timeEnd(tag);
                         if (ignoreRequest) {
                             // Force.console.debug("FETCH ignored " + currentRequest);

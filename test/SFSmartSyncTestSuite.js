@@ -480,13 +480,13 @@ SmartSyncTestSuite.prototype.testStoreCacheWithGlobalStore = function() {
     var querySpec007 = {queryType:"exact", indexPath:"Name", matchKey:"JamesBond", order:"ascending", pageSize:1}
     var querySpec008 = {queryType:"exact", indexPath:"Name", matchKey:"Vilain", order:"ascending", pageSize:1}
 
-    $.when(Force.smartstoreClient.removeSoup(REGULAR_STORE, soupName),
+    Promise.all(Force.smartstoreClient.removeSoup(REGULAR_STORE, soupName),
            Force.smartstoreClient.removeSoup(GLOBAL_STORE, soupName))
         .then(function() {
             console.log("## Initialization of StoreCache's");
             cache = new Force.StoreCache(soupName, indexSpecs, null, REGULAR_STORE);
             cacheGlobal = new Force.StoreCache(soupName, indexSpecs, null, GLOBAL_STORE);
-            return $.when(cache.init(), cacheGlobal.init());
+            return Promise.all(cache.init(), cacheGlobal.init());
         })
         .then(function() {
             console.log("## Save record into regular cache");
@@ -494,7 +494,7 @@ SmartSyncTestSuite.prototype.testStoreCacheWithGlobalStore = function() {
         })
         .then(function() {
             console.log("## Looking for record in both caches");
-            return $.when(cache.find(querySpec007), cacheGlobal.find(querySpec007));
+            return Promise.all(cache.find(querySpec007), cacheGlobal.find(querySpec007));
         })
         .then(function(result, resultGlobal) {
             console.log("## Checking result from regular cache");
@@ -507,7 +507,7 @@ SmartSyncTestSuite.prototype.testStoreCacheWithGlobalStore = function() {
         })
         .then(function() {
             console.log("## Looking for record in both caches");
-            return $.when(cache.find(querySpec008), cacheGlobal.find(querySpec008));
+            return Promise.all(cache.find(querySpec008), cacheGlobal.find(querySpec008));
         })
         .then(function(result, resultGlobal) {
             console.log("## Checking result from regular cache");
@@ -518,7 +518,7 @@ SmartSyncTestSuite.prototype.testStoreCacheWithGlobalStore = function() {
             console.log("## Save record into global cache");
 
             // Cleaning up 
-            return $.when(Force.smartstoreClient.removeSoup(REGULAR_STORE, soupName),
+            return Promise.all(Force.smartstoreClient.removeSoup(REGULAR_STORE, soupName),
                           Force.smartstoreClient.removeSoup(GLOBAL_STORE, soupName))
         })
         .then(function() {
@@ -673,7 +673,7 @@ SmartSyncTestSuite.prototype.testSObjectTypeCacheOnlyMode = function() {
     .then(function() {
         console.log("## Calling describe layout");
         var sobjectType = new Force.SObjectType("MockObject", cache, Force.CACHE_MODE.CACHE_ONLY);
-        return $.when(sobjectType.describe(), sobjectType.getMetadata(), sobjectType.describeLayout());
+        return Promise.all(sobjectType.describe(), sobjectType.getMetadata(), sobjectType.describeLayout());
     })
     .then(function(descResult, metaResult, layoutResult) {
         assertContains(descResult, data.describeResult);
@@ -749,7 +749,7 @@ SmartSyncTestSuite.prototype.testMultiSObjectTypes = function() {
         console.log("## Calling describe layout");
         var accountType = new Force.SObjectType("Account", cache);
         var contactType = new Force.SObjectType("Contact", cache);
-        return $.when(accountType.describe(), contactType.describe());
+        return Promise.all(accountType.describe(), contactType.describe());
     })
     .then(function(data1, data2) {
         accountDescribe = data1;
@@ -757,7 +757,7 @@ SmartSyncTestSuite.prototype.testMultiSObjectTypes = function() {
         QUnit.equals('Account', accountDescribe.name, 'Describe result should be for Account');
         QUnit.equals('Contact', contactDescribe.name, 'Describe result should be for Contact');
         console.log("## Checking underlying cache");
-        return $.when(cache.retrieve("Account"), cache.retrieve("Contact"));
+        return Promise.all(cache.retrieve("Account"), cache.retrieve("Contact"));
     })
     .then(function(accountCache, contactCache) {    
         assertContains(accountDescribe, accountCache.describeResult);
@@ -789,7 +789,7 @@ SmartSyncTestSuite.prototype.testSObjectTypeReset = function() {
     .then(function() { 
         console.log("## Calling getMetadata and describe");
         sobjectType = new Force.SObjectType("Account", cache);
-        return $.when(sobjectType.getMetadata(), sobjectType.describe());
+        return Promise.all(sobjectType.getMetadata(), sobjectType.describe());
     })
     .then(function() {
         console.log("## Checking underlying cache");
@@ -1302,7 +1302,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectCreate = function() {
         })
         .then(function() {
             console.log("## Cleaning up");
-            return $.when(Force.forceJsClient.del("account", id), Force.forceJsClient.del("account", id2), Force.smartstoreClient.removeSoup(soupName));
+            return Promise.all(Force.forceJsClient.del("account", id), Force.forceJsClient.del("account", id2), Force.smartstoreClient.removeSoup(soupName));
         })
         .then(function() {
             self.finalizeTest();
@@ -1385,7 +1385,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectRetrieve = function() {
         })
         .then(function() {
             console.log("## Cleaning up");
-            return $.when(Force.forceJsClient.del("account", id), Force.forceJsClient.del("account", id2), Force.smartstoreClient.removeSoup(soupName));
+            return Promise.all(Force.forceJsClient.del("account", id), Force.forceJsClient.del("account", id2), Force.smartstoreClient.removeSoup(soupName));
         })
         .then(function() {
             self.finalizeTest();
@@ -1442,7 +1442,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectUpdate = function() {
         })
         .then(function() {
             console.log("## Cleaning up");
-            return $.when(Force.forceJsClient.del("account", id), Force.smartstoreClient.removeSoup(soupName));
+            return Promise.all(Force.forceJsClient.del("account", id), Force.smartstoreClient.removeSoup(soupName));
         })
         .then(function() {
             self.finalizeTest();
@@ -1502,7 +1502,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectDelete = function() {
         })
         .then(function() {
             console.log("## Cleaning up");
-            return $.when(Force.smartstoreClient.removeSoup(soupName));
+            return Promise.all(Force.smartstoreClient.removeSoup(soupName));
         })
         .then(function() {
             self.finalizeTest();
@@ -1527,12 +1527,12 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictCreate = function() {
     var soupNameForOriginals = "originalsFor" + soupName;
     var id, id2;
 
-    $.when(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals))
+    Promise.all(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals))
         .then(function() {
             console.log("## Initialization of StoreCaches");
             cache = new Force.StoreCache(soupName);
             cacheForOriginals = new Force.StoreCache(soupNameForOriginals);
-            return $.when(cache.init(), cacheForOriginals.init());
+            return Promise.all(cache.init(), cacheForOriginals.init());
         })
         .then(function() {
             console.log("## Trying create server-only");
@@ -1560,7 +1560,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictCreate = function() {
         })
         .then(function(data) {
             console.log("## Cleaning up");
-            return $.when(Force.forceJsClient.del("account", id), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals),
+            return Promise.all(Force.forceJsClient.del("account", id), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals),
                           Force.forceJsClient.del("account", id2), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
 
         })
@@ -1581,12 +1581,12 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictRetrieve = function() 
     var soupNameForOriginals = "originalsFor" + soupName;
     var id, id2;
 
-    $.when(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals))
+    Promise.all(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals))
         .then(function() {
             console.log("## Initialization of StoreCaches");
             cache = new Force.StoreCache(soupName);
             cacheForOriginals = new Force.StoreCache(soupNameForOriginals);
-            return $.when(cache.init(), cacheForOriginals.init());
+            return Promise.all(cache.init(), cacheForOriginals.init());
         })
         .then(function() {
             console.log("## Direct creation against server");    
@@ -1646,7 +1646,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictRetrieve = function() 
         })
         .then(function() {
             console.log("## Cleaning up");
-            return $.when(Force.forceJsClient.del("account", id), Force.forceJsClient.del("account", id2), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
+            return Promise.all(Force.forceJsClient.del("account", id), Force.forceJsClient.del("account", id2), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
         })
         .then(function() {
             self.finalizeTest();
@@ -1664,12 +1664,12 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() {
     var soupNameForOriginals = "originalsFor" + soupName;
     var id;
 
-    $.when(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals))
+    Promise.all(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals))
         .then(function() {
             console.log("## Initialization of StoreCaches");
             cache = new Force.StoreCache(soupName);
             cacheForOriginals = new Force.StoreCache(soupNameForOriginals);
-            return $.when(cache.init(), cacheForOriginals.init());
+            return Promise.all(cache.init(), cacheForOriginals.init());
         })
         .then(function() {
             console.log("## Direct creation against server");    
@@ -1823,7 +1823,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() {
         })
         .then(function() {
             console.log("## Cleaning up");
-            return $.when(Force.forceJsClient.del("account", id), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
+            return Promise.all(Force.forceJsClient.del("account", id), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
         })
         .then(function() {
             self.finalizeTest();
@@ -1841,12 +1841,12 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() {
     var soupNameForOriginals = "originalsFor" + soupName;
     var id, id2;
 
-    $.when(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals))
+    Promise.all(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals))
         .then(function() {
             console.log("## Initialization of StoreCaches");
             cache = new Force.StoreCache(soupName);
             cacheForOriginals = new Force.StoreCache(soupNameForOriginals);
-            return $.when(cache.init(), cacheForOriginals.init());
+            return Promise.all(cache.init(), cacheForOriginals.init());
         })
         .then(function() {
             console.log("## Direct creation against server");    
@@ -2005,7 +2005,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() {
         })
         .then(function() {
             console.log("## Cleaning up");
-            return $.when(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
+            return Promise.all(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
         })
         .then(function() {
             self.finalizeTest();
@@ -2033,10 +2033,10 @@ SmartSyncTestSuite.prototype.testSObjectFetch = function() {
     var accountFetch = optionsPromiser(account, "fetch", "account");
     var id;
 
-    $.when(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals))
+    Promise.all(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals))
         .then(function() {
             console.log("## Initialization of StoreCaches");
-            return $.when(cache.init(), cacheForOriginals.init());
+            return Promise.all(cache.init(), cacheForOriginals.init());
         })
         .then(function() {
             console.log("## Direct creation against server");    
@@ -2054,7 +2054,7 @@ SmartSyncTestSuite.prototype.testSObjectFetch = function() {
         })
         .then(function() {
             console.log("## Cleaning up");
-            return $.when(Force.forceJsClient.del("account", id), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
+            return Promise.all(Force.forceJsClient.del("account", id), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
         })
         .then(function() {
             self.finalizeTest();
@@ -2077,10 +2077,10 @@ SmartSyncTestSuite.prototype.testSObjectSave = function() {
     var accountSave = optionsPromiser(account, "save", "account");
     var id;
 
-    $.when(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals))
+    Promise.all(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals))
         .then(function() {
             console.log("## Initialization of StoreCaches");
-            return $.when(cache.init(), cacheForOriginals.init());
+            return Promise.all(cache.init(), cacheForOriginals.init());
         })
         .then(function() {
             console.log("## Trying save with default cacheMode and mergeMode");
@@ -2094,7 +2094,7 @@ SmartSyncTestSuite.prototype.testSObjectSave = function() {
         })
         .then(function() {
             console.log("## Cleaning up");
-            return $.when(Force.forceJsClient.del("account", id), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
+            return Promise.all(Force.forceJsClient.del("account", id), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
         })
         .then(function() {
             self.finalizeTest();
@@ -2117,10 +2117,10 @@ SmartSyncTestSuite.prototype.testSObjectDestroy = function() {
     var accountDestroy = optionsPromiser(account, "destroy", "account");
     var id;
 
-    $.when(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals))
+    Promise.all(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals))
         .then(function() {
             console.log("## Initialization of StoreCaches");
-            return $.when(cache.init(), cacheForOriginals.init());
+            return Promise.all(cache.init(), cacheForOriginals.init());
         })
         .then(function() {
             console.log("## Trying destroy with default cacheMode and mergeMode");
@@ -2140,7 +2140,7 @@ SmartSyncTestSuite.prototype.testSObjectDestroy = function() {
         })
         .then(function() {
             console.log("## Cleaning up");
-            return $.when(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
+            return Promise.all(Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
         })
         .then(function() {
             self.finalizeTest();
@@ -2430,7 +2430,7 @@ SmartSyncTestSuite.prototype.testFetchSObjects = function() {
             console.log("## Initialization of StoreCache's");
             cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
             cacheForOriginals = new Force.StoreCache(soupNameForOriginals, [ {path:"Name", type:"string"} ]);
-            return $.when(cache.init(), cacheForOriginals.init());
+            return Promise.all(cache.init(), cacheForOriginals.init());
         })
         .then(function() { 
             console.log("## Direct creation against server");    
@@ -2512,7 +2512,7 @@ SmartSyncTestSuite.prototype.testFetchSObjects = function() {
             QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
 
             console.log("## Cleaning up");
-            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
+            return Promise.all(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
         })
         .then(function() {
             self.finalizeTest();
@@ -2541,7 +2541,7 @@ SmartSyncTestSuite.prototype.testSObjectCollectionFetch = function() {
             console.log("## Initialization of StoreCache's");
             cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
             cacheForOriginals = new Force.StoreCache(soupNameForOriginals, [ {path:"Name", type:"string"} ]);
-            return $.when(cache.init(), cacheForOriginals.init());
+            return Promise.all(cache.init(), cacheForOriginals.init());
         })
         .then(function() { 
             console.log("## Direct creation against server");    
@@ -2632,7 +2632,7 @@ SmartSyncTestSuite.prototype.testSObjectCollectionFetch = function() {
             QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
 
             console.log("## Cleaning up");
-            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
+            return Promise.all(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName), Force.smartstoreClient.removeSoup(soupNameForOriginals));
         })
         .then(function() {
             self.finalizeTest();
@@ -2659,7 +2659,7 @@ SmartSyncTestSuite.prototype.testSyncDown = function() {
         .then(function() {
             console.log("## Initialization of StoreCache's");
             cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
-            return $.when(cache.init());
+            return Promise.all(cache.init());
         })
         .then(function() { 
             console.log("## Direct creation against server");    
@@ -2670,7 +2670,7 @@ SmartSyncTestSuite.prototype.testSyncDown = function() {
             return self.trySyncDown(cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
         })
         .then(function() {
-            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
+            return Promise.all(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
         })
         .then(function() {
             self.finalizeTest();
@@ -2691,7 +2691,7 @@ SmartSyncTestSuite.prototype.testSyncDownToGlobalStore = function() {
         .then(function() {
             console.log("## Initialization of StoreCache's");
             cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ], null /* default id */, true /* global */);
-            return $.when(cache.init());
+            return Promise.all(cache.init());
         })
         .then(function() { 
             console.log("## Direct creation against server");    
@@ -2703,12 +2703,12 @@ SmartSyncTestSuite.prototype.testSyncDownToGlobalStore = function() {
         })
         .then(function() {
             console.log("## Check both stores");
-            return $.when(Force.smartstoreClient.soupExists(false, soupName), Force.smartstoreClient.soupExists(true, soupName));
+            return Promise.all(Force.smartstoreClient.soupExists(false, soupName), Force.smartstoreClient.soupExists(true, soupName));
         })
         .then(function(exists, existsGlobal) {
             QUnit.equals(exists, false, "soup should not exist in regular store");
             QUnit.equals(existsGlobal, true, "soup should exist in global store");
-            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(true /* global */, soupName));
+            return Promise.all(deleteRecords(idToName), Force.smartstoreClient.removeSoup(true /* global */, soupName));
         })
         .then(function() {
             self.finalizeTest();
@@ -2732,7 +2732,7 @@ SmartSyncTestSuite.prototype.testSyncDownWithNoOverwrite = function() {
         .then(function() {
             console.log("## Initialization of StoreCache's");
             cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
-            return $.when(cache.init());
+            return Promise.all(cache.init());
         })
         .then(function() { 
             console.log("## Direct creation against server");    
@@ -2784,7 +2784,7 @@ SmartSyncTestSuite.prototype.testSyncDownWithNoOverwrite = function() {
                 QUnit.ok(record.Name.indexOf("Updated") == -1, "Record name should no longer have update");                
             });
 
-            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
+            return Promise.all(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
         })
         .then(function() {
             self.finalizeTest();
@@ -2806,7 +2806,7 @@ SmartSyncTestSuite.prototype.testRefreshSyncDown = function() {
         .then(function() {
             console.log("## Initialization of StoreCache's");
             cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
-            return $.when(cache.init());
+            return Promise.all(cache.init());
         })
         .then(function() { 
             console.log("## Direct creation against server");    
@@ -2832,7 +2832,7 @@ SmartSyncTestSuite.prototype.testRefreshSyncDown = function() {
             return self.trySyncDown(cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE, target);
         })
         .then(function() {
-            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
+            return Promise.all(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
         })
         .then(function() {
             self.finalizeTest();
@@ -2856,7 +2856,7 @@ SmartSyncTestSuite.prototype.testReSync = function() {
         .then(function() {
             console.log("## Initialization of StoreCache's");
             cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
-            return $.when(cache.init());
+            return Promise.all(cache.init());
         })
         .then(function() { 
             console.log("## Direct creation against server");    
@@ -2885,7 +2885,7 @@ SmartSyncTestSuite.prototype.testReSync = function() {
             return self.tryReSync(cache, soupName, idToName, syncDownId, _.keys(idToUpdatedName).length);
         })
         .then(function() {
-            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
+            return Promise.all(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
         })
         .then(function() {
             self.finalizeTest();
@@ -2911,7 +2911,7 @@ SmartSyncTestSuite.prototype.testCleanResyncGhosts = function() {
         .then(function() {
             console.log("## Initialization of StoreCache's");
             cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
-            return $.when(cache.init());
+            return Promise.all(cache.init());
         })
         .then(function() {
             console.log("## Direct creation against server");
@@ -2960,7 +2960,7 @@ SmartSyncTestSuite.prototype.testCleanResyncGhosts = function() {
             mustDelRecords[secondId] = idToName[secondId];
         })
         .then(function() {
-            return $.when(deleteRecords(mustDelRecords), Force.smartstoreClient.removeSoup(soupName));
+            return Promise.all(deleteRecords(mustDelRecords), Force.smartstoreClient.removeSoup(soupName));
         })
         .then(function() {
             self.finalizeTest();
@@ -2989,7 +2989,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdated = function() {
         .then(function() {
             console.log("## Initialization of StoreCache's");
             cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
-            return $.when(cache.init());
+            return Promise.all(cache.init());
         })
         .then(function() { 
             console.log("## Direct creation against server");    
@@ -3027,7 +3027,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdated = function() {
             return checkServerMultiple(updatedRecords);
         })
         .then(function() {
-            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
+            return Promise.all(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
         })
         .then(function() {
             self.finalizeTest();
@@ -3050,7 +3050,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithGlobalStore = function(
         .then(function() {
             console.log("## Initialization of StoreCache's");
             cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ], null /* default id*/, true /* global */);
-            return $.when(cache.init());
+            return Promise.all(cache.init());
         })
         .then(function() { 
             console.log("## Direct creation against server");    
@@ -3074,7 +3074,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithGlobalStore = function(
         })
         .then(function() {
             console.log("## Check both stores");
-            return $.when(Force.smartstoreClient.soupExists(false, soupName), Force.smartstoreClient.soupExists(true, soupName));
+            return Promise.all(Force.smartstoreClient.soupExists(false, soupName), Force.smartstoreClient.soupExists(true, soupName));
         })
         .then(function(exists, existsGlobal) {
             QUnit.equals(exists, false, "soup should not exist in regular store");
@@ -3094,7 +3094,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithGlobalStore = function(
             return checkServerMultiple(updatedRecords);
         })
         .then(function() {
-            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(true /* global */, soupName));
+            return Promise.all(deleteRecords(idToName), Force.smartstoreClient.removeSoup(true /* global */, soupName));
         })
         .then(function() {
             self.finalizeTest();
@@ -3118,7 +3118,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithNoOverwrite = function(
         .then(function() {
             console.log("## Initialization of StoreCache's");
             cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
-            return $.when(cache.init());
+            return Promise.all(cache.init());
         })
         .then(function() { 
             console.log("## Direct creation against server");    
@@ -3168,7 +3168,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithNoOverwrite = function(
         })
         .then(function(result) {
             QUnit.equals(result.records.length, 3, "Expected 3 records");
-            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
+            return Promise.all(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
         })
         .then(function() {
             self.finalizeTest();
@@ -3191,7 +3191,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
         .then(function() {
             console.log("## Initialization of StoreCache's");
             cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
-            return $.when(cache.init());
+            return Promise.all(cache.init());
         })
         .then(function() { 
             console.log("## Direct creation against server");    
@@ -3228,7 +3228,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
             QUnit.equals(resp.records.length, 0, "Expected 0 records");
 
             // Cleanup
-            return $.when(Force.smartstoreClient.removeSoup(soupName));
+            return Promise.all(Force.smartstoreClient.removeSoup(soupName));
         })
         .then(function() {
             self.finalizeTest();
@@ -3252,7 +3252,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeletedWithNoOverwrite = function(
         .then(function() {
             console.log("## Initialization of StoreCache's");
             cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
-            return $.when(cache.init());
+            return Promise.all(cache.init());
         })
         .then(function() { 
             console.log("## Direct creation against server");
@@ -3305,7 +3305,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeletedWithNoOverwrite = function(
             QUnit.equals(resp.records.length, 3, "Expected 3 records");
 
             // Cleanup
-            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
+            return Promise.all(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
         })
         .then(function() {
             self.finalizeTest();
@@ -3328,7 +3328,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyCreated = function() {
         .then(function() {
             console.log("## Initialization of StoreCache's");
             cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ]);
-            return $.when(cache.init());
+            return Promise.all(cache.init());
         })
         .then(function() { 
             console.log("## Local creation");    
@@ -3363,7 +3363,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyCreated = function() {
             return checkServerMultiple(result.records);
         })
         .then(function() {
-            return $.when(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
+            return Promise.all(deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName));
         })
         .then(function() {
             self.finalizeTest();
@@ -3426,7 +3426,7 @@ var getCaller = function() {
  * Helper method to create several records on server
  */
 var createRecords = function(idToName, prefix, count) {
-    return $.when.apply(null, (_.map(_.range(count), function(i) {
+    return Promise.all.apply(null, (_.map(_.range(count), function(i) {
         var name = prefix + i;
         console.log("Creating " + name);
         return Force.forceJsClient.create("Account", {Name:name})
@@ -3441,7 +3441,7 @@ var createRecords = function(idToName, prefix, count) {
  * Helper method to update several records on server
  */
 var updateRecords = function(idToUpdatedName) {
-    return $.when.apply(null, (_.map(_.keys(idToUpdatedName), function(id) {
+    return Promise.all.apply(null, (_.map(_.keys(idToUpdatedName), function(id) {
         var updatedName = idToUpdatedName[id];
         console.log("Updating " + updatedName);
         return Force.forceJsClient.update("Account",{Id:id, Name:updatedName})
@@ -3455,7 +3455,7 @@ var updateRecords = function(idToUpdatedName) {
  * Helper method to delete several records on server
  */
 var deleteRecords = function(idToName) {
-    return $.when.apply(null, (_.map(_.keys(idToName), function(id) {
+    return Promise.all.apply(null, (_.map(_.keys(idToName), function(id) {
         var name = idToName[id];
         console.log("Deleting " + name);
         return Force.forceJsClient.del("account", id)
@@ -3520,7 +3520,7 @@ var rejectedPromiseWrapper = function(p) {
         .then(function(result) {
             d.resolve.apply(d, [{success:true, result:result}]);
         })
-        .fail(function(err) {
+        .catch(function(err) {
             d.resolve.apply(d, [{success:false, result:err}]);
         });
     return d.promise();
@@ -3534,7 +3534,7 @@ var checkCache = function(id, expectedCacheRecord, cache, caller) {
     if (cache == null) { 
         // no cache specified: expectedCacheRecord should be null
         assertContains(null, expectedCacheRecord, caller);
-        return $.when();
+        return Promise.all();
     }
     if (caller == null) caller = getCaller();
     console.log("## Direct retrieve from cache");
@@ -3553,7 +3553,7 @@ var checkServer = function(id, expectedServerRecord, caller) {
     if (id.indexOf("local_") == 0) { 
         // local id: server won't have record
         assertContains(null, expectedServerRecord, caller);
-        return $.when();
+        return Promise.all();
     }
     console.log("## Direct retrieve from server");
     var fields = expectedServerRecord == null ? "Id" : _.select(_.keys(expectedServerRecord), function(field) { return field.indexOf("__local") == -1; }).join(",");
@@ -3569,7 +3569,7 @@ var checkServer = function(id, expectedServerRecord, caller) {
  */
 var checkServerMultiple = function(records, caller) {
     if (caller == null) caller = getCaller();
-    return $.when.apply(null, _.map(records, function(record) {
+    return Promise.all.apply(null, _.map(records, function(record) {
         var expectedServerRecord = _.omit(record, "__local__", "__locally_created__", "__locally_deleted__", "__locally_updated__", "attributes", "_soupEntryId", "_soupLastModifiedDate");
         return checkServer(record.Id, expectedServerRecord, caller);
     }));
@@ -3583,7 +3583,7 @@ var checkResultServerAndCaches = function(data, expectedData, id, expectedServer
     if (caller == null) caller = getCaller();
     console.log("## Checking data returned by sync call");
     assertContains(data, expectedData, caller);
-    return $.when(checkServer(id, expectedServerRecord, caller), checkCache(id, expectedCacheRecord, cache, caller), checkCache(id, expectedCacheRecord2, cache2, caller));
+    return Promise.all(checkServer(id, expectedServerRecord, caller), checkCache(id, expectedCacheRecord, cache, caller), checkCache(id, expectedCacheRecord2, cache2, caller));
 };
 
 /** 
@@ -3617,7 +3617,7 @@ var tryConflictDetection = function(message, cache, cacheForOriginals, theirs, y
         if (expectedResult.success) return checkResultServerAndCaches(result.result, newTheirs, id, newTheirs, newYours, cache, newBase, cacheForOriginals, caller);
     })
     .then(function() {
-        if (cleanup) return $.when(Force.forceJsClient.del("account", id));
+        if (cleanup) return Promise.all(Force.forceJsClient.del("account", id));
     });
 };
 
