@@ -50,7 +50,7 @@ AbstractSmartStoreTestSuite.prototype.runTest= function (methName) {
     var self = this;
     this.defaultSoupName = "soupFor" + methName;
     self.removeAndRecreateSoup(this.defaultSoupName, this.defaultSoupIndexes)
-        .done(
+        .then(
             function() {
                 self[methName]();
             });
@@ -105,21 +105,21 @@ AbstractSmartStoreTestSuite.prototype.removeAndRecreateSoup = function(soupName,
     var self = this;
     // Start clean
     return self.removeSoup(soupName)
-        .pipe(function() {
+        .then(function() {
             // Check soup does not exist
             return self.soupExists(soupName);
         })
-        .pipe(function(exists) {
+        .then(function(exists) {
             QUnit.equals(exists, false, "soup should not already exist");
             // Create soup
             return self.registerSoup(soupName, soupIndexes);
         })
-        .pipe(function(soupName2) {
+        .then(function(soupName2) {
             QUnit.equals(soupName2,soupName,"registered soup OK");
             // Check soup now exists
             return self.soupExists(soupName);
         })
-        .done(function(exists2) {
+        .then(function(exists2) {
             QUnit.equals(exists2, true, "soup should now exist");
         });
 }

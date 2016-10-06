@@ -25,7 +25,7 @@
  *
  */
 
-(function($, _, Backbone, forceJs) {
+(function(_, Backbone, forceJs) {
 
     "use strict";
 
@@ -68,11 +68,11 @@
     var promiser = function(object, methodName, objectName) {
         var retfn = function () {
             var args = Array.from(arguments);
-            var d = new Promise(function(resolve, reject) {
+            return new Promise(function(resolve, reject) {
                 args.push(function() {
                     Force.console.debug("------> Calling successCB for " + objectName + ":" + methodName);
                     try {
-                        resolve.apply(d, arguments);
+                        resolve.apply(null, arguments);
                     }
                     catch (err) {
                         Force.console.error("------> Error when calling successCB for " + objectName + ":" + methodName);
@@ -82,17 +82,16 @@
                 args.push(function() {
                     Force.console.debug("------> Calling errorCB for " + objectName + ":" + methodName);
                     try {
-                        reject.apply(d, arguments);
+                        reject.apply(null, arguments);
                     }
                     catch (err) {
                         Force.console.error("------> Error when calling errorCB for " + objectName + ":" + methodName);
                         Force.console.error(err.stack);
                     }
                 });
+                Force.console.debug("-----> Calling " + objectName + ":" + methodName);
+                object[methodName].apply(object, args);
             });
-            Force.console.debug("-----> Calling " + objectName + ":" + methodName);
-            object[methodName].apply(object, args);
-            return d;
         };
         return retfn;
     };
@@ -1649,4 +1648,4 @@
 
     } // if (!_.isUndefined(Backbone)) {
 })
-.call(this, jQuery, _, window.Backbone, window.force);
+.call(this, _, window.Backbone, window.force);

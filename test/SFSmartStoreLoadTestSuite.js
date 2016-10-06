@@ -71,7 +71,7 @@ SmartStoreLoadTestSuite.prototype.upsertNextEntries = function(k) {
 	}	
 	
 	return self.addEntriesToTestSoup(entries)
-        .pipe(function(updatedEntries) {
+        .then(function(updatedEntries) {
 			if (updatedEntries.length < self.MAX_NUMBER_ENTRIES) {
 				return self.upsertNextEntries(k*2);
 			}
@@ -84,7 +84,7 @@ SmartStoreLoadTestSuite.prototype.testUpsertManyEntries  = function() {
 	var self = this;
     
     self.upsertNextEntries(1)
-        .done(function() {
+        .then(function() {
             self.finalizeTest();
         });
 };
@@ -103,7 +103,7 @@ SmartStoreLoadTestSuite.prototype.upsertNextManyFieldsEntry = function(k) {
 	}
 	
 	return self.addEntriesToTestSoup([entry])
-        .pipe(function(updatedEntries) {
+        .then(function(updatedEntries) {
 			if (k < self.MAX_NUMBER_FIELDS) {
 				return self.upsertNextManyFieldsEntry(k*2);
 			}
@@ -115,7 +115,7 @@ SmartStoreLoadTestSuite.prototype.testNumerousFields = function() {
 	var self = this;
 
 	self.upsertNextManyFieldsEntry(1)
-        .done(function() {
+        .then(function() {
             self.finalizeTest();
         });
 };
@@ -135,7 +135,7 @@ SmartStoreLoadTestSuite.prototype.upsertNextLargerFieldEntry = function(k) {
 	var entry = {key: "k"+k, value:val};
 	
 	return self.addEntriesToTestSoup([entry])
-        .pipe(function(updatedEntries) {
+        .then(function(updatedEntries) {
 			if (k < self.MAX_FIELD_LENGTH) {
 				return self.upsertNextLargerFieldEntry(k*2);
             }
@@ -147,7 +147,7 @@ SmartStoreLoadTestSuite.prototype.testIncreasingFieldLength  = function() {
 	var self = this;
 
 	self.upsertNextLargerFieldEntry(1)
-        .done(function() {
+        .then(function() {
             self.finalizeTest();
         });
 };
@@ -162,7 +162,7 @@ SmartStoreLoadTestSuite.prototype.testAddAndRetrieveManyEntries  = function() {
     var retrievedIds = [];
 	
 	self.addGeneratedEntriesToTestSoup(self.MAX_NUMBER_ENTRIES)
-        .pipe(function(entries) {
+        .then(function(entries) {
             addedEntries = entries;
 			for (var i = 0; i < addedEntries.length; i++) {
 				retrievedIds.push(addedEntries[i]._soupEntryId);
@@ -170,7 +170,7 @@ SmartStoreLoadTestSuite.prototype.testAddAndRetrieveManyEntries  = function() {
 					
 			return self.retrieveSoupEntries(self.defaultSoupName, retrievedIds);
         })
-    .done(function(retrievedEntries) {
+    .then(function(retrievedEntries) {
 		QUnit.equal(retrievedEntries.length, addedEntries.length,"verify retrieved matches added");
 		QUnit.equal(retrievedEntries[0]._soupEntryId,retrievedIds[0],"verify retrieved ID");
         self.finalizeTest();
@@ -198,15 +198,15 @@ SmartStoreLoadTestSuite.prototype.upsertQueryEntries = function(batch) {
     }
     
     return self.addEntriesToTestSoup(entries)
-        .pipe(function(updatedentries) {
+        .then(function(updatedentries) {
             var querySpec = navigator.smartstore.buildAllQuerySpec("key",null, self.QUERY_PAGE_SIZE);
             return self.querySoup(self.defaultSoupName, querySpec);
         })
-        .pipe(function(cursor) {
+        .then(function(cursor) {
             QUnit.equal(cursor.totalPages, Math.ceil(endKey/self.QUERY_PAGE_SIZE))
             return self.closeCursor(cursor);
         })
-        .pipe(function() {
+        .then(function() {
             if (batch < self.NUMBER_BATCHES - 1) {
                 return self.upsertQueryEntries(batch + 1);
             }
@@ -219,7 +219,7 @@ SmartStoreLoadTestSuite.prototype.testUpsertAndQueryEntries  = function() {
     var self = this;
     
     self.upsertQueryEntries(0)
-        .done(function() {
+        .then(function() {
             self.finalizeTest();
         });
 };
@@ -238,7 +238,7 @@ SmartStoreLoadTestSuite.prototype.upsertEntriesSaveResults = function(saveResult
     }
     
     return self.addEntriesWithExternalIdToTestSoup(entries, 'key')
-        .pipe(function(updatedEntries) {
+        .then(function(updatedEntries) {
               saveResultsList.push(updatedEntries);
         });
 };
@@ -296,14 +296,14 @@ SmartStoreLoadTestSuite.prototype.compareRetrievedEntriesWithLastEntryBatch = fu
 SmartStoreLoadTestSuite.prototype.testUpsertConcurrentEntries = function() {
     var numInsertIterations = 100;
     var numEntriesInBatch = 20;
-    var deferreds = [];
+    var promises = [];
     var upsertResults = [];
     var self = this;
     
     for (var i = 0; i < numInsertIterations; i++) {
-        deferreds.push(self.upsertEntriesSaveResults(upsertResults, numEntriesInBatch));
+        promises.push(self.upsertEntriesSaveResults(upsertResults, numEntriesInBatch));
     }
-    $.when.apply($, deferreds).done(function() {
+    Promise.all(promises).then(function() {
         QUnit.equal(upsertResults.length, numInsertIterations, 'Invalid number of upsert results.');
         var lastEntryBatch = self.getLastUpsertBatch(upsertResults);
                                     
@@ -313,7 +313,7 @@ SmartStoreLoadTestSuite.prototype.testUpsertConcurrentEntries = function() {
                 self.compareRetrievedEntriesWithLastEntryBatch(cursor.currentPageOrderedEntries, lastEntryBatch);
                 return self.closeCursor(cursor);
             })
-            .done(function() {
+            .then(function() {
                 self.finalizeTest();
             });
     });

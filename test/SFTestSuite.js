@@ -31,27 +31,27 @@
  */
 if (typeof promiser === 'undefined') {
 
-var promiser = function(object, methodName, noAssertionOnFailure) {
-    var retfn = function () {
-        console.log("In " + methodName);
-        var self = this;
-        var args = $.makeArray(arguments);
-        var d = $.Deferred();
-        args.push(function() {
-            console.log(methodName + " succeeded");
-            d.resolve.apply(d, arguments);
-        });
-        args.push(function() {
-            console.log(methodName + " failed");
-            //console.log("Failure-->" + JSON.stringify($.makeArray(arguments)));
-            if (!noAssertionOnFailure) self.setAssertionFailed(methodName + " failed");
-            d.reject.apply(d, arguments);
-        });
-        object[methodName].apply(object, args);
-        return d.promise();
-    };
-    return retfn;
-}
+    var promiser = function(object, methodName, noAssertionOnFailure) {
+        var retfn = function () {
+            console.log("In " + methodName);
+            var self = this;
+            var args = Array.from(arguments);
+            return new Promise(function(resolve, reject) {
+                args.push(function() {
+                    console.log(methodName + " succeeded");
+                    resolve.apply(null, arguments);
+                });
+                args.push(function() {
+                    console.log(methodName + " failed");
+                    //console.log("Failure-->" + JSON.stringify(Array.from(arguments)));
+                    if (!noAssertionOnFailure) self.setAssertionFailed(methodName + " failed");
+                    reject.apply(null, Array.from(arguments));
+                });
+                object[methodName].apply(object, args);
+            });
+        };
+        return retfn;
+    }
 
 };
 

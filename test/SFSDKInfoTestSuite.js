@@ -56,7 +56,7 @@ SDKInfoTestSuite.prototype.testGetInfo = function()  {
     var self = this;
 
     self.getInfo()
-        .done(function(sdkInfo) {
+        .then(function(sdkInfo) {
             // sdkVersion
         	QUnit.ok(sdkInfo.sdkVersion.indexOf("5.0") == 0, "expected different sdk version");
             // appName
