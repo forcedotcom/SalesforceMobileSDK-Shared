@@ -10,3 +10,37 @@ When writing an application using SmartStore, to test it outside the container d
 - include MockSmartStore.js after cordova.force.js
 
 
+# Running the tests in a browser
+
+1. Install [ForceServer](https://github.com/ccoenraets/force-server)
+
+To install ForceServer, make sure Node.js is installed on your system, open a command prompt and execute the following command:
+
+    ```
+    npm install -g force-server
+    ```
+
+    On a Mac, you may have to use sudo:
+
+    ```
+    sudo npm install -g force-server
+    ```
+    
+2. Whitelist your local server for CORS in your Org.
+
+Go to Setup: Administer > Security Controls > CORS.
+Add http://localhost:8200
+
+
+3. Run the server.
+
+    Open a command prompt, navigate to your the root directory of your SalesforceMobileSDK-Shared directory and type the following command:
+
+    ```
+    force-server
+    ```
+
+    This starts the ForceServer server on port 8200.
+    Navigate to http://localhost:8200/test/test.html in a browser.
+
+    
