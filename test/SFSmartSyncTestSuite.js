@@ -537,7 +537,7 @@ SmartSyncTestSuite.prototype.testStoreCacheWithGlobalStore = function() {
 /** 
  * TEST Force.SObjectType.describe
  */
-SmartSyncTestSuite.prototype._testSObjectTypeDescribe = function() {
+SmartSyncTestSuite.prototype.testSObjectTypeDescribe = function() {
     console.log("# In SmartSyncTestSuite.testSObjectTypeDescribe");
     var self = this;
     var soupName = "testSoupForSObjectType";
@@ -576,7 +576,7 @@ SmartSyncTestSuite.prototype._testSObjectTypeDescribe = function() {
 /** 
  * TEST Force.SObjectType.getMetadata
  */
-SmartSyncTestSuite.prototype._testSObjectTypeGetMetadata = function() {
+SmartSyncTestSuite.prototype.testSObjectTypeGetMetadata = function() {
     console.log("# In SmartSyncTestSuite.testSObjectTypeGetMetadata");
     var self = this;
     var soupName = "testSoupForSObjectType";
@@ -615,7 +615,7 @@ SmartSyncTestSuite.prototype._testSObjectTypeGetMetadata = function() {
 /** 
  * TEST Force.SObjectType.describeLayout
  */
-SmartSyncTestSuite.prototype._testSObjectTypeDescribeLayout = function() {
+SmartSyncTestSuite.prototype.testSObjectTypeDescribeLayout = function() {
     console.log("# In SmartSyncTestSuite.testSObjectTypeDescribeLayout");
     var self = this;
     var soupName = "testSoupForSObjectType";
@@ -652,7 +652,7 @@ SmartSyncTestSuite.prototype._testSObjectTypeDescribeLayout = function() {
 /**
  * TEST Force.SObjectType cache merge by multiple instances
  */
-SmartSyncTestSuite.prototype._testSObjectTypeCacheOnlyMode = function() {
+SmartSyncTestSuite.prototype.testSObjectTypeCacheOnlyMode = function() {
     console.log("# In SmartSyncTestSuite.testSObjectTypeCacheOnlyMode");
     var self = this;
     var soupName = "testSoupForSObjectType";
@@ -680,7 +680,7 @@ SmartSyncTestSuite.prototype._testSObjectTypeCacheOnlyMode = function() {
     .then(function(results) {
         var descResult = results[0], metadataResult = results[1], layoutResult = results[2];
         assertContains(descResult, data.describeResult);
-        assertContains(metaResult, data.metadataResult);
+        assertContains(metadataResult, data.metadataResult);
         assertContains(layoutResult, data.layoutInfo_012000000000000AAA);
         console.log("## Cleaning up");
         return Force.smartstoreClient.removeSoup(soupName);
@@ -693,7 +693,7 @@ SmartSyncTestSuite.prototype._testSObjectTypeCacheOnlyMode = function() {
 /** 
  * TEST Force.SObjectType cache merge by multiple instances
  */
-SmartSyncTestSuite.prototype._testSObjectTypeCacheMerge = function() {
+SmartSyncTestSuite.prototype.testSObjectTypeCacheMerge = function() {
     console.log("# In SmartSyncTestSuite.testSObjectTypeCacheMerge");
     var self = this;
     var soupName = "testSoupForSObjectType";
@@ -736,7 +736,7 @@ SmartSyncTestSuite.prototype._testSObjectTypeCacheMerge = function() {
 /** 
  * TEST Force.SObjectType multiple types
  */
-SmartSyncTestSuite.prototype._testMultiSObjectTypes = function() {
+SmartSyncTestSuite.prototype.testMultiSObjectTypes = function() {
     console.log("# In SmartSyncTestSuite.testMultiSObjectTypes");
     var self = this;
     var soupName = "testSoupForSObjectType";
@@ -778,7 +778,7 @@ SmartSyncTestSuite.prototype._testMultiSObjectTypes = function() {
 /** 
  * TEST Force.SObjectType.reset
  */
-SmartSyncTestSuite.prototype._testSObjectTypeReset = function() {
+SmartSyncTestSuite.prototype.testSObjectTypeReset = function() {
     console.log("# In SmartSyncTestSuite.testSObjectTypeReset");
     var self = this;
     var soupName = "testSoupForSObjectType";

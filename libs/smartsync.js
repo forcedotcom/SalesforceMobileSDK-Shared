@@ -518,11 +518,17 @@
             } else return that;
         };
 
+        // Has the result been computed already?
+        // Returns true if promiseOrResult is an object that is not a promise
+        var hasResultBeenComputed = function(promiseOrResult) {
+            return promiseOrResult && 'function' !== typeof promiseOrResult.then;
+        };
+        
         // Server action helper
         // If no describe data exists on the instance, get it from server.
         var serverDescribeUnlessCached = function(that) {
             var cacheMode = _.result(that, 'cacheMode');
-            if(!that._data.describeResult && cacheMode != Force.CACHE_MODE.CACHE_ONLY) {
+            if(!hasResultBeenComputed(that._data.describeResult) && cacheMode != Force.CACHE_MODE.CACHE_ONLY) {
                 return forceJsClient.describe(that.sobjectType)
                         .then(function(describeResult) {
                             that._data.describeResult = describeResult;
@@ -535,7 +541,7 @@
         // If no metadata data exists on the instance, get it from server.
         var serverMetadataUnlessCached = function(that) {
             var cacheMode = _.result(that, 'cacheMode');
-            if(!that._data.metadataResult && cacheMode != Force.CACHE_MODE.CACHE_ONLY) {
+            if(!hasResultBeenComputed(that._data.metadataResult) && cacheMode != Force.CACHE_MODE.CACHE_ONLY) {
                 return forceJsClient.metadata(that.sobjectType)
                         .then(function(metadataResult) {
                             that._data.metadataResult = metadataResult;
@@ -547,9 +553,10 @@
 
         // If no layout data exists for this record type on the instance,
         // get it from server.
-        var serverDescribeLayoutUnlessCached = function(that, recordTypeId) {
+        var serverDescribeLayoutUnlessCached = function(params) {
+            var that = params[0], recordTypeId = params[1];
             var cacheMode = _.result(that, 'cacheMode');
-            if(!that._data["layoutInfo_" + recordTypeId] && cacheMode != Force.CACHE_MODE.CACHE_ONLY) {
+            if(!hasResultBeenComputed(that._data["layoutInfo_" + recordTypeId]) && cacheMode != Force.CACHE_MODE.CACHE_ONLY) {
                 return forceJsClient.describeLayout(that.sobjectType, recordTypeId)
                         .then(function(layoutResult) {
                             that._data["layoutInfo_" + recordTypeId] = layoutResult;
@@ -600,7 +607,7 @@
 
                 var layoutInfoId = "layoutInfo_" + recordTypeId;
                 if (!that._data[layoutInfoId]) {
-                    that._data[layoutInfoId] = Promise.resolve(cacheRetrieve(that, layoutInfoId), recordTypeId)
+                    that._data[layoutInfoId] = Promise.all([cacheRetrieve(that, layoutInfoId), recordTypeId])
                         .then(serverDescribeLayoutUnlessCached)
                         .then(cacheSave)
                         .then(function(cacheRow) {
