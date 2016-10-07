@@ -34,7 +34,7 @@ var SmartSyncTestSuite = function () {
     SFTestSuite.call(this, "SmartSyncTestSuite");
 
     // To run specific tests
-    this.testsToRun = ["testSObjectTypeDescribe"];
+    // this.testsToRun = ["testSObjectTypeDescribe"];
 };
 
 // We are sub-classing SFTestSuite
@@ -537,7 +537,7 @@ SmartSyncTestSuite.prototype.testStoreCacheWithGlobalStore = function() {
 /** 
  * TEST Force.SObjectType.describe
  */
-SmartSyncTestSuite.prototype.testSObjectTypeDescribe = function() {
+SmartSyncTestSuite.prototype._testSObjectTypeDescribe = function() {
     console.log("# In SmartSyncTestSuite.testSObjectTypeDescribe");
     var self = this;
     var soupName = "testSoupForSObjectType";
@@ -576,7 +576,7 @@ SmartSyncTestSuite.prototype.testSObjectTypeDescribe = function() {
 /** 
  * TEST Force.SObjectType.getMetadata
  */
-SmartSyncTestSuite.prototype.testSObjectTypeGetMetadata = function() {
+SmartSyncTestSuite.prototype._testSObjectTypeGetMetadata = function() {
     console.log("# In SmartSyncTestSuite.testSObjectTypeGetMetadata");
     var self = this;
     var soupName = "testSoupForSObjectType";
@@ -615,7 +615,7 @@ SmartSyncTestSuite.prototype.testSObjectTypeGetMetadata = function() {
 /** 
  * TEST Force.SObjectType.describeLayout
  */
-SmartSyncTestSuite.prototype.testSObjectTypeDescribeLayout = function() {
+SmartSyncTestSuite.prototype._testSObjectTypeDescribeLayout = function() {
     console.log("# In SmartSyncTestSuite.testSObjectTypeDescribeLayout");
     var self = this;
     var soupName = "testSoupForSObjectType";
@@ -652,7 +652,7 @@ SmartSyncTestSuite.prototype.testSObjectTypeDescribeLayout = function() {
 /**
  * TEST Force.SObjectType cache merge by multiple instances
  */
-SmartSyncTestSuite.prototype.testSObjectTypeCacheOnlyMode = function() {
+SmartSyncTestSuite.prototype._testSObjectTypeCacheOnlyMode = function() {
     console.log("# In SmartSyncTestSuite.testSObjectTypeCacheOnlyMode");
     var self = this;
     var soupName = "testSoupForSObjectType";
@@ -693,7 +693,7 @@ SmartSyncTestSuite.prototype.testSObjectTypeCacheOnlyMode = function() {
 /** 
  * TEST Force.SObjectType cache merge by multiple instances
  */
-SmartSyncTestSuite.prototype.testSObjectTypeCacheMerge = function() {
+SmartSyncTestSuite.prototype._testSObjectTypeCacheMerge = function() {
     console.log("# In SmartSyncTestSuite.testSObjectTypeCacheMerge");
     var self = this;
     var soupName = "testSoupForSObjectType";
@@ -736,7 +736,7 @@ SmartSyncTestSuite.prototype.testSObjectTypeCacheMerge = function() {
 /** 
  * TEST Force.SObjectType multiple types
  */
-SmartSyncTestSuite.prototype.testMultiSObjectTypes = function() {
+SmartSyncTestSuite.prototype._testMultiSObjectTypes = function() {
     console.log("# In SmartSyncTestSuite.testMultiSObjectTypes");
     var self = this;
     var soupName = "testSoupForSObjectType";
@@ -778,7 +778,7 @@ SmartSyncTestSuite.prototype.testMultiSObjectTypes = function() {
 /** 
  * TEST Force.SObjectType.reset
  */
-SmartSyncTestSuite.prototype.testSObjectTypeReset = function() {
+SmartSyncTestSuite.prototype._testSObjectTypeReset = function() {
     console.log("# In SmartSyncTestSuite.testSObjectTypeReset");
     var self = this;
     var soupName = "testSoupForSObjectType";
@@ -1668,7 +1668,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictRetrieve = function() 
 /** 
  * TEST Force.syncSObjectDetectConflict for method update
  */
-SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() {
+SmartSyncTestSuite.prototype._testSyncSObjectDetectConflictUpdate = function() {
     console.log("# In SmartSyncTestSuite.testSyncSObjectDetectConflictUpdate");
     var self = this;
     var cache, cacheForOriginals;
@@ -1847,7 +1847,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() {
 /** 
  * TEST Force.syncSObjectDetectConflict for method delete
  */
-SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() {
+SmartSyncTestSuite.prototype._testSyncSObjectDetectConflictDelete = function() {
     console.log("# In SmartSyncTestSuite.testSyncSObjectDetectConflictDelete");
     var self = this;
     var cache, cacheForOriginals;
@@ -2724,7 +2724,8 @@ SmartSyncTestSuite.prototype.testSyncDownToGlobalStore = function() {
             console.log("## Check both stores");
             return Promise.all([Force.smartstoreClient.soupExists(false, soupName), Force.smartstoreClient.soupExists(true, soupName)]);
         })
-        .then(function(exists, existsGlobal) {
+        .then(function(results) {
+            var exists = results[0], existsGlobal = results[1];
             QUnit.equals(exists, false, "soup should not exist in regular store");
             QUnit.equals(existsGlobal, true, "soup should exist in global store");
             return Promise.all([deleteRecords(idToName), Force.smartstoreClient.removeSoup(true /* global */, soupName)]);
@@ -3095,7 +3096,8 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithGlobalStore = function(
             console.log("## Check both stores");
             return Promise.all([Force.smartstoreClient.soupExists(false, soupName), Force.smartstoreClient.soupExists(true, soupName)]);
         })
-        .then(function(exists, existsGlobal) {
+        .then(function(results) {
+            var exists = results[0], existsGlobal = results[1];
             QUnit.equals(exists, false, "soup should not exist in regular store");
             QUnit.equals(existsGlobal, true, "soup should exist in global store");
             console.log("## Checking cache");
