@@ -742,7 +742,7 @@
                 })
         };
 
-        // Chaining promises that return either a promise or created/upated/read model attributes or null in the case of delete
+        // Chaining promises that return either a promise or created/updated/read model attributes or null in the case of delete
         var promise = null;
         switch(method) {
         case "create": promise = serverCreate(); break;

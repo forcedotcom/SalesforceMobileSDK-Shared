@@ -34,7 +34,7 @@ var SmartSyncTestSuite = function () {
     SFTestSuite.call(this, "SmartSyncTestSuite");
 
     // To run specific tests
-    // this.testsToRun = ["testSObjectTypeDescribe"];
+    // this.testsToRun = ["testSyncSObjectDetectConflictDelete"];
 };
 
 // We are sub-classing SFTestSuite
@@ -1668,7 +1668,7 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictRetrieve = function() 
 /** 
  * TEST Force.syncSObjectDetectConflict for method update
  */
-SmartSyncTestSuite.prototype._testSyncSObjectDetectConflictUpdate = function() {
+SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() {
     console.log("# In SmartSyncTestSuite.testSyncSObjectDetectConflictUpdate");
     var self = this;
     var cache, cacheForOriginals;
@@ -1847,7 +1847,7 @@ SmartSyncTestSuite.prototype._testSyncSObjectDetectConflictUpdate = function() {
 /** 
  * TEST Force.syncSObjectDetectConflict for method delete
  */
-SmartSyncTestSuite.prototype._testSyncSObjectDetectConflictDelete = function() {
+SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() {
     console.log("# In SmartSyncTestSuite.testSyncSObjectDetectConflictDelete");
     var self = this;
     var cache, cacheForOriginals;
@@ -3539,10 +3539,10 @@ var rejectedPromiseWrapper = function(p) {
     return new Promise(function(resolve, reject) {
         p
             .then(function(result) {
-                resolve([{success:true, result:result}]);
+                resolve({success:true, result:result});
             })
             .catch(function(err) {
-                resolve([{success: false, result:err}]);
+                resolve({success: false, result:err});
             });
     });
 };
