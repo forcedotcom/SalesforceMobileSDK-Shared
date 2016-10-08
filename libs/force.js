@@ -358,7 +358,7 @@ var force = (function () {
             proxyURL = params.proxyURL || proxyURL;
             useProxy = params.useProxy === undefined ? useProxy : params.useProxy;
             useCordova = params.useCordova === undefined ? useCordova : params.useCordova;
-            userAgent = params.userAgent || computeWebAppSdkAgent(navigator.userAgent);
+            userAgent = useCordova ? null : (params.userAgent || computeWebAppSdkAgent(navigator.userAgent));
 
             if (params.accessToken) {
                 if (!oauth) oauth = {};
