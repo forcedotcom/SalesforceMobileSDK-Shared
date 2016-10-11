@@ -3518,8 +3518,7 @@ var timeoutPromiser = function(millis) {
  */
 var optionsPromiser = function(object, methodName, objectName) {
     var retfn = function () {
-        var args = [];
-        for (var i=0; i<arguments.length; i++) { args.push(arguments[i]); }
+        var args = Array.prototype.slice.call(arguments);
 
         return new Promise(function(resolve, reject) {
             if (args.length == 0 || !_.isObject(_.last(args))) { args.push({}); }
