@@ -1002,6 +1002,9 @@ cordova.define("com.salesforce.plugin.smartstore.client", function(require, expo
     module.exports = client;
 });
 
+// For backward compatibility
+navigator.smartstoreClient = cordova.require("com.salesforce.plugin.smartstore.client");
+
 cordova.define("com.salesforce.plugin.smartsync", function (require, exports, module) {
     var SERVICE = "com.salesforce.smartsync";
 
