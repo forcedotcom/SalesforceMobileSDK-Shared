@@ -168,7 +168,7 @@ SmartStoreLoadTestSuite.prototype.testAddAndRetrieveManyEntries  = function() {
 				retrievedIds.push(addedEntries[i]._soupEntryId);
 			}
 					
-			return self.retrieveSoupEntries(self.defaultSoupName, retrievedIds);
+			return self.smartstoreClient.retrieveSoupEntries(self.defaultSoupName, retrievedIds);
         })
     .then(function(retrievedEntries) {
 		QUnit.equal(retrievedEntries.length, addedEntries.length,"verify retrieved matches added");
@@ -199,12 +199,12 @@ SmartStoreLoadTestSuite.prototype.upsertQueryEntries = function(batch) {
     
     return self.addEntriesToTestSoup(entries)
         .then(function(updatedentries) {
-            var querySpec = navigator.smartstore.buildAllQuerySpec("key",null, self.QUERY_PAGE_SIZE);
-            return self.querySoup(self.defaultSoupName, querySpec);
+            var querySpec = self.smartstore.buildAllQuerySpec("key",null, self.QUERY_PAGE_SIZE);
+            return self.smartstoreClient.querySoup(self.defaultSoupName, querySpec);
         })
         .then(function(cursor) {
             QUnit.equal(cursor.totalPages, Math.ceil(endKey/self.QUERY_PAGE_SIZE))
-            return self.closeCursor(cursor);
+            return self.smartstoreClient.closeCursor(cursor);
         })
         .then(function() {
             if (batch < self.NUMBER_BATCHES - 1) {
@@ -307,11 +307,11 @@ SmartStoreLoadTestSuite.prototype.testUpsertConcurrentEntries = function() {
         QUnit.equal(upsertResults.length, numInsertIterations, 'Invalid number of upsert results.');
         var lastEntryBatch = self.getLastUpsertBatch(upsertResults);
                                     
-        var querySpec = navigator.smartstore.buildAllQuerySpec("key", null, upsertResults.length);
-        self.querySoup(self.defaultSoupName, querySpec)
+        var querySpec = self.smartstore.buildAllQuerySpec("key", null, upsertResults.length);
+        self.smartstoreClient.querySoup(self.defaultSoupName, querySpec)
             .then(function(cursor) {
                 self.compareRetrievedEntriesWithLastEntryBatch(cursor.currentPageOrderedEntries, lastEntryBatch);
-                return self.closeCursor(cursor);
+                return self.smartstoreClient.closeCursor(cursor);
             })
             .then(function() {
                 self.finalizeTest();

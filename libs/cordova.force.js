@@ -209,6 +209,51 @@ cordova.define("com.salesforce.util.exec", function(require, exports, module) {
     };
 });
 
+/**
+ * Helper function to turn function taking callbacks into a promise
+ */
+cordova.define("com.salesforce.util.promiser", function(require, exports, module) {
+
+    var promiser = function(object, methodName, objectName) {
+        var retfn = function () {
+            var args = Array.from(arguments);
+            return new Promise(function(resolve, reject) {
+                args.push(function() {
+                    console.debug("------> Calling successCB for " + objectName + ":" + methodName);
+                    try {
+                        resolve.apply(null, arguments);
+                    }
+                    catch (err) {
+                        console.error("------> Error when calling successCB for " + objectName + ":" + methodName);
+                        console.error(err.stack);
+                    }
+                });
+                args.push(function() {
+                    console.debug("------> Calling errorCB for " + objectName + ":" + methodName);
+                    try {
+                        reject.apply(null, arguments);
+                    }
+                    catch (err) {
+                        console.error("------> Error when calling errorCB for " + objectName + ":" + methodName);
+                        console.error(err.stack);
+                    }
+                });
+                console.debug("-----> Calling " + objectName + ":" + methodName);
+                object[methodName].apply(object, args);
+            });
+        };
+        return retfn;
+    };
+
+    /**
+     * Part of the module that is public
+     */
+    module.exports = {
+        promiser: promiser,
+    };
+});
+
+
 cordova.define("com.salesforce.plugin.sdkinfo", function(require, exports, module) {
     var SERVICE = "com.salesforce.sdkinfo";
 
@@ -918,6 +963,44 @@ navigator.smartstore = cordova.require("com.salesforce.plugin.smartstore");
 var SoupIndexSpec = navigator.smartstore.SoupIndexSpec;
 var QuerySpec = navigator.smartstore.QuerySpec;
 var StoreCursor = navigator.smartstore.StoreCursor;
+
+/**
+ * SmartStore client with promise-based APIs
+ */
+cordova.define("com.salesforce.plugin.smartstore.client", function(require, exports, module) {
+
+    var smartstore = require("com.salesforce.plugin.smartstore");
+    var promiser = require("com.salesforce.util.promiser").promiser;
+
+    // Promise-based APIs
+    var client = new Object();
+    client.alterSoup = promiser(smartstore, "alterSoup", "smartstore.client");
+    client.alterSoupWithSpec = promiser(smartstore, "alterSoupWithSpec", "smartstore.client");
+    client.clearSoup = promiser(smartstore, "clearSoup", "smartstore.client");
+    client.closeCursor = promiser(smartstore, "closeCursor", "smartstore.client");
+    client.getDatabaseSize = promiser(smartstore, "getDatabaseSize", "smartstore.client");
+    client.getSoupIndexSpecs = promiser(smartstore, "getSoupIndexSpecs", "smartstore.client");
+    client.getSoupSpec = promiser(smartstore, "getSoupSpec", "smartstore.client");
+    client.moveCursorToNextPage = promiser(smartstore, "moveCursorToNextPage", "smartstore.client");
+    client.moveCursorToPageIndex = promiser(smartstore, "moveCursorToPageIndex", "smartstore.client");
+    client.moveCursorToPreviousPage = promiser(smartstore, "moveCursorToPreviousPage", "smartstore.client");
+    client.querySoup = promiser(smartstore, "querySoup", "smartstore.client");
+    client.reIndexSoup = promiser(smartstore, "reIndexSoup", "smartstore.client");
+    client.registerSoup = promiser(smartstore, "registerSoup", "smartstore.client");
+    client.registerSoupWithSpec = promiser(smartstore, "registerSoupWithSpec", "smartstore.client");
+    client.removeFromSoup = promiser(smartstore, "removeFromSoup", "smartstore.client");
+    client.removeSoup = promiser(smartstore, "removeSoup", "smartstore.client");
+    client.retrieveSoupEntries = promiser(smartstore, "retrieveSoupEntries", "smartstore.client");
+    client.runSmartQuery = promiser(smartstore, "runSmartQuery", "smartstore.client");
+    client.soupExists = promiser(smartstore, "soupExists", "smartstore.client");
+    client.upsertSoupEntries = promiser(smartstore, "upsertSoupEntries", "smartstore.client");
+    client.upsertSoupEntriesWithExternalId = promiser(smartstore, "upsertSoupEntriesWithExternalId", "smartstore.client");
+    
+    /**
+     * Part of the module that is public
+     */
+    module.exports = client;
+});
 
 cordova.define("com.salesforce.plugin.smartsync", function (require, exports, module) {
     var SERVICE = "com.salesforce.smartsync";

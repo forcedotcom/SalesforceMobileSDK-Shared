@@ -63,39 +63,6 @@
     // Default log level: info
     Force.setLogLevel("info");
 
-
-    // Utility Function to turn methods with callbacks into jQuery promises
-    var promiser = function(object, methodName, objectName) {
-        var retfn = function () {
-            var args = Array.from(arguments);
-            return new Promise(function(resolve, reject) {
-                args.push(function() {
-                    Force.console.debug("------> Calling successCB for " + objectName + ":" + methodName);
-                    try {
-                        resolve.apply(null, arguments);
-                    }
-                    catch (err) {
-                        Force.console.error("------> Error when calling successCB for " + objectName + ":" + methodName);
-                        Force.console.error(err.stack);
-                    }
-                });
-                args.push(function() {
-                    Force.console.debug("------> Calling errorCB for " + objectName + ":" + methodName);
-                    try {
-                        reject.apply(null, arguments);
-                    }
-                    catch (err) {
-                        Force.console.error("------> Error when calling errorCB for " + objectName + ":" + methodName);
-                        Force.console.error(err.stack);
-                    }
-                });
-                Force.console.debug("-----> Calling " + objectName + ":" + methodName);
-                object[methodName].apply(object, args);
-            });
-        };
-        return retfn;
-    };
-
     // Private force client with promise-wrapped methods
     var forceJsClient = null;
 
@@ -135,26 +102,15 @@
         forceJsClient.fileDetails = promiser(forceJs, "fileDetails", "forceJsClient");
         forceJsClient.apexrest = promiser(forceJs, "apexrest", "forceJsClient");
 
+        if (cordova && cordova.require("com.salesforce.plugin.smartstore.client"))
+        {
+            smartstoreClient = cordova.require("com.salesforce.plugin.smartstore.client");
+        }
+
         // Exposing outside
         Force.forceJsClient = forceJsClient;
+        Force.smartstoreClient = smartstoreClient;
 
-        if (navigator.smartstore)
-        {
-            smartstoreClient = new Object();
-            smartstoreClient.registerSoup = promiser(navigator.smartstore, "registerSoup", "smartstoreClient");
-            smartstoreClient.upsertSoupEntriesWithExternalId = promiser(navigator.smartstore, "upsertSoupEntriesWithExternalId", "smartstoreClient");
-            smartstoreClient.querySoup = promiser(navigator.smartstore, "querySoup", "smartstoreClient");
-            smartstoreClient.runSmartQuery = promiser(navigator.smartstore, "runSmartQuery", "smartstoreClient");
-            smartstoreClient.moveCursorToNextPage = promiser(navigator.smartstore, "moveCursorToNextPage", "smartstoreClient");
-            smartstoreClient.removeFromSoup = promiser(navigator.smartstore, "removeFromSoup", "smartstoreClient");
-            smartstoreClient.closeCursor = promiser(navigator.smartstore, "closeCursor", "smartstoreClient");
-            smartstoreClient.soupExists = promiser(navigator.smartstore, "soupExists", "smartstoreClient");
-            smartstoreClient.removeSoup = promiser(navigator.smartstore, "removeSoup", "smartstoreClient");
-            smartstoreClient.retrieveSoupEntries = promiser(navigator.smartstore, "retrieveSoupEntries", "smartstoreClient");
-
-            // Exposing outside
-            Force.smartstoreClient = smartstoreClient;
-        }
     };
 
     // Force.Error

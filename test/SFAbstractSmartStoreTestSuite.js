@@ -36,6 +36,8 @@ if (typeof AbstractSmartStoreTestSuite === 'undefined') {
 var AbstractSmartStoreTestSuite = function (module, defaultSoupIndexes) {
     SFTestSuite.call(this, module);
     this.defaultSoupIndexes = defaultSoupIndexes;
+    this.smartstore = cordova.require("com.salesforce.plugin.smartstore");
+    this.smartstoreClient = cordova.require("com.salesforce.plugin.smartstore.client");
 };
 
 // We are sub-classing SFTestSuite
@@ -56,46 +58,12 @@ AbstractSmartStoreTestSuite.prototype.runTest= function (methName) {
             });
 };
 
-/**
- * Helper methods to do smartstore operations using promises
- */
-AbstractSmartStoreTestSuite.prototype.alterSoup = promiser(navigator.smartstore, "alterSoup");
-AbstractSmartStoreTestSuite.prototype.alterSoupWithSpec = promiser(navigator.smartstore, "alterSoupWithSpec");
-AbstractSmartStoreTestSuite.prototype.clearSoup = promiser(navigator.smartstore, "clearSoup");
-AbstractSmartStoreTestSuite.prototype.closeCursor = promiser(navigator.smartstore, "closeCursor");
-AbstractSmartStoreTestSuite.prototype.getDatabaseSize = promiser(navigator.smartstore, "getDatabaseSize");
-AbstractSmartStoreTestSuite.prototype.getSoupIndexSpecs = promiser(navigator.smartstore, "getSoupIndexSpecs");
-AbstractSmartStoreTestSuite.prototype.getSoupSpec = promiser(navigator.smartstore, "getSoupSpec");
-AbstractSmartStoreTestSuite.prototype.moveCursorToNextPage = promiser(navigator.smartstore, "moveCursorToNextPage");
-AbstractSmartStoreTestSuite.prototype.moveCursorToPreviousPage = promiser(navigator.smartstore, "moveCursorToPreviousPage");
-AbstractSmartStoreTestSuite.prototype.querySoup = promiser(navigator.smartstore, "querySoup");
-AbstractSmartStoreTestSuite.prototype.reIndexSoup = promiser(navigator.smartstore, "reIndexSoup");
-AbstractSmartStoreTestSuite.prototype.registerSoup = promiser(navigator.smartstore, "registerSoup");
-AbstractSmartStoreTestSuite.prototype.registerSoupWithSpec = promiser(navigator.smartstore, "registerSoupWithSpec");
-AbstractSmartStoreTestSuite.prototype.removeFromSoup = promiser(navigator.smartstore, "removeFromSoup");
-AbstractSmartStoreTestSuite.prototype.removeSoup = promiser(navigator.smartstore, "removeSoup");
-AbstractSmartStoreTestSuite.prototype.retrieveSoupEntries = promiser(navigator.smartstore, "retrieveSoupEntries");
-AbstractSmartStoreTestSuite.prototype.runSmartQuery = promiser(navigator.smartstore, "runSmartQuery");
-AbstractSmartStoreTestSuite.prototype.soupExists = promiser(navigator.smartstore, "soupExists");
-AbstractSmartStoreTestSuite.prototype.upsertEntriesToSoupWithExternalIdPath = promiser(navigator.smartstore, "upsertSoupEntriesWithExternalId");
-AbstractSmartStoreTestSuite.prototype.upsertSoupEntries = promiser(navigator.smartstore, "upsertSoupEntries");
-
-AbstractSmartStoreTestSuite.prototype.alterSoupNoAssertion = promiser(navigator.smartstore, "alterSoup", true);
-AbstractSmartStoreTestSuite.prototype.clearSoupNoAssertion = promiser(navigator.smartstore, "clearSoup", true);
-AbstractSmartStoreTestSuite.prototype.getSoupIndexSpecsNoAssertion = promiser(navigator.smartstore, "getSoupIndexSpecs", true);
-AbstractSmartStoreTestSuite.prototype.moveCursorToNextPageNoAssertion = promiser(navigator.smartstore, "moveCursorToNextPage", true);
-AbstractSmartStoreTestSuite.prototype.moveCursorToPreviousPageNoAssertion = promiser(navigator.smartstore, "moveCursorToPreviousPage", true);
-AbstractSmartStoreTestSuite.prototype.querySoupNoAssertion = promiser(navigator.smartstore, "querySoup", true);
-AbstractSmartStoreTestSuite.prototype.reIndexSoupNoAssertion = promiser(navigator.smartstore, "reIndexSoup", true);
-AbstractSmartStoreTestSuite.prototype.registerSoupNoAssertion = promiser(navigator.smartstore, "registerSoup", true);
-AbstractSmartStoreTestSuite.prototype.upsertSoupEntriesNoAssertion = promiser(navigator.smartstore, "upsertSoupEntries", true);
-
 AbstractSmartStoreTestSuite.prototype.registerDefaultSoup = function() {
-    return this.registerSoup(this.defaultSoupName, this.defaultSoupIndexes);
+    return this.smartstoreClient.registerSoup(this.defaultSoupName, this.defaultSoupIndexes);
 };
 
 AbstractSmartStoreTestSuite.prototype.removeDefaultSoup = function() {
-    return this.removeSoup(this.defaultSoupName);
+    return this.smartstoreClient.removeSoup(this.defaultSoupName);
 };
 
 /**
@@ -104,20 +72,20 @@ AbstractSmartStoreTestSuite.prototype.removeDefaultSoup = function() {
 AbstractSmartStoreTestSuite.prototype.removeAndRecreateSoup = function(soupName, soupIndexes) {
     var self = this;
     // Start clean
-    return self.removeSoup(soupName)
+    return self.smartstoreClient.removeSoup(soupName)
         .then(function() {
             // Check soup does not exist
-            return self.soupExists(soupName);
+            return self.smartstoreClient.soupExists(soupName);
         })
         .then(function(exists) {
             QUnit.equals(exists, false, "soup should not already exist");
             // Create soup
-            return self.registerSoup(soupName, soupIndexes);
+            return self.smartstoreClient.registerSoup(soupName, soupIndexes);
         })
         .then(function(soupName2) {
             QUnit.equals(soupName2,soupName,"registered soup OK");
             // Check soup now exists
-            return self.soupExists(soupName);
+            return self.smartstoreClient.soupExists(soupName);
         })
         .then(function(exists2) {
             QUnit.equals(exists2, true, "soup should now exist");
@@ -131,7 +99,7 @@ AbstractSmartStoreTestSuite.prototype.removeAndRecreateSoup = function(soupName,
 AbstractSmartStoreTestSuite.prototype.addGeneratedEntriesToSoup = function(soupName, nEntries) {
     console.log("In addGeneratedEntriesToSoup: " + soupName + " nEntries=" + nEntries);
     var entries = this.createGeneratedEntries(nEntries);
-    return this.upsertSoupEntries(soupName, entries);
+    return this.smartstoreClient.upsertSoupEntries(soupName, entries);
 };
 
 /**
@@ -182,12 +150,12 @@ AbstractSmartStoreTestSuite.prototype.addGeneratedEntriesToTestSoup = function(n
  */
 AbstractSmartStoreTestSuite.prototype.addEntriesToTestSoup = function(entries) {
     console.log("In addEntriesToTestSoup: entries.length=" + entries.length);
-    return this.upsertSoupEntries(this.defaultSoupName,entries);
+    return this.smartstoreClient.upsertSoupEntries(this.defaultSoupName,entries);
 };
     
 AbstractSmartStoreTestSuite.prototype.addEntriesWithExternalIdToTestSoup = function(entries, externalIdPath) {
     console.log("In addEntriesWithExternalIdToTestSoup: entries.length=" + entries.length);
-    return this.upsertEntriesToSoupWithExternalIdPath(this.defaultSoupName, entries, externalIdPath);
+    return this.smartstoreClient.upsertSoupEntriesWithExternalId(this.defaultSoupName, entries, externalIdPath);
 };
 
 }
