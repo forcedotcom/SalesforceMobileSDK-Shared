@@ -42,6 +42,7 @@ SmartSyncTestSuite.prototype = new SFTestSuite();
 SmartSyncTestSuite.prototype.constructor = SmartSyncTestSuite;
 
 // SmartSyncPlugin
+var promiser = cordova.require("com.salesforce.util.promiser").promiser;
 SmartSyncTestSuite.prototype.cleanResyncGhosts = promiser(cordova.require("com.salesforce.plugin.smartsync"), "cleanResyncGhosts");
 SmartSyncTestSuite.prototype.reSync = promiser(cordova.require("com.salesforce.plugin.smartsync"), "reSync");
 SmartSyncTestSuite.prototype.syncDown = promiser(cordova.require("com.salesforce.plugin.smartsync"), "syncDown");

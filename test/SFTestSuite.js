@@ -24,37 +24,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-/**
- * Build a function returning a promise from a function that takes a success and error callback as last arguments
- * The new function will take the same arguments as the original function minus the two callback functions
- */
-if (typeof promiser === 'undefined') {
-
-    var promiser = function(object, methodName, noAssertionOnFailure) {
-        var retfn = function () {
-            console.log("In " + methodName);
-            var self = this;
-            var args = Array.from(arguments);
-            return new Promise(function(resolve, reject) {
-                args.push(function() {
-                    console.log(methodName + " succeeded");
-                    resolve.apply(null, arguments);
-                });
-                args.push(function() {
-                    console.log(methodName + " failed");
-                    //console.log("Failure-->" + JSON.stringify(Array.from(arguments)));
-                    if (!noAssertionOnFailure) self.setAssertionFailed(methodName + " failed");
-                    reject.apply(null, Array.from(arguments));
-                });
-                object[methodName].apply(object, args);
-            });
-        };
-        return retfn;
-    }
-
-};
-
 /**
  * SFTestStatus - Represents a particular test and its status information.
  */

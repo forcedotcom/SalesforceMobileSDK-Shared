@@ -25,7 +25,7 @@
  *
  */
 
-(function(_, Backbone, forceJs) {
+(function(_, Backbone, forceJsClient) {
 
     "use strict";
 
@@ -60,15 +60,9 @@
         }
     };
 
-    // Default log level: info
-    Force.setLogLevel("info");
-
-    // Private force client with promise-wrapped methods
-    var forceJsClient = null;
-
     // Private smartstore client with promise-wrapped methods
     var smartstoreClient = null;
-
+    
     // Helper function to patch user agent
     var patchUserAgent = function(userAgent) {
         var match = /^(SalesforceMobileSDK\/[^\ ]* [^\/]*\/[^\ ]* \([^\)]*\) [^\/]*\/[^ ]* )(Hybrid|Web)(.*$)/.exec(userAgent);
@@ -81,28 +75,23 @@
         }
     };
 
-    forceJs.setUserAgent(patchUserAgent(forceJs.getUserAgent()));
+    /**
+     * Initialize Force
+     * @param params
+     *  logLevel (optional)
+     *  userAgent (optional)
+     */
+    Force.init = function(params) {
+        params = params || {};
 
-    Force.init = function() {
-        forceJsClient = new Object();
-        forceJsClient.impl = forceJs;
-        forceJsClient.create = promiser(forceJs, "create", "forceJsClient");
-        forceJsClient.retrieve = promiser(forceJs, "retrieve", "forceJsClient");
-        forceJsClient.update = promiser(forceJs, "update", "forceJsClient");
-        forceJsClient.del = promiser(forceJs, "del", "forceJsClient");
-        forceJsClient.query = promiser(forceJs, "query", "forceJsClient");
-        forceJsClient.queryMore = promiser(forceJs, "queryMore", "forceJsClient");
-        forceJsClient.search = promiser(forceJs, "search", "forceJsClient");
-        forceJsClient.metadata = promiser(forceJs, "metadata", "forceJsClient");
-        forceJsClient.describe = promiser(forceJs, "describe", "forceJsClient");
-        forceJsClient.describeLayout = promiser(forceJs, "describeLayout", "forceJsClient");
-        forceJsClient.ownedFilesList = promiser(forceJs, "ownedFilesList", "forceJsClient");
-        forceJsClient.filesInUsersGroups = promiser(forceJs, "filesInUsersGroups", "forceJsClient");
-        forceJsClient.filesSharedWithUser = promiser(forceJs, "filesSharedWithUser", "forceJsClient");
-        forceJsClient.fileDetails = promiser(forceJs, "fileDetails", "forceJsClient");
-        forceJsClient.apexrest = promiser(forceJs, "apexrest", "forceJsClient");
+        // Default log level: info
+        Force.setLogLevel(params.logLevel || "info");
+        
+        // The one from forceJsClient patched 
+        forceJsClient.setUserAgent(params.userAgent || patchUserAgent(forceJsClient.getUserAgent()));
 
-        if (cordova && cordova.require("com.salesforce.plugin.smartstore.client"))
+        // Getting a smartstoreclient if availablex
+        if (window.cordova && window.cordova.require("com.salesforce.plugin.smartstore.client"))
         {
             smartstoreClient = cordova.require("com.salesforce.plugin.smartstore.client");
         }
@@ -110,7 +99,6 @@
         // Exposing outside
         Force.forceJsClient = forceJsClient;
         Force.smartstoreClient = smartstoreClient;
-
     };
 
     // Force.Error
@@ -1611,4 +1599,4 @@
 
     } // if (!_.isUndefined(Backbone)) {
 })
-.call(this, _, window.Backbone, window.force);
+.call(this, _, window.Backbone, window.forceJsClient);
