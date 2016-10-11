@@ -1187,7 +1187,8 @@ var forceJsClient = (function() {
     
     var promiser = function(methodName) {
         var retfn = function () {
-            var args = Array.from(arguments);
+            var args = [];
+            for (var i=0; i<arguments.length; i++) { args.push(arguments[i]); }
             return new Promise(function(resolve, reject) {
                 args.push(function() {
                     console.debug("------> Calling success handler for force." + methodName);

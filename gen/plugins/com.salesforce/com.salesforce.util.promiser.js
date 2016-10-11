@@ -29,7 +29,8 @@ var SALESFORCE_MOBILE_SDK_VERSION = "5.0.0";
 
 var promiser = function(object, methodName, objectName) {
     var retfn = function () {
-        var args = Array.from(arguments);
+        var args = [];
+        for (var i=0; i<arguments.length; i++) { args.push(arguments[i]); }
         return new Promise(function(resolve, reject) {
             args.push(function() {
                 console.debug("------> Calling successCB for " + objectName + ":" + methodName);
