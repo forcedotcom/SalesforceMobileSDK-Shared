@@ -389,7 +389,7 @@ var moveCursorToNextPage = function (isGlobalStore, cursor, successCB, errorCB) 
     if (checkFirstArg(arguments)) return;
     var newPageIndex = cursor.currentPageIndex + 1;
     if (newPageIndex >= cursor.totalPages) {
-        errorCB(cursor, new Error("moveCursorToNextPage called while on last page"));
+        errorCB(new Error("moveCursorToNextPage called while on last page"));
     } else {
         moveCursorToPageIndex(isGlobalStore, cursor, newPageIndex, successCB, errorCB);
     }
@@ -399,7 +399,7 @@ var moveCursorToPreviousPage = function (isGlobalStore, cursor, successCB, error
     if (checkFirstArg(arguments)) return;
     var newPageIndex = cursor.currentPageIndex - 1;
     if (newPageIndex < 0) {
-        errorCB(cursor, new Error("moveCursorToPreviousPage called while on first page"));
+        errorCB(new Error("moveCursorToPreviousPage called while on first page"));
     } else {
         moveCursorToPageIndex(isGlobalStore, cursor, newPageIndex, successCB, errorCB);
     }
