@@ -45,6 +45,7 @@ SDKInfoTestSuite.prototype.constructor = SDKInfoTestSuite;
 /**
  * Helper method to do sdk info operations using promises
  */
+var promiser = cordova.require("com.salesforce.util.promiser").promiser;
 SDKInfoTestSuite.prototype.getInfo = promiser(cordova.require("com.salesforce.plugin.sdkinfo"), "getInfo");
 
 /** 
@@ -56,7 +57,7 @@ SDKInfoTestSuite.prototype.testGetInfo = function()  {
     var self = this;
 
     self.getInfo()
-        .done(function(sdkInfo) {
+        .then(function(sdkInfo) {
             // sdkVersion
         	QUnit.ok(sdkInfo.sdkVersion.indexOf("5.0") == 0, "expected different sdk version");
             // appName

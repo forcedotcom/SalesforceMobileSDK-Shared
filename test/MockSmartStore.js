@@ -128,6 +128,7 @@ var MockSmartStore = (function(window) {
 
         registerSoup: function(soupName, soupSpec, indexSpecs) {
             if (!this.soupExists(soupName)) {
+                if (indexSpecs == null) throw new Error("No indexSpecs provided");
                 this._soups[soupName] = {};
                 this._soupIndexSpecs[soupName] = indexSpecs;
                 this._soupSpecs[soupName] = soupSpec;

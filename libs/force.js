@@ -1179,3 +1179,86 @@ var force = (function () {
     };
 
 }());
+
+/**
+ * Promise-based APIs
+ */
+var forceJsClient = (function() {
+    
+    var promiser = function(methodName) {
+        var retfn = function () {
+            var args = Array.prototype.slice.call(arguments);
+
+            return new Promise(function(resolve, reject) {
+                args.push(function() {
+                    console.debug("------> Calling success handler for force." + methodName);
+                    try {
+                        resolve.apply(null, arguments);
+                    }
+                    catch (err) {
+                        console.error("------> Error when calling success handler for force." + methodName);
+                        console.error(err.stack);
+                    }
+                });
+                args.push(function() {
+                    console.debug("------> Calling error handler for force." + methodName);
+                    try {
+                        reject.apply(null, arguments);
+                    }
+                    catch (err) {
+                        console.error("------> Error when calling error handler for force." + methodName);
+                        console.error(err.stack);
+                    }
+                });
+                console.debug("-----> Calling force." + methodName);
+                force[methodName].apply(force, args);
+            });
+        };
+        return retfn;
+    };
+
+    var client = new Object();
+
+    client.login = promiser("login");
+    client.request = promiser("request");
+    client.versions = promiser("versions");
+    client.resources = promiser("resources");
+    client.describeGlobal = promiser("describeGlobal");
+    client.metadata = promiser("metadata");
+    client.describe = promiser("describe");
+    client.describeLayout = promiser("describeLayout");
+    client.query = promiser("query");
+    client.queryMore = promiser("queryMore");
+    client.search = promiser("search");
+    client.create = promiser("create");
+    client.update = promiser("update");
+    client.del = promiser("del");
+    client.upsert = promiser("upsert");
+    client.retrieve = promiser("retrieve");
+    client.apexrest = promiser("apexrest");
+    client.chatter = promiser("chatter");
+    client.getPickListValues = promiser("getPickListValues");
+    client.getAttachment = promiser("getAttachment");
+
+    //Files
+    client.ownedFilesList = promiser("ownedFilesList");
+    client.filesInUsersGroups = promiser("filesInUsersGroups");
+    client.filesSharedWithUser = promiser(" filesSharedWithUser");
+    client.fileDetails = promiser("fileDetails");
+    client.batchFileDetails = promiser("batchFileDetails");
+    client.fileShares = promiser("fileShares");
+    client.addFileShare = promiser("addFileShare");
+    client.deleteFileShare = promiser("deleteFileShare");
+
+    // API that dont' return a promise
+    client.init = force.init;
+    client.getUserAgent = force.getUserAgent;
+    client.setUserAgent = force.setUserAgent;
+    client.isAuthenticated = force.isAuthenticated;
+    client.getUserId = force.getUserId;
+    client.discardToken = force.discardToken;
+
+    // The public API
+    return client;
+
+}());
