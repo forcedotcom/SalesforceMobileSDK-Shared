@@ -113,7 +113,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equals(exists, false, "soup should not already exist in regular store");
                 QUnit.equals(existsGlobal, false, "soup should not already exist in global store");
                 // Create soup in global store
-                return self.smartstoreClient.registerSoup(GLOBAL_STORE, soupName, self.smartstoreClient.defaultSoupIndexes);
+                return self.smartstoreClient.registerSoup(GLOBAL_STORE, soupName, self.defaultSoupIndexes);
             })
             .then(function(soupName2) {
                 QUnit.equals(soupName2,soupName,"registered soup OK in global store");
@@ -126,7 +126,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equals(exists, false, "soup should not exist in regular store");
                 QUnit.equals(existsGlobal, true, "soup should now exist in global store");
                 // Create soup in regular store
-                return self.smartstoreClient.registerSoup(REGULAR_STORE, soupName, self.smartstoreClient.defaultSoupIndexes);
+                return self.smartstoreClient.registerSoup(REGULAR_STORE, soupName, self.defaultSoupIndexes);
             })
             .then(function(soupName2) {
                 QUnit.equals(soupName2,soupName,"registered soup OK in regular store");
