@@ -111,6 +111,7 @@ var forceJsClient = (function(force) {
     client.isAuthenticated = force.isAuthenticated;
     client.getUserId = force.getUserId;
     client.discardToken = force.discardToken;
+    client.getRequestBaseURL = force.getRequestBaseURL;
 
     // The public API
     return client;
