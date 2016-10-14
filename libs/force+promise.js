@@ -33,11 +33,11 @@
  * NB you need to include force.js (and optionally force+files.js) before
  *
  */
-if (window.force === undefined) {
-    throw new Error("You need to include force.js before force+promise.js");
-}
+var forceJsClient = (function(force) {
 
-var forceJsClient = (function() {
+    if (force === undefined) {
+        throw new Error("You need to include force.js before force+promise.js");
+    }
     
     var promiser = function(methodName) {
         var retfn = function () {
@@ -115,4 +115,4 @@ var forceJsClient = (function() {
     // The public API
     return client;
 
-}());
+})(window.force);
