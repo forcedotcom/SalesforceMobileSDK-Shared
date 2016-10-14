@@ -23,8 +23,6 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Based on: https://github.com/ccoenraets/forcejs/blob/a9348b90a046e12aac9b56864359c24e5b246abe/force.js
- *
  * ForceJS - REST toolkit for Salesforce.com
  * Author: Christophe Coenraets @ccoenraets
  * Version: 1.0
@@ -68,9 +66,6 @@ var force = (function () {
     // if page URL is http://localhost:3000/myapp/index.html, oauthCallbackURL is http://localhost:3000/myapp/oauthcallback.html
     // To override default, pass oauthCallbackURL in init(props)
         oauthCallbackURL = baseURL + '/oauthcallback.html',
-
-    // User agent
-        userAgent,
 
     // Because the OAuth login spans multiple processes, we need to keep the login success and error handlers as a variables
     // inside the module instead of keeping them local within the login function.
