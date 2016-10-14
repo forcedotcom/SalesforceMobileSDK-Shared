@@ -106,8 +106,6 @@ var forceJsClient = (function(force) {
 
     // API that dont' return a promise
     client.init = force.init;
-    client.getUserAgent = force.getUserAgent;
-    client.setUserAgent = force.setUserAgent;
     client.isAuthenticated = force.isAuthenticated;
     client.getUserId = force.getUserId;
     client.discardToken = force.discardToken;

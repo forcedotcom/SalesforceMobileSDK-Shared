@@ -94,106 +94,6 @@ var force = (function () {
        requestHandler;
         
 
-
-    /**
-     * Compute SalesforceMobileSDK for web app.
-     */
-    function computeWebAppSdkAgent(navigatorUserAgent) {
-        var sdkVersion = SALESFORCE_MOBILE_SDK_VERSION;
-        var model = "Unknown"
-        var platform = "Unknown";
-        var platformVersion = "Unknown";
-        var appName = window.location.pathname.split("/").pop();
-        var appVersion = "1.0";
-
-        var getIPadVersion = function() {
-            var match = /CPU OS ([0-9_]*) like Mac OS X/.exec(navigatorUserAgent);
-            return (match != null && match.length == 2 ? match[1].replace(/_/g, ".") : "Unknown");
-        };
-
-        var getIPhoneVersion = function() {
-            var match = /CPU iPhone OS ([0-9_]*) like Mac OS X/.exec(navigatorUserAgent);
-            return (match != null && match.length == 2 ? match[1].replace(/_/g, ".") : "Unknown");
-        };
-
-        var getIOSModel = function() {
-            var match = /(iPad|iPhone|iPod)/.exec(navigatorUserAgent);
-            return (match != null && match.length == 2 ? match[1] : "Unknown");
-        };
-
-        var getAndroidVersion = function() {
-            var match = /Android ([0-9\.]*)/.exec(navigatorUserAgent);
-            return (match != null && match.length == 2 ? match[1] : "Unknown");
-        };
-
-        var getAndroidModel = function() {
-            var match = /Android[^\)]*; ([^;\)]*)/.exec(navigatorUserAgent);
-            return (match != null && match.length == 2 ? match[1].replace(/[\/ ]/g, "_") : "Unknown");
-        };
-
-        var getWindowsPhoneVersion = function() {
-            var match = /Windows Phone OS ([0-9\.]*)/.exec(navigatorUserAgent);
-            return (match != null && match.length == 2 ? match[1] : "Unknown");
-        };
-
-        var getWindowsPhoneModel = function() {
-            var match = /Windows Phone OS [^\)]*; ([^;\)]*)/.exec(navigatorUserAgent);
-            return (match != null && match.length == 2 ? match[1].replace(/[\/ ]/g, "_") : "Unknown");
-        };
-
-        var getMacOSVersion = function() {
-            var match = /Mac OS X ([0-9_]*)/.exec(navigatorUserAgent);
-            return (match != null && match.length == 2 ? match[1].replace(/_/g, ".") : "Unknown");
-        };
-
-        var getWindowsVersion = function() {
-            var match = /Windows NT ([0-9\.]*)/.exec(navigatorUserAgent);
-            return (match != null && match.length == 2 ? match[1] : "Unknown");
-        };
-
-        var match = /(iPhone|iPad|iPod|Android|Windows Phone|Macintosh|Windows)/.exec(navigatorUserAgent);
-        if (match != null && match.length == 2) {
-            switch(match[1]) {
-            case "iPad":
-                platform = "iPhone OS";
-                platformVersion = getIPadVersion();
-                model = "iPad";
-                break;
-
-            case "iPhone":
-            case "iPod":
-                platform = "iPhone OS";
-                platformVersion = getIPhoneVersion();
-                model = match[1];
-                break;
-
-            case "Android":
-                platform = "android mobile";
-                platformVersion = getAndroidVersion();
-                model = getAndroidModel();
-                break;
-
-            case "Windows Phone":
-                platform = "Windows Phone";
-                platformVersion = getWindowsPhoneVersion();
-                model = getWindowsPhoneModel();
-                break;
-
-            case "Macintosh":
-                platform = "Mac OS";
-                platformVersion = getMacOSVersion();
-                break;
-
-            case "Windows":
-                platform = "Windows";
-                platformVersion = getWindowsVersion();
-                break;
-            }
-        }
-
-        return "SalesforceMobileSDK/" + sdkVersion + " " + platform + "/" + platformVersion + " (" + model + ") " + appName + "/" + appVersion + " Web " + navigatorUserAgent;
-    }
-
     /*
      * Determines the request base URL.
      */
@@ -345,7 +245,6 @@ var force = (function () {
      *  instanceURL (optional)
      *  refreshToken (optional)
      *  useCordova (optional)
-     *  userAgent (optional)
      *  requestHandler (testing only)
      */
     function init(params) {
@@ -358,7 +257,6 @@ var force = (function () {
             proxyURL = params.proxyURL || proxyURL;
             useProxy = params.useProxy === undefined ? useProxy : params.useProxy;
             useCordova = params.useCordova === undefined ? useCordova : params.useCordova;
-            userAgent = useCordova ? null : (params.userAgent || computeWebAppSdkAgent(navigator.userAgent));
 
             if (params.accessToken) {
                 if (!oauth) oauth = {};
@@ -420,21 +318,6 @@ var force = (function () {
                 loginErrorHandler({status: 'access_denied'});
             }
         }
-    }
-
-    /**
-     * Set a User-Agent to use in the client.
-     * @param ua A User-Agent string to use for all requests.
-     */
-    function setUserAgent(ua) {
-        userAgent = ua;
-    }
-
-    /**
-     * Get User-Agent used by this client.
-     */
-    function getUserAgent() {
-        return userAgent;
     }
 
     /**
@@ -613,9 +496,6 @@ var force = (function () {
         xhr.setRequestHeader('Cache-Control', 'no-store');
         // See http://www.salesforce.com/us/developer/docs/chatterapi/Content/intro_requesting_bearer_token_url.htm#kanchor36
         xhr.setRequestHeader("X-Connect-Bearer-Urls", true);
-        if (userAgent) {
-            xhr.setRequestHeader('X-User-Agent',  userAgent);
-        }
 
         if (obj.contentType) {
             xhr.setRequestHeader("Content-Type", obj.contentType);
@@ -995,8 +875,6 @@ var force = (function () {
         apiVersion: apiVersion,
         init: init,
         login: login,
-        getUserAgent: getUserAgent,
-        setUserAgent: setUserAgent,
         getUserId: getUserId,
         isAuthenticated: isAuthenticated,
         request: request,
@@ -1023,7 +901,6 @@ var force = (function () {
         getRequestBaseURL: getRequestBaseURL,
 
         // Exposed for testing only
-        computeWebAppSdkAgent: computeWebAppSdkAgent,
         computeEndPointIfMissing: computeEndPointIfMissing,
         parseUrl: parseUrl
     };
