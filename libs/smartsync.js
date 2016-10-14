@@ -63,23 +63,10 @@
     // Private smartstore client with promise-wrapped methods
     var smartstoreClient = null;
     
-    // Helper function to patch user agent
-    var patchUserAgent = function(userAgent) {
-        var match = /^(SalesforceMobileSDK\/[^\ ]* [^\/]*\/[^\ ]* \([^\)]*\) [^\/]*\/[^ ]* )(Hybrid|Web)(.*$)/.exec(userAgent);
-        if (match != null && match.length == 4) {
-            return match[1] + match[2] + "SmartSync" + match[3];
-        }
-        else {
-            // Not a SalesforceMobileSDK user agent, we leave it unchanged
-            return userAgent;
-        }
-    };
-
     /**
      * Initialize Force
      * @param params
      *  logLevel (optional)
-     *  userAgent (optional)
      */
     Force.init = function(params) {
         params = params || {};
@@ -87,9 +74,6 @@
         // Default log level: info
         Force.setLogLevel(params.logLevel || "info");
         
-        // The one from forceJsClient patched 
-        forceJsClient.setUserAgent(params.userAgent || patchUserAgent(forceJsClient.getUserAgent()));
-
         // Getting a smartstoreclient if availablex
         if (window.cordova && window.cordova.require("com.salesforce.plugin.smartstore.client"))
         {
