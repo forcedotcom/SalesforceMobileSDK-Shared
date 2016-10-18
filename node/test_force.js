@@ -291,7 +291,7 @@ function editForceScriptToUseLocalPluginRepo(tmpDir, os) {
 // 
 function editCreateAppToNotDoPodInstall(tmpDir) {
     log('Editing  createApp.sh to not do pod install', COLOR.green);
-    miscUtils.replaceTextInFile(path.join(tmpDir, 'node_modules', 'forceios', 'build', 'app_template_files', 'createApp.sh'), new RegExp('pod install$', 'g'), '# pod install');
+    miscUtils.replaceTextInFile(path.join(tmpDir, 'node_modules', 'forceios', 'build', 'app_template_files', 'createApp.sh'), new RegExp('^\\s*pod install', 'g'), '# pod install');
 
 }
 
