@@ -77,6 +77,7 @@ function main(args) {
         var repoDir = cloneRepo(tmpDir, fork, repoName, branch);
         runProcessThrowError('sh install.sh', repoDir);
         createDeployForcePackage(repoDir, tmpDir, OS.ios, version);
+        editCreateAppToNotDoPodInstall(tmpDir);
     }
 
     // Get android repo if requested
@@ -284,6 +285,16 @@ function editForceScriptToUseLocalPluginRepo(tmpDir, os) {
     log('Editing  ' + forcePackageNameForOs(os) + '.js to use local cordova plugin', COLOR.green);
     miscUtils.replaceTextInFile(path.join(tmpDir, 'node_modules', forcePackageNameForOs(os), 'node', forcePackageNameForOs(os) + '.js'), new RegExp('\'cordova plugin add .*\'', 'g'), '\'cordova plugin add ../SalesforceMobileSDK-CordovaPlugin\'');
 }
+
+//
+// Update createApp.sh to not do pod install
+// 
+function editCreateAppToNotDoPodInstall(tmpDir) {
+    log('Editing  createApp.sh to not do pod install', COLOR.green);
+    miscUtils.replaceTextInFile(path.join(tmpDir, 'node_modules', 'forceios', 'build', 'app_template_files', 'createApp.sh'), new RegExp('pod install$', 'g'), '# pod install');
+
+}
+
 
 //
 // Update podfile to use local ios repo
