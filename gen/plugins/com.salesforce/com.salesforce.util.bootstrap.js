@@ -40,7 +40,7 @@ var deviceIsOnline = function() {
     } else {
         logger.logToConsole("deviceIsOnline connType is undefined.");
     }
-    
+
     // Android Chrome has navigator.connection but not window.Connection, which is cordova object.
     if (typeof connType !== 'undefined' && window.Connection) {
         // Cordova's connection object.  May be more accurate?

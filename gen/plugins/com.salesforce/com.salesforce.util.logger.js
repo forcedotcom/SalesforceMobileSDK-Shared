@@ -76,10 +76,10 @@ var sanitizeUrlParamsForLogging = function(origUrl, sanitizeParamArray) {
     var trimmedOrigUrl = origUrl.trim();
     if (trimmedOrigUrl === '')
         return trimmedOrigUrl;
-    
+
     if ((typeof sanitizeParamArray !== "object") || (sanitizeParamArray.length === 0))
         return trimmedOrigUrl;
-    
+
     var redactedUrl = trimmedOrigUrl;
     for (var i = 0; i < sanitizeParamArray.length; i++) {
         var paramRedactRegexString = "^(.*[\\?&]" + sanitizeParamArray[i] + "=)([^&]+)(.*)$";
@@ -87,7 +87,7 @@ var sanitizeUrlParamsForLogging = function(origUrl, sanitizeParamArray) {
         if (paramRedactRegex.test(redactedUrl))
             redactedUrl = redactedUrl.replace(paramRedactRegex, "$1[redacted]$3");
     }
-    
+
     return redactedUrl;
 };
 

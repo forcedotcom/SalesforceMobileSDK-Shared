@@ -93,7 +93,7 @@ var getCurrentUser = function (success, fail) {
  * Logs out the specified user, or the current user if not specified.
  * This removes any current valid session token as well as any OAuth
  * refresh token.  The user is forced to login again.
- * This method does not call back with a success or failure callback, as 
+ * This method does not call back with a success or failure callback, as
  * (1) this method must not fail and (2) in the success case, the current user
  * will be logged out and asked to re-authenticate. Note also that this method can only
  * be called once per page load. Initiating logout will ultimately redirect away from
