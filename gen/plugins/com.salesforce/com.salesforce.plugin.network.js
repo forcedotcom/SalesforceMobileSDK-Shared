@@ -41,7 +41,7 @@ var sendRequest = function(endPoint, path, successCB, errorCB, method, payload, 
      * File params expected to be of the form:
      * {<fileParamNameInPost>: {fileMimeType:<someMimeType>, fileUrl:<fileUrl>, fileName:<fileNameForPost>}}.
      */
-    fileParams = fileParams || {}; 
+    fileParams = fileParams || {};
     var args = {endPoint: endPoint, path:path, method:method, queryParams:payload, headerParams:headerParams, fileParams: fileParams};
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE, "pgSendRequest", [args]);
 };

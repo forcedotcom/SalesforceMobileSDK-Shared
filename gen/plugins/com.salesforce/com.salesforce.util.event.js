@@ -37,7 +37,7 @@ var EventType = {
     STARTING: {code: 1, description: "Loading application", isError: false},
     OFFLINE: {code: 2, description: "Your device is offline. Can't continue.", isError: true}
 };
-       
+
 /**
  * Dispatches event with current status text and success indicator.
  */
