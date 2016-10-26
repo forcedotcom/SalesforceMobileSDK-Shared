@@ -1645,13 +1645,13 @@ if (typeof SmartStoreTestSuite === 'undefined') {
         console.log("In SFSmartStoreTestSuite.testSmartQueryWithSpecialFields");
         var self = this;
         var expectedEntry;
-        
-        if (window.mockStore) {
+
+        if (window.userStores) {
             // Mock smartstore doesn't support such queries
             self.finalizeTest();
             return;
         }
-        
+
         self.stuffTestSoup()
             .then(function(entries) {
                 QUnit.equal(entries.length, 3,"check stuffTestSoup result");
@@ -2007,5 +2007,123 @@ if (typeof SmartStoreTestSuite === 'undefined') {
             });
     };
 
-}
+    /**
+     * TEST testCreateMultipleUserStores
+     */
+    SmartStoreTestSuite.prototype.testCreateMultipleUserStores = function()  {
+        console.log("In SFSmartStoreTestSuite.testCreateMultipleUserStores");
+        var storeConfig = {'storeName':'USRDB1','isGlobalStore':false};
+        var self = this;
 
+        return this.smartstoreClient
+                         .getDatabaseSize(storeConfig)
+                         .then(function(size) {
+                             QUnit.ok(size > 1,"check getDatabaseSize result: " + size);
+                             return self.smartstoreClient.getAllStores();
+                         })
+                         .then( function (stores) {
+                              QUnit.ok(stores.length > 1 ,"Should have more than 1 database: " + stores.length);
+                              var sConfig;
+                              Object.keys(stores).forEach(function(key, index) {
+                                     if(stores[key].storeName.toLowerCase() == storeConfig.storeName.toLowerCase()) {
+                                         sConfig = stores[key];
+                                     }
+                                  });
+                              QUnit.ok(sConfig!=null, "Should have found store: ");
+                              return sConfig;
+                         })
+                         .then(function (sConfig) {
+                              QUnit.ok(sConfig,"Store Should exist: " + sConfig);
+                              return self.smartstoreClient.removeStore(sConfig);
+
+                         })
+                         .then (function() {
+                             return self.smartstoreClient.getAllStores();
+                         })
+                         .then(function (stores) {
+                           var sConfig;
+                           QUnit.ok(stores.length > 0 ,"Should have at least  1 database: " + stores.length);
+                           Object.keys(stores).forEach(function(key, index) {
+                                  if(stores[key].storeName.toLowerCase() == storeConfig.storeName.toLowerCase()) {
+                                      sConfig = stores[key];
+                                  }
+                               });
+                           QUnit.ok(sConfig==null, "Should not have found store: ");
+                           self.finalizeTest();
+                         });
+    };
+
+
+    /**
+     * TEST testCreateMultipleUserStores
+     */
+    SmartStoreTestSuite.prototype.testCreateMultipleGlobalStores = function()  {
+        console.log("In SFSmartStoreTestSuite.testCreateMultipleGlobalStores");
+        var storeConfig = {'storeName':'GLBLDB1','isGlobalStore':true};
+        var self = this;
+
+        return this.smartstoreClient
+                         .getDatabaseSize(storeConfig)
+                         .then(function(size) {
+                             QUnit.ok(size > 1,"check getDatabaseSize result: " + size);
+                             return self.smartstoreClient.getAllGlobalStores();
+                         })
+                         .then( function (stores) {
+                              QUnit.ok(stores.length > 1 ,"Should have more than 1 database: " + stores.length);
+                              var sConfig;
+                              Object.keys(stores).forEach(function(key, index) {
+                                     if(stores[key].storeName.toLowerCase() == storeConfig.storeName.toLowerCase()) {
+                                         sConfig = stores[key];
+                                     }
+                                  });
+                              QUnit.ok(sConfig!=null, "Should have found store: ");
+                              return sConfig;
+                         })
+                         .then(function (sConfig) {
+                              QUnit.ok(sConfig,"Store Should exist: " + sConfig);
+                              return self.smartstoreClient.removeStore(sConfig);
+
+                         })
+                         .then (function() {
+                             return self.smartstoreClient.getAllGlobalStores();
+                         })
+                         .then(function (stores) {
+                           var sConfig;
+                           QUnit.ok(stores.length > 0 ,"Should have at least  1 database: " + stores.length);
+                           Object.keys(stores).forEach(function(key, index) {
+                                  if(stores[key].storeName.toLowerCase() == storeConfig.storeName.toLowerCase()) {
+                                      sConfig = stores[key];
+                                  }
+                               });
+                           QUnit.ok(sConfig==null, "Should not have found store: ");
+                           self.finalizeTest();
+                         });
+    };
+
+    /**
+     * TEST clearSoup
+     */
+    SmartStoreTestSuite.prototype.testGetAllStores = function()  {
+        console.log("In SFSmartStoreTestSuite.testGetAllStores");
+        var self = this;
+        return this.smartstoreClient.getAllStores()
+                         .then( function(storeNames) {
+                            QUnit.equals(storeNames.length, 1, "Check number of user stores");
+                            self.finalizeTest();
+                          });
+
+    };
+
+    /**
+     * TEST clearSoup
+     */
+    SmartStoreTestSuite.prototype.testGetAllGlobalStores = function()  {
+      console.log("In SFSmartStoreTestSuite.testGetAllGlobalStores");
+      var self = this;
+      return this.smartstoreClient.getAllGlobalStores()
+                       .then( function(storeNames) {
+                          QUnit.equals(storeNames.length, 1, "Check number of global stores");
+                            self.finalizeTest();
+                        });
+    };
+}

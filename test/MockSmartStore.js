@@ -818,19 +818,99 @@ var MockSmartStore = (function(window) {
     return module;
 })(window);
 
-var mockStore = new MockSmartStore(false);
-var mockGlobalStore = new MockSmartStore(true);
-(function (cordova, store, globalStore) {
-    
+//var mockGlobalStore = new MockSmartStore(true);
+var globalStores = {};
+var userStores = {};
+
+var getStore = function (args) {
+   var isGlobal = args[0].isGlobalStore;
+   var storeName = args[0].storeName;
+   var store;
+
+   if(storeName == null)
+      storeName = "defaultStore";
+
+  if(isGlobal == null)
+         isGlobal = false;
+
+   store = isGlobal?globalStores[storeName]:userStores[storeName];
+
+   if(store == null) {
+      store = new MockSmartStore(isGlobal);
+      if(isGlobal == true)
+         globalStores[storeName] = store;
+      else
+         userStores[storeName] = store;
+   }
+   return store;
+};
+
+getAllStores =  function() {
+    var stores = new Array();
+    var self = this;
+    if(userStores) {
+      Object.keys(userStores).forEach(function(key, index) {
+          stores.push({'storeName':key,'isGlobalStore':false});
+        });
+    }
+    return stores;
+};
+
+getAllGlobalStores = function() {
+    var stores = new Array();
+    var self = this;
+    if(globalStores) {
+      Object.keys(globalStores).forEach(function(key, index) {
+             stores.push({'storeName':key,'isGlobalStore':true});
+          });
+    }
+    return stores;
+};
+
+removeStore =  function(args) {
+    var newStoreList = [];
+    var oldStoreList;
+    if(args[0].isGlobalStore == true) {
+        oldStoreList = globalStores;
+    }else {
+        oldStoreList = userStores;
+    }
+    Object.keys(oldStoreList).forEach(function(key, index) {
+          if(key.toLowerCase()!=args[0].storeName.toLowerCase())
+               newStoreList[key] = oldStoreList[key];
+         });
+
+    if(args[0].isGlobalStore == true) {
+        globalStores = newStoreList;
+    }else {
+        userStores = newStoreList;
+    }
+    return newStoreList;
+};
+
+removeAllStores =  function() {
+    var storeNames = new Array();
+    userStores = [];
+    return;
+};
+
+removeAllGlobalStores = function() {
+    var storeNames = new Array();
+    globalStores = [];
+    return;
+};
+
+(function (cordova, userStores, globalStores) {
+
     var SMARTSTORE_SERVICE = "com.salesforce.smartstore";
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgGetDatabaseSize", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = getStore(args);
         successCB(targetStore.toJSON().length);
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgRegisterSoup", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = getStore(args);
         var soupSpec = args[0].soupSpec == null ? {name: args[0].soupName, features: []} : args[0].soupSpec;
         var soupName = args[0].soupName == null ? soupSpec.name : args[0].soupName;
         var indexSpecs = args[0].indexes;
@@ -840,28 +920,28 @@ var mockGlobalStore = new MockSmartStore(true);
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgRemoveSoup", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = getStore(args);
         var soupName = args[0].soupName;
         targetStore.removeSoup(soupName);
         successCB("OK");
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgClearSoup", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = getStore(args);
         var soupName = args[0].soupName;
         targetStore.clearSoup(soupName);
         successCB("OK");
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgGetSoupIndexSpecs", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = getStore(args);
         var soupName = args[0].soupName;
         if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
         successCB(targetStore.getSoupIndexSpecs(soupName));
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgAlterSoup", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = getStore(args);
         var soupSpec = args[0].soupSpec == null ? {name: args[0].soupName, features: []} : args[0].soupSpec;
         var soupName = args[0].soupName == null ? soupSpec.name : args[0].soupName;
         var indexSpecs = args[0].indexes;
@@ -871,7 +951,7 @@ var mockGlobalStore = new MockSmartStore(true);
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgReIndexSoup", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = getStore(args);
         var soupName = args[0].soupName;
         var paths = args[0].paths;
         if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
@@ -879,33 +959,33 @@ var mockGlobalStore = new MockSmartStore(true);
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgSoupExists", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = getStore(args);
         var soupName = args[0].soupName;
         successCB(targetStore.soupExists(soupName));
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgQuerySoup", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = getStore(args);
         var soupName = args[0].soupName;
         var querySpec = args[0].querySpec;
         successCB(targetStore.querySoup(soupName, querySpec));
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgRunSmartQuery", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = getStore(args);
         var querySpec = args[0].querySpec;
         successCB(targetStore.querySoup(null, querySpec));
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgRetrieveSoupEntries", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = getStore(args);
         var soupName = args[0].soupName;
         var entryIds = args[0].entryIds;
         successCB(targetStore.retrieveSoupEntries(soupName, entryIds));
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgUpsertSoupEntries", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = getStore(args);
         var soupName = args[0].soupName;
         var entries = args[0].entries;
         var externalIdPath = args[0].externalIdPath;
@@ -913,7 +993,7 @@ var mockGlobalStore = new MockSmartStore(true);
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgRemoveFromSoup", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = getStore(args);
         var soupName = args[0].soupName;
         var entryIds = args[0].entryIds;
         var querySpec = args[0].querySpec;
@@ -922,14 +1002,14 @@ var mockGlobalStore = new MockSmartStore(true);
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgMoveCursorToPageIndex", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = getStore(args);
         var cursorId = args[0].cursorId;
         var index = args[0].index;
         successCB(targetStore.moveCursorToPage(cursorId, index));
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgCloseCursor", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = getStore(args);
         var cursorId = args[0].cursorId;
         targetStore.closeCursor(cursorId);
         if (successCB) {
@@ -938,9 +1018,30 @@ var mockGlobalStore = new MockSmartStore(true);
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgGetSoupSpec", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = getStore(args);
         var soupName = args[0].soupName;
         successCB(targetStore.getSoupSpec(soupName));
     });
 
-})(cordova, mockStore, mockGlobalStore);
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgGetAllStores", function (successCB, errorCB, args) {
+        successCB(getAllStores());
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgGetAllGlobalStores", function (successCB, errorCB, args) {
+        successCB(getAllGlobalStores());
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgRemoveAllGlobalStores", function (successCB, errorCB, args) {
+        successCB(removeAllGlobalStores());
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgRemoveAllStores", function (successCB, errorCB, args) {
+        successCB(removeAllStores());
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgRemoveStore", function (successCB, errorCB, args) {
+        successCB(removeStore(args));
+    });
+
+
+})(cordova, userStores, globalStores);
