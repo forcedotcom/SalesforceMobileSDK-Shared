@@ -41,6 +41,15 @@ var SoupSpec = function (soupName, features) {
 };
 
 /**
+ * StoreConfig constructor
+ */
+var StoreConfig = function (storeName, isGlobal) {
+    this.storeName = storeName;
+    this.isGlobal = isGlobal;
+};
+
+
+/**
  * SoupIndexSpec consturctor
  */
 var SoupIndexSpec = function (path, type) {
@@ -220,8 +229,6 @@ var checkFirstArg = function(argumentsOfCaller) {
 };
 
 
-
-
 // ====== Soup manipulation ======
 var getDatabaseSize = function (storeConfig, successCB, errorCB) {
     if (checkFirstArg(arguments)) return;
@@ -370,10 +377,45 @@ var upsertSoupEntriesWithExternalId = function (storeConfig, soupName, entries, 
         );
 };
 
+var getAllStores = function (successCB, errorCB) {
+    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+         "pgGetAllStores",
+         [{}]
+        );
+};
+
+var getAllGlobalStores = function (successCB, errorCB) {
+    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+         "pgGetAllGlobalStores",
+         [{}]
+        );
+};
+
+var removeStore = function (storeConfig,successCB, errorCB) {
+    if (checkFirstArg(arguments)) return;
+    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+         "pgRemoveStore",
+         [{"isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
+        );
+};
+
+var removeAllGlobalStores = function (successCB, errorCB) {
+    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+         "pgRemoveAllGlobalStores",
+         [{}]
+        );
+};
+
+var removeAllStores = function (successCB, errorCB) {
+    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+         "pgRemoveAllStores",
+         [{}]
+        );
+};
+
 var removeFromSoup = function (storeConfig, soupName, entryIdsOrQuerySpec, successCB, errorCB) {
     if (checkFirstArg(arguments)) return;
     storeConsole.debug("SmartStore.removeFromSoup:isGlobalStore="  + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",soupName=" + soupName + ",entryIdsOrQuerySpec=" + entryIdsOrQuerySpec);
-    isGlobalStore = isGlobalStore || false;
     var execArgs = {"soupName": soupName, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName};
     execArgs[entryIdsOrQuerySpec instanceof Array ? "entryIds":"querySpec"] = entryIdsOrQuerySpec;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
@@ -455,10 +497,15 @@ module.exports = {
     soupExists: soupExists,
     upsertSoupEntries: upsertSoupEntries,
     upsertSoupEntriesWithExternalId: upsertSoupEntriesWithExternalId,
-
+    getAllStores: getAllStores,
+    getAllGlobalStores: getAllGlobalStores,
+    removeStore: removeStore,
+    removeAllGlobalStores: removeAllGlobalStores,
+    removeAllStores: removeAllStores,
     // Constructors
     SoupSpec: SoupSpec,
     QuerySpec: QuerySpec,
     SoupIndexSpec: SoupIndexSpec,
+    StoreConfig: StoreConfig,
     StoreCursor: StoreCursor
 };
