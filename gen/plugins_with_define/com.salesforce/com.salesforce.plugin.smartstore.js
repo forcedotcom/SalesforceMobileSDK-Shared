@@ -222,7 +222,7 @@ var checkFirstArg = function(argumentsOfCaller) {
     var isGlobalStore =  false;
 
     if (typeof(args[0]) === "boolean") {
-       isGlobalStore = args.shift();
+       isGlobalStore = args.shift() || false;
     }
     args.unshift({'storeName': defaultStoreName, 'isGlobalStore': isGlobalStore});
     argumentsOfCaller.callee.apply(null, args);

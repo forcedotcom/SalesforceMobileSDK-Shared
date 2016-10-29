@@ -723,7 +723,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         var isGlobalStore =  false;
 
         if (typeof(args[0]) === "boolean") {
-           isGlobalStore = args.shift();
+           isGlobalStore = args.shift() || false;
         }
         args.unshift({'storeName': defaultStoreName, 'isGlobalStore': isGlobalStore});
         argumentsOfCaller.callee.apply(null, args);
@@ -1086,7 +1086,7 @@ cordova.define("com.salesforce.plugin.smartsync", function (require, exports, mo
 
         var isGlobalStore =  false;
         if (typeof(args[0]) === "boolean") {
-           isGlobalStore = args.shift();
+           isGlobalStore = args.shift() || false;
         }
         args.unshift({'storeName': defaultStoreName, 'isGlobalStore': isGlobalStore});
         argumentsOfCaller.callee.apply(null, args);
@@ -1107,11 +1107,11 @@ cordova.define("com.salesforce.plugin.smartsync", function (require, exports, mo
         if (checkFirstArg(arguments)) return;
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "reSync",
-             [{"syncId": syncId,  "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
+             [{"syncId": syncId, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
             );
     };
 
-    var cleanResyncGhosts = function(isGlobalStore, syncId, successCB, errorCB) {
+    var cleanResyncGhosts = function(storeConfig, syncId, successCB, errorCB) {
         if (checkFirstArg(arguments)) return;
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "cleanResyncGhosts",
@@ -1120,24 +1120,23 @@ cordova.define("com.salesforce.plugin.smartsync", function (require, exports, mo
     };
 
     var syncUp = function(storeConfig, target, soupName, options, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
         var args = Array.prototype.slice.call(arguments);
         // We accept syncUp(soupName, options, successCB, errorCB)
-        if (typeof(args[0]) === "string") {
-            storeConfig = defaultStoreConfig;
+        if (typeof(args[1]) === "string") {
             target = {};
-            soupName = args[0];
-            options = args[1];
-            successCB = args[2];
-            errorCB = args[3];
-        }
-        // We accept syncUp(target, soupName, options, successCB, errorCB)
-        if (typeof(args[0]) === "object") {
-            storeConfig = defaultStoreConfig;
-            target = args[0];
             soupName = args[1];
             options = args[2];
             successCB = args[3];
             errorCB = args[4];
+        }
+        // We accept syncUp(target, soupName, options, successCB, errorCB)
+        if (typeof(args[1]) === "object") {
+            target = args[1];
+            soupName = args[2];
+            options = args[3];
+            successCB = args[4];
+            errorCB = args[5];
         }
         target = target || {};
 

@@ -29,16 +29,16 @@
  * This file assumes that qunit.js has been previously loaded, as well as jquery.js,  SFTestSuite.js and SFAbstractSmartStoreTestSuite.js
  * To display results you'll need to load qunit.css.
  */
-if (typeof SmartStoreTestSuite === 'undefined') { 
+if (typeof SmartStoreTestSuite === 'undefined') {
 
     /**
      * Constructor for SmartStoreTestSuite
      */
     var SmartStoreTestSuite = function () {
-        AbstractSmartStoreTestSuite.call(this, 
-                                         "smartstore", 
+        AbstractSmartStoreTestSuite.call(this,
+                                         "smartstore",
                                          [
-                                             {path:"Name", type:"string"}, 
+                                             {path:"Name", type:"string"},
                                              {path:"Id", type:"string"}
                                          ]);
 
@@ -64,7 +64,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
     };
 
 
-    /** 
+    /**
      * TEST getDatabaseSize
      */
     SmartStoreTestSuite.prototype.testGetDatabaseSize  = function() {
@@ -89,7 +89,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
             });
     };
 
-    /** 
+    /**
      * TEST global store vs regular store with registerSoup / soupExists / removeSoup
      */
     SmartStoreTestSuite.prototype.testRegisterRemoveSoupGlobalStore = function()  {
@@ -165,9 +165,9 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 self.finalizeTest();
             });
     };
-    
-    /** 
-     * TEST registerSoup / soupExists / removeSoup 
+
+    /**
+     * TEST registerSoup / soupExists / removeSoup
      */
     SmartStoreTestSuite.prototype.testRegisterRemoveSoup = function()  {
         console.log("In SFSmartStoreTestSuite.testRegisterRemoveSoup");
@@ -209,10 +209,10 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equals(exists, false, "soup should no longer exist");
                 self.finalizeTest();
             });
-    }; 
+    };
 
-    /** 
-     * TEST registerSoupWithSpec / getSoupSpec / removeSoup 
+    /**
+     * TEST registerSoupWithSpec / getSoupSpec / removeSoup
      */
     SmartStoreTestSuite.prototype.testRegisterWithSpec = function()  {
         console.log("In SFSmartStoreTestSuite.testRegisterWithSpec");
@@ -253,10 +253,10 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equals(exists, false, "soup should no longer exist");
                 self.finalizeTest();
             });
-    }; 
+    };
 
 
-    /** 
+    /**
      * TEST registerSoup with bogus soup
      */
     SmartStoreTestSuite.prototype.testRegisterBogusSoup = function()  {
@@ -265,14 +265,14 @@ if (typeof SmartStoreTestSuite === 'undefined') {
         var self = this;
 
         self.smartstoreClient.registerSoup(soupName, self.defaultSoupIndexes)
-            .catch(function() {            
+            .catch(function() {
                 QUnit.ok(true,"registerSoup should fail with bogus soupName");
                 self.finalizeTest();
             });
     };
 
 
-    /** 
+    /**
      * TEST registerSoup with no indices
      */
     SmartStoreTestSuite.prototype.testRegisterSoupNoIndices = function()  {
@@ -292,14 +292,14 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 // Create soup
                 return self.smartstoreClient.registerSoup(soupName, []);
             })
-            .catch(function() {            
+            .catch(function() {
                 QUnit.ok(true,"registerSoup should fail with bogus indices");
                 self.finalizeTest();
             });
     }
 
-    /** 
-     * TEST upsertSoupEntries 
+    /**
+     * TEST upsertSoupEntries
      */
     SmartStoreTestSuite.prototype.testUpsertSoupEntries = function()  {
         console.log("In SFSmartStoreTestSuite.testUpsertSoupEntries");
@@ -308,7 +308,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
         self.addGeneratedEntriesToTestSoup(7)
             .then(function(entries1) {
                 QUnit.equal(entries1.length, 7);
-                
+
                 //upsert another batch
                 return self.addGeneratedEntriesToTestSoup(12);
             })
@@ -319,7 +319,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                     var e = entries2[i];
                     e.updatedField = "Mister Toast " + i;
                 }
-                
+
                 //update the entries
                 return self.addEntriesToTestSoup(entries2);
             })
@@ -328,9 +328,9 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal(entries3[0].updatedField,"Mister Toast 0","updatedField is correct");
                 self.finalizeTest();
             });
-    }; 
+    };
 
-    /** 
+    /**
      * TEST upsertSoupEntriesWithExternalId
      */
     SmartStoreTestSuite.prototype.testUpsertSoupEntriesWithExternalId = function()  {
@@ -340,7 +340,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
         self.addGeneratedEntriesToTestSoup(11)
             .then(function(entries1) {
                 QUnit.equal(entries1.length, 11);
-                
+
                 // Now upsert an overlapping batch, using an external ID path.
                 var entries2 = self.createGeneratedEntries(16);
                 for (var i = 0; i < entries2.length; i++) {
@@ -352,7 +352,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
             })
             .then(function(entries3) {
                 QUnit.equal(entries3.length, 16);
-                
+
                 // Now, query the soup for all entries, and make sure that we have only 16.
                 var querySpec = self.smartstore.buildAllQuerySpec("Name", null, 25);
                 return self.smartstoreClient.querySoup(self.defaultSoupName, querySpec);
@@ -367,17 +367,17 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal(orderedEntries[0].updatedField, "Mister Toast 0", "Is the first updated field correct?");
                 QUnit.equal(orderedEntries[15]._soupEntryId, 16, "Is the last soup entry ID correct?");
                 QUnit.equal(orderedEntries[15].updatedField, "Mister Toast 15", "Is the last updated field correct?");
-                
+
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
-                self.finalizeTest(); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
+                self.finalizeTest();
             });
-    }; 
+    };
 
 
-    /** 
+    /**
      * TEST upsertSoupEntries to non existent soup
      */
     SmartStoreTestSuite.prototype.testUpsertToNonexistentSoup = function()  {
@@ -385,21 +385,21 @@ if (typeof SmartStoreTestSuite === 'undefined') {
 
         var self = this;
         var entries = [{a:1},{a:2},{a:3}];
-        
+
         self.smartstoreClient.upsertSoupEntries("nonexistentSoup", entries)
-            .catch(function() {            
+            .catch(function() {
                 QUnit.ok(true,"upsertSoupEntries should fail with nonexistent soup");
                 self.finalizeTest();
             });
     };
-    
+
     /**
-     * TEST retrieveSoupEntries 
+     * TEST retrieveSoupEntries
      */
     SmartStoreTestSuite.prototype.testRetrieveSoupEntries = function()  {
         console.log("In SFSmartStoreTestSuite.testRetrieveSoupEntries");
-        
-        var self = this; 
+
+        var self = this;
         var soupEntry0Id;
         var soupEntry2Id;
 
@@ -408,12 +408,12 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal(entries.length, 3,"check stuffTestSoup result");
                 soupEntry0Id = entries[0]._soupEntryId;
                 soupEntry2Id = entries[2]._soupEntryId;
-                
+
                 return self.smartstoreClient.retrieveSoupEntries(self.defaultSoupName, [soupEntry2Id, soupEntry0Id]);
             })
             .then(function(retrievedEntries) {
                 QUnit.equal(retrievedEntries.length, 2);
-                
+
                 var entryIdArray = new Array();
                 for (var i = 0; i < retrievedEntries.length; i++) {
                     entryIdArray[i] = retrievedEntries[i]._soupEntryId;
@@ -421,7 +421,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 self.collectionContains(entryIdArray, soupEntry0Id);
                 self.collectionContains(entryIdArray, soupEntry2Id);
                 self.finalizeTest();
-            }); 
+            });
     };
 
 
@@ -429,24 +429,24 @@ if (typeof SmartStoreTestSuite === 'undefined') {
      * TEST removeFromSoup by ids
      */
     SmartStoreTestSuite.prototype.testRemoveFromSoup = function()  {
-        console.log("In SFSmartStoreTestSuite.testRemoveFromSoup");    
-        
-        var self = this; 
+        console.log("In SFSmartStoreTestSuite.testRemoveFromSoup");
+
+        var self = this;
         self.stuffTestSoup()
             .then(function(entries) {
                 var soupEntryIds = [];
                 QUnit.equal(entries.length, 3);
-                
+
                 for (var i = entries.length - 1; i >= 0; i--) {
                     var entry = entries[i];
                     soupEntryIds.push(entry._soupEntryId);
                 }
-                
+
                 return self.smartstoreClient.removeFromSoup(self.defaultSoupName, soupEntryIds);
             })
             .then(function(status) {
                 QUnit.equal(status, "OK", "removeFromSoup OK");
-                
+
                 var querySpec = self.smartstore.buildAllQuerySpec("Name");
                 return self.smartstoreClient.querySoup(self.defaultSoupName, querySpec);
             })
@@ -455,9 +455,9 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal(nEntries, 0, "currentPageOrderedEntries correct");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
-                self.finalizeTest(); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
+                self.finalizeTest();
             });
     };
 
@@ -465,9 +465,9 @@ if (typeof SmartStoreTestSuite === 'undefined') {
      * TEST removeFromSoup by query
      */
     SmartStoreTestSuite.prototype.testRemoveFromSoupByQuery = function()  {
-        console.log("In SFSmartStoreTestSuite.testRemoveFromSoupByQuery");    
-        
-        var self = this; 
+        console.log("In SFSmartStoreTestSuite.testRemoveFromSoupByQuery");
+
+        var self = this;
         self.stuffTestSoup()
             .then(function(entries) {
                 QUnit.equal(entries.length, 3);
@@ -485,8 +485,8 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal(cursor.currentPageOrderedEntries[1].Name,"Pro Bono Bonobo","verify second entry");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
                 var querySpecForRemove = self.smartstore.buildLikeQuerySpec("Name", "%Stella%");
                 return self.smartstoreClient.removeFromSoup(self.defaultSoupName, querySpecForRemove);
             })
@@ -500,8 +500,8 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal(cursor.currentPageOrderedEntries[0].Name,"Pro Bono Bonobo","verify only entry");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
                 var querySpecForRemove = self.smartstore.buildAllQuerySpec("Name");
                 return self.smartstoreClient.removeFromSoup(self.defaultSoupName, querySpecForRemove);
             })
@@ -514,9 +514,9 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal(cursor.currentPageOrderedEntries.length, 0, "check currentPageOrderedEntries");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
-                self.finalizeTest(); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
+                self.finalizeTest();
             });
     };
 
@@ -524,8 +524,8 @@ if (typeof SmartStoreTestSuite === 'undefined') {
      * TEST querySoup with exact query
      */
     SmartStoreTestSuite.prototype.testQuerySoupWithExactQuery = function()  {
-        console.log("In SFSmartStoreTestSuite.testQuerySoupWithExactQuery"); 
-        
+        console.log("In SFSmartStoreTestSuite.testQuerySoupWithExactQuery");
+
         var self = this;
         self.stuffTestSoup()
             .then(function(entries) {
@@ -541,7 +541,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal(cursor.currentPageOrderedEntries[0]["Name"], "Robot", "wrong name");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
+            .then(function(param) {
                 // Now querying with select paths
                 var querySpec = self.smartstore.buildExactQuerySpec("Name","Robot",null,null,null,["Name", "Id"]);
                 return self.smartstoreClient.querySoup(self.defaultSoupName, querySpec);
@@ -555,9 +555,9 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal(cursor.currentPageOrderedEntries[0][1], "00300C", "wrong id");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
-                self.finalizeTest(); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
+                self.finalizeTest();
             });
     };
 
@@ -566,14 +566,14 @@ if (typeof SmartStoreTestSuite === 'undefined') {
      * TEST querySoup with all query with descending sort order
      */
     SmartStoreTestSuite.prototype.testQuerySoupWithAllQueryDescending = function()  {
-        console.log("In SFSmartStoreTestSuite.testQuerySoupWithAllQueryDescending");   
-        
+        console.log("In SFSmartStoreTestSuite.testQuerySoupWithAllQueryDescending");
+
         var self = this;
         self.stuffTestSoup().
             then(function(entries) {
                 QUnit.equal(entries.length, 3);
-                
-                var querySpec = self.smartstore.buildAllQuerySpec("Name", "descending");       
+
+                var querySpec = self.smartstore.buildAllQuerySpec("Name", "descending");
                 return self.smartstoreClient.querySoup(self.defaultSoupName, querySpec);
             })
             .then(function(cursor) {
@@ -585,7 +585,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal(cursor.currentPageOrderedEntries[2].Name,"Pro Bono Bonobo","verify third entry");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
+            .then(function(param) {
                 // Now querying with select paths
                 var querySpec = self.smartstore.buildAllQuerySpec("Name", "descending", null, ["Name", "Id"]);
                 return self.smartstoreClient.querySoup(self.defaultSoupName, querySpec);
@@ -603,9 +603,9 @@ if (typeof SmartStoreTestSuite === 'undefined') {
 
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
-                self.finalizeTest(); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
+                self.finalizeTest();
             });
     };
 
@@ -613,8 +613,8 @@ if (typeof SmartStoreTestSuite === 'undefined') {
      * TEST querySoup with range query using order path
      */
     SmartStoreTestSuite.prototype.testQuerySoupWithRangeQueryWithOrderPath = function()  {
-        console.log("In SFSmartStoreTestSuite.testQuerySoupWithRangeQueryWithOrderPath");   
-        
+        console.log("In SFSmartStoreTestSuite.testQuerySoupWithRangeQueryWithOrderPath");
+
         var self = this;
         self.stuffTestSoup().
             then(function(entries) {
@@ -634,7 +634,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
 
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
+            .then(function(param) {
                 // Now querying with select paths
                 var querySpec = self.smartstore.buildRangeQuerySpec("Id", null, "00300B", "ascending", 3, "Name", ["Name", "Id"]);
                 return self.smartstoreClient.querySoup(self.defaultSoupName, querySpec);
@@ -650,9 +650,9 @@ if (typeof SmartStoreTestSuite === 'undefined') {
 
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
-                self.finalizeTest(); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
+                self.finalizeTest();
             });
     };
 
@@ -660,21 +660,21 @@ if (typeof SmartStoreTestSuite === 'undefined') {
      * TEST querySoup with bad query spec
      */
     SmartStoreTestSuite.prototype.testQuerySoupBadQuerySpec = function()  {
-        console.log("In SFSmartStoreTestSuite.testQuerySoupBadQuerySpec"); 
-        
+        console.log("In SFSmartStoreTestSuite.testQuerySoupBadQuerySpec");
+
         var self = this;
         self.stuffTestSoup()
             .then(function(entries) {
                 QUnit.equal(entries.length, 3);
-                
+
                 //query on a nonexistent index
-                var querySpec = self.smartstore.buildRangeQuerySpec("bottlesOfBeer",99,null,"descending");             
-                
+                var querySpec = self.smartstore.buildRangeQuerySpec("bottlesOfBeer",99,null,"descending");
+
                 return self.smartstoreClient.querySoup(self.defaultSoupName, querySpec);
             })
-            .catch(function(param) { 
+            .catch(function(param) {
                 QUnit.ok(true,"querySoup with bogus querySpec should fail");
-                self.finalizeTest();                
+                self.finalizeTest();
             });
     };
 
@@ -683,14 +683,14 @@ if (typeof SmartStoreTestSuite === 'undefined') {
      * TEST querySoup  with an endKey and no beginKey
      */
     SmartStoreTestSuite.prototype.testQuerySoupEndKeyNoBeginKey = function()  {
-        console.log("In SFSmartStoreTestSuite.testQuerySoupEndKeyNoBeginKey"); 
+        console.log("In SFSmartStoreTestSuite.testQuerySoupEndKeyNoBeginKey");
         var self = this;
-        
+
         self.stuffTestSoup()
             .then(function(entries) {
                 QUnit.equal(entries.length, 3);
                 //keep in sync with stuffTestSoup
-                var querySpec = self.smartstore.buildRangeQuerySpec("Name",null,"Robot");              
+                var querySpec = self.smartstore.buildRangeQuerySpec("Name",null,"Robot");
 
                 return self.smartstoreClient.querySoup(self.defaultSoupName, querySpec);
             })
@@ -700,9 +700,9 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal(cursor.currentPageOrderedEntries[1].Name,"Robot","verify last entry");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
-                self.finalizeTest(); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
+                self.finalizeTest();
             });
     };
 
@@ -710,14 +710,14 @@ if (typeof SmartStoreTestSuite === 'undefined') {
      * TEST querySoup  with beginKey and no endKey
      */
     SmartStoreTestSuite.prototype.testQuerySoupBeginKeyNoEndKey = function()  {
-        console.log("In SFSmartStoreTestSuite.testQuerySoupBeginKeyNoEndKey"); 
+        console.log("In SFSmartStoreTestSuite.testQuerySoupBeginKeyNoEndKey");
         var self = this;
 
         self.stuffTestSoup()
             .then(function(entries) {
                 QUnit.equal(entries.length, 3);
                 //keep in sync with stuffTestSoup
-                var querySpec = self.smartstore.buildRangeQuerySpec("Name","Robot",null);              
+                var querySpec = self.smartstore.buildRangeQuerySpec("Name","Robot",null);
 
                 return self.smartstoreClient.querySoup(self.defaultSoupName, querySpec);
             })
@@ -727,9 +727,9 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal(cursor.currentPageOrderedEntries[0].Name,"Robot","verify first entry");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
-                self.finalizeTest(); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
+                self.finalizeTest();
             });
     };
 
@@ -737,14 +737,14 @@ if (typeof SmartStoreTestSuite === 'undefined') {
      * TEST testManipulateCursor
      */
     SmartStoreTestSuite.prototype.testManipulateCursor = function()  {
-        console.log("In SFSmartStoreTestSuite.testManipulateCursor");  
+        console.log("In SFSmartStoreTestSuite.testManipulateCursor");
         var self = this;
 
         var NUM_ENTRIES = 42;
         var PAGE_SIZE = 20;
         var LAST_PAGE_SIZE = NUM_ENTRIES % PAGE_SIZE; // 2
         var NUM_PAGES = Math.ceil(NUM_ENTRIES / PAGE_SIZE); // 3
-        
+
         var checkPage = function(cursor, expectedPage) {
             var expectedPageSize = (expectedPage < NUM_PAGES - 1 ? PAGE_SIZE : LAST_PAGE_SIZE);
             var expectedIdOfFirstRowOnPage = "003" + self.padNumber(expectedPage*PAGE_SIZE, NUM_ENTRIES, "0");
@@ -753,9 +753,9 @@ if (typeof SmartStoreTestSuite === 'undefined') {
             QUnit.equal(cursor.currentPageIndex, expectedPage, "currentPageIndex correct");
             QUnit.equal(cursor.totalEntries, NUM_ENTRIES, "totalEntries correct");
             QUnit.equal(cursor.totalPages, NUM_PAGES, "totalPages correct");
-            QUnit.equal(cursor.currentPageOrderedEntries.length, expectedPageSize, "pageSize correct");      
-            QUnit.equal(cursor.currentPageOrderedEntries[0].Id, expectedIdOfFirstRowOnPage , "pageSize correct");      
-            QUnit.equal(cursor.currentPageOrderedEntries[expectedPageSize-1].Id, expectedIdOfLastRowOnPage, "pageSize correct");      
+            QUnit.equal(cursor.currentPageOrderedEntries.length, expectedPageSize, "pageSize correct");
+            QUnit.equal(cursor.currentPageOrderedEntries[0].Id, expectedIdOfFirstRowOnPage , "pageSize correct");
+            QUnit.equal(cursor.currentPageOrderedEntries[expectedPageSize-1].Id, expectedIdOfLastRowOnPage, "pageSize correct");
         };
 
         self.addGeneratedEntriesToTestSoup(NUM_ENTRIES)
@@ -784,9 +784,9 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 checkPage(cursor, 2);
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
-                self.finalizeTest(); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
+                self.finalizeTest();
             });
     };
 
@@ -794,14 +794,14 @@ if (typeof SmartStoreTestSuite === 'undefined') {
      * TEST testMoveCursorToPreviousPageFromFirstPage
      */
     SmartStoreTestSuite.prototype.testMoveCursorToPreviousPageFromFirstPage = function()  {
-        console.log("In SFSmartStoreTestSuite.testMoveCursorToPreviousPageFromFirstPage");  
+        console.log("In SFSmartStoreTestSuite.testMoveCursorToPreviousPageFromFirstPage");
         var self = this;
 
         var NUM_ENTRIES = 8;
         var PAGE_SIZE = 5;
         var NUM_PAGES = Math.ceil(NUM_ENTRIES / PAGE_SIZE); // 2
         var cursor;
-        
+
         self.addGeneratedEntriesToTestSoup(NUM_ENTRIES)
             .then(function(entries) {
                 QUnit.equal(entries.length, NUM_ENTRIES);
@@ -817,9 +817,9 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.ok(error.message.indexOf("moveCursorToPreviousPage") == 0, "error should be about moveCursorToPreviousPage")
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
-                self.finalizeTest(); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
+                self.finalizeTest();
             });
     };
 
@@ -828,14 +828,14 @@ if (typeof SmartStoreTestSuite === 'undefined') {
      * TEST testMoveCursorToNextPageFromLastPage
      */
     SmartStoreTestSuite.prototype.testMoveCursorToNextPageFromLastPage = function()  {
-        console.log("In SFSmartStoreTestSuite.testMoveCursorToNextPageFromLastPage");  
+        console.log("In SFSmartStoreTestSuite.testMoveCursorToNextPageFromLastPage");
         var self = this;
 
         var NUM_ENTRIES = 8;
         var PAGE_SIZE = 5;
         var NUM_PAGES = Math.ceil(NUM_ENTRIES / PAGE_SIZE); // 2
         var cursor;
-        
+
         self.addGeneratedEntriesToTestSoup(NUM_ENTRIES)
             .then(function(entries) {
                 QUnit.equal(entries.length, NUM_ENTRIES);
@@ -856,8 +856,8 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 return self.smartstoreClient.closeCursor(cursor);
             })
             .then(function(param) {
-                 QUnit.ok(true,"closeCursor ok"); 
-                 self.finalizeTest(); 
+                 QUnit.ok(true,"closeCursor ok");
+                 self.finalizeTest();
             });
     };
 
@@ -866,10 +866,10 @@ if (typeof SmartStoreTestSuite === 'undefined') {
      * TEST unusual soup names
      */
     SmartStoreTestSuite.prototype.testArbitrarySoupNames = function() {
-        console.log("In SFSmartStoreTestSuite.testArbitrarySoupNames");    
+        console.log("In SFSmartStoreTestSuite.testArbitrarySoupNames");
         var self = this;
         var soupName = "123This should-be a_valid.soup+name!?100";
-        
+
         //simply register and verify that the soup exists
         self.removeAndRecreateSoup(soupName,self.defaultSoupIndexes).
             then(function() {
@@ -884,7 +884,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
     SmartStoreTestSuite.prototype.testQuerySpecFactories = function() {
         console.log("In SFSmartStoreTestSuite.testQuerySpecFactories");
         var self = this;
-        
+
         var path = "Name";
         var matchKey = "matchKeyValue";
         var beginKey = "beginKeyValue";
@@ -912,8 +912,8 @@ if (typeof SmartStoreTestSuite === 'undefined') {
         QUnit.equal(query.pageSize,10,"check pageSize");
         QUnit.equal(query.order,"ascending", "check order");
         QUnit.equal(query.orderPath,path,"check orderPath");
-        QUnit.ok(query.selectPaths == null,"check selectPaths");    
-        
+        QUnit.ok(query.selectPaths == null,"check selectPaths");
+
         // Range query with all args
         query = self.smartstore.buildRangeQuerySpec(path,beginKey,endKey,order,pageSize,orderPath,selectPaths);
         QUnit.equal(query.queryType,"range","check queryType");
@@ -934,8 +934,8 @@ if (typeof SmartStoreTestSuite === 'undefined') {
         QUnit.equal(query.order,"ascending", "check order");
         QUnit.equal(query.pageSize,10,"check pageSize");
         QUnit.equal(query.orderPath,path,"check orderPath");
-        QUnit.ok(query.selectPaths == null,"check selectPaths");    
-        
+        QUnit.ok(query.selectPaths == null,"check selectPaths");
+
         // Like query with all args
         query = self.smartstore.buildLikeQuerySpec(path,beginKey,order,pageSize,orderPath,selectPaths);
         QUnit.equal(query.queryType,"like","check queryType");
@@ -945,7 +945,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
         QUnit.equal(query.pageSize,pageSize,"check pageSize");
         QUnit.equal(query.orderPath,orderPath,"check orderPath");
         QUnit.equal(JSON.stringify(query.selectPaths),JSON.stringify(selectPaths),"check selectPaths");
-        
+
         // Like query with min args
         query = self.smartstore.buildLikeQuerySpec(path,beginKey);
         QUnit.equal(query.queryType,"like","check queryType");
@@ -954,8 +954,8 @@ if (typeof SmartStoreTestSuite === 'undefined') {
         QUnit.equal(query.order,"ascending", "check order");
         QUnit.equal(query.pageSize,10,"check pageSize");
         QUnit.equal(query.orderPath,path,"check orderPath");
-        QUnit.ok(query.selectPaths == null,"check selectPaths");    
-        
+        QUnit.ok(query.selectPaths == null,"check selectPaths");
+
         // All query with all args
         query = self.smartstore.buildAllQuerySpec(path,order,pageSize,selectPaths);
         QUnit.equal(query.queryType,"range","check queryType");
@@ -974,7 +974,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
         QUnit.equal(query.order,"ascending", "check order");
         QUnit.equal(query.pageSize,10,"check pageSize");
         QUnit.equal(query.orderPath,path,"check orderPath");
-        QUnit.ok(query.selectPaths == null,"check selectPaths");    
+        QUnit.ok(query.selectPaths == null,"check selectPaths");
 
         // Match query with all args
         query = self.smartstore.buildMatchQuerySpec(path, matchKey, order, pageSize, orderPath, selectPaths);
@@ -985,7 +985,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
         QUnit.equal(query.pageSize,pageSize,"check pageSize");
         QUnit.equal(query.orderPath,orderPath,"check orderPath");
         QUnit.equal(JSON.stringify(query.selectPaths),JSON.stringify(selectPaths),"check selectPaths");
-        
+
         // Match query with min args
         query = self.smartstore.buildMatchQuerySpec(path, matchKey);
         QUnit.equal(query.queryType,"match","check queryType");
@@ -994,8 +994,8 @@ if (typeof SmartStoreTestSuite === 'undefined') {
         QUnit.equal(query.order,"ascending", "check order");
         QUnit.equal(query.pageSize,10,"check pageSize");
         QUnit.equal(query.orderPath,path,"check orderPath");
-        QUnit.ok(query.selectPaths == null,"check selectPaths");    
-        
+        QUnit.ok(query.selectPaths == null,"check selectPaths");
+
         self.finalizeTest();
     };
 
@@ -1005,7 +1005,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
     SmartStoreTestSuite.prototype.testLikeQuerySpecStartsWith  = function() {
         console.log("In SFSmartStoreTestSuite.testLikeQuerySpecStartsWith");
         var self = this;
-        
+
         self.stuffTestSoup()
             .then(function(entries) {
                 QUnit.equal(entries.length, 3,"check stuffTestSoup result");
@@ -1018,7 +1018,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal(cursor.currentPageOrderedEntries[0].Name,"Todd Stellanova","verify entry");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
+            .then(function(param) {
                 // Now querying with select paths
                 var querySpec = self.smartstore.buildLikeQuerySpec("Name","Todd%", null, null, null, ["Name", "Id"]);
                 return self.smartstoreClient.querySoup(self.defaultSoupName, querySpec);
@@ -1032,9 +1032,9 @@ if (typeof SmartStoreTestSuite === 'undefined') {
 
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
-                self.finalizeTest(); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
+                self.finalizeTest();
             });
     };
 
@@ -1045,7 +1045,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
     SmartStoreTestSuite.prototype.testLikeQuerySpecEndsWith  = function() {
         console.log("In SFSmartStoreTestSuite.testLikeQuerySpecEndsWith");
         var self = this;
-        
+
         self.stuffTestSoup()
             .then(function(entries) {
                 QUnit.equal(entries.length, 3,"check stuffTestSoup result");
@@ -1058,9 +1058,9 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal(cursor.currentPageOrderedEntries[0].Name,"Todd Stellanova","verify entry");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
-                self.finalizeTest(); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
+                self.finalizeTest();
             });
     };
 
@@ -1070,7 +1070,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
     SmartStoreTestSuite.prototype.testLikeQueryInnerText  = function() {
         console.log("In SFSmartStoreTestSuite.testLikeQueryInnerText");
         var self = this;
-        
+
         self.stuffTestSoup()
             .then(function(entries) {
                 QUnit.equal(entries.length, 3,"check stuffTestSoup result");
@@ -1083,9 +1083,9 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal(cursor.currentPageOrderedEntries[0].Name,"Pro Bono Bonobo","verify entry");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
-                self.finalizeTest(); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
+                self.finalizeTest();
             });
     };
 
@@ -1156,8 +1156,8 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 var querySpec = self.smartstore.buildMatchQuerySpec("description", "m* NOT small", "ascending", 10, "name");
                 return self.tryQuery(soupName, querySpec, ["dog", "elephant"]);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
                 self.finalizeTest();
             });
     };
@@ -1223,8 +1223,8 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 var querySpec = self.smartstore.buildMatchQuerySpec("attributes.color", "black NOT tabby", "descending", 10, "name");
                 return self.tryQuery(soupName, querySpec, ["lizard", "dog"]);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
                 self.finalizeTest();
             });
     };
@@ -1254,8 +1254,8 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 var querySpec = self.smartstore.buildLikeQuerySpec("attributes.color", "%gr%", "ascending", 10, "name");
                 return self.tryQuery(soupName, querySpec, ["dog", "elephant", "lizard"]);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
                 self.finalizeTest();
             });
     };
@@ -1281,8 +1281,8 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 var querySpec = self.smartstore.buildExactQuerySpec("attributes.color", "[\"grey\"]");
                 return self.tryQuery(soupName, querySpec, ["elephant"]);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
                 self.finalizeTest();
             });
     };
@@ -1315,12 +1315,12 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal("elephant", cursor.currentPageOrderedEntries[1][0].name, "check second row");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
                 self.finalizeTest();
             });
     };
-    
+
     /**
      * TEST query with compound path
      */
@@ -1341,7 +1341,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 var selectedEntry = entries[1];
                 selectedUrl = selectedEntry.attributes.url;
                 var querySpec = self.smartstore.buildExactQuerySpec("attributes.url",selectedUrl);
-                return self.smartstoreClient.querySoup(soupName, querySpec); 
+                return self.smartstoreClient.querySoup(soupName, querySpec);
             })
             .then(function(cursor) {
                 QUnit.equal(cursor.currentPageOrderedEntries.length, 1, "currentPageOrderedEntries correct");
@@ -1349,9 +1349,9 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal(foundEntry.attributes.url,selectedUrl,"Verify same entry");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
-                self.finalizeTest(); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
+                self.finalizeTest();
             });
     };
 
@@ -1361,12 +1361,12 @@ if (typeof SmartStoreTestSuite === 'undefined') {
     SmartStoreTestSuite.prototype.testEmptyQuerySpec  = function() {
         console.log("In SFSmartStoreTestSuite.testEmptyQuerySpec");
         var self = this;
-        
+
         var querySpec = new QuerySpec(null);
-        querySpec.queryType = null; 
+        querySpec.queryType = null;
         self.smartstoreClient.querySoup(self.defaultSoupName, querySpec)
-            .catch(function(param) { 
-                self.finalizeTest(); 
+            .catch(function(param) {
+                self.finalizeTest();
             });
     };
 
@@ -1397,8 +1397,8 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal(cursor.currentPageOrderedEntries[1].Name,"Pro Bono Bonobo","verify last entry");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
                 self.finalizeTest();
             });
     };
@@ -1409,7 +1409,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
     SmartStoreTestSuite.prototype.testSmartQueryWithCount  = function() {
         console.log("In SFSmartStoreTestSuite.testSmartQueryWithCount");
         var self = this;
-        
+
         self.stuffTestSoup()
             .then(function(entries) {
                 QUnit.equal(entries.length, 3,"check stuffTestSoup result");
@@ -1422,8 +1422,8 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal("[[3]]", JSON.stringify(cursor.currentPageOrderedEntries), "check currentPageOrderedEntries");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
                 self.finalizeTest();
             });
     };
@@ -1466,48 +1466,48 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal(pluckNames(cursor), "ABDE");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
                 return self.smartstoreClient.runSmartQuery(buildQuerySpec("= 3"));
             })
             .then(function(cursor) {
                 QUnit.equal(pluckNames(cursor), "C");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
                 return self.smartstoreClient.runSmartQuery(buildQuerySpec("< 3"));
             })
             .then(function(cursor) {
                 QUnit.equal(pluckNames(cursor), "AB");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
                 return self.smartstoreClient.runSmartQuery(buildQuerySpec("<= 3"));
             })
             .then(function(cursor) {
                 QUnit.equal(pluckNames(cursor), "ABC");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
                 return self.smartstoreClient.runSmartQuery(buildQuerySpec("> 3"));
             })
             .then(function(cursor) {
                 QUnit.equal(pluckNames(cursor), "DE");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
                 return self.smartstoreClient.runSmartQuery(buildQuerySpec(">= 3"));
             })
             .then(function(cursor) {
                 QUnit.equal(pluckNames(cursor), "CDE");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
                 self.finalizeTest();
             });
     };
@@ -1519,7 +1519,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
         console.log("In SFSmartStoreTestSuite.testSmartQueryWithCount");
         var self = this;
         var testEntries;
-        
+
         self.stuffTestSoup()
             .then(function(entries) {
                 testEntries = entries;
@@ -1538,8 +1538,8 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal("Robot",  actualNames[1]);
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
                 self.finalizeTest();
             });
     };
@@ -1551,7 +1551,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
         console.log("In SFSmartStoreTestSuite.testSmartQueryWithCount");
         var self = this;
         var testEntries;
-        
+
         self.stuffTestSoup()
             .then(function(entries) {
                 testEntries = entries;
@@ -1570,8 +1570,8 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal("Todd Stellanova", actualNames[2]);
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
                 self.finalizeTest();
             });
     };
@@ -1583,7 +1583,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
         console.log("In SFSmartStoreTestSuite.testSmartQueryWithCount");
         var self = this;
         var testEntries;
-        
+
         self.stuffTestSoup()
             .then(function(entries) {
                 testEntries = entries;
@@ -1600,8 +1600,8 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal(JSON.stringify([testEntries[1].Name]), JSON.stringify(cursor.currentPageOrderedEntries[1]), "check currentPageOrderedEntries[1]");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
                 self.finalizeTest();
             });
     };
@@ -1613,7 +1613,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
         console.log("In SFSmartStoreTestSuite.testSmartQueryWithCount");
         var self = this;
         var testEntries;
-        
+
         self.stuffTestSoup()
             .then(function(entries) {
                 testEntries = entries;
@@ -1626,14 +1626,14 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal(2, cursor.currentPageOrderedEntries[0].length, "check number of fields returned");
 
                 // Should return 1st and 3rd entries.
-                QUnit.equal(JSON.stringify([testEntries[0].Name, testEntries[0].Id]), 
+                QUnit.equal(JSON.stringify([testEntries[0].Name, testEntries[0].Id]),
                             JSON.stringify(cursor.currentPageOrderedEntries[0]), "check currentPageOrderedEntries[0]");
-                QUnit.equal(JSON.stringify([testEntries[2].Name, testEntries[2].Id]), 
+                QUnit.equal(JSON.stringify([testEntries[2].Name, testEntries[2].Id]),
                             JSON.stringify(cursor.currentPageOrderedEntries[1]), "check currentPageOrderedEntries[1]");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
                 self.finalizeTest();
             });
     };
@@ -1670,8 +1670,8 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal(cursor.currentPageOrderedEntries[0][2], expectedEntry._soupLastModifiedDate, "check _soupLastModifieddate returned");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
                 self.finalizeTest();
             });
     };
@@ -1714,7 +1714,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equals(exists, false, "soup should not already exist");
                 return self.getSoupIndexSpecs(soupName);
             })
-            .catch(function() {            
+            .catch(function() {
                 QUnit.ok(true,"getSoupIndexSpecs should fail for bogus soupName");
                 self.finalizeTest();
             });
@@ -1765,7 +1765,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 return self.smartstoreClient.alterSoup(self.defaultSoupName, alteredIndexes, reIndexData);
             })
             .then(function() {
-                // Checking altered soup indexes 
+                // Checking altered soup indexes
                 return self.checkSoupIndexes(self.defaultSoupName, alteredIndexes);
             })
             .then(function() {
@@ -1786,8 +1786,8 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal(cursor.currentPageOrderedEntries.length, 1, "check number of rows returned");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
                 self.finalizeTest();
             });
     };
@@ -1811,7 +1811,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 return self.smartstoreClient.alterSoupWithSpec(self.defaultSoupName, alteredSoupSpec1, alteredIndexes1, reIndexData);
             })
             .then(function() {
-                // Checking altered soup indexes 
+                // Checking altered soup indexes
                 return self.checkSoupIndexes(self.defaultSoupName, alteredIndexes1);
             })
             .then(function() {
@@ -1836,13 +1836,13 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal(cursor.currentPageOrderedEntries.length, 1, "check number of rows returned");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
                 // Alter soup external -> internal
                 return self.smartstoreClient.alterSoupWithSpec(self.defaultSoupName, alteredSoupSpec2, alteredIndexes2, reIndexData);
             })
             .then(function() {
-                // Checking altered soup indexes 
+                // Checking altered soup indexes
                 return self.checkSoupIndexes(self.defaultSoupName, alteredIndexes2);
             })
             .then(function() {
@@ -1867,8 +1867,8 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal(cursor.currentPageOrderedEntries.length, 1, "check number of rows returned");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
                 self.finalizeTest();
             });
     };
@@ -1886,7 +1886,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equals(exists, false, "soup should not already exist");
                 return self.smartstoreClient.alterSoup(soupName, [{path:"key", type:"string"}], true);
             })
-            .catch(function() {            
+            .catch(function() {
                 QUnit.ok(true,"alterSoup should fail for bogus soupName");
                 self.finalizeTest();
             });
@@ -1907,7 +1907,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 return self.smartstoreClient.alterSoup(self.defaultSoupName, alteredIndexes, false);
             })
             .then(function() {
-                // Checking altered soup indexes 
+                // Checking altered soup indexes
                 return self.checkSoupIndexes(self.defaultSoupName, alteredIndexes);
             })
             .then(function() {
@@ -1941,8 +1941,8 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal(cursor.currentPageOrderedEntries.length, 1, "check number of rows returned");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
                 self.finalizeTest();
             });
     };
@@ -1982,9 +1982,9 @@ if (typeof SmartStoreTestSuite === 'undefined') {
      * TEST clearSoup
      */
     SmartStoreTestSuite.prototype.testClearSoup = function()  {
-        console.log("In SFSmartStoreTestSuite.testClearSoup");    
-        
-        var self = this; 
+        console.log("In SFSmartStoreTestSuite.testClearSoup");
+
+        var self = this;
         self.stuffTestSoup()
             .then(function(entries) {
                 QUnit.equal(entries.length, 3);
@@ -1992,7 +1992,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
             })
             .then(function(status) {
                 QUnit.equal(status, "OK", "clearSoup OK");
-                
+
                 var querySpec = self.smartstore.buildAllQuerySpec("Name");
                 return self.smartstoreClient.querySoup(self.defaultSoupName, querySpec);
             })
@@ -2001,8 +2001,8 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 QUnit.equal(nEntries, 0, "currentPageOrderedEntries correct");
                 return self.smartstoreClient.closeCursor(cursor);
             })
-            .then(function(param) { 
-                QUnit.ok(true,"closeCursor ok"); 
+            .then(function(param) {
+                QUnit.ok(true,"closeCursor ok");
                 self.finalizeTest();
             });
     };
@@ -2012,44 +2012,44 @@ if (typeof SmartStoreTestSuite === 'undefined') {
      */
     SmartStoreTestSuite.prototype.testCreateMultipleUserStores = function()  {
         console.log("In SFSmartStoreTestSuite.testCreateMultipleUserStores");
-        var storeConfig = {'storeName':'USRDB1','isGlobalStore':false};
+
+        var storeConfig1 = {'storeName':'USRDB1','isGlobalStore':false};
+        var storeConfig2 = {'storeName':'USRDB2','isGlobalStore':false};
         var self = this;
 
         return this.smartstoreClient
-                         .getDatabaseSize(storeConfig)
+                         .removeAllStores()
+                         .then(function() {
+                            return self.smartstoreClient.getDatabaseSize(storeConfig1);
+                          })
                          .then(function(size) {
-                             QUnit.ok(size > 1,"check getDatabaseSize result: " + size);
+                             QUnit.ok(size > 1,"check getDatabaseSize result " + size);
+                             return self.smartstoreClient.getAllStores();
+                         })
+                         .then(function() {
+                            return self.smartstoreClient.getDatabaseSize(storeConfig2);
+                          })
+                         .then(function(size) {
+                             QUnit.ok(size > 1,"check getDatabaseSize result " + size);
                              return self.smartstoreClient.getAllStores();
                          })
                          .then( function (stores) {
-                              QUnit.ok(stores.length > 1 ,"Should have more than 1 database: " + stores.length);
-                              var sConfig;
-                              Object.keys(stores).forEach(function(key, index) {
-                                     if(stores[key].storeName.toLowerCase() == storeConfig.storeName.toLowerCase()) {
-                                         sConfig = stores[key];
-                                     }
-                                  });
-                              QUnit.ok(sConfig!=null, "Should have found store: ");
-                              return sConfig;
+                              QUnit.equals(stores.length, 2, "Check number of global stores");
+                              return self.smartstoreClient.removeStore(storeConfig1);
                          })
-                         .then(function (sConfig) {
-                              QUnit.ok(sConfig,"Store Should exist: " + sConfig);
-                              return self.smartstoreClient.removeStore(sConfig);
-
-                         })
-                         .then (function() {
+                         .then(function () {
                              return self.smartstoreClient.getAllStores();
                          })
-                         .then(function (stores) {
-                           var sConfig;
-                           QUnit.ok(stores.length > 0 ,"Should have at least  1 database: " + stores.length);
-                           Object.keys(stores).forEach(function(key, index) {
-                                  if(stores[key].storeName.toLowerCase() == storeConfig.storeName.toLowerCase()) {
-                                      sConfig = stores[key];
-                                  }
-                               });
-                           QUnit.ok(sConfig==null, "Should not have found store: ");
-                           self.finalizeTest();
+                         .then( function(stores) {
+                            QUnit.equals(stores.length, 1, "Check number of global stores");
+                            return self.smartstoreClient.removeStore(storeConfig2);
+                         })
+                         .then(function () {
+                             return self.smartstoreClient.getAllStores();
+                         })
+                         .then( function(stores) {
+                            QUnit.equals(stores.length, 0, "All user stores removed");
+                            self.finalizeTest();
                          });
     };
 
@@ -2059,44 +2059,43 @@ if (typeof SmartStoreTestSuite === 'undefined') {
      */
     SmartStoreTestSuite.prototype.testCreateMultipleGlobalStores = function()  {
         console.log("In SFSmartStoreTestSuite.testCreateMultipleGlobalStores");
-        var storeConfig = {'storeName':'GLBLDB1','isGlobalStore':true};
+        var storeConfig1 = {'storeName':'GLBLDB1','isGlobalStore':true};
+        var storeConfig2 = {'storeName':'GLBLDB2','isGlobalStore':true};
         var self = this;
 
         return this.smartstoreClient
-                         .getDatabaseSize(storeConfig)
+                         .removeAllGlobalStores()
+                         .then(function() {
+                            return self.smartstoreClient.getDatabaseSize(storeConfig1);
+                          })
                          .then(function(size) {
-                             QUnit.ok(size > 1,"check getDatabaseSize result: " + size);
+                             QUnit.ok(size > 1,"check getDatabaseSize result " + size);
+                             return self.smartstoreClient.getAllGlobalStores();
+                         })
+                         .then(function() {
+                            return self.smartstoreClient.getDatabaseSize(storeConfig2);
+                          })
+                         .then(function(size) {
+                             QUnit.ok(size > 1,"check getDatabaseSize result " + size);
                              return self.smartstoreClient.getAllGlobalStores();
                          })
                          .then( function (stores) {
-                              QUnit.ok(stores.length > 1 ,"Should have more than 1 database: " + stores.length);
-                              var sConfig;
-                              Object.keys(stores).forEach(function(key, index) {
-                                     if(stores[key].storeName.toLowerCase() == storeConfig.storeName.toLowerCase()) {
-                                         sConfig = stores[key];
-                                     }
-                                  });
-                              QUnit.ok(sConfig!=null, "Should have found store: ");
-                              return sConfig;
+                              QUnit.equals(stores.length, 2, "Check number of global stores");
+                              return self.smartstoreClient.removeStore(storeConfig1);
                          })
-                         .then(function (sConfig) {
-                              QUnit.ok(sConfig,"Store Should exist: " + sConfig);
-                              return self.smartstoreClient.removeStore(sConfig);
-
-                         })
-                         .then (function() {
+                         .then(function () {
                              return self.smartstoreClient.getAllGlobalStores();
                          })
-                         .then(function (stores) {
-                           var sConfig;
-                           QUnit.ok(stores.length > 0 ,"Should have at least  1 database: " + stores.length);
-                           Object.keys(stores).forEach(function(key, index) {
-                                  if(stores[key].storeName.toLowerCase() == storeConfig.storeName.toLowerCase()) {
-                                      sConfig = stores[key];
-                                  }
-                               });
-                           QUnit.ok(sConfig==null, "Should not have found store: ");
-                           self.finalizeTest();
+                         .then( function(stores) {
+                            QUnit.equals(stores.length, 1, "Check number of global stores");
+                            return self.smartstoreClient.removeStore(storeConfig2);
+                         })
+                         .then(function () {
+                             return self.smartstoreClient.getAllGlobalStores();
+                         })
+                         .then( function(stores) {
+                            QUnit.equals(stores.length, 0, "All global stores removed");
+                            self.finalizeTest();
                          });
     };
 
@@ -2105,12 +2104,40 @@ if (typeof SmartStoreTestSuite === 'undefined') {
      */
     SmartStoreTestSuite.prototype.testGetAllStores = function()  {
         console.log("In SFSmartStoreTestSuite.testGetAllStores");
+        var storeConfig1 = {'storeName':'USRDB1','isGlobalStore':false};
+        var storeConfig2 = {'storeName':'USRDB2','isGlobalStore':false};
         var self = this;
-        return this.smartstoreClient.getAllStores()
-                         .then( function(storeNames) {
-                            QUnit.equals(storeNames.length, 1, "Check number of user stores");
-                            self.finalizeTest();
-                          });
+
+        var self = this;
+        return this.smartstoreClient
+                        .removeAllStores()
+                        .then(function() {
+                           return self.smartstoreClient.getDatabaseSize(storeConfig1);
+                         })
+                        .then(function(size) {
+                            QUnit.ok(size > 1,"check getDatabaseSize result " + size);
+                            return self.smartstoreClient.getAllStores();
+                        })
+                        .then( function(storeNames) {
+                              QUnit.equals(storeNames.length, 1, "Check number of user stores");
+                        })
+                        .then(function() {
+                           return self.smartstoreClient.getDatabaseSize(storeConfig2);
+                         })
+                        .then( function() {
+                            return self.smartstoreClient.getAllStores();
+                        })
+                        .then( function (stores)  {
+                            QUnit.equals(stores.length, 2, "Check number of user stores");
+                             return self.smartstoreClient.removeAllStores();
+                        })
+                        .then( function ()  {
+                           return self.smartstoreClient.getAllStores();
+                        })
+                        .then(function(stores) {
+                                QUnit.equals(stores.length, 0, "Removed all user stores");
+                                self.finalizeTest();
+                        });
 
     };
 
@@ -2119,11 +2146,39 @@ if (typeof SmartStoreTestSuite === 'undefined') {
      */
     SmartStoreTestSuite.prototype.testGetAllGlobalStores = function()  {
       console.log("In SFSmartStoreTestSuite.testGetAllGlobalStores");
+      var storeConfig1 = {'storeName':'GLBLDB1','isGlobalStore':true};
+      var storeConfig2 = {'storeName':'GLBLDB2','isGlobalStore':true};
       var self = this;
-      return this.smartstoreClient.getAllGlobalStores()
-                       .then( function(storeNames) {
-                          QUnit.equals(storeNames.length, 1, "Check number of global stores");
-                            self.finalizeTest();
-                        });
+
+      var self = this;
+      return this.smartstoreClient
+                      .removeAllGlobalStores()
+                      .then(function() {
+                         return self.smartstoreClient.getDatabaseSize(storeConfig1);
+                       })
+                      .then(function(size) {
+                          QUnit.ok(size > 1,"check getDatabaseSize result " + size);
+                          return self.smartstoreClient.getAllGlobalStores();
+                      })
+                      .then( function(stores) {
+                            QUnit.equals(stores.length, 1, "Check number of global stores");
+                      })
+                      .then(function() {
+                         return self.smartstoreClient.getDatabaseSize(storeConfig2);
+                       })
+                      .then( function() {
+                          return self.smartstoreClient.getAllGlobalStores();
+                      })
+                      .then( function (stores)  {
+                          QUnit.equals(stores.length, 2, "Check number of global stores");
+                           return self.smartstoreClient.removeAllGlobalStores();
+                      })
+                      .then( function ()  {
+                         return self.smartstoreClient.getAllGlobalStores();
+                      })
+                      .then(function(stores) {
+                              QUnit.equals(stores.length, 0, "Removed all global stores");
+                              self.finalizeTest();
+                      });
     };
 }

@@ -35,8 +35,8 @@ var MockSmartStore = (function(window) {
     // Constructor
     var module = function(isGlobalStore) {
         this.isGlobalStore = isGlobalStore || false;
-        this._soups = {};     
-        this._soupIndexedData = {}; 
+        this._soups = {};
+        this._soupIndexedData = {};
         this._soupIndexSpecs = {};
         this._soupSpecs = {};
         this._cursors = {};
@@ -106,7 +106,7 @@ var MockSmartStore = (function(window) {
         },
 
         checkIndex: function(soupName, path) {
-            if (["_soup", "_soupEntryId"].indexOf(path) == -1 && !this.indexExists(soupName, path)) throw new Error(soupName + " does not have an index on " + path); 
+            if (["_soup", "_soupEntryId"].indexOf(path) == -1 && !this.indexExists(soupName, path)) throw new Error(soupName + " does not have an index on " + path);
         },
 
         soupExists: function(soupName) {
@@ -145,7 +145,7 @@ var MockSmartStore = (function(window) {
         },
 
         getSoupIndexSpecs: function(soupName) {
-            this.checkSoup(soupName); 
+            this.checkSoup(soupName);
             return this._soupIndexSpecs[soupName];
         },
 
@@ -155,7 +155,7 @@ var MockSmartStore = (function(window) {
         },
 
         alterSoup: function(soupName, soupSpec, indexSpecs, reIndexData) {
-            this.checkSoup(soupName); 
+            this.checkSoup(soupName);
 
             // Gather path---type of old index specs
             var oldPathTypes = [];
@@ -219,15 +219,15 @@ var MockSmartStore = (function(window) {
         },
 
         upsertSoupEntries: function(soupName, entries, externalIdPath) {
-            this.checkSoup(soupName); 
-            if (externalIdPath != "_soupEntryId" && !this.indexExists(soupName, externalIdPath)) 
-                throw new Error(soupName + " does not have an index on " + externalIdPath); 
+            this.checkSoup(soupName);
+            if (externalIdPath != "_soupEntryId" && !this.indexExists(soupName, externalIdPath))
+                throw new Error(soupName + " does not have an index on " + externalIdPath);
 
             var soup = this._soups[soupName];
             var soupIndexedData = this._soupIndexedData[soupName];
             var indexSpecs = this._soupIndexSpecs[soupName];
             var upsertedEntries = [];
-            
+
             for (var i=0; i<entries.length; i++) {
                 var entry = JSON.parse(JSON.stringify(entries[i])); // clone
                 var isNew = true;
@@ -251,14 +251,14 @@ var MockSmartStore = (function(window) {
                 }
 
                 // create
-                if (!("_soupEntryId" in entry)) { 
+                if (!("_soupEntryId" in entry)) {
                     this._nextSoupEltIds[soupName] = (soupName in this._nextSoupEltIds ? this._nextSoupEltIds[soupName]+1 : 1);
                     entry._soupEntryId = this._nextSoupEltIds[soupName];
                 }
 
                 // last modified date
                 entry._soupLastModifiedDate = (new Date()).getTime();
-                
+
                 // update/insert into soup
                 soup[entry._soupEntryId] = entry;
                 upsertedEntries.push(entry);
@@ -275,7 +275,7 @@ var MockSmartStore = (function(window) {
         },
 
         retrieveSoupEntries: function(soupName, entryIds) {
-            this.checkSoup(soupName); 
+            this.checkSoup(soupName);
             var soup = this._soups[soupName];
             var entries = [];
             for (var i=0; i<entryIds.length; i++) {
@@ -286,7 +286,7 @@ var MockSmartStore = (function(window) {
         },
 
         removeFromSoup: function(soupName, entryIdsOrQuerySpec) {
-            this.checkSoup(soupName); 
+            this.checkSoup(soupName);
             var soup = this._soups[soupName];
             var soupIndexedData = this._soupIndexedData[soupName];
             if (entryIdsOrQuerySpec instanceof Array) {
@@ -348,31 +348,31 @@ var MockSmartStore = (function(window) {
 
 		    return result;
 	    },
-        
+
         supportedQueries : function() {
             // NB we don't have full support evidently
             return [
-                { 
-                    name: "Query with variable select fields and where clause {soup:field} IN list of values", 
-                    example: "SELECT {soupName:selectField1}, {soupName:selectField2} FROM {soupName} WHERE {soupName:whereField} IN (values)", 
-                    pattern: /SELECT (.*) FROM {(.*)} WHERE {(.*):(.*)} IN \((.*)\)/i, 
-                    processor: this.smartQuerySoupIn 
+                {
+                    name: "Query with variable select fields and where clause {soup:field} IN list of values",
+                    example: "SELECT {soupName:selectField1}, {soupName:selectField2} FROM {soupName} WHERE {soupName:whereField} IN (values)",
+                    pattern: /SELECT (.*) FROM {(.*)} WHERE {(.*):(.*)} IN \((.*)\)/i,
+                    processor: this.smartQuerySoupIn
                 },
-                { 
-                    name: "Query with where clause {soup:field} like 'value' with optional order by", 
-                    example: "SELECT {soupName:_soup} FROM {soupName} WHERE {soupName:whereField} LIKE 'value' ORDER BY LOWER({soupName:orderByField})", 
-                    pattern: /SELECT {(.*):_soup} FROM {(.*)} WHERE {(.*):(.*)} LIKE '(.*)'(?: ORDER BY LOWER\({(.*):(.*)}\))?/i, 
-                    processor: this.smartQuerySoupLikeOrdered 
+                {
+                    name: "Query with where clause {soup:field} like 'value' with optional order by",
+                    example: "SELECT {soupName:_soup} FROM {soupName} WHERE {soupName:whereField} LIKE 'value' ORDER BY LOWER({soupName:orderByField})",
+                    pattern: /SELECT {(.*):_soup} FROM {(.*)} WHERE {(.*):(.*)} LIKE '(.*)'(?: ORDER BY LOWER\({(.*):(.*)}\))?/i,
+                    processor: this.smartQuerySoupLikeOrdered
                 },
-                { 
-                    name: "Count of soup items", 
-                    example: "SELECT count(*) FROM {soupName}", 
-                    pattern: /SELECT count\(\*\) FROM {(.*)}/i, 
+                {
+                    name: "Count of soup items",
+                    example: "SELECT count(*) FROM {soupName}",
+                    pattern: /SELECT count\(\*\) FROM {(.*)}/i,
                     processor: this.smartQuerySoupCount
                 },
-                { 
-                    name: "Comparing soup item to integer with optional order by", 
-                    example: "SELECT {soupName:_soup} FROM {soupName} WHERE {soupName:whereField} > 123456 ORDER BY LOWER({soupName:orderByField})", 
+                {
+                    name: "Comparing soup item to integer with optional order by",
+                    example: "SELECT {soupName:_soup} FROM {soupName} WHERE {soupName:whereField} > 123456 ORDER BY LOWER({soupName:orderByField})",
                     pattern: /SELECT {(.*):_soup} FROM {(.*)} WHERE {(.*):(.*)} ([!=<>]+) ([0-9]+)(?: ORDER BY LOWER\({(.*):(.*)}\))?/i,
                     processor: this.smartQuerySoupCompare
                 }
@@ -445,7 +445,7 @@ var MockSmartStore = (function(window) {
                 var likeRegexp = new RegExp("^" + matches[5].replace(/%/g, ".*"), "i");
                 var orderField = matches[6] ? matches[7] : null;
 
-                this.checkSoup(soupName); 
+                this.checkSoup(soupName);
                 this.checkIndex(soupName, whereField);
                 if (orderField) this.checkIndex(soupName, orderField);
                 var soup = this._soups[soupName];
@@ -475,7 +475,7 @@ var MockSmartStore = (function(window) {
 
         smartQuerySoupCount : function(queryDesc, matches, smartSql) {
             var soupName = matches[1];
-            this.checkSoup(soupName); 
+            this.checkSoup(soupName);
             var soup = this._soups[soupName];
             var count = 0;
             for (var soupEntryId in soup) {
@@ -492,13 +492,13 @@ var MockSmartStore = (function(window) {
                 var comparator = matches[5];
                 var compareTo = parseInt(matches[6], 10);
                 var orderField = matches[7] ? matches[8] : null;
-                
+
                 // Make sure the soup has all the appropriate fields.
                 this.checkSoup(soupName);
                 this.checkIndex(soupName, whereField);
-                
+
                 var soup = this._soups[soupName];
-                
+
                 // Pull results out from soup iteratively.
                 var results = [];
                 for (var soupEntryId in soup) {
@@ -524,10 +524,10 @@ var MockSmartStore = (function(window) {
                         return ( p1 > p2 ? 1 : (p1 === p2 ? 0 : -1));
                     });
                 }
-                
+
                 return results;
             }
-        },        
+        },
 
         smartQuerySoupFull: function(querySpec) {
             // Match the query against the supported queries in test and then execute.
@@ -555,7 +555,7 @@ var MockSmartStore = (function(window) {
 
         // Support some full-text queries (see doesFullTextMatch for details)
         querySoupFullTextSearch: function(soupName, querySpec) {
-            this.checkSoup(soupName); 
+            this.checkSoup(soupName);
             var soup = this._soups[soupName];
             var results = [];
 
@@ -732,7 +732,7 @@ var MockSmartStore = (function(window) {
             for (var soupEntryId in soup) {
                 var soupElt = soup[soupEntryId];
                 var projection = querySpec.indexPath == null ? null : this.getTypedIndexedData(soupName, querySpec.indexPath, soupEntryId);
-                var type = this.typeForPath(soupName, querySpec.indexPath);                
+                var type = this.typeForPath(soupName, querySpec.indexPath);
 
                 if (querySpec.queryType === "exact") {
                     if (projection == this.asType(type, querySpec.matchKey)) {
@@ -770,10 +770,10 @@ var MockSmartStore = (function(window) {
             var results = this.querySoupFull(soupName, querySpec);
             var cursorId = this._nextCursorId++;
             var cursor = {
-                cursorId: cursorId, 
+                cursorId: cursorId,
                 pageSize: querySpec.pageSize,
-                soupName: soupName, 
-                querySpec: querySpec, 
+                soupName: soupName,
+                querySpec: querySpec,
                 currentPageIndex: 0,
                 currentPageOrderedEntries: results.slice(0, querySpec.pageSize),
                 totalPages: Math.ceil(results.length / querySpec.pageSize),
@@ -781,7 +781,7 @@ var MockSmartStore = (function(window) {
             };
 
             this._cursors[cursorId] = cursor;
-            // Since original cursor from smarstore doesn't contain querySpec and soupName, 
+            // Since original cursor from smarstore doesn't contain querySpec and soupName,
             // remove them here too before returning cursor to the user.
             return this.omit(cursor, 'soupName', 'querySpec');
         },
@@ -794,7 +794,7 @@ var MockSmartStore = (function(window) {
             cursor.currentPageIndex = pageIndex;
             cursor.currentPageOrderedEntries = results.slice(pageIndex*querySpec.pageSize, (pageIndex+1)*querySpec.pageSize);
 
-            // Since original cursor from smarstore doesn't contain querySpec and soupName, 
+            // Since original cursor from smarstore doesn't contain querySpec and soupName,
             // remove them here too before returning cursor to the user.
             return this.omit(cursor, 'soupName', 'querySpec');
         },
