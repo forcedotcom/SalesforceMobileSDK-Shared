@@ -30,8 +30,7 @@ var SALESFORCE_MOBILE_SDK_VERSION = "5.0.0";
 var SERVICE = "com.salesforce.smartsync";
 
 var exec = require("com.salesforce.util.exec").exec;
-var defaultStoreName = "defaultStore";
-var defaultStoreConfig = {'storeName':defaultStoreName, 'isGlobalStore':false};
+var defaultStoreConfig = {'isGlobalStore':false};
 
 // Helper function to handle calls that don't specify storeConfig as first argument
 // If missing, the caller is re-invoked with false prepended to the arguments list and true is returned
@@ -41,7 +40,7 @@ var checkFirstArg = function(argumentsOfCaller) {
     var args = Array.prototype.slice.call(argumentsOfCaller);
 
     // If first argument is a store config
-    if (typeof(args[0]) === "object" && args[0].storeName != null) {
+    if (typeof(args[0]) === "object" && args[0].hasOwnProperty("isGlobalStore")) {
          return false;
     }
 
@@ -49,7 +48,7 @@ var checkFirstArg = function(argumentsOfCaller) {
     if (typeof(args[0]) === "boolean") {
        isGlobalStore = args.shift() || false;
     }
-    args.unshift({'storeName': defaultStoreName, 'isGlobalStore': isGlobalStore});
+    args.unshift({'isGlobalStore': isGlobalStore});
     argumentsOfCaller.callee.apply(null, args);
     return true;
 };

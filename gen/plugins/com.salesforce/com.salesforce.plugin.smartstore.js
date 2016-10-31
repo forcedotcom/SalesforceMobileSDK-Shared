@@ -30,8 +30,7 @@ var SERVICE = "com.salesforce.smartstore";
 
 var exec = require("com.salesforce.util.exec").exec;
 
-var defaultStoreName = "defaultStore";
-var defaultStoreConfig = {'storeName':defaultStoreName, 'isGlobalStore':false};
+var defaultStoreConfig = {'isGlobalStore':false};
 /**
  * SoupSpec constructor
  */
@@ -214,7 +213,7 @@ var checkFirstArg = function(argumentsOfCaller) {
     var args = Array.prototype.slice.call(argumentsOfCaller);
 
     // If first argument is a store config
-    if (typeof(args[0]) === "object" && args[0].storeName != null) {
+    if (typeof(args[0]) === "object" && args[0].hasOwnProperty("isGlobalStore")) {
          return false;
     }
 
@@ -223,7 +222,7 @@ var checkFirstArg = function(argumentsOfCaller) {
     if (typeof(args[0]) === "boolean") {
        isGlobalStore = args.shift() || false;
     }
-    args.unshift({'storeName': defaultStoreName, 'isGlobalStore': isGlobalStore});
+    args.unshift({'isGlobalStore': isGlobalStore});
     argumentsOfCaller.callee.apply(null, args);
     return true;
 };

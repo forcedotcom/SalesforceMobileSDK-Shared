@@ -134,7 +134,7 @@
         this.soupName = soupName;
         this.keyField = keyField || "Id";
         this.additionalIndexSpecs = additionalIndexSpecs || [];
-        this.storeConfig = storeConfig || {'storeName': "defaultStore",'isGlobalStore': false};
+        this.storeConfig = storeConfig || {'isGlobalStore': false};
     };
 
     _.extend(Force.StoreCache.prototype, {

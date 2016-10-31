@@ -824,7 +824,7 @@ var userStores = {};
 
 var getStore = function (args) {
    var isGlobal = args[0].isGlobalStore;
-   var storeName = args[0].storeName;
+   var storeName = (args[0].storeName==='undefined' || args[0].storeName == null)?"defaultStore":args[0].storeName;
    var store;
 
    if(storeName == null)

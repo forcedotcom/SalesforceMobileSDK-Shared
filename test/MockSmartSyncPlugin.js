@@ -259,8 +259,8 @@ var MockSmartSyncPlugin = (function(window) {
 })(window);
 
 
-var mockSyncManager = new MockSmartSyncPlugin({'storeName' : 'defaultStore' , 'isGlobalStore': false});
-var mockGlobalSyncManager = new MockSmartSyncPlugin({'storeName' : 'defaultStore', 'isGlobalStore': true});
+var mockSyncManager = new MockSmartSyncPlugin({'isGlobalStore': false});
+var mockGlobalSyncManager = new MockSmartSyncPlugin({'isGlobalStore': true});
 (function (cordova, syncManager, globalSyncManager) {
 
     var SMARTSYNC_SERVICE = "com.salesforce.smartsync";

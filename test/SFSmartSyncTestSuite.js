@@ -33,8 +33,8 @@ if (typeof SmartSyncTestSuite === 'undefined') {
 var SmartSyncTestSuite = function () {
     SFTestSuite.call(this, "SmartSyncTestSuite");
     //default store config
-    this.defaultStoreConfig = {"storeName": "defaultStore","isGlobalStore" : false};
-    this.defaultGlobalStoreConfig = {"storeName": "defaultStore","isGlobalStore" : true};
+    this.defaultStoreConfig = {"isGlobalStore" : false};
+    this.defaultGlobalStoreConfig = {"isGlobalStore" : true};
 
     // To run specific tests
     // this.testsToRun = ["testRefreshSyncDown"];
