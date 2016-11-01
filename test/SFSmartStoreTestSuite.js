@@ -2039,6 +2039,16 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                             QUnit.equals(exists1, false, "soup should exist in user store1 " + storeConfig1_SoupName);
                             QUnit.equals(exists2, false, "soup should exist in user store2 " + storeConfig2_SoupName);
                           })
+                          .then(function() {
+                            return Promise.all(
+                                    [self.smartstoreClient.soupExists(storeConfig1, storeConfig2_SoupName),
+                                    self.smartstoreClient.soupExists(storeConfig2, storeConfig1_SoupName)]);
+                          })
+                          .then(function(result) {
+                             var exists1 = result[0], exists2 = result[1];
+                             QUnit.equals(exists1, false, "soup should not exist in user store1 " + storeConfig2_SoupName);
+                             QUnit.equals(exists2, false, "soup should not exist in user store2 " + storeConfig1_SoupName);
+                           })
                          .then(function () {
                            return Promise.all(
                                    [self.smartstoreClient.removeStore(storeConfig1),
@@ -2087,6 +2097,16 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                             QUnit.equals(exists1, false, "soup should exist in global store1 " + storeConfig1_SoupName);
                             QUnit.equals(exists2, false, "soup should exist in global store2 " + storeConfig2_SoupName);
                           })
+                          .then(function() {
+                            return Promise.all(
+                                    [self.smartstoreClient.soupExists(storeConfig1, storeConfig2_SoupName),
+                                    self.smartstoreClient.soupExists(storeConfig2, storeConfig1_SoupName)]);
+                          })
+                          .then(function(result) {
+                             var exists1 = result[0], exists2 = result[1];
+                             QUnit.equals(exists1, false, "soup should not exist in user store1 " + storeConfig2_SoupName);
+                             QUnit.equals(exists2, false, "soup should not exist in user store2 " + storeConfig1_SoupName);
+                           })
                          .then(function () {
                            return Promise.all(
                                    [self.smartstoreClient.removeStore(storeConfig1),
