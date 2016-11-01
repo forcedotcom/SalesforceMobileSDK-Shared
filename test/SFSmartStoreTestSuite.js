@@ -2015,34 +2015,34 @@ if (typeof SmartStoreTestSuite === 'undefined') {
 
         var storeConfig1 = {'storeName':'USRDB1','isGlobalStore':false};
         var storeConfig2 = {'storeName':'USRDB2','isGlobalStore':false};
+
+        var indexes = [{path:"Name", type:"string"},{path:"Id", type:"string"}];
+        var storeConfig1_SoupName = storeConfig1.storeName + "_Soup";
+        var storeConfig2_SoupName = storeConfig2.storeName + "_Soup";
+
         var self = this;
 
         return this.smartstoreClient
                          .removeAllStores()
                          .then(function() {
-                            return self.smartstoreClient.getDatabaseSize(storeConfig1);
+                              return
+                                Promise.all([self.smartstoreClient.registerSoup(storeConfig1,  storeConfig1_SoupName, indexes),
+                                             self.smartstoreClient.registerSoup(storeConfig2, storeConfig2_SoupName, indexes)]);
                           })
-                         .then(function(size) {
-                             QUnit.ok(size > 1,"check getDatabaseSize result " + size);
-                             return self.smartstoreClient.getAllStores();
-                         })
                          .then(function() {
-                            return self.smartstoreClient.getDatabaseSize(storeConfig2);
+                           return Promise.all(
+                                   [self.smartstoreClient.soupExists(storeConfig1, storeConfig1_SoupName),
+                                   self.smartstoreClient.soupExists(storeConfig2, storeConfig2_SoupName)]);
+                         })
+                         .then(function(result) {
+                            var exists1 = result[0], exists2 = result[1];
+                            QUnit.equals(exists1, false, "soup should exist in user store1 " + storeConfig1_SoupName);
+                            QUnit.equals(exists2, false, "soup should exist in user store2 " + storeConfig2_SoupName);
                           })
-                         .then(function(size) {
-                             QUnit.ok(size > 1,"check getDatabaseSize result " + size);
-                             return self.smartstoreClient.getAllStores();
-                         })
-                         .then( function (stores) {
-                              QUnit.equals(stores.length, 2, "Check number of global stores");
-                              return self.smartstoreClient.removeStore(storeConfig1);
-                         })
                          .then(function () {
-                             return self.smartstoreClient.getAllStores();
-                         })
-                         .then( function(stores) {
-                            QUnit.equals(stores.length, 1, "Check number of global stores");
-                            return self.smartstoreClient.removeStore(storeConfig2);
+                           return Promise.all(
+                                   [self.smartstoreClient.removeStore(storeConfig1),
+                                   self.smartstoreClient.removeStore(storeConfig2)]);
                          })
                          .then(function () {
                              return self.smartstoreClient.getAllStores();
@@ -2059,36 +2059,38 @@ if (typeof SmartStoreTestSuite === 'undefined') {
      */
     SmartStoreTestSuite.prototype.testCreateMultipleGlobalStores = function()  {
         console.log("In SFSmartStoreTestSuite.testCreateMultipleGlobalStores");
+        console.log("In SFSmartStoreTestSuite.testCreateMultipleUserStores");
+
         var storeConfig1 = {'storeName':'GLBLDB1','isGlobalStore':true};
         var storeConfig2 = {'storeName':'GLBLDB2','isGlobalStore':true};
+
+        var indexes = [{path:"Name", type:"string"},{path:"Id", type:"string"}];
+        var storeConfig1_SoupName = storeConfig1.storeName + "_Soup";
+        var storeConfig2_SoupName = storeConfig2.storeName + "_Soup";
+
         var self = this;
 
         return this.smartstoreClient
                          .removeAllGlobalStores()
                          .then(function() {
-                            return self.smartstoreClient.getDatabaseSize(storeConfig1);
+                              return
+                                Promise.all([self.smartstoreClient.registerSoup(storeConfig1,  storeConfig1_SoupName, indexes),
+                                             self.smartstoreClient.registerSoup(storeConfig2, storeConfig2_SoupName, indexes)]);
                           })
-                         .then(function(size) {
-                             QUnit.ok(size > 1,"check getDatabaseSize result " + size);
-                             return self.smartstoreClient.getAllGlobalStores();
-                         })
                          .then(function() {
-                            return self.smartstoreClient.getDatabaseSize(storeConfig2);
+                           return Promise.all(
+                                   [self.smartstoreClient.soupExists(storeConfig1, storeConfig1_SoupName),
+                                   self.smartstoreClient.soupExists(storeConfig2, storeConfig2_SoupName)]);
+                         })
+                         .then(function(result) {
+                            var exists1 = result[0], exists2 = result[1];
+                            QUnit.equals(exists1, false, "soup should exist in global store1 " + storeConfig1_SoupName);
+                            QUnit.equals(exists2, false, "soup should exist in global store2 " + storeConfig2_SoupName);
                           })
-                         .then(function(size) {
-                             QUnit.ok(size > 1,"check getDatabaseSize result " + size);
-                             return self.smartstoreClient.getAllGlobalStores();
-                         })
-                         .then( function (stores) {
-                              QUnit.equals(stores.length, 2, "Check number of global stores");
-                              return self.smartstoreClient.removeStore(storeConfig1);
-                         })
                          .then(function () {
-                             return self.smartstoreClient.getAllGlobalStores();
-                         })
-                         .then( function(stores) {
-                            QUnit.equals(stores.length, 1, "Check number of global stores");
-                            return self.smartstoreClient.removeStore(storeConfig2);
+                           return Promise.all(
+                                   [self.smartstoreClient.removeStore(storeConfig1),
+                                   self.smartstoreClient.removeStore(storeConfig2)]);
                          })
                          .then(function () {
                              return self.smartstoreClient.getAllGlobalStores();
@@ -2099,86 +2101,4 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                          });
     };
 
-    /**
-     * TEST clearSoup
-     */
-    SmartStoreTestSuite.prototype.testGetAllStores = function()  {
-        console.log("In SFSmartStoreTestSuite.testGetAllStores");
-        var storeConfig1 = {'storeName':'USRDB1','isGlobalStore':false};
-        var storeConfig2 = {'storeName':'USRDB2','isGlobalStore':false};
-        var self = this;
-
-        var self = this;
-        return this.smartstoreClient
-                        .removeAllStores()
-                        .then(function() {
-                           return self.smartstoreClient.getDatabaseSize(storeConfig1);
-                         })
-                        .then(function(size) {
-                            QUnit.ok(size > 1,"check getDatabaseSize result " + size);
-                            return self.smartstoreClient.getAllStores();
-                        })
-                        .then( function(storeNames) {
-                              QUnit.equals(storeNames.length, 1, "Check number of user stores");
-                        })
-                        .then(function() {
-                           return self.smartstoreClient.getDatabaseSize(storeConfig2);
-                         })
-                        .then( function() {
-                            return self.smartstoreClient.getAllStores();
-                        })
-                        .then( function (stores)  {
-                            QUnit.equals(stores.length, 2, "Check number of user stores");
-                             return self.smartstoreClient.removeAllStores();
-                        })
-                        .then( function ()  {
-                           return self.smartstoreClient.getAllStores();
-                        })
-                        .then(function(stores) {
-                                QUnit.equals(stores.length, 0, "Removed all user stores");
-                                self.finalizeTest();
-                        });
-
-    };
-
-    /**
-     * TEST clearSoup
-     */
-    SmartStoreTestSuite.prototype.testGetAllGlobalStores = function()  {
-      console.log("In SFSmartStoreTestSuite.testGetAllGlobalStores");
-      var storeConfig1 = {'storeName':'GLBLDB1','isGlobalStore':true};
-      var storeConfig2 = {'storeName':'GLBLDB2','isGlobalStore':true};
-      var self = this;
-
-      var self = this;
-      return this.smartstoreClient
-                      .removeAllGlobalStores()
-                      .then(function() {
-                         return self.smartstoreClient.getDatabaseSize(storeConfig1);
-                       })
-                      .then(function(size) {
-                          QUnit.ok(size > 1,"check getDatabaseSize result " + size);
-                          return self.smartstoreClient.getAllGlobalStores();
-                      })
-                      .then( function(stores) {
-                            QUnit.equals(stores.length, 1, "Check number of global stores");
-                      })
-                      .then(function() {
-                         return self.smartstoreClient.getDatabaseSize(storeConfig2);
-                       })
-                      .then( function() {
-                          return self.smartstoreClient.getAllGlobalStores();
-                      })
-                      .then( function (stores)  {
-                          QUnit.equals(stores.length, 2, "Check number of global stores");
-                           return self.smartstoreClient.removeAllGlobalStores();
-                      })
-                      .then( function ()  {
-                         return self.smartstoreClient.getAllGlobalStores();
-                      })
-                      .then(function(stores) {
-                              QUnit.equals(stores.length, 0, "Removed all global stores");
-                              self.finalizeTest();
-                      });
-    };
 }

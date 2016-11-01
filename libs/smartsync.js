@@ -130,11 +130,16 @@
     // A __local__ boolean field is added automatically on save
     // Index are created for keyField and __local__
     //
-    Force.StoreCache = function(storeConfig,soupName, additionalIndexSpecs, keyField) {
+    Force.StoreCache = function(soupName, additionalIndexSpecs, keyField,isGlobalStore,storeName) {
         this.soupName = soupName;
         this.keyField = keyField || "Id";
         this.additionalIndexSpecs = additionalIndexSpecs || [];
-        this.storeConfig = storeConfig || {'isGlobalStore': false};
+        if(storeName == null) {
+            this.storeConfig = {isGlobalStore: isGlobalStore || false};
+        }else {
+           this.storeConfig = {isGlobalStore: isGlobalStore || false,storeName:storeName};
+        }
+
     };
 
     _.extend(Force.StoreCache.prototype, {

@@ -78,7 +78,7 @@ var MockSmartSyncPlugin = (function(window) {
             var target = sync.target;
             var soupName = sync.soupName;
             var options = sync.options;
-            var cache = new Force.StoreCache(self.storeConfig,soupName, null, null, this.storeConfig);
+            var cache = new Force.StoreCache(soupName, null, null, this.storeConfig.isGlobalStore,this.storeConfig.storeName);
             var collection = new Force.SObjectCollection();
             var progress = 0;
             collection.cache = cache;
@@ -148,7 +148,7 @@ var MockSmartSyncPlugin = (function(window) {
             var sync = this.syncs[syncId];
             var target = sync.target;
             var soupName = sync.soupName;
-            var cache = new Force.StoreCache(self.storeConfig,soupName, null, null, this.storeConfig);
+            var cache = new Force.StoreCache(soupName, null, null, self.storeConfig.isGlobalStore,self.storeConfig.storeName);
             cache.find({queryType:"range", orderPath:cache.keyField, pageSize:500}) // XXX not handling case with more than 500 local ids
                 .then(function(result) {
                     var localIds = _.pluck(result.records, cache.keyField);
@@ -180,7 +180,7 @@ var MockSmartSyncPlugin = (function(window) {
         syncUp: function(target, soupName, options, successCB, errorCB) {
             var self = this;
             var syncId = self.recordSync("syncUp", target, soupName, options);
-            var cache = new Force.StoreCache(self.storeConfig,soupName,  null, null, this.storeConfig);
+            var cache = new Force.StoreCache(soupName,  null, null, self.storeConfig.isGlobalStore,self.storeConfig.storeName);
             var collection = new Force.SObjectCollection();
             var numberRecords;
             collection.cache = cache;
