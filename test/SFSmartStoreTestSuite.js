@@ -43,7 +43,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                                          ]);
 
         // To run specific tests
-        // this.testsToRun = ["testSmartQueryWithIntegerCompare"];
+        //this.testsToRun = ["testCreateMultipleUserStores"];
     };
 
     // We are sub-classing AbstractSmartStoreTestSuite
@@ -1646,7 +1646,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
         var self = this;
         var expectedEntry;
 
-        if (window.userStores) {
+        if (window.storeMap) {
             // Mock smartstore doesn't support such queries
             self.finalizeTest();
             return;
@@ -2008,7 +2008,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
     };
 
     /**
-     * TEST testCreateMultipleUserStores
+     * TEST testCreateMultipleUserStores Cross check soups
      */
     SmartStoreTestSuite.prototype.testCreateMultipleUserStores = function()  {
         console.log("In SFSmartStoreTestSuite.testCreateMultipleUserStores");
@@ -2025,9 +2025,8 @@ if (typeof SmartStoreTestSuite === 'undefined') {
         return this.smartstoreClient
                          .removeAllStores()
                          .then(function() {
-                              return
-                                Promise.all([self.smartstoreClient.registerSoup(storeConfig1,  storeConfig1_SoupName, indexes),
-                                             self.smartstoreClient.registerSoup(storeConfig2, storeConfig2_SoupName, indexes)]);
+                           Promise.all([self.smartstoreClient.registerSoup(storeConfig1,  storeConfig1_SoupName, indexes),
+                                        self.smartstoreClient.registerSoup(storeConfig2, storeConfig2_SoupName, indexes)]);
                           })
                          .then(function() {
                            return Promise.all(
@@ -2036,8 +2035,8 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                          })
                          .then(function(result) {
                             var exists1 = result[0], exists2 = result[1];
-                            QUnit.equals(exists1, false, "soup should exist in user store1 " + storeConfig1_SoupName);
-                            QUnit.equals(exists2, false, "soup should exist in user store2 " + storeConfig2_SoupName);
+                            QUnit.equals(exists1, true, "soup should exist in user store1 " + storeConfig1_SoupName);
+                            QUnit.equals(exists2, true, "soup should exist in user store2 " + storeConfig2_SoupName);
                           })
                           .then(function() {
                             return Promise.all(
@@ -2065,7 +2064,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
 
 
     /**
-     * TEST testCreateMultipleUserStores
+     * TEST testCreateMultipleUserStores Cross check soups
      */
     SmartStoreTestSuite.prototype.testCreateMultipleGlobalStores = function()  {
         console.log("In SFSmartStoreTestSuite.testCreateMultipleGlobalStores");
@@ -2083,7 +2082,6 @@ if (typeof SmartStoreTestSuite === 'undefined') {
         return this.smartstoreClient
                          .removeAllGlobalStores()
                          .then(function() {
-                              return
                                 Promise.all([self.smartstoreClient.registerSoup(storeConfig1,  storeConfig1_SoupName, indexes),
                                              self.smartstoreClient.registerSoup(storeConfig2, storeConfig2_SoupName, indexes)]);
                           })
@@ -2094,8 +2092,8 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                          })
                          .then(function(result) {
                             var exists1 = result[0], exists2 = result[1];
-                            QUnit.equals(exists1, false, "soup should exist in global store1 " + storeConfig1_SoupName);
-                            QUnit.equals(exists2, false, "soup should exist in global store2 " + storeConfig2_SoupName);
+                            QUnit.equals(exists1, true, "soup should exist in global store1 " + storeConfig1_SoupName);
+                            QUnit.equals(exists2, true, "soup should exist in global store2 " + storeConfig2_SoupName);
                           })
                           .then(function() {
                             return Promise.all(
