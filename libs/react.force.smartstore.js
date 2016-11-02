@@ -34,6 +34,18 @@ var exec = function(successCB, errorCB, methodName, args) {
 };
 
 /**
+ * StoreConfig constructor
+ */
+var StoreConfig = function (storeName, isGlobal) {
+    this.storeName = storeName;
+    this.isGlobalStore = isGlobal;
+};
+
+var defaultStoreName = "defaultStore";
+var defaultStoreConfig = {'storeName':defaultStoreName, 'isGlobalStore':false};
+
+
+/**
  * SoupSpec consturctor
  */
 var SoupSpec = function (soupName, features) {
@@ -94,7 +106,7 @@ var QuerySpec = function (path) {
 var StoreCursor = function () {
     //a unique identifier for this cursor, used by plugin
     this.cursorId = null;
-    //the maximum number of entries returned per page 
+    //the maximum number of entries returned per page
     this.pageSize = 0;
     // the total number of results
     this.totalEntries = 0;
@@ -179,110 +191,151 @@ var buildSmartQuerySpec = function (smartSql, pageSize) {
 };
 
 // ====== Soup manipulation ======
-var getDatabaseSize = function (isGlobalStore, successCB, errorCB) {
-    exec(successCB, errorCB, "getDatabaseSize", {"isGlobalStore": isGlobalStore});
+var getDatabaseSize = function (storeConfig, successCB, errorCB) {
+    if(storeConfig==null || storeConfig==='undefined') storeConfig = defaultStoreConfig;
+    exec(successCB, errorCB, "getDatabaseSize", {"isGlobalStore": storeConfig.isGlobalStore,"storeName": storeConfig.storeName});
 };
 
-var registerSoup = function (isGlobalStore, soupName, indexSpecs, successCB, errorCB) {
-    exec(successCB, errorCB, "registerSoup", {"soupName": soupName, "indexes": indexSpecs, "isGlobalStore": isGlobalStore});
+var registerSoup = function (storeConfig, soupName, indexSpecs, successCB, errorCB) {
+    if(storeConfig==null || storeConfig==='undefined') storeConfig = defaultStoreConfig;
+    exec(successCB, errorCB, "registerSoup", {"soupName": soupName, "indexes": indexSpecs, "isGlobalStore": storeConfig.isGlobalStore,"storeName": storeConfig.storeName});
 };
 
-var registerSoupWithSpec = function (isGlobalStore, soupSpec, indexSpecs, successCB, errorCB) {
-    exec(successCB, errorCB, "registerSoup", {"soupSpec": soupSpec, "indexes": indexSpecs, "isGlobalStore": isGlobalStore});
+var registerSoupWithSpec = function (storeConfig, soupSpec, indexSpecs, successCB, errorCB) {
+    if(storeConfig==null || storeConfig==='undefined') storeConfig = defaultStoreConfig;
+    exec(successCB, errorCB, "registerSoup", {"soupSpec": soupSpec, "indexes": indexSpecs,  "isGlobalStore": storeConfig.isGlobalStore,"storeName": storeConfig.storeName});
 };
 
-var removeSoup = function (isGlobalStore, soupName, successCB, errorCB) {
-    exec(successCB, errorCB, "removeSoup", {"soupName": soupName, "isGlobalStore": isGlobalStore});
+var removeSoup = function (storeConfig, soupName, successCB, errorCB) {
+    if(storeConfig==null || storeConfig==='undefined') storeConfig = defaultStoreConfig;
+    exec(successCB, errorCB, "removeSoup", {"soupName": soupName,  "isGlobalStore": storeConfig.isGlobalStore,"storeName": storeConfig.storeName});
 };
 
-var getSoupIndexSpecs = function(isGlobalStore, soupName, successCB, errorCB) {
-    exec(successCB, errorCB, "getSoupIndexSpecs", {"soupName": soupName, "isGlobalStore": isGlobalStore});
+var getSoupIndexSpecs = function(storeConfig, soupName, successCB, errorCB) {
+    if(storeConfig==null || storeConfig==='undefined') storeConfig = defaultStoreConfig;
+    exec(successCB, errorCB, "getSoupIndexSpecs", {"soupName": soupName,  "isGlobalStore": storeConfig.isGlobalStore,"storeName": storeConfig.storeName});
 };
 
-var getSoupSpec = function(isGlobalStore, soupName, successCB, errorCB) {
-    exec(successCB, errorCB, "getSoupSpec", {"soupName": soupName, "isGlobalStore": isGlobalStore});
+var getSoupSpec = function(storeConfig, soupName, successCB, errorCB) {
+    if(storeConfig==null || storeConfig==='undefined') storeConfig = defaultStoreConfig;
+    exec(successCB, errorCB, "getSoupSpec", {"soupName": soupName, "isGlobalStore": storeConfig.isGlobalStore,"storeName": storeConfig.storeName});
 };
 
-var alterSoup = function (isGlobalStore, soupName, indexSpecs, reIndexData, successCB, errorCB) {
-    exec(successCB, errorCB, "alterSoup", {"soupName": soupName, "indexes": indexSpecs, "reIndexData": reIndexData, "isGlobalStore": isGlobalStore});
+var alterSoup = function (storeConfig, soupName, indexSpecs, reIndexData, successCB, errorCB) {
+    if(storeConfig==null || storeConfig==='undefined') storeConfig = defaultStoreConfig;
+    exec(successCB, errorCB, "alterSoup", {"soupName": soupName, "indexes": indexSpecs, "reIndexData": reIndexData, "isGlobalStore": storeConfig.isGlobalStore,"storeName": storeConfig.storeName});
 };
 
-var alterSoupWithSpec = function (isGlobalStore, soupName, soupSpec, indexSpecs, reIndexData, successCB, errorCB) {
-    exec(successCB, errorCB, "alterSoup", {"soupName": soupName, "soupSpec": soupSpec, "indexes": indexSpecs, "reIndexData": reIndexData, "isGlobalStore": isGlobalStore});
+var alterSoupWithSpec = function (storeConfig, soupName, soupSpec, indexSpecs, reIndexData, successCB, errorCB) {
+    if(storeConfig==null || storeConfig==='undefined') storeConfig = defaultStoreConfig;
+    exec(successCB, errorCB, "alterSoup", {"soupName": soupName, "soupSpec": soupSpec, "indexes": indexSpecs, "reIndexData": reIndexData,  "isGlobalStore": storeConfig.isGlobalStore,"storeName": storeConfig.storeName});
 };
 
-var reIndexSoup = function (isGlobalStore, soupName, paths, successCB, errorCB) {
-    exec(successCB, errorCB, "reIndexSoup", {"soupName": soupName, "paths": paths, "isGlobalStore": isGlobalStore});
+var reIndexSoup = function (storeConfig, soupName, paths, successCB, errorCB) {
+    if(storeConfig==null || storeConfig==='undefined') storeConfig = defaultStoreConfig;
+    exec(successCB, errorCB, "reIndexSoup", {"soupName": soupName, "paths": paths,  "isGlobalStore": storeConfig.isGlobalStore,"storeName": storeConfig.storeName});
 };
 
-var clearSoup = function (isGlobalStore, soupName, successCB, errorCB) {
-    exec(successCB, errorCB, "clearSoup", {"soupName": soupName, "isGlobalStore": isGlobalStore});
+var clearSoup = function (storeConfig, soupName, successCB, errorCB) {
+    if(storeConfig==null || storeConfig==='undefined') storeConfig = defaultStoreConfig;
+    exec(successCB, errorCB, "clearSoup", {"soupName": soupName,  "isGlobalStore": storeConfig.isGlobalStore,"storeName": storeConfig.storeName});
 };
 
-var showInspector = function(isGlobalStore) {
-    isGlobalStore = isGlobalStore || false;
-    exec("ShowInspector", {"isGlobalStore": isGlobalStore});
+var showInspector = function(storeConfig) {
+    if(storeConfig==null || storeConfig==='undefined') storeConfig = defaultStoreConfig;
+    exec("ShowInspector", { "isGlobalStore": storeConfig.isGlobalStore,"storeName": storeConfig.storeName});
 };
 
-var soupExists = function (isGlobalStore, soupName, successCB, errorCB) {
-    exec(successCB, errorCB, "soupExists", {"soupName": soupName, "isGlobalStore": isGlobalStore});
+var soupExists = function (storeConfig, soupName, successCB, errorCB) {
+    if(storeConfig==null || storeConfig==='undefined') storeConfig = defaultStoreConfig;
+    exec(successCB, errorCB, "soupExists", {"soupName": soupName,  "isGlobalStore": storeConfig.isGlobalStore,"storeName": storeConfig.storeName});
 };
 
-var querySoup = function (isGlobalStore, soupName, querySpec, successCB, errorCB) {
+var querySoup = function (storeConfig, soupName, querySpec, successCB, errorCB) {
+    if(storeConfig==null || storeConfig==='undefined') storeConfig = defaultStoreConfig;
     if (querySpec.queryType == "smart") throw new Error("Smart queries can only be run using runSmartQuery");
     if (querySpec.order != null && querySpec.orderPath == null) querySpec.orderPath = querySpec.indexPath; // for backward compatibility with pre-3.3 code
-    exec(successCB, errorCB, "querySoup", {"soupName": soupName, "querySpec": querySpec, "isGlobalStore": isGlobalStore});
+    exec(successCB, errorCB, "querySoup", {"soupName": soupName, "querySpec": querySpec, "isGlobalStore": storeConfig.isGlobalStore,"storeName": storeConfig.storeName});
 };
 
-var runSmartQuery = function (isGlobalStore, querySpec, successCB, errorCB) {
+var runSmartQuery = function (storeConfig, querySpec, successCB, errorCB) {
+    if(storeConfig==null || storeConfig==='undefined') storeConfig = defaultStoreConfig;
     if (querySpec.queryType != "smart") throw new Error("runSmartQuery can only run smart queries");
-    exec(successCB, errorCB, "runSmartQuery", {"querySpec": querySpec, "isGlobalStore": isGlobalStore});
+    exec(successCB, errorCB, "runSmartQuery", {"querySpec": querySpec,  "isGlobalStore": storeConfig.isGlobalStore,"storeName": storeConfig.storeName});
 };
 
-var retrieveSoupEntries = function (isGlobalStore, soupName, entryIds, successCB, errorCB) {
-    exec(successCB, errorCB, "retrieveSoupEntries", {"soupName": soupName, "entryIds": entryIds, "isGlobalStore": isGlobalStore});
+var retrieveSoupEntries = function (storeConfig, soupName, entryIds, successCB, errorCB) {
+    if(storeConfig==null || storeConfig==='undefined') storeConfig = defaultStoreConfig;
+    exec(successCB, errorCB, "retrieveSoupEntries", {"soupName": soupName, "entryIds": entryIds, "isGlobalStore": storeConfig.isGlobalStore,"storeName": storeConfig.storeName});
 };
 
-var upsertSoupEntries = function (isGlobalStore, soupName, entries, successCB, errorCB) {
-    upsertSoupEntriesWithExternalId(isGlobalStore, soupName, entries, "_soupEntryId", successCB, errorCB);
+var upsertSoupEntries = function (storeConfig, soupName, entries, successCB, errorCB) {
+    if(storeConfig==null || storeConfig==='undefined') storeConfig = defaultStoreConfig;
+    upsertSoupEntriesWithExternalId(storeConfig, soupName, entries, "_soupEntryId", successCB, errorCB);
 };
 
-var upsertSoupEntriesWithExternalId = function (isGlobalStore, soupName, entries, externalIdPath, successCB, errorCB) {
-    exec(successCB, errorCB, "upsertSoupEntries", {"soupName": soupName, "entries": entries, "externalIdPath": externalIdPath, "isGlobalStore": isGlobalStore});
+var upsertSoupEntriesWithExternalId = function (storeConfig, soupName, entries, externalIdPath, successCB, errorCB) {
+    if(storeConfig==null || storeConfig==='undefined') storeConfig = defaultStoreConfig;
+    exec(successCB, errorCB, "upsertSoupEntries", {"soupName": soupName, "entries": entries, "externalIdPath": externalIdPath,  "isGlobalStore": storeConfig.isGlobalStore,"storeName": storeConfig.storeName});
 };
 
-var removeFromSoup = function (isGlobalStore, soupName, entryIdsOrQuerySpec, successCB, errorCB) {
-    isGlobalStore = isGlobalStore || false;
-    var execArgs = {"soupName": soupName, "isGlobalStore": isGlobalStore};
+var removeFromSoup = function (storeConfig, soupName, entryIdsOrQuerySpec, successCB, errorCB) {
+    if(storeConfig==null || storeConfig==='undefined') storeConfig = defaultStoreConfig;
+    var execArgs = {"soupName": soupName, "isGlobalStore": storeConfig.isGlobalStore,"storeName": storeConfig.storeName};
     execArgs[entryIdsOrQuerySpec instanceof Array ? "entryIds":"querySpec"] = entryIdsOrQuerySpec;
     exec(successCB, errorCB, "removeFromSoup", execArgs);
 };
 
 //====== Cursor manipulation ======
-var moveCursorToPageIndex = function (isGlobalStore, cursor, newPageIndex, successCB, errorCB) {
-    exec(successCB, errorCB, "moveCursorToPageIndex", {"cursorId": cursor.cursorId, "index": newPageIndex, "isGlobalStore": isGlobalStore});
+var moveCursorToPageIndex = function (storeConfig, cursor, newPageIndex, successCB, errorCB) {
+    if(storeConfig==null || storeConfig==='undefined') storeConfig = defaultStoreConfig;
+    exec(successCB, errorCB, "moveCursorToPageIndex", {"cursorId": cursor.cursorId, "index": newPageIndex, "isGlobalStore": storeConfig.isGlobalStore,"storeName": storeConfig.storeName});
 };
 
-var moveCursorToNextPage = function (isGlobalStore, cursor, successCB, errorCB) {
+var moveCursorToNextPage = function (storeConfig, cursor, successCB, errorCB) {
+    if(storeConfig==null || storeConfig==='undefined') storeConfig = defaultStoreConfig;
     var newPageIndex = cursor.currentPageIndex + 1;
     if (newPageIndex >= cursor.totalPages) {
         errorCB(cursor, new Error("moveCursorToNextPage called while on last page"));
     } else {
-        moveCursorToPageIndex(isGlobalStore, cursor, newPageIndex, successCB, errorCB);
+        moveCursorToPageIndex(storeConfig, cursor, newPageIndex, successCB, errorCB);
     }
 };
 
-var moveCursorToPreviousPage = function (isGlobalStore, cursor, successCB, errorCB) {
+var moveCursorToPreviousPage = function (storeConfig, cursor, successCB, errorCB) {
+    if(storeConfig==null || storeConfig==='undefined') storeConfig = defaultStoreConfig;
     var newPageIndex = cursor.currentPageIndex - 1;
     if (newPageIndex < 0) {
         errorCB(cursor, new Error("moveCursorToPreviousPage called while on first page"));
     } else {
-        moveCursorToPageIndex(isGlobalStore, cursor, newPageIndex, successCB, errorCB);
+        moveCursorToPageIndex(storeConfig, cursor, newPageIndex, successCB, errorCB);
     }
 };
 
-var closeCursor = function (isGlobalStore, cursor, successCB, errorCB) {
-    exec(successCB, errorCB, "closeCursor", {"cursorId": cursor.cursorId, "isGlobalStore": isGlobalStore});
+var closeCursor = function (storeConfig, cursor, successCB, errorCB) {
+    if(storeConfig==null || storeConfig==='undefined') storeConfig = defaultStoreConfig;
+    exec(successCB, errorCB, "closeCursor", {"cursorId": cursor.cursorId,  "isGlobalStore": storeConfig.isGlobalStore,"storeName": storeConfig.storeName});
+};
+
+var getAllStores = function (successCB, errorCB) {
+    exec(successCB, errorCB, "getAllStores", [{}]);
+};
+
+var getAllGlobalStores = function (successCB, errorCB) {
+    exec(successCB, errorCB, "getAllGlobalStores",[{}]);
+};
+
+var removeStore = function (storeConfig,successCB, errorCB) {
+    exec( successCB, errorCB,
+         "removeStore",[{"isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]);
+};
+
+var removeAllGlobalStores = function (successCB, errorCB) {
+    exec(successCB, errorCB,"removeAllGlobalStores", [{}]);
+};
+
+var removeAllStores = function (successCB, errorCB) {
+    exec(successCB, errorCB,"removeAllStores",[{}]);
 };
 
 /**
@@ -317,11 +370,16 @@ module.exports = {
     soupExists: soupExists,
     upsertSoupEntries: upsertSoupEntries,
     upsertSoupEntriesWithExternalId: upsertSoupEntriesWithExternalId,
+    getAllStores: getAllStores,
+    getAllGlobalStores: getAllGlobalStores,
+    removeStore: removeStore,
+    removeAllGlobalStores: removeAllGlobalStores,
+    removeAllStores: removeAllStores,
 
     // Constructors
     SoupSpec: SoupSpec,
     QuerySpec: QuerySpec,
     SoupIndexSpec: SoupIndexSpec,
+    StoreConfig: StoreConfig,
     StoreCursor: StoreCursor
 };
-
