@@ -544,9 +544,9 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     /**
      * StoreConfig constructor
      */
-    var StoreConfig = function (storeName, isGlobal) {
+    var StoreConfig = function (storeName, isGlobalStore) {
         this.storeName = storeName;
-        this.isGlobal = isGlobal;
+        this.isGlobalStore = isGlobalStore;
     };
 
 
