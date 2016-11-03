@@ -53,6 +53,11 @@ client.runSmartQuery = promiser(smartstore, "runSmartQuery", "smartstore.client"
 client.soupExists = promiser(smartstore, "soupExists", "smartstore.client");
 client.upsertSoupEntries = promiser(smartstore, "upsertSoupEntries", "smartstore.client");
 client.upsertSoupEntriesWithExternalId = promiser(smartstore, "upsertSoupEntriesWithExternalId", "smartstore.client");
+client.getAllStores = promiser(smartstore, "getAllStores", "smartstore.client");
+client.getAllGlobalStores = promiser(smartstore, "getAllGlobalStores", "smartstore.client");
+client.removeAllGlobalStores = promiser(smartstore, "removeAllGlobalStores", "smartstore.client");
+client.removeAllStores = promiser(smartstore, "removeAllStores", "smartstore.client");
+client.removeStore = promiser(smartstore, "removeStore", "smartstore.client");
 
 /**
  * Part of the module that is public

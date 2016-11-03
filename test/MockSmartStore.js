@@ -35,8 +35,8 @@ var MockSmartStore = (function(window) {
     // Constructor
     var module = function(isGlobalStore) {
         this.isGlobalStore = isGlobalStore || false;
-        this._soups = {};     
-        this._soupIndexedData = {}; 
+        this._soups = {};
+        this._soupIndexedData = {};
         this._soupIndexSpecs = {};
         this._soupSpecs = {};
         this._cursors = {};
@@ -106,7 +106,7 @@ var MockSmartStore = (function(window) {
         },
 
         checkIndex: function(soupName, path) {
-            if (["_soup", "_soupEntryId"].indexOf(path) == -1 && !this.indexExists(soupName, path)) throw new Error(soupName + " does not have an index on " + path); 
+            if (["_soup", "_soupEntryId"].indexOf(path) == -1 && !this.indexExists(soupName, path)) throw new Error(soupName + " does not have an index on " + path);
         },
 
         soupExists: function(soupName) {
@@ -145,7 +145,7 @@ var MockSmartStore = (function(window) {
         },
 
         getSoupIndexSpecs: function(soupName) {
-            this.checkSoup(soupName); 
+            this.checkSoup(soupName);
             return this._soupIndexSpecs[soupName];
         },
 
@@ -155,7 +155,7 @@ var MockSmartStore = (function(window) {
         },
 
         alterSoup: function(soupName, soupSpec, indexSpecs, reIndexData) {
-            this.checkSoup(soupName); 
+            this.checkSoup(soupName);
 
             // Gather path---type of old index specs
             var oldPathTypes = [];
@@ -219,15 +219,15 @@ var MockSmartStore = (function(window) {
         },
 
         upsertSoupEntries: function(soupName, entries, externalIdPath) {
-            this.checkSoup(soupName); 
-            if (externalIdPath != "_soupEntryId" && !this.indexExists(soupName, externalIdPath)) 
-                throw new Error(soupName + " does not have an index on " + externalIdPath); 
+            this.checkSoup(soupName);
+            if (externalIdPath != "_soupEntryId" && !this.indexExists(soupName, externalIdPath))
+                throw new Error(soupName + " does not have an index on " + externalIdPath);
 
             var soup = this._soups[soupName];
             var soupIndexedData = this._soupIndexedData[soupName];
             var indexSpecs = this._soupIndexSpecs[soupName];
             var upsertedEntries = [];
-            
+
             for (var i=0; i<entries.length; i++) {
                 var entry = JSON.parse(JSON.stringify(entries[i])); // clone
                 var isNew = true;
@@ -251,14 +251,14 @@ var MockSmartStore = (function(window) {
                 }
 
                 // create
-                if (!("_soupEntryId" in entry)) { 
+                if (!("_soupEntryId" in entry)) {
                     this._nextSoupEltIds[soupName] = (soupName in this._nextSoupEltIds ? this._nextSoupEltIds[soupName]+1 : 1);
                     entry._soupEntryId = this._nextSoupEltIds[soupName];
                 }
 
                 // last modified date
                 entry._soupLastModifiedDate = (new Date()).getTime();
-                
+
                 // update/insert into soup
                 soup[entry._soupEntryId] = entry;
                 upsertedEntries.push(entry);
@@ -275,7 +275,7 @@ var MockSmartStore = (function(window) {
         },
 
         retrieveSoupEntries: function(soupName, entryIds) {
-            this.checkSoup(soupName); 
+            this.checkSoup(soupName);
             var soup = this._soups[soupName];
             var entries = [];
             for (var i=0; i<entryIds.length; i++) {
@@ -286,7 +286,7 @@ var MockSmartStore = (function(window) {
         },
 
         removeFromSoup: function(soupName, entryIdsOrQuerySpec) {
-            this.checkSoup(soupName); 
+            this.checkSoup(soupName);
             var soup = this._soups[soupName];
             var soupIndexedData = this._soupIndexedData[soupName];
             if (entryIdsOrQuerySpec instanceof Array) {
@@ -348,31 +348,31 @@ var MockSmartStore = (function(window) {
 
 		    return result;
 	    },
-        
+
         supportedQueries : function() {
             // NB we don't have full support evidently
             return [
-                { 
-                    name: "Query with variable select fields and where clause {soup:field} IN list of values", 
-                    example: "SELECT {soupName:selectField1}, {soupName:selectField2} FROM {soupName} WHERE {soupName:whereField} IN (values)", 
-                    pattern: /SELECT (.*) FROM {(.*)} WHERE {(.*):(.*)} IN \((.*)\)/i, 
-                    processor: this.smartQuerySoupIn 
+                {
+                    name: "Query with variable select fields and where clause {soup:field} IN list of values",
+                    example: "SELECT {soupName:selectField1}, {soupName:selectField2} FROM {soupName} WHERE {soupName:whereField} IN (values)",
+                    pattern: /SELECT (.*) FROM {(.*)} WHERE {(.*):(.*)} IN \((.*)\)/i,
+                    processor: this.smartQuerySoupIn
                 },
-                { 
-                    name: "Query with where clause {soup:field} like 'value' with optional order by", 
-                    example: "SELECT {soupName:_soup} FROM {soupName} WHERE {soupName:whereField} LIKE 'value' ORDER BY LOWER({soupName:orderByField})", 
-                    pattern: /SELECT {(.*):_soup} FROM {(.*)} WHERE {(.*):(.*)} LIKE '(.*)'(?: ORDER BY LOWER\({(.*):(.*)}\))?/i, 
-                    processor: this.smartQuerySoupLikeOrdered 
+                {
+                    name: "Query with where clause {soup:field} like 'value' with optional order by",
+                    example: "SELECT {soupName:_soup} FROM {soupName} WHERE {soupName:whereField} LIKE 'value' ORDER BY LOWER({soupName:orderByField})",
+                    pattern: /SELECT {(.*):_soup} FROM {(.*)} WHERE {(.*):(.*)} LIKE '(.*)'(?: ORDER BY LOWER\({(.*):(.*)}\))?/i,
+                    processor: this.smartQuerySoupLikeOrdered
                 },
-                { 
-                    name: "Count of soup items", 
-                    example: "SELECT count(*) FROM {soupName}", 
-                    pattern: /SELECT count\(\*\) FROM {(.*)}/i, 
+                {
+                    name: "Count of soup items",
+                    example: "SELECT count(*) FROM {soupName}",
+                    pattern: /SELECT count\(\*\) FROM {(.*)}/i,
                     processor: this.smartQuerySoupCount
                 },
-                { 
-                    name: "Comparing soup item to integer with optional order by", 
-                    example: "SELECT {soupName:_soup} FROM {soupName} WHERE {soupName:whereField} > 123456 ORDER BY LOWER({soupName:orderByField})", 
+                {
+                    name: "Comparing soup item to integer with optional order by",
+                    example: "SELECT {soupName:_soup} FROM {soupName} WHERE {soupName:whereField} > 123456 ORDER BY LOWER({soupName:orderByField})",
                     pattern: /SELECT {(.*):_soup} FROM {(.*)} WHERE {(.*):(.*)} ([!=<>]+) ([0-9]+)(?: ORDER BY LOWER\({(.*):(.*)}\))?/i,
                     processor: this.smartQuerySoupCompare
                 }
@@ -445,7 +445,7 @@ var MockSmartStore = (function(window) {
                 var likeRegexp = new RegExp("^" + matches[5].replace(/%/g, ".*"), "i");
                 var orderField = matches[6] ? matches[7] : null;
 
-                this.checkSoup(soupName); 
+                this.checkSoup(soupName);
                 this.checkIndex(soupName, whereField);
                 if (orderField) this.checkIndex(soupName, orderField);
                 var soup = this._soups[soupName];
@@ -475,7 +475,7 @@ var MockSmartStore = (function(window) {
 
         smartQuerySoupCount : function(queryDesc, matches, smartSql) {
             var soupName = matches[1];
-            this.checkSoup(soupName); 
+            this.checkSoup(soupName);
             var soup = this._soups[soupName];
             var count = 0;
             for (var soupEntryId in soup) {
@@ -492,13 +492,13 @@ var MockSmartStore = (function(window) {
                 var comparator = matches[5];
                 var compareTo = parseInt(matches[6], 10);
                 var orderField = matches[7] ? matches[8] : null;
-                
+
                 // Make sure the soup has all the appropriate fields.
                 this.checkSoup(soupName);
                 this.checkIndex(soupName, whereField);
-                
+
                 var soup = this._soups[soupName];
-                
+
                 // Pull results out from soup iteratively.
                 var results = [];
                 for (var soupEntryId in soup) {
@@ -524,10 +524,10 @@ var MockSmartStore = (function(window) {
                         return ( p1 > p2 ? 1 : (p1 === p2 ? 0 : -1));
                     });
                 }
-                
+
                 return results;
             }
-        },        
+        },
 
         smartQuerySoupFull: function(querySpec) {
             // Match the query against the supported queries in test and then execute.
@@ -555,7 +555,7 @@ var MockSmartStore = (function(window) {
 
         // Support some full-text queries (see doesFullTextMatch for details)
         querySoupFullTextSearch: function(soupName, querySpec) {
-            this.checkSoup(soupName); 
+            this.checkSoup(soupName);
             var soup = this._soups[soupName];
             var results = [];
 
@@ -732,7 +732,7 @@ var MockSmartStore = (function(window) {
             for (var soupEntryId in soup) {
                 var soupElt = soup[soupEntryId];
                 var projection = querySpec.indexPath == null ? null : this.getTypedIndexedData(soupName, querySpec.indexPath, soupEntryId);
-                var type = this.typeForPath(soupName, querySpec.indexPath);                
+                var type = this.typeForPath(soupName, querySpec.indexPath);
 
                 if (querySpec.queryType === "exact") {
                     if (projection == this.asType(type, querySpec.matchKey)) {
@@ -770,10 +770,10 @@ var MockSmartStore = (function(window) {
             var results = this.querySoupFull(soupName, querySpec);
             var cursorId = this._nextCursorId++;
             var cursor = {
-                cursorId: cursorId, 
+                cursorId: cursorId,
                 pageSize: querySpec.pageSize,
-                soupName: soupName, 
-                querySpec: querySpec, 
+                soupName: soupName,
+                querySpec: querySpec,
                 currentPageIndex: 0,
                 currentPageOrderedEntries: results.slice(0, querySpec.pageSize),
                 totalPages: Math.ceil(results.length / querySpec.pageSize),
@@ -781,7 +781,7 @@ var MockSmartStore = (function(window) {
             };
 
             this._cursors[cursorId] = cursor;
-            // Since original cursor from smarstore doesn't contain querySpec and soupName, 
+            // Since original cursor from smarstore doesn't contain querySpec and soupName,
             // remove them here too before returning cursor to the user.
             return this.omit(cursor, 'soupName', 'querySpec');
         },
@@ -794,7 +794,7 @@ var MockSmartStore = (function(window) {
             cursor.currentPageIndex = pageIndex;
             cursor.currentPageOrderedEntries = results.slice(pageIndex*querySpec.pageSize, (pageIndex+1)*querySpec.pageSize);
 
-            // Since original cursor from smarstore doesn't contain querySpec and soupName, 
+            // Since original cursor from smarstore doesn't contain querySpec and soupName,
             // remove them here too before returning cursor to the user.
             return this.omit(cursor, 'soupName', 'querySpec');
         },
@@ -818,19 +818,112 @@ var MockSmartStore = (function(window) {
     return module;
 })(window);
 
-var mockStore = new MockSmartStore(false);
-var mockGlobalStore = new MockSmartStore(true);
-(function (cordova, store, globalStore) {
-    
+// Store functions
+var StoreMap = (function() {
+  // Constructor
+  var module = function() {
+      this.globalStores = {};
+      this.userStores = {};
+  };
+
+  // Prototype
+  module.prototype = {
+      constructor: module,
+
+      getStore: function (args) {
+         var isGlobal = args[0].isGlobalStore;
+         var storeName = (args[0].storeName==='undefined' || args[0].storeName == null)?"defaultStore":args[0].storeName;
+         var store;
+
+         if(storeName == null)
+            storeName = "defaultStore";
+
+        if(isGlobal == null)
+               isGlobal = false;
+
+         store = isGlobal?this.globalStores[storeName]:this.userStores[storeName];
+
+         if(store == null) {
+            store = new MockSmartStore(isGlobal);
+            if(isGlobal == true)
+               this.globalStores[storeName] = store;
+            else
+               this.userStores[storeName] = store;
+         }
+         return store;
+      },
+
+      getAllStores: function() {
+          var stores = new Array();
+          var self = this;
+          if(this.userStores) {
+            Object.keys(this.userStores).forEach(function(key, index) {
+                stores.push({'storeName':key,'isGlobalStore':false});
+              });
+          }
+          return stores;
+      },
+
+      getAllGlobalStores: function() {
+          var stores = new Array();
+          var self = this;
+          if(this.globalStores) {
+            Object.keys(this.globalStores).forEach(function(key, index) {
+                   stores.push({'storeName':key,'isGlobalStore':true});
+                });
+          }
+          return stores;
+      },
+
+      removeStore: function(args) {
+          var newStoreList = [];
+          var oldStoreList;
+          if(args[0].isGlobalStore == true) {
+              oldStoreList = this.globalStores;
+          }else {
+              oldStoreList = this.userStores;
+          }
+          Object.keys(oldStoreList).forEach(function(key, index) {
+                if(key.toLowerCase()!=args[0].storeName.toLowerCase())
+                     newStoreList[key] = oldStoreList[key];
+               });
+
+          if(args[0].isGlobalStore == true) {
+              this.globalStores = newStoreList;
+          }else {
+              this.userStores = newStoreList;
+          }
+          return newStoreList;
+      },
+
+      removeAllStores: function() {
+          var storeNames = new Array();
+          this.userStores = [];
+          return;
+      },
+
+      removeAllGlobalStores: function() {
+          var storeNames = new Array();
+          this.globalStores = [];
+          return;
+      }
+    };
+    return module;
+  })();
+
+var storeMap = new StoreMap();
+
+(function (cordova) {
+
     var SMARTSTORE_SERVICE = "com.salesforce.smartstore";
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgGetDatabaseSize", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = storeMap.getStore(args);
         successCB(targetStore.toJSON().length);
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgRegisterSoup", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = storeMap.getStore(args);
         var soupSpec = args[0].soupSpec == null ? {name: args[0].soupName, features: []} : args[0].soupSpec;
         var soupName = args[0].soupName == null ? soupSpec.name : args[0].soupName;
         var indexSpecs = args[0].indexes;
@@ -840,28 +933,28 @@ var mockGlobalStore = new MockSmartStore(true);
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgRemoveSoup", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = storeMap.getStore(args);
         var soupName = args[0].soupName;
         targetStore.removeSoup(soupName);
         successCB("OK");
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgClearSoup", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = storeMap.getStore(args);
         var soupName = args[0].soupName;
         targetStore.clearSoup(soupName);
         successCB("OK");
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgGetSoupIndexSpecs", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = storeMap.getStore(args);
         var soupName = args[0].soupName;
         if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
         successCB(targetStore.getSoupIndexSpecs(soupName));
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgAlterSoup", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = storeMap.getStore(args);
         var soupSpec = args[0].soupSpec == null ? {name: args[0].soupName, features: []} : args[0].soupSpec;
         var soupName = args[0].soupName == null ? soupSpec.name : args[0].soupName;
         var indexSpecs = args[0].indexes;
@@ -871,7 +964,7 @@ var mockGlobalStore = new MockSmartStore(true);
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgReIndexSoup", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = storeMap.getStore(args);
         var soupName = args[0].soupName;
         var paths = args[0].paths;
         if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
@@ -879,33 +972,33 @@ var mockGlobalStore = new MockSmartStore(true);
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgSoupExists", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = storeMap.getStore(args);
         var soupName = args[0].soupName;
         successCB(targetStore.soupExists(soupName));
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgQuerySoup", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = storeMap.getStore(args);
         var soupName = args[0].soupName;
         var querySpec = args[0].querySpec;
         successCB(targetStore.querySoup(soupName, querySpec));
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgRunSmartQuery", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = storeMap.getStore(args);
         var querySpec = args[0].querySpec;
         successCB(targetStore.querySoup(null, querySpec));
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgRetrieveSoupEntries", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = storeMap.getStore(args);
         var soupName = args[0].soupName;
         var entryIds = args[0].entryIds;
         successCB(targetStore.retrieveSoupEntries(soupName, entryIds));
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgUpsertSoupEntries", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = storeMap.getStore(args);
         var soupName = args[0].soupName;
         var entries = args[0].entries;
         var externalIdPath = args[0].externalIdPath;
@@ -913,7 +1006,7 @@ var mockGlobalStore = new MockSmartStore(true);
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgRemoveFromSoup", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = storeMap.getStore(args);
         var soupName = args[0].soupName;
         var entryIds = args[0].entryIds;
         var querySpec = args[0].querySpec;
@@ -922,14 +1015,14 @@ var mockGlobalStore = new MockSmartStore(true);
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgMoveCursorToPageIndex", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = storeMap.getStore(args);
         var cursorId = args[0].cursorId;
         var index = args[0].index;
         successCB(targetStore.moveCursorToPage(cursorId, index));
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgCloseCursor", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = storeMap.getStore(args);
         var cursorId = args[0].cursorId;
         targetStore.closeCursor(cursorId);
         if (successCB) {
@@ -938,9 +1031,30 @@ var mockGlobalStore = new MockSmartStore(true);
     });
 
     cordova.interceptExec(SMARTSTORE_SERVICE, "pgGetSoupSpec", function (successCB, errorCB, args) {
-        var targetStore = args[0].isGlobalStore ? globalStore : store;
+        var targetStore = storeMap.getStore(args);
         var soupName = args[0].soupName;
         successCB(targetStore.getSoupSpec(soupName));
     });
 
-})(cordova, mockStore, mockGlobalStore);
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgGetAllStores", function (successCB, errorCB, args) {
+        successCB(storeMap.getAllStores());
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgGetAllGlobalStores", function (successCB, errorCB, args) {
+        successCB(storeMap.getAllGlobalStores());
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgRemoveAllGlobalStores", function (successCB, errorCB, args) {
+        successCB(storeMap.removeAllGlobalStores());
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgRemoveAllStores", function (successCB, errorCB, args) {
+        successCB(storeMap.removeAllStores());
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgRemoveStore", function (successCB, errorCB, args) {
+        successCB(storeMap.removeStore(args));
+    });
+
+
+})(cordova);

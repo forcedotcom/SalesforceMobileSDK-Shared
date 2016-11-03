@@ -36,14 +36,14 @@ var exec = function(pluginVersion, successCB, errorCB, service, action, args) {
             console.timeEnd(tag);
             if (typeof successCB === "function")
                 successCB.apply(null, arguments);
-        }, 
+        },
         function() {
             console.timeEnd(tag);
             console.error(tag + " failed");
             if (typeof errorCB === "function")
                 errorCB.apply(null, arguments);
-        }, 
-        service, action, args);                  
+        },
+        service, action, args);
 };
 
 /**
