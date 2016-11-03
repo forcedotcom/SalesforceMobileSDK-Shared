@@ -43,9 +43,9 @@ var SoupSpec = function (soupName, features) {
 /**
  * StoreConfig constructor
  */
-var StoreConfig = function (storeName, isGlobal) {
+var StoreConfig = function (storeName, isGlobalStore) {
     this.storeName = storeName;
-    this.isGlobal = isGlobal;
+    this.isGlobalStore = isGlobalStore;
 };
 
 
