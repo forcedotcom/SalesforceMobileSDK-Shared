@@ -259,36 +259,78 @@ var MockSmartSyncPlugin = (function(window) {
 })(window);
 
 
-var mockSyncManager = new MockSmartSyncPlugin({'isGlobalStore': false});
-var mockGlobalSyncManager = new MockSmartSyncPlugin({'isGlobalStore': true});
+// Store functions
+var syncManagerMap = (function() {
+  // Constructor
+  var module = function() {
+      this.globalSyncManagers= {};
+      this.userSyncManagers = {};
+  };
+
+  // Prototype
+  module.prototype = {
+      constructor: module,
+
+      getSyncManager: function (args) {
+
+         var isGlobalStore = args[0].isGlobalStore;
+         var storeName = (args[0].storeName==='undefined' || args[0].storeName == null)?"defaultStore":args[0].storeName;
+         var syncManager;
+
+         if(isGlobalStore == null)
+               isGlobalStore = false;
+
+         syncManager = isGlobalStore?this.globalSyncManagers[storeName]:this.userSyncManagers[storeName];
+
+         if(syncManager == null) {
+            syncManager = new MockSmartSyncPlugin({'isGlobalStore': isGlobalStore,'storeName' :storeName});
+            if(isGlobalStore == true)
+               this.globalSyncManagers[storeName] = syncManager;
+            else
+               this.userSyncManagers[storeName] = syncManager;
+         }
+         return syncManager;
+      },
+
+      reset: function (){
+        this.globalSyncManagers = {};
+        this.userSyncManagers = {};
+      }
+
+    };
+    return module;
+  })();
+
+
+
 (function (cordova, syncManager, globalSyncManager) {
 
     var SMARTSYNC_SERVICE = "com.salesforce.smartsync";
 
     cordova.interceptExec(SMARTSYNC_SERVICE, "syncUp", function (successCB, errorCB, args) {
-        var mgr = args[0].isGlobalStore ? globalSyncManager : syncManager;
+        var mgr = syncManagerMap.getSyncManager(args);
         mgr.syncUp(args[0].target, args[0].soupName, args[0].options, successCB, errorCB);
     });
 
     cordova.interceptExec(SMARTSYNC_SERVICE, "syncDown", function (successCB, errorCB, args) {
-        var mgr = args[0].isGlobalStore ? globalSyncManager : syncManager;
+        var mgr = syncManagerMap.getSyncManager(args);
         mgr.syncDown(args[0].target, args[0].soupName, args[0].options, successCB, errorCB);
     });
 
     cordova.interceptExec(SMARTSYNC_SERVICE, "getSyncStatus", function (successCB, errorCB, args) {
-        var mgr = args[0].isGlobalStore ? globalSyncManager : syncManager;
+        var mgr = syncManagerMap.getSyncManager(args);
         mgr.getSyncStatus(args[0].syncId, successCB, errorCB);
     });
 
     cordova.interceptExec(SMARTSYNC_SERVICE, "reSync", function (successCB, errorCB, args) {
-        var mgr = args[0].isGlobalStore ? globalSyncManager : syncManager;
+        var mgr = syncManagerMap.getSyncManager(args);
         mgr.reSync(args[0].syncId, successCB, errorCB);
     });
 
     cordova.interceptExec(SMARTSYNC_SERVICE, "cleanResyncGhosts", function (successCB, errorCB, args) {
-        var mgr = args[0].isGlobalStore ? globalSyncManager : syncManager;
+        var mgr = syncManagerMap.getSyncManager(args);
         mgr.cleanResyncGhosts(args[0].syncId, successCB, errorCB);
     });
 
 
-})(cordova, mockSyncManager, mockGlobalSyncManager);
+})(cordova, syncManagerMap);
