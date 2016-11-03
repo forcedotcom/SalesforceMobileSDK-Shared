@@ -37,7 +37,7 @@ var SmartSyncTestSuite = function () {
     this.defaultGlobalStoreConfig = {"isGlobalStore" : true};
 
     // To run specific tests
-    // this.testsToRun = ["testRefreshSyncDown"];
+    //this.testsToRun = ["testSyncDownToGlobalStoreNamed"];
 };
 
 // We are sub-classing SFTestSuite
@@ -528,6 +528,81 @@ SmartSyncTestSuite.prototype.testStoreCacheWithGlobalStore = function() {
             return Promise.all([Force.smartstoreClient.removeSoup(self.defaultStoreConfig, soupName),
                                 Force.smartstoreClient.removeSoup(self.defaultGlobalStoreConfig, soupName)])
         })
+        .then(function() {
+            self.finalizeTest();
+        });
+}
+
+
+/**
+ * TEST Force.StoreCache backed by global store
+ */
+SmartSyncTestSuite.prototype.testStoreCacheWithGlobalStoreNamed = function() {
+    console.log("# In SmartSyncTestSuite.testStoreCacheWithGlobalStoreNamed");
+    var self = this;
+    var cache;
+    var cacheGlobal;
+    var soupName = "testSoupForStoreCache";
+    var resultSet;
+    var GLOBAL_STORE = true;
+    var REGULAR_STORE = false;
+    var indexSpecs = [ {path:"Name", type:"string"}];
+    var agent007 = {Id:"007", Name:"JamesBond"};
+    var agent008 = {Id:"008", Name:"Vilain"};
+    var querySpec007 = {queryType:"exact", indexPath:"Name", matchKey:"JamesBond", order:"ascending", pageSize:1}
+    var querySpec008 = {queryType:"exact", indexPath:"Name", matchKey:"Vilain", order:"ascending", pageSize:1}
+    var storeConfigWithName =  {"isGlobalStore" : false,'storeName' : 'NAMED_USR_STORE'};
+    var globalStoreConfigWithName =  {"isGlobalStore" : true,'storeName' : 'NAMED_GLBL_STORE'};
+
+    Promise.all([Force.smartstoreClient.removeAllStores(),
+                 Force.smartstoreClient.removeAllGlobalStores()])
+         .then(function() {
+             Promise.all([Force.smartstoreClient.removeSoup(storeConfigWithName, soupName),
+                          Force.smartstoreClient.removeSoup(globalStoreConfigWithName, soupName)])
+        })
+        .then(function() {
+            console.log("## Initialization of StoreCache's");
+            cache = new Force.StoreCache(soupName, indexSpecs, null,storeConfigWithName.isGlobalStore,storeConfigWithName.storeName);
+            cacheGlobal = new Force.StoreCache(soupName, indexSpecs, null,globalStoreConfigWithName.isGlobalStore,globalStoreConfigWithName.storeName);
+            return Promise.all([cache.init(), cacheGlobal.init()]);
+        })
+        .then(function() {
+            console.log("## Save record into regular cache");
+            return cache.save(agent007);
+        })
+        .then(function() {
+            console.log("## Looking for record in both caches");
+            return Promise.all([cache.find(querySpec007), cacheGlobal.find(querySpec007)]);
+        })
+        .then(function(results) {
+            var result = results[0], resultGlobal = results[1];
+            console.log("## Checking result from regular cache");
+            QUnit.equals(result.records.length, 1);
+            assertContains(result.records[0], agent007);
+            console.log("## Checking result from global cache");
+            QUnit.equals(resultGlobal.records.length, 0);
+            console.log("## Save record into global cache");
+            return cacheGlobal.save(agent008);
+        })
+        .then(function() {
+            console.log("## Looking for record in both caches");
+            return Promise.all([cache.find(querySpec008), cacheGlobal.find(querySpec008)]);
+        })
+        .then(function(results) {
+            var result = results[0], resultGlobal = results[1];
+            console.log("## Checking result from regular cache");
+            QUnit.equals(result.records.length, 0);
+            console.log("## Checking result from global cache");
+            QUnit.equals(resultGlobal.records.length, 1);
+            assertContains(resultGlobal.records[0], agent008);
+            console.log("## Save record into global cache");
+            // Cleaning up
+            return Promise.all([Force.smartstoreClient.removeSoup(storeConfigWithName, soupName),
+                                Force.smartstoreClient.removeSoup(globalStoreConfigWithName, soupName),
+                                Force.smartstoreClient.removeAllStores(),
+                                Force.smartstoreClient.removeAllGlobalStores()]);
+        })
+
         .then(function() {
             self.finalizeTest();
         });
@@ -2742,6 +2817,53 @@ SmartSyncTestSuite.prototype.testSyncDownToGlobalStore = function() {
 };
 
 /**
+ * TEST smartsyncplugin sync down to global store soup
+ */
+SmartSyncTestSuite.prototype.testSyncDownToGlobalStoreNamed = function() {
+    console.log("# In SmartSyncTestSuite.testSyncDownToGlobalStoreNamed");
+    var self = this;
+    var idToName = {};
+    var soupName = "testSyncDownToGlobalStoreNamed";
+    var cache;
+    var globalStoreConfigWithName =  {"isGlobalStore" : true,'storeName' : 'NAMED_GLBL_STORE'};
+
+     Force.smartstoreClient.removeAllGlobalStores()
+        .then(function() {
+          Promise.all([Force.smartstoreClient.removeSoup(globalStoreConfigWithName, soupName)]);
+        })
+        .then(function() {
+            console.log("## Initialization of StoreCache's");
+            cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ],null,globalStoreConfigWithName.isGlobalStore,globalStoreConfigWithName.storeName);
+            return cache.init();
+        })
+        .then(function() {
+            console.log("## Direct creation against server");
+            return createRecords(idToName, "testSyncDownToGlobalStoreNamed", 3);
+        })
+        .then(function() {
+            console.log("## Calling sync down");
+            return self.trySyncDown(globalStoreConfigWithName,cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
+        })
+        .then(function() {
+            console.log("## Check both stores");
+            return Promise.all([Force.smartstoreClient.soupExists(self.defaultGlobalStoreConfig, soupName), Force.smartstoreClient.soupExists(globalStoreConfigWithName, soupName)]);
+        })
+        .then(function(results) {
+            var exists = results[0], existsGlobal = results[1];
+            QUnit.equals(exists, false, "soup should not exist in default global store");
+            QUnit.equals(existsGlobal, true, "soup should exist in global store");
+            return Promise.all([deleteRecords(idToName),
+              Force.smartstoreClient.removeSoup(globalStoreConfigWithName, soupName),
+              Force.smartstoreClient.removeAllStores(),
+              Force.smartstoreClient.removeAllGlobalStores()
+            ]);
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
+/**
  * TEST smartsyncplugin sync down with merge mode leave-if-changed
  */
 SmartSyncTestSuite.prototype.testSyncDownWithNoOverwrite = function() {
@@ -3122,6 +3244,85 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithGlobalStore = function(
         })
         .then(function() {
             return Promise.all([deleteRecords(idToName), Force.smartstoreClient.removeSoup(self.defaultGlobalStoreConfig, soupName)]);
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
+
+/**
+ * TEST smartsyncplugin sync up with locally updated records in global store soup
+ */
+SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithGlobalStoreNamed = function() {
+    console.log("# In SmartSyncTestSuite.testSyncUpLocallyUpdatedWithGlobalStoreNamed");
+    var self = this;
+    var idToName = {};
+    var updatedRecords;
+    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE};
+    var soupName = "testSyncUpLocallyUpdatedWithGlobalStore";
+    var cache;
+    var storeConfigWithName =  {"isGlobalStore" : false,'storeName' : 'NAMED_USR_STORE'};
+    var globalStoreConfigWithName =  {"isGlobalStore" : true,'storeName' : 'NAMED_GLBL_STORE'};
+    Promise.all([Force.smartstoreClient.removeAllStores(),
+                 Force.smartstoreClient.removeAllGlobalStores()])
+        .then(function(){
+          return Promise.all([
+                      Force.smartstoreClient.removeSoup(storeConfigWithName, soupName),
+                       Force.smartstoreClient.removeSoup(globalStoreConfigWithName, soupName)]);
+        })
+       .then(function() {
+            console.log("## Initialization of StoreCache's");
+            cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ],null,globalStoreConfigWithName.isGlobalStore,globalStoreConfigWithName.storeName);
+            return cache.init();
+        })
+        .then(function() {
+            console.log("## Direct creation against server");
+            return createRecords(idToName, "testSyncUpLocallyUpdatedWithGlobalStore", 3);
+        })
+        .then(function() {
+            console.log("## Calling sync down");
+            return self.trySyncDown(globalStoreConfigWithName,cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
+        })
+        .then(function() {
+            console.log("## Updating local records");
+            updatedRecords = [];
+            _.each(_.keys(idToName), function(id) {
+                updatedRecords.push({Id:id, Name:idToName[id] + "Updated", __locally_updated__:true});
+            });
+            return cache.saveAll(updatedRecords);
+        })
+        .then(function(records) {
+            console.log("## Calling sync up");
+            return self.trySyncUp(globalStoreConfigWithName, soupName, options);
+        })
+        .then(function() {
+            console.log("## Check both stores");
+            return Promise.all([Force.smartstoreClient.soupExists(storeConfigWithName, soupName), Force.smartstoreClient.soupExists(globalStoreConfigWithName, soupName)]);
+        })
+        .then(function(results) {
+            var exists = results[0], existsGlobal = results[1];
+            QUnit.equals(exists, false, "soup should not exist in regular store");
+            QUnit.equals(existsGlobal, true, "soup should exist in global store");
+            console.log("## Checking cache");
+            return cache.find({queryType:"range", indexPath:"Name", order:"ascending", pageSize:3});
+        })
+        .then(function(result) {
+            console.log("## Checking data returned from cache");
+            QUnit.equals(result.records.length, 3, "Expected 3 records");
+            _.each(result.records, function(record) {
+                QUnit.ok(!record.__local__, "Record should no longer marked as local");
+                QUnit.ok(!record.__locally_updated__, "Record should no longer marked as updated");
+            });
+
+            console.log("## Checking server");
+            return checkServerMultiple(updatedRecords);
+        })
+        .then(function() {
+            return Promise.all([deleteRecords(idToName),
+              Force.smartstoreClient.removeSoup(self.defaultGlobalStoreConfig, soupName),
+              Force.smartstoreClient.removeAllStores(),
+              Force.smartstoreClient.removeAllGlobalStores()]);
         })
         .then(function() {
             self.finalizeTest();

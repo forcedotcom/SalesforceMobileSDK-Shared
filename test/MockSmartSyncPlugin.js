@@ -260,7 +260,7 @@ var MockSmartSyncPlugin = (function(window) {
 
 
 // Store functions
-var syncManagerMap = (function() {
+var SyncManagerMap = (function() {
   // Constructor
   var module = function() {
       this.globalSyncManagers= {};
@@ -301,7 +301,7 @@ var syncManagerMap = (function() {
     return module;
   })();
 
-
+var syncManagerMap = new SyncManagerMap();
 
 (function (cordova, syncManager, globalSyncManager) {
 
