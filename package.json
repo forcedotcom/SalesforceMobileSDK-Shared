@@ -1,7 +1,7 @@
 {
 	"name": "SalesforceMobileSDKShared",
 	"version": "5.0.0",
-	"description": "Salesforce Mobile SDK for iOS",
+	"description": "Shared javascript libraries for Salesforce Mobile SDK",
 	"keywords": [ "mobilesdk", "javascript", "salesforce", "mobile", "sdk" ],
 	"homepage": "https://github.com/forcedotcom/SalesforceMobileSDKShared",
 	"bugs": "https://github.com/forcedotcom/SalesforceMobileSDKShared/issues",
