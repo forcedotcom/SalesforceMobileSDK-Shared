@@ -1,0 +1,28 @@
+{
+	"name": "SalesforceMobileSDKShared",
+	"version": "5.0.0",
+	"description": "Salesforce Mobile SDK for iOS",
+	"keywords": [ "mobilesdk", "javascript", "salesforce", "mobile", "sdk" ],
+	"homepage": "https://github.com/forcedotcom/SalesforceMobileSDKShared",
+	"bugs": "https://github.com/forcedotcom/SalesforceMobileSDKShared/issues",
+	"licenses" : [
+	    { "type": "Salesforce.com Mobile SDK License", "url": "https://github.com/forcedotcom/SalesforceMobileSDKShared/blob/master/LICENSE.md" }
+	],
+	"repository": {
+		"type" : "git",
+		"url" : "https://github.com/forcedotcom/SalesforceMobileSDKShared.git"
+	},
+    "engines": {
+        "node": ">=4"
+    },
+	"author": { "name": "Kevin Hawkins", "email": "khawkins@salesforce.com" },
+	"contributors": [
+        { "name": "Wolfgang Mathurin", "email": "wmathurin@salesforce.com" },
+        { "name": "Bharath Hariharan", "email": "bhariharan@salesforce.com" }
+    ],
+    "files": [
+        "libs"
+    ],
+    "dependencies": {
+    }
+}
