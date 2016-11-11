@@ -288,11 +288,21 @@ cordova.define("com.salesforce.plugin.sdkinfo", function(require, exports, modul
     };
 
     /**
+     * Unregisters App Feature code
+     */
+    var unregisterAppFeature = function(feature) {
+      if(feature){
+        exec(SALESFORCE_MOBILE_SDK_VERSION, null, null, SERVICE, "unregisterAppFeature", [{feature:feature}]);
+      }
+    };
+
+    /**
      * Part of the module that is public
      */
     module.exports = {
         getInfo: getInfo,
         registerAppFeature: registerAppFeature,
+        unregisterAppFeature: unregisterAppFeature,
 
         // Constructor
         SDKInfo: SDKInfo
