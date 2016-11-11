@@ -2025,7 +2025,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
         return this.smartstoreClient
                          .removeAllStores()
                          .then(function() {
-                           Promise.all([self.smartstoreClient.registerSoup(storeConfig1,  storeConfig1_SoupName, indexes),
+                           return Promise.all([self.smartstoreClient.registerSoup(storeConfig1,  storeConfig1_SoupName, indexes),
                                         self.smartstoreClient.registerSoup(storeConfig2, storeConfig2_SoupName, indexes)]);
                           })
                          .then(function() {
@@ -2082,7 +2082,7 @@ if (typeof SmartStoreTestSuite === 'undefined') {
         return this.smartstoreClient
                          .removeAllGlobalStores()
                          .then(function() {
-                                Promise.all([self.smartstoreClient.registerSoup(storeConfig1,  storeConfig1_SoupName, indexes),
+                              return  Promise.all([self.smartstoreClient.registerSoup(storeConfig1,  storeConfig1_SoupName, indexes),
                                              self.smartstoreClient.registerSoup(storeConfig2, storeConfig2_SoupName, indexes)]);
                           })
                          .then(function() {
