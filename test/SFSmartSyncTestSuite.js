@@ -557,7 +557,7 @@ SmartSyncTestSuite.prototype.testStoreCacheWithGlobalStoreNamed = function() {
     Promise.all([Force.smartstoreClient.removeAllStores(),
                  Force.smartstoreClient.removeAllGlobalStores()])
          .then(function() {
-             Promise.all([Force.smartstoreClient.removeSoup(storeConfigWithName, soupName),
+             return Promise.all([Force.smartstoreClient.removeSoup(storeConfigWithName, soupName),
                           Force.smartstoreClient.removeSoup(globalStoreConfigWithName, soupName)])
         })
         .then(function() {
@@ -2829,7 +2829,7 @@ SmartSyncTestSuite.prototype.testSyncDownToGlobalStoreNamed = function() {
 
      Force.smartstoreClient.removeAllGlobalStores()
         .then(function() {
-          Promise.all([Force.smartstoreClient.removeSoup(globalStoreConfigWithName, soupName)]);
+          return Force.smartstoreClient.removeSoup(globalStoreConfigWithName, soupName);
         })
         .then(function() {
             console.log("## Initialization of StoreCache's");
