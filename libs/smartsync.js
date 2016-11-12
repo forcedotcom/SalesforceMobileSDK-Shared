@@ -83,7 +83,7 @@
         var sdkinfo = cordova.require("com.salesforce.plugin.sdkinfo");
         if(sdkinfo && typeof(sdkinfo.registerAppFeature) === 'function'){
           // register SmartSync JS App feature
-          sdkinfo.registerAppFeature('SJ')
+          sdkinfo.registerAppFeature('SJ');
         }
 
         // Exposing outside
