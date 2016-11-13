@@ -80,10 +80,13 @@
             smartstoreClient = cordova.require("com.salesforce.plugin.smartstore.client");
         }
 
-        var sdkinfo = cordova.require("com.salesforce.plugin.sdkinfo");
-        if(sdkinfo && typeof(sdkinfo.registerAppFeature) === 'function'){
-          // register SmartSync JS App feature
-          sdkinfo.registerAppFeature('SJ');
+        if (window.cordova && window.cordova.require("com.salesforce.plugin.sdkinfo"))
+        {
+          var sdkinfo = cordova.require("com.salesforce.plugin.sdkinfo");
+          if(sdkinfo && typeof(sdkinfo.registerAppFeature) === 'function'){
+            // register SmartSync JS App feature
+            sdkinfo.registerAppFeature('SJ');
+          }
         }
 
         // Exposing outside
