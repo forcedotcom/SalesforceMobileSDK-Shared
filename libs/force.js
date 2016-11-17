@@ -83,7 +83,7 @@ var force = (function () {
         useProxy = (window.cordova || window.SfdcApp || window.sforce) ? false : true,
 
     // Where or not to use cordova for oauth and network calls
-        useCordova = window.cordova,
+        useCordova = window.cordova ? true : false,
 
     // Testing only
        requestHandler;
