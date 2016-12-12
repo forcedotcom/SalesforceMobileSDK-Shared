@@ -26,7 +26,7 @@ cordova.define("com.salesforce.plugin.oauth", function(require, exports, module)
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "4.3.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "5.0.0";
 var SERVICE = "com.salesforce.oauth";
 
 var exec = require("com.salesforce.util.exec").exec;
@@ -52,7 +52,7 @@ var logoutInitiated = false;
  *   loginUrl
  *   instanceUrl
  *   userAgent
- *   community id 
+ *   community id
  *   community url
  */
 var getAuthCredentials = function (success, fail) {
@@ -72,7 +72,7 @@ var getAuthCredentials = function (success, fail) {
  *   loginUrl
  *   instanceUrl
  *   userAgent
- *   community id 
+ *   community id
  *   community url
  */
 var authenticate = function (success, fail) {
@@ -82,7 +82,7 @@ var authenticate = function (success, fail) {
 /**
  * Logout the current authenticated user. This removes any current valid session token
  * as well as any OAuth refresh token.  The user is forced to login again.
- * This method does not call back with a success or failure callback, as 
+ * This method does not call back with a success or failure callback, as
  * (1) this method must not fail and (2) in the success case, the current user
  * will be logged out and asked to re-authenticate.  Note also that this method can only
  * be called once per page load.  Initiating logout will ultimately redirect away from
@@ -108,28 +108,12 @@ var getAppHomeUrl = function (success) {
 };
 
 /**
- * Goes through the refresh flow, and sets the new session token in the supplied forcetkClient.
- */
-var forcetkRefresh = function (forcetkClient, success, fail) {
-    authenticate(function(oauthResponse) {
-        var oauthResponseData = oauthResponse;
-        if (oauthResponse.data)  {
-            oauthResponseData = oauthResponse.data;
-        }
-        forcetkClient.setSessionToken(oauthResponseData.accessToken, null, oauthResponseData.instanceUrl);
-        success();
-    },
-    fail);
-};
-
-/**
  * Part of the module that is public
  */
 module.exports = {
     getAuthCredentials: getAuthCredentials,
     authenticate: authenticate,
     logout: logout,
-    getAppHomeUrl: getAppHomeUrl,
-    forcetkRefresh: forcetkRefresh
+    getAppHomeUrl: getAppHomeUrl
 };
 });

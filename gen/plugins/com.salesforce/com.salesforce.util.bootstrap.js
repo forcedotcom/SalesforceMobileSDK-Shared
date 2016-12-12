@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "4.3.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "5.0.0";
 
 var logger = require("com.salesforce.util.logger");
 
@@ -40,7 +40,7 @@ var deviceIsOnline = function() {
     } else {
         logger.logToConsole("deviceIsOnline connType is undefined.");
     }
-    
+
     // Android Chrome has navigator.connection but not window.Connection, which is cordova object.
     if (typeof connType !== 'undefined' && window.Connection) {
         // Cordova's connection object.  May be more accurate?

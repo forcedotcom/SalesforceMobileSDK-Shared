@@ -20,6 +20,13 @@ module.exports = [
         ]
     },
     {
+        "file": "plugins/com.salesforce/com.salesforce.plugin.smartstore.client.js",
+        "id": "com.salesforce.plugin.smartstore.client",
+        "clobbers": [
+            "navigator.smartstoreClient"
+        ]
+    },
+    {
         "file": "plugins/com.salesforce/com.salesforce.plugin.smartsync.js",
         "id": "com.salesforce.plugin.smartsync",
     },
@@ -36,18 +43,26 @@ module.exports = [
         "id": "com.salesforce.util.exec"
     },
     {
+        "file": "plugins/com.salesforce/com.salesforce.util.promiser.js",
+        "id": "com.salesforce.util.promiser"
+    },
+    {
         "file": "plugins/com.salesforce/com.salesforce.util.logger.js",
         "id": "com.salesforce.util.logger"
     },
     {
         "file": "plugins/com.salesforce/com.salesforce.util.push.js",
         "id": "com.salesforce.util.push"
+    },
+    {
+        "file": "plugins/com.salesforce/com.salesforce.plugin.network.js",
+        "id": "com.salesforce.plugin.network"
     }
 ];
 module.exports.metadata = 
 // TOP OF METADATA
 {
-    "com.salesforce": "4.3.0"
+    "com.salesforce": "5.0.0"
 }
 // BOTTOM OF METADATA
 });

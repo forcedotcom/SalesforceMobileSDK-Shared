@@ -5,7 +5,7 @@
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
 
     <!-- external libs -->
-    <script src="dependencies/jquery/jquery.min.js"></script>
+    <script src="dependencies/promise-polyfill/promise.js"></script>
     <script src="dependencies/underscore/underscore-min.js"></script>
     <script src="dependencies/backbone/backbone-min.js"></script>
 
@@ -13,9 +13,11 @@
     <script src="cordova.js"></script>
 
     <!-- sfdc libs -->
-    <script src="libs/forcetk.mobilesdk.js"></script>
     <script src="libs/cordova.force.js"></script>
     <script src="test/SFTestRunnerPlugin.js"></script>
+    <script src="libs/force.js"></script>
+    <script src="libs/force+files.js"></script>
+    <script src="libs/force+promise.js"></script>
     <script src="libs/smartsync.js"></script>
 
 	<!-- load qunit -->
@@ -29,41 +31,25 @@
     <script src="test/SFSmartStoreLoadTestSuite.js"></script>
     <script src="test/SFSDKInfoTestSuite.js"></script>
     <script src="test/SFSmartSyncTestSuite.js"></script>
-    <script src="test/SFForcetkTestSuite.js"></script>
+    <script src="test/SFForceJSTestSuite.js"></script>
     <script type="text/javascript" charset="utf-8">
 
     var debugMode = true;
     var logToConsole = cordova.require("com.salesforce.util.logger").logToConsole;
 
-    $(function() {
+    force.login(
+        function() {
+            logToConsole('OAuth success!');
+            Force.init();
+            // Now we are ready
+            cordova.require("com.salesforce.plugin.testrunner").onReadyForTests();
+        },
+        function(error) {
+            logToConsole('OAuth error! ' + error);
+        }
+    );
 
-        // Add event listeners and so forth here
-        logToConsole("onLoad: jquery ready");
-		document.addEventListener("deviceready", onDeviceReady,false);
-    });
-
-    // When this function is called, Cordova has been initialized and is ready to roll 
-    function onDeviceReady() {
-        logToConsole("onDeviceReady: Cordova ready");
-
-        // Call getAuthCredentials to get the initial session credentials
-        cordova.require("com.salesforce.plugin.oauth").getAuthCredentials(salesforceSessionRefreshed, getAuthCredentialsError);
-    }
-
-    function salesforceSessionRefreshed(creds) {
-        logToConsole("salesforceSessionRefreshed");
-		
-        // Initializing SmartSync library
-        Force.init(creds, null, null, cordova.require("com.salesforce.plugin.oauth").forcetkRefresh);
-
-        // Now we are ready
-        cordova.require("com.salesforce.plugin.testrunner").onReadyForTests();
-    }
-
-    function getAuthCredentialsError(error) {
-        logToConsole("getAuthCredentialsError: " + error);
-    }
-    </script>
+  </script>
   </head>
   <body>
       <div data-role="page" data-theme="b" id="jqm-home"> 

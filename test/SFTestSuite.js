@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, salesforce.com, inc.
+ * Copyright (c) 2012-present, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -23,37 +23,6 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-
-
-/**
- * Build a function returning a promise from a function that takes a success and error callback as last arguments
- * The new function will take the same arguments as the original function minus the two callback functions
- */
-if (typeof promiser === 'undefined') {
-
-var promiser = function(object, methodName, noAssertionOnFailure) {
-    var retfn = function () {
-        console.log("In " + methodName);
-        var self = this;
-        var args = $.makeArray(arguments);
-        var d = $.Deferred();
-        args.push(function() {
-            console.log(methodName + " succeeded");
-            d.resolve.apply(d, arguments);
-        });
-        args.push(function() {
-            console.log(methodName + " failed");
-            //console.log("Failure-->" + JSON.stringify($.makeArray(arguments)));
-            if (!noAssertionOnFailure) self.setAssertionFailed(methodName + " failed");
-            d.reject.apply(d, arguments);
-        });
-        object[methodName].apply(object, args);
-        return d.promise();
-    };
-    return retfn;
-}
-
-};
 
 /**
  * SFTestStatus - Represents a particular test and its status information.

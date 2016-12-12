@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "4.3.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "5.0.0";
 
 var logger = require("com.salesforce.util.logger");
 
@@ -37,7 +37,7 @@ var EventType = {
     STARTING: {code: 1, description: "Loading application", isError: false},
     OFFLINE: {code: 2, description: "Your device is offline. Can't continue.", isError: true}
 };
-       
+
 /**
  * Dispatches event with current status text and success indicator.
  */

@@ -1,4 +1,31 @@
-(function($, _, Backbone, forcetk) {
+/*
+ * Copyright (c) 2013-present, salesforce.com, inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided
+ * that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice, this list of conditions and the
+ * following disclaimer.
+ *
+ * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and
+ * the following disclaimer in the documentation and/or other materials provided with the distribution.
+ *
+ * Neither the name of salesforce.com, inc. nor the names of its contributors may be used to endorse or
+ * promote products derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+(function(_, Backbone, forceJsClient) {
 
     "use strict";
 
@@ -18,7 +45,7 @@
         root.Force = previousForce;
         return this;
     };
-     
+
     // Enable/disable logging - level should be "error", "info", "warn", "debug"
     // Passing anything else will cause all error, info, warn, and debug messages to be suppressed
     // Passing error will cause only error messages to be printed out
@@ -33,115 +60,38 @@
         }
     };
 
-    // Default log level: info
-    Force.setLogLevel("info");
-
-
-    // Utility Function to turn methods with callbacks into jQuery promises
-    var promiser = function(object, methodName, objectName) {
-        var retfn = function () {
-            var args = $.makeArray(arguments);
-            var d = $.Deferred();
-            args.push(function() {
-                Force.console.debug("------> Calling successCB for " + objectName + ":" + methodName);
-                try {
-                    d.resolve.apply(d, arguments);
-                }
-                catch (err) {
-                    Force.console.error("------> Error when calling successCB for " + objectName + ":" + methodName);
-                    Force.console.error(err.stack);
-                }
-            });
-            args.push(function() {
-                Force.console.debug("------> Calling errorCB for " + objectName + ":" + methodName);
-                try {
-                    d.reject.apply(d, arguments);
-                }
-                catch (err) {
-                    Force.console.error("------> Error when calling errorCB for " + objectName + ":" + methodName);
-                    Force.console.error(err.stack);
-                }
-            });
-            Force.console.debug("-----> Calling " + objectName + ":" + methodName);
-            object[methodName].apply(object, args);
-            return d.promise();
-        };
-        return retfn;
-    };
-
-    // Private forcetk client with promise-wrapped methods
-    var forcetkClient = null;
-
     // Private smartstore client with promise-wrapped methods
     var smartstoreClient = null;
 
-    // Helper function to patch user agent
-    var patchUserAgent = function(userAgent) {
-        var match = /^(SalesforceMobileSDK\/[^\ ]* [^\/]*\/[^\ ]* \([^\)]*\) [^\/]*\/[^ ]* )(Hybrid|Web)(.*$)/.exec(userAgent);
-        if (match != null && match.length == 4) {
-            return match[1] + match[2] + "SmartSync" + match[3];
-        }
-        else {
-            // Not a SalesforceMobileSDK user agent, we leave it unchanged
-            return userAgent;
-        }
-    };
+    /**
+     * Initialize Force
+     * @param params
+     *  logLevel (optional)
+     */
+    Force.init = function(params) {
+        params = params || {};
 
-    // Init function
-    // * creds: credentials returned by authenticate call
-    // * apiVersion: apiVersion to use, when null, v36.0 (Spring '16) is used
-    // * innerForcetkClient: [Optional] A fully initialized forcetkClient to be re-used internally in the SmartSync library
-    // * reauth: auth module for the refresh flow
-    Force.init = function(creds, apiVersion, innerForcetkClient, reauth) {
-        if (!apiVersion || apiVersion == null) {
-            apiVersion = "v36.0";
+        // Default log level: info
+        Force.setLogLevel(params.logLevel || "info");
+
+        // Getting a smartstoreclient if availablex
+        if (window.cordova && window.cordova.require("com.salesforce.plugin.smartstore.client"))
+        {
+            smartstoreClient = cordova.require("com.salesforce.plugin.smartstore.client");
         }
 
-        if(!innerForcetkClient || innerForcetkClient == null) {
-            innerForcetkClient = new forcetk.Client(creds.clientId, creds.loginUrl, creds.proxyUrl, reauth);
-            innerForcetkClient.setSessionToken(creds.accessToken, apiVersion, creds.instanceUrl);
-            innerForcetkClient.setRefreshToken(creds.refreshToken);
-            innerForcetkClient.setUserAgentString(patchUserAgent(creds.userAgent || innerForcetkClient.getUserAgentString()));
+        if (window.cordova && window.cordova.require("com.salesforce.plugin.sdkinfo"))
+        {
+          var sdkinfo = cordova.require("com.salesforce.plugin.sdkinfo");
+          if(sdkinfo && typeof(sdkinfo.registerAppFeature) === 'function'){
+            // register SmartSync JS App feature
+            sdkinfo.registerAppFeature('SJ');
+          }
         }
-
-        forcetkClient = new Object();
-        forcetkClient.impl = innerForcetkClient;
-        forcetkClient.create = promiser(innerForcetkClient, "create", "forcetkClient");
-        forcetkClient.retrieve = promiser(innerForcetkClient, "retrieve", "forcetkClient");
-        forcetkClient.update = promiser(innerForcetkClient, "update", "forcetkClient");
-        forcetkClient.del = promiser(innerForcetkClient, "del", "forcetkClient");
-        forcetkClient.query = promiser(innerForcetkClient, "query", "forcetkClient");
-        forcetkClient.queryMore = promiser(innerForcetkClient, "queryMore", "forcetkClient");
-        forcetkClient.search = promiser(innerForcetkClient, "search", "forcetkClient");
-        forcetkClient.metadata = promiser(innerForcetkClient, "metadata", "forcetkClient");
-        forcetkClient.describe = promiser(innerForcetkClient, "describe", "forcetkClient");
-        forcetkClient.describeLayout = promiser(innerForcetkClient, "describeLayout", "forcetkClient");
-        forcetkClient.ownedFilesList = promiser(innerForcetkClient, "ownedFilesList", "forcetkClient");
-        forcetkClient.filesInUsersGroups = promiser(innerForcetkClient, "filesInUsersGroups", "forcetkClient");
-        forcetkClient.filesSharedWithUser = promiser(innerForcetkClient, "filesSharedWithUser", "forcetkClient");
-        forcetkClient.fileDetails = promiser(innerForcetkClient, "fileDetails", "forcetkClient");
-        forcetkClient.apexrest = promiser(innerForcetkClient, "apexrest", "forcetkClient");
 
         // Exposing outside
-        Force.forcetkClient = forcetkClient;
-
-        if (navigator.smartstore)
-        {
-            smartstoreClient = new Object();
-            smartstoreClient.registerSoup = promiser(navigator.smartstore, "registerSoup", "smartstoreClient");
-            smartstoreClient.upsertSoupEntriesWithExternalId = promiser(navigator.smartstore, "upsertSoupEntriesWithExternalId", "smartstoreClient");
-            smartstoreClient.querySoup = promiser(navigator.smartstore, "querySoup", "smartstoreClient");
-            smartstoreClient.runSmartQuery = promiser(navigator.smartstore, "runSmartQuery", "smartstoreClient");
-            smartstoreClient.moveCursorToNextPage = promiser(navigator.smartstore, "moveCursorToNextPage", "smartstoreClient");
-            smartstoreClient.removeFromSoup = promiser(navigator.smartstore, "removeFromSoup", "smartstoreClient");
-            smartstoreClient.closeCursor = promiser(navigator.smartstore, "closeCursor", "smartstoreClient");
-            smartstoreClient.soupExists = promiser(navigator.smartstore, "soupExists", "smartstoreClient");
-            smartstoreClient.removeSoup = promiser(navigator.smartstore, "removeSoup", "smartstoreClient");
-            smartstoreClient.retrieveSoupEntries = promiser(navigator.smartstore, "retrieveSoupEntries", "smartstoreClient");
-
-            // Exposing outside
-            Force.smartstoreClient = smartstoreClient;
-        }
+        Force.forceJsClient = forceJsClient;
+        Force.smartstoreClient = smartstoreClient;
     };
 
     // Force.Error
@@ -189,11 +139,16 @@
     // A __local__ boolean field is added automatically on save
     // Index are created for keyField and __local__
     //
-    Force.StoreCache = function(soupName, additionalIndexSpecs, keyField, isGlobalStore) {
+    Force.StoreCache = function(soupName, additionalIndexSpecs, keyField,isGlobalStore,storeName) {
         this.soupName = soupName;
         this.keyField = keyField || "Id";
         this.additionalIndexSpecs = additionalIndexSpecs || [];
-        this.isGlobalStore = isGlobalStore || false;
+        if(storeName == null) {
+            this.storeConfig = {isGlobalStore: isGlobalStore || false};
+        }else {
+           this.storeConfig = {isGlobalStore: isGlobalStore || false,storeName:storeName};
+        }
+
     };
 
     _.extend(Force.StoreCache.prototype, {
@@ -202,7 +157,7 @@
             if (smartstoreClient == null) return;
             var indexSpecs = _.union([{path:this.keyField, type:"string"}, {path:"__local__", type:"string"}],
                                      this.additionalIndexSpecs);
-            return smartstoreClient.registerSoup(this.isGlobalStore, this.soupName, indexSpecs);
+            return smartstoreClient.registerSoup(this.storeConfig, this.soupName, indexSpecs);
         },
 
         // Return promise which retrieves cached value for the given key
@@ -226,10 +181,10 @@
                 return true;
             };
 
-            return smartstoreClient.querySoup(this.isGlobalStore, this.soupName, querySpec)
+            return smartstoreClient.querySoup(this.storeConfig, this.soupName, querySpec)
                 .then(function(cursor) {
                     if (cursor.currentPageOrderedEntries.length == 1) record = cursor.currentPageOrderedEntries[0];
-                    return smartstoreClient.closeCursor(that.isGlobalStore, cursor);
+                    return smartstoreClient.closeCursor(that.storeConfig, cursor);
                 })
                 .then(function() {
                     // if the cached record doesn't have all the field we are interested in the return null
@@ -255,7 +210,7 @@
 
             var mergeIfRequested = function() {
                 if (mergeMode == Force.MERGE_MODE_DOWNLOAD.OVERWRITE) {
-                    return $.when(record);
+                    return Promise.resolve(record);
                 }
                 else if (mergeMode == Force.MERGE_MODE_DOWNLOAD.MERGE_ACCEPT_THEIRS) {
                     return that.retrieve(record[that.keyField])
@@ -271,7 +226,7 @@
             return mergeIfRequested()
                 .then(function(record) {
                     record = that.addLocalFields(record);
-                    return smartstoreClient.upsertSoupEntriesWithExternalId(that.isGlobalStore, that.soupName, [ record ], that.keyField)
+                    return smartstoreClient.upsertSoupEntriesWithExternalId(that.storeConfig, that.soupName, [ record ], that.keyField)
                 })
                 .then(function(records) {
                     return records[0];
@@ -290,7 +245,7 @@
 
             var mergeIfRequested = function() {
                 if (mergeMode == Force.MERGE_MODE_DOWNLOAD.OVERWRITE) {
-                    return $.when(records);
+                    return Promise.resolve(records);
                 }
                 else {
                     if (_.any(records, function(record) { return !_.has(record, that.keyField); })) {
@@ -305,14 +260,14 @@
 
                     var querySpec = navigator.smartstore.buildSmartQuerySpec(smartSql, records.length);
 
-                    return smartstoreClient.runSmartQuery(that.isGlobalStore, querySpec)
+                    return smartstoreClient.runSmartQuery(that.storeConfig, querySpec)
                         .then(function(cursor) {
                             // smart query result will look like [[soupElt1], ...]
                             cursor.currentPageOrderedEntries = _.flatten(cursor.currentPageOrderedEntries);
                             _.each(cursor.currentPageOrderedEntries, function(oldRecord) {
                                 oldRecords[oldRecord[that.keyField]] = oldRecord;
                             });
-                            return smartstoreClient.closeCursor(that.isGlobalStore, cursor);
+                            return smartstoreClient.closeCursor(that.storeConfig, cursor);
                         })
                         .then(function() {
                             return _.map(records, function(record) {
@@ -333,7 +288,7 @@
                         return that.addLocalFields(record);
                     });
 
-                    return smartstoreClient.upsertSoupEntriesWithExternalId(that.isGlobalStore, that.soupName, records, that.keyField);
+                    return smartstoreClient.upsertSoupEntriesWithExternalId(that.storeConfig, that.soupName, records, that.keyField);
                 });
         },
 
@@ -350,7 +305,7 @@
             var cache = this;
             var closeCursorIfNeeded = function(cursor) {
                 if ((cursor.currentPageIndex + 1) == cursor.totalPages) {
-                    return smartstoreClient.closeCursor(cache.isGlobalStore, cursor).then(function() {
+                    return smartstoreClient.closeCursor(cache.storeConfig, cursor).then(function() {
                         return cursor;
                     });
                 }
@@ -371,7 +326,7 @@
                         var that = this;
                         if (that.hasMore()) {
                             // Move cursor to the next page and update records property
-                            return smartstoreClient.moveCursorToNextPage(cache.isGlobalStore, cursor)
+                            return smartstoreClient.moveCursorToNextPage(cache.storeConfig, cursor)
                             .then(closeCursorIfNeeded)
                             .then(function(c) {
                                 cursor = c;
@@ -385,7 +340,7 @@
                     },
 
                     closeCursor: function() {
-                        return smartstoreClient.closeCursor(cache.isGlobalStore, cursor)
+                        return smartstoreClient.closeCursor(cache.storeConfig, cursor)
                             .then(function() { cursor = null; });
                     }
                 }
@@ -393,14 +348,14 @@
 
             var runQuery = function(soupName, querySpec) {
                 if (querySpec.queryType === "smart") {
-                    return smartstoreClient.runSmartQuery(cache.isGlobalStore, querySpec).then(function(cursor) {
+                    return smartstoreClient.runSmartQuery(cache.storeConfig, querySpec).then(function(cursor) {
                         // smart query result will look like [[soupElt1], ...]
                         cursor.currentPageOrderedEntries = _.flatten(cursor.currentPageOrderedEntries);
                         return cursor;
                     })
                 }
                 else {
-                    return smartstoreClient.querySoup(cache.isGlobalStore, soupName, querySpec)
+                    return smartstoreClient.querySoup(cache.storeConfig, soupName, querySpec)
                 }
             }
 
@@ -416,16 +371,16 @@
             var that = this;
             var querySpec = navigator.smartstore.buildExactQuerySpec(this.keyField, key);
             var soupEntryId = null;
-            return smartstoreClient.querySoup(that.isGlobalStore, this.soupName, querySpec)
+            return smartstoreClient.querySoup(this.storeConfig, this.soupName, querySpec)
                 .then(function(cursor) {
                     if (cursor.currentPageOrderedEntries.length == 1) {
                         soupEntryId = cursor.currentPageOrderedEntries[0]._soupEntryId;
                     }
-                    return smartstoreClient.closeCursor(that.isGlobalStore, cursor);
+                    return smartstoreClient.closeCursor(that.storeConfig, cursor);
                 })
                 .then(function() {
                     if (soupEntryId != null) {
-                        return smartstoreClient.removeFromSoup(that.isGlobalStore, that.soupName, [ soupEntryId ])
+                        return smartstoreClient.removeFromSoup(that.storeConfig, that.soupName, [ soupEntryId ])
                     }
                     return null;
                 })
@@ -505,12 +460,18 @@
             } else return that;
         };
 
+        // Has the result been computed already?
+        // Returns true if promiseOrResult is an object that is not a promise
+        var hasResultBeenComputed = function(promiseOrResult) {
+            return promiseOrResult && 'function' !== typeof promiseOrResult.then;
+        };
+
         // Server action helper
         // If no describe data exists on the instance, get it from server.
         var serverDescribeUnlessCached = function(that) {
             var cacheMode = _.result(that, 'cacheMode');
-            if(!that._data.describeResult && cacheMode != Force.CACHE_MODE.CACHE_ONLY) {
-                return forcetkClient.describe(that.sobjectType)
+            if(!hasResultBeenComputed(that._data.describeResult) && cacheMode != Force.CACHE_MODE.CACHE_ONLY) {
+                return forceJsClient.describe(that.sobjectType)
                         .then(function(describeResult) {
                             that._data.describeResult = describeResult;
                             that._cacheSynced = false;
@@ -522,8 +483,8 @@
         // If no metadata data exists on the instance, get it from server.
         var serverMetadataUnlessCached = function(that) {
             var cacheMode = _.result(that, 'cacheMode');
-            if(!that._data.metadataResult && cacheMode != Force.CACHE_MODE.CACHE_ONLY) {
-                return forcetkClient.metadata(that.sobjectType)
+            if(!hasResultBeenComputed(that._data.metadataResult) && cacheMode != Force.CACHE_MODE.CACHE_ONLY) {
+                return forceJsClient.metadata(that.sobjectType)
                         .then(function(metadataResult) {
                             that._data.metadataResult = metadataResult;
                             that._cacheSynced = false;
@@ -534,10 +495,11 @@
 
         // If no layout data exists for this record type on the instance,
         // get it from server.
-        var serverDescribeLayoutUnlessCached = function(that, recordTypeId) {
+        var serverDescribeLayoutUnlessCached = function(params) {
+            var that = params[0], recordTypeId = params[1];
             var cacheMode = _.result(that, 'cacheMode');
-            if(!that._data["layoutInfo_" + recordTypeId] && cacheMode != Force.CACHE_MODE.CACHE_ONLY) {
-                return forcetkClient.describeLayout(that.sobjectType, recordTypeId)
+            if(!hasResultBeenComputed(that._data["layoutInfo_" + recordTypeId]) && cacheMode != Force.CACHE_MODE.CACHE_ONLY) {
+                return forceJsClient.describeLayout(that.sobjectType, recordTypeId)
                         .then(function(layoutResult) {
                             that._data["layoutInfo_" + recordTypeId] = layoutResult;
                             that._cacheSynced = false;
@@ -553,28 +515,28 @@
             describe: function() {
                 var that = this;
                 if (!that._data.describeResult) {
-                    that._data.describeResult =  $.when(cacheRetrieve(that, "describeResult"))
+                    that._data.describeResult =  Promise.resolve(cacheRetrieve(that, "describeResult"))
                         .then(serverDescribeUnlessCached)
                         .then(cacheSave)
                         .then(function(cacheRow) {
                             return cacheRow._data.describeResult;
                         });
                 }
-                return $.when(that._data.describeResult);
+                return Promise.resolve(that._data.describeResult);
             },
             // Returns a promise, which once resolved
             // returns metadata of the sobject.
             getMetadata: function() {
                 var that = this;
                 if (!that._data.metadataResult) {
-                    that._data.metadataResult = $.when(cacheRetrieve(that, "metadataResult"))
+                    that._data.metadataResult = Promise.resolve(cacheRetrieve(that, "metadataResult"))
                         .then(serverMetadataUnlessCached)
                         .then(cacheSave)
                         .then(function(cacheRow) {
                             return cacheRow._data.metadataResult;
                         });
                 }
-                return $.when(that._data.metadataResult);
+                return Promise.resolve(that._data.metadataResult);
             },
             // Returns a promise, which once resolved
             // returns layout information associated
@@ -587,14 +549,14 @@
 
                 var layoutInfoId = "layoutInfo_" + recordTypeId;
                 if (!that._data[layoutInfoId]) {
-                    that._data[layoutInfoId] = $.when(cacheRetrieve(that, layoutInfoId), recordTypeId)
+                    that._data[layoutInfoId] = Promise.all([cacheRetrieve(that, layoutInfoId), recordTypeId])
                         .then(serverDescribeLayoutUnlessCached)
                         .then(cacheSave)
                         .then(function(cacheRow) {
                             return cacheRow._data[layoutInfoId];
                         });
                 }
-                return $.when(that._data[layoutInfoId]);
+                return Promise.resolve(that._data[layoutInfoId]);
             },
             // Returns a promise, which once resolved clears
             // the cached data for the current sobject type.
@@ -602,7 +564,7 @@
                 var that = this;
                 that._cacheSynced = true;
                 that._data = {};
-                return $.when(cacheClear(that));
+                return Promise.resolve(cacheClear(that));
             }
         }
     })());
@@ -697,32 +659,32 @@
         // Server actions helper
         var serverCreate   = function() {
             var attributesToSave = _.pick(attributes, fieldlist);
-            return forcetkClient.create(sobjectType, _.omit(attributesToSave, "Id"))
+            return forceJsClient.create(sobjectType, _.omit(attributesToSave, "Id"))
                 .then(function(resp) {
                     return _.extend(attributes, {Id: resp.id});
                 })
         };
 
         var serverRetrieve = function() {
-            return forcetkClient.retrieve(sobjectType, id, fieldlist);
+            return forceJsClient.retrieve(sobjectType, id, fieldlist);
         };
 
         var serverUpdate   = function() {
-            var attributesToSave = _.pick(attributes, fieldlist);
-            return forcetkClient.update(sobjectType, id, _.omit(attributesToSave, "Id"))
+            var attributesToSave = _.extend(_.pick(attributes, fieldlist), {Id: id});
+            return forceJsClient.update(sobjectType, attributesToSave)
                 .then(function(resp) {
                     return attributes;
                 })
         };
 
         var serverDelete   = function() {
-            return forcetkClient.del(sobjectType, id)
+            return forceJsClient.del(sobjectType, id)
                 .then(function(resp) {
                     return null;
                 })
         };
 
-        // Chaining promises that return either a promise or created/upated/read model attributes or null in the case of delete
+        // Chaining promises that return either a promise or created/updated/read model attributes or null in the case of delete
         var promise = null;
         switch(method) {
         case "create": promise = serverCreate(); break;
@@ -753,7 +715,7 @@
         // Server actions helper
         var serverCreate   = function() {
             var attributesToSave = _.pick(attributes, fieldlist);
-            return forcetkClient.apexrest(path, "POST", JSON.stringify(_.omit(attributesToSave, idField)), null)
+            return forceJsClient.apexrest({path:path, method:"POST", data:_.omit(attributesToSave, idField)})
                 .then(function(resp) {
                     var idMap = {};
                     idMap[idField] = resp[idField];
@@ -762,20 +724,19 @@
         };
 
         var serverRetrieve = function() {
-            var fields = fieldlist ? '?fields=' + fieldlist : '';
-            return forcetkClient.apexrest(path + "/" + id + fields, "GET", null, null);
+            return forceJsClient.apexrest({path:path + "/" + id, method:"GET", params:{fields:fieldlist.join(",")}});
         };
 
         var serverUpdate   = function() {
             var attributesToSave = _.pick(attributes, fieldlist);
-            return forcetkClient.apexrest(path + "/" + id, "PATCH", JSON.stringify(attributesToSave), null)
+            return forceJsClient.apexrest({path:path + "/" + id, method:"PATCH", data:attributesToSave})
                 .then(function(resp) {
                     return attributes;
                 })
         };
 
         var serverDelete   = function() {
-            return forcetkClient.apexrest(path + "/" + id, "DELETE", null, null)
+            return forceJsClient.apexrest({path:path + "/" + id, method:"DELETE"})
                 .then(function(resp) {
                     return null;
                 })
@@ -1059,7 +1020,7 @@
                         }
                         if (shouldFail) {
                             var conflictDetails = {base: originalAttributes, theirs: remoteAttributes, yours:attributes, remoteChanges:remoteChanges, localChanges:localChanges, conflictingChanges:conflictingChanges};
-                            return $.Deferred().reject(conflictDetails);
+                            return Promise.reject(conflictDetails);
                         }
                         else {
                             var mergedAttributes = _.extend(attributes, _.pick(remoteAttributes, nonConflictingRemoteChanges));
@@ -1119,7 +1080,7 @@
 
         // Server actions helper
         var serverSoql = function(soql) {
-            return forcetkClient.query(soql)
+            return forceJsClient.query(soql)
                 .then(function(resp) {
                     var nextRecordsUrl = resp.nextRecordsUrl;
                     return {
@@ -1129,21 +1090,21 @@
                         getMore: function() {
                             var that = this;
                             if (!nextRecordsUrl) return null;
-                            return forcetkClient.queryMore(nextRecordsUrl).then(function(resp) {
+                            return forceJsClient.queryMore(nextRecordsUrl).then(function(resp) {
                                 nextRecordsUrl = resp.nextRecordsUrl;
                                 that.records = _.union(that.records, resp.records);
                                 return resp.records;
                             });
                         },
                         closeCursor: function() {
-                            return $.when(function() { nextRecordsUrl = null; });
+                            return Promise.resolve(function() { nextRecordsUrl = null; });
                         }
                     };
                 });
         };
 
         var serverSosl = function(sosl) {
-            return forcetkClient.search(sosl).then(function(resp) {
+            return forceJsClient.search(sosl).then(function(resp) {
                 return {
                     records: resp,
                     totalSize: resp.length,
@@ -1154,7 +1115,7 @@
         };
 
         var serverMru = function(sobjectType, fieldlist, orderBy, orderDirection) {
-            return forcetkClient.metadata(sobjectType)
+            return forceJsClient.metadata(sobjectType)
                 .then(function(resp) {
                     //Only do query if the fieldList is provided.
                     if (fieldlist) {
@@ -1211,8 +1172,7 @@
 
         // Server actions helper
         var serverFetch = function(apexRestPath) {
-            var path = apexRestPath + "?" + $.param(config.params);
-            return forcetkClient.apexrest(path, "GET", null, null)
+            return forceJsClient.apexrest({path:apexRestPath, params:config.params})
                 .then(function(resp) {
                     var nextRecordsUrl = resp.nextRecordsUrl;
                     return {
@@ -1222,14 +1182,14 @@
                         getMore: function() {
                             var that = this;
                             if (!nextRecordsUrl) return null;
-                            return forcetkClient.queryMore(nextRecordsUrl).then(function(resp) {
+                            return forceJsClient.queryMore(nextRecordsUrl).then(function(resp) {
                                 nextRecordsUrl = resp.nextRecordsUrl;
                                 that.records = _.union(that.records, resp.records);
                                 return resp.records;
                             });
                         },
                         closeCursor: function() {
-                            return $.when(function() { nextRecordsUrl = null; });
+                            return Promise.resolve(function() { nextRecordsUrl = null; });
                         }
                     };
                 });
@@ -1349,7 +1309,7 @@
 
             // To be defined in concrete subclass
             syncRemoteObjectWithServer: function(method, id, attributes, fieldlist) {
-                return $.when([]);
+                return Promise.resolve([]);
             },
 
             // Overriding Backbone sync method (responsible for all server interactions)
@@ -1384,11 +1344,11 @@
                 console.time(tag);
 
                 Force.syncRemoteObjectDetectConflict(method, model.id, model.attributes, fieldlist, cache, cacheMode, cacheForOriginals, mergeMode, syncWithServer)
-                    .done(function() {
+                    .then(function() {
                         console.timeEnd(tag);
                         options.success.apply(null, arguments);
                     })
-                    .fail(function() {
+                    .catch(function() {
                         console.timeEnd(tag);
                         options.error.apply(null, arguments);
                     });
@@ -1422,7 +1382,7 @@
 
             // Id is the id attribute
             idAttribute: 'Id',
-            
+
             syncRemoteObjectWithServer: function(method, id, attributes, fieldlist) {
                 return Force.syncApexRestObjectWithServer(method, this.apexRestPath, id, this.idAttribute, attributes, fieldlist);
             }
@@ -1455,7 +1415,7 @@
 
             // To be defined in concrete subclass
             fetchRemoteObjectFromServer: function(config) {
-                return $.when([]);
+                return Promise.resolve([]);
             },
 
             // Method to fetch remote objects from cache
@@ -1477,12 +1437,12 @@
                             that.add(records);
                             return records;
                         });
-                else return $.when([]);
+                else return Promise.resolve([]);
             },
 
             // Close any open cursors to fetch more records.
             closeCursor: function() {
-                return $.when(!this.hasMore() || that._fetchResponse.closeCursor());
+                return Promise.resolve(!this.hasMore() || that._fetchResponse.closeCursor());
             },
 
             // Overriding Backbone sync method (responsible for all server interactions)
@@ -1507,7 +1467,7 @@
                     options.success([]);
                     return;
                 }
-                
+
                 // Out of order handling
                 this.lastRequestSent++;
                 var currentRequest = this.lastRequestSent;
@@ -1531,7 +1491,7 @@
                             }
                             else {
                                 ignoreRequest = true;
-                                return $.Deferred().reject();
+                                return Promise.reject();
                             }
                     });
                 };
@@ -1553,11 +1513,11 @@
                         if (config.closeCursorImmediate) that.closeCursor();
                         return resp.records;
                     })
-                    .done(function() {
+                    .then(function() {
                         console.timeEnd(tag);
                         options.success.apply(null, arguments);
                     })
-                    .fail(function() {
+                    .catch(function() {
                         console.timeEnd(tag);
                         if (ignoreRequest) {
                             // Force.console.debug("FETCH ignored " + currentRequest);
@@ -1601,7 +1561,7 @@
                 var that = this;
                 return _.map(resp, function(result) {
                     var sobject = new that.model(result);
-                    if (!sobject.sobjectType && result.attributes) 
+                    if (!sobject.sobjectType && result.attributes)
                         sobject.sobjectType = result.attributes.type;
                     return sobject;
                 });
@@ -1637,4 +1597,4 @@
 
     } // if (!_.isUndefined(Backbone)) {
 })
-.call(this, jQuery, _, window.Backbone, forcetk);
+.call(this, _, window.Backbone, window.forceJsClient);

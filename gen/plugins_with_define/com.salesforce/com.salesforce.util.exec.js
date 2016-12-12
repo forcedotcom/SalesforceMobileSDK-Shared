@@ -26,7 +26,7 @@ cordova.define("com.salesforce.util.exec", function(require, exports, module) {
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "4.3.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "5.0.0";
 var exec = function(pluginVersion, successCB, errorCB, service, action, args) {
     var tag = "TIMING " + service + ":" + action;
     console.time(tag);
@@ -37,14 +37,14 @@ var exec = function(pluginVersion, successCB, errorCB, service, action, args) {
             console.timeEnd(tag);
             if (typeof successCB === "function")
                 successCB.apply(null, arguments);
-        }, 
+        },
         function() {
             console.timeEnd(tag);
             console.error(tag + " failed");
             if (typeof errorCB === "function")
                 errorCB.apply(null, arguments);
-        }, 
-        service, action, args);                  
+        },
+        service, action, args);
 };
 
 /**
