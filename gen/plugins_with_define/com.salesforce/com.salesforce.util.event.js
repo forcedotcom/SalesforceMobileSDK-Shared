@@ -1,6 +1,6 @@
 cordova.define("com.salesforce.util.event", function(require, exports, module) {
 /*
- * Copyright (c) 2012-14, salesforce.com, inc.
+ * Copyright (c) 2012-present, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -26,7 +26,7 @@ cordova.define("com.salesforce.util.event", function(require, exports, module) {
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "2.3.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "5.0.0";
 
 var logger = require("com.salesforce.util.logger");
 
@@ -38,7 +38,7 @@ var EventType = {
     STARTING: {code: 1, description: "Loading application", isError: false},
     OFFLINE: {code: 2, description: "Your device is offline. Can't continue.", isError: true}
 };
-       
+
 /**
  * Dispatches event with current status text and success indicator.
  */

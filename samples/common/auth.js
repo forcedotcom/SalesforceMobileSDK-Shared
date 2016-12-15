@@ -10,27 +10,31 @@ jQuery(document).ready(function() {
     console.log("onLoad: jquery ready");
     // FastClick
     new FastClick(document.body);
-	document.addEventListener("deviceready", onDeviceReady,false);
+
+    // Browser
+    if (cordova.interceptExec) {
+        force.init({loginURL: "https://test.salesforce.com/",
+                    appId: "3MVG98dostKihXN53TYStBIiS8BTFb20jwWfFcShqfABb3c.HH3CkmA00FuCmc0aM3v4LZOGR5QBnEi77fotN",
+                    oauthCallbackURL: "http://localhost:8200/test/oauthcallback.html",
+                    useCordova: false /* running in browser with mock cordova - so do oauth through browser and network through xhr */
+                   });
+    }
+       
+    force.login(
+        function() {
+            console.log("Auth succeeded"); 
+            appStart();
+        },
+        function(error) {
+            console.log("Auth failed: " + error); 
+        }
+    );
 });
 
-// When this function is called, cordova has been initialized and is ready to roll 
-function onDeviceReady() {
-    console.log("onDeviceReady: cordova ready");
-	//Call getAuthCredentials to get the initial session credentials
-    cordova.require("com.salesforce.plugin.oauth").getAuthCredentials(
-        function(creds) {
-            appStart( _.extend(creds, {userAgent: navigator.userAgent}) );
-        }, 
-        function(error) { 
-            console.log("Auth failed: " + error); 
-        });
-
-}
-
-function appStart(creds)
+function appStart(creds, refresh)
 {
     // Force init
-    Force.init(creds, null, null, cordova.require("com.salesforce.plugin.oauth").forcetkRefresh);
+    Force.init();
 
 
     // Register for push

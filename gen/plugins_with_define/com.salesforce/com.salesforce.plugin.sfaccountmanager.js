@@ -1,6 +1,6 @@
 cordova.define("com.salesforce.plugin.sfaccountmanager", function(require, exports, module) {
 /*
- * Copyright (c) 2012-14, salesforce.com, inc.
+ * Copyright (c) 2012-present, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -26,7 +26,7 @@ cordova.define("com.salesforce.plugin.sfaccountmanager", function(require, expor
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "2.3.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "5.0.0";
 var SERVICE = "com.salesforce.sfaccountmanager";
 
 var exec = require("com.salesforce.util.exec").exec;
@@ -94,7 +94,7 @@ var getCurrentUser = function (success, fail) {
  * Logs out the specified user, or the current user if not specified.
  * This removes any current valid session token as well as any OAuth
  * refresh token.  The user is forced to login again.
- * This method does not call back with a success or failure callback, as 
+ * This method does not call back with a success or failure callback, as
  * (1) this method must not fail and (2) in the success case, the current user
  * will be logged out and asked to re-authenticate. Note also that this method can only
  * be called once per page load. Initiating logout will ultimately redirect away from

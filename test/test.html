@@ -4,7 +4,6 @@
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
 
     <!-- external libs -->
-    <script src="dependencies/jquery/jquery.min.js"></script>
     <script src="dependencies/underscore/underscore-min.js"></script>
     <script src="dependencies/backbone/backbone-min.js"></script>
 
@@ -12,12 +11,15 @@
     <script src="MockCordova.js"></script>
 
     <!-- sfdc libs -->
-    <script src="../libs/forcetk.mobilesdk.js"></script>
+    <script src="../libs/force.js"></script>
+    <script src="../libs/force+files.js"></script>
+    <script src="../libs/force+promise.js"></script>
     <script src="../libs/cordova.force.js"></script>
-    <script src="../libs/smartsync.js"></script>
+    <script src="../libs/smartsync.js"></script> 
 
     <!-- mock for native implementations -->
     <script src="MockSmartStore.js"></script>
+    <script src="MockSmartSyncPlugin.js"></script>
     <script src="MockSDKInfo.js"></script>
 
 	<!-- load qunit -->
@@ -25,9 +27,9 @@
     <script src="dependencies/qunit/qunit.js"></script>
 
 	<!-- we load all the test suite definitions here but do not run them until the native test runner tells us to -->
-	<script src="SFTestSuite.js"></script>
+    <script src="SFTestSuite.js"></script>
     <script src="SFSDKInfoTestSuite.js"></script>
-    <script src="SFForcetkTestSuite.js"></script>
+    <script src="SFForceJSTestSuite.js"></script>
     <script src="SFAbstractSmartStoreTestSuite.js"></script>
     <script src="SFSmartStoreTestSuite.js"></script>
     <script src="SFSmartStoreLoadTestSuite.js"></script>
@@ -36,20 +38,32 @@
     <script charset="utf-8">
     var debugMode = true;
 
-    var creds = {
-        accessToken: "--will-be-obtained-by-refresh--",
-        refreshToken: "5Aep861KIwKdekr90KlxVVUI47zdR6dX_VeBWZBgUZuRVDPRFxk1TKdhIU.JlBAdWR1isPBCbUaeuSt..EbEbkA",
-        clientId: "3MVG9Iu66FKeHhINkB1l7xt7kR8czFcCTUhgoA8Ol2Ltf1eYHOU4SqQRSEitYFDUpqRWcoQ2.dBv_a1Dyu5xa",
-        loginUrl: "https://test.salesforce.com",
-        instanceUrl: "https://cs1.salesforce.com"
-    };
-    Force.init(creds, null, null, null);
+    force.init({loginURL: "https://test.salesforce.com/",
+                appId: "3MVG98dostKihXN53TYStBIiS8BTFb20jwWfFcShqfABb3c.HH3CkmA00FuCmc0aM3v4LZOGR5QBnEi77fotN",
+                oauthCallbackURL: "http://localhost:8200/test/oauthcallback.html",
+                useCordova: false /* running in browser with mock cordova - so do oauth through browser and network through xhr */
+               });
+    
+    function doLogin() {
+        force.login(
+            function() {
+                console.log('OAuth success!');
+                Force.init();
+            }, 
+            function(error) {
+                console.log('OAuth error!');
+                if (confirm("Authentication Failed. Try again?")) doLogin();
+            });
+        
+    }
+    
+    doLogin();
 
     window.addEventListener("load", function() {
         document.getElementById("link_sdkinfo_test_suite")
             .addEventListener("click", function() {new SDKInfoTestSuite().startTests();});
-        document.getElementById("link_forcetk_test_suite")
-            .addEventListener("click", function() {new ForcetkTestSuite().startTests();});
+        document.getElementById("link_forcejs_test_suite")
+            .addEventListener("click", function() {new ForceJSTestSuite().startTests();});
         document.getElementById("link_smartstore_test_suite")
             .addEventListener("click", function() {new SmartStoreTestSuite().startTests();});
         document.getElementById("link_smartstore_load_test_suite")
@@ -66,7 +80,7 @@
           </div> 
 
           <p><a href="#" id="link_sdkinfo_test_suite" data-role="button" data-inline="true">Run SDK Info Tests</a></p>
-          <p><a href="#" id="link_forcetk_test_suite" data-role="button" data-inline="true">Run Forcetk Tests</a></p>
+          <p><a href="#" id="link_forcejs_test_suite" data-role="button" data-inline="true">Run ForceJS Tests</a></p>
           <p><a href="#" id="link_smartstore_test_suite" data-role="button" data-inline="true">Run SmartStore Tests</a></p>
           <p><a href="#" id="link_smartstore_load_test_suite" data-role="button" data-inline="true">Run SmartStore Load Tests</a></p>
           <p><a href="#" id="link_smart_sync_test_suite" data-role="button" data-inline="true">Run SmartSync Tests</a></p>

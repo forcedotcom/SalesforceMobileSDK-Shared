@@ -1,6 +1,6 @@
 cordova.define("com.salesforce.util.exec", function(require, exports, module) {
 /*
- * Copyright (c) 2012-14, salesforce.com, inc.
+ * Copyright (c) 2012-present, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -26,19 +26,25 @@ cordova.define("com.salesforce.util.exec", function(require, exports, module) {
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "2.3.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "5.0.0";
 var exec = function(pluginVersion, successCB, errorCB, service, action, args) {
-    var defaultSuccessCB = function() {
-        console.log(service + ":" + action + " succeeded");
-    };
-    var defaultErrorCB = function() {
-        console.error(service + ":" + action + " failed");
-    };
-    successCB = typeof successCB !== "function" ? defaultSuccessCB : successCB;
-    errorCB = typeof errorCB !== "function" ? defaultErrorCB : errorCB;
+    var tag = "TIMING " + service + ":" + action;
+    console.time(tag);
     args.unshift("pluginSDKVersion:" + pluginVersion);
     var cordovaExec = require('cordova/exec');
-    return cordovaExec(successCB, errorCB, service, action, args);                  
+    return cordovaExec(
+        function() {
+            console.timeEnd(tag);
+            if (typeof successCB === "function")
+                successCB.apply(null, arguments);
+        },
+        function() {
+            console.timeEnd(tag);
+            console.error(tag + " failed");
+            if (typeof errorCB === "function")
+                errorCB.apply(null, arguments);
+        },
+        service, action, args);
 };
 
 /**

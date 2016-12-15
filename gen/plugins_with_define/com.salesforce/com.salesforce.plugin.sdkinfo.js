@@ -1,6 +1,6 @@
 cordova.define("com.salesforce.plugin.sdkinfo", function(require, exports, module) {
 /*
- * Copyright (c) 2012-14, salesforce.com, inc.
+ * Copyright (c) 2012-present, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -26,7 +26,7 @@ cordova.define("com.salesforce.plugin.sdkinfo", function(require, exports, modul
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "2.3.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "5.0.0";
 var SERVICE = "com.salesforce.sdkinfo";
 
 var exec = require("com.salesforce.util.exec").exec;
@@ -49,12 +49,31 @@ var getInfo = function(successCB, errorCB) {
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE, "getInfo", []);
 };
 
+/**
+ * Registers App Feature code
+ */
+var registerAppFeature = function(feature) {
+  if(feature){
+    exec(SALESFORCE_MOBILE_SDK_VERSION, null, null, SERVICE, "registerAppFeature", [{feature:feature}]);
+  }
+};
+
+/**
+ * Unregisters App Feature code
+ */
+var unregisterAppFeature = function(feature) {
+  if(feature){
+    exec(SALESFORCE_MOBILE_SDK_VERSION, null, null, SERVICE, "unregisterAppFeature", [{feature:feature}]);
+  }
+};
 
 /**
  * Part of the module that is public
  */
 module.exports = {
     getInfo: getInfo,
+    registerAppFeature: registerAppFeature,
+    unregisterAppFeature: unregisterAppFeature,
 
     // Constructor
     SDKInfo: SDKInfo

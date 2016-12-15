@@ -67,3 +67,20 @@
   text-shadow: 0 -1px 0 rgba(0, 0, 0, .3);
   background-color: #ff9900;
 }
+
+.circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    float: left;
+    display: flex;
+    text-align: center;
+    line-height: 50px;
+    margin-right: 4px;
+}
+
+.initials {
+    font-size: 1.4em;
+    color: white;
+    width: 100%;
+}

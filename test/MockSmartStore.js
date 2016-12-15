@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, salesforce.com, inc.
+ * Copyright (c) 2012-present, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -32,44 +32,46 @@
  */
 
 var MockSmartStore = (function(window) {
-    // Private
-    var _soups = {};     
-    var _soupIndexedData = {}; 
-    var _soupIndexSpecs = {};
-    var _cursors = {};
-    var _nextSoupEltIds = {};
-    var _nextCursorId = 1;
-
     // Constructor
-    var module = function() {}; 
+    var module = function(isGlobalStore) {
+        this.isGlobalStore = isGlobalStore || false;
+        this._soups = {};
+        this._soupIndexedData = {};
+        this._soupIndexSpecs = {};
+        this._soupSpecs = {};
+        this._cursors = {};
+        this._nextSoupEltIds = {};
+        this._nextCursorId = 1;
+    };
 
     // Prototype
     module.prototype = {
         constructor: module,
 
         reset: function() {
-            _soups = {};
-            _soupIndexedData = {};
-            _soupIndexSpecs = {};
-            _cursors = {};
-            _nextSoupEltIds = {};
-            _nextCursorId = 1;
+            this._soups = {};
+            this._soupIndexedData = {};
+            this._soupIndexSpecs = {};
+            this._soupSpecs = {};
+            this._cursors = {};
+            this._nextSoupEltIds = {};
+            this._nextCursorId = 1;
         },
 
         useSessionStorage: function() {
             if (window.sessionStorage) {
                 // Restore smartstore from storage
-                var STORAGE_KEY_MOCKSTORE = "mockStore";
+                var STORAGE_KEY_MOCKSTORE = this.isGlobalStore ? "mockGlobalStore" : "mockStore";
                 var json = window.sessionStorage.getItem(STORAGE_KEY_MOCKSTORE);
                 if (json) {
                     console.log("Getting store from session storage");
-                    mockStore.fromJSON(json);
+                    this.fromJSON(json);
                 }
                 // Save smartstore to storage when onBeforeUnload fires
                 window.onbeforeunload = function() {
                     if (window.sessionStorage) {
                         console.log("Saving store to session storage");
-                        var json = mockStore.toJSON();
+                        var json = this.toJSON();
                         window.sessionStorage.setItem(STORAGE_KEY_MOCKSTORE, json);
                     }
                 };
@@ -78,23 +80,25 @@ var MockSmartStore = (function(window) {
 
         toJSON: function() {
             return JSON.stringify({
-                soups: _soups,
-                soupIndexedData: _soupIndexedData,
-                soupIndexSpecs: _soupIndexSpecs,
-                cursors: _cursors,
-                nextSoupEltIds: _nextSoupEltIds,
-                nextCursorId: _nextCursorId
+                soups: this._soups,
+                soupIndexedData: this._soupIndexedData,
+                soupIndexSpecs: this._soupIndexSpecs,
+                soupSpecs: this._soupSpecs,
+                cursors: this._cursors,
+                nextSoupEltIds: this._nextSoupEltIds,
+                nextCursorId: this._nextCursorId
             });
         },
 
         fromJSON: function(json) {
             var obj = JSON.parse(json);
-            _soups = obj.soups;
-            _soupIndexedData = obj.soupIndexedData;
-            _soupIndexSpecs = obj.soupIndexSpecs;
-            _cursors = obj.cursors;
-            _nextSoupEltIds = obj.nextSoupEltIds;
-            _nextCursorId = obj.nextCursorId;
+            this._soups = obj.soups;
+            this._soupIndexedData = obj.soupIndexedData;
+            this._soupIndexSpecs = obj.soupIndexSpecs;
+            this._soupSpecs = obj.soupSpecs;
+            this._cursors = obj.cursors;
+            this._nextSoupEltIds = obj.nextSoupEltIds;
+            this._nextCursorId = obj.nextCursorId;
         },
 
         checkSoup: function(soupName) {
@@ -102,15 +106,15 @@ var MockSmartStore = (function(window) {
         },
 
         checkIndex: function(soupName, path) {
-            if (["_soup", "_soupEntryId"].indexOf(path) == -1 && !this.indexExists(soupName, path)) throw new Error(soupName + " does not have an index on " + path); 
+            if (["_soup", "_soupEntryId"].indexOf(path) == -1 && !this.indexExists(soupName, path)) throw new Error(soupName + " does not have an index on " + path);
         },
 
         soupExists: function(soupName) {
-            return _soups[soupName] !== undefined;
+            return this._soups[soupName] !== undefined;
         },
 
         indexExists: function(soupName, indexPath) {
-            var indexSpecs = _soupIndexSpecs[soupName];
+            var indexSpecs = this._soupIndexSpecs[soupName];
             if (indexSpecs != null) {
                 for (var i=0; i<indexSpecs.length; i++) {
                     var indexSpec = indexSpecs[i];
@@ -122,44 +126,55 @@ var MockSmartStore = (function(window) {
             return false;
         },
 
-        registerSoup: function(soupName, indexSpecs) {
+        registerSoup: function(soupName, soupSpec, indexSpecs) {
             if (!this.soupExists(soupName)) {
-                _soups[soupName] = {};
-                _soupIndexSpecs[soupName] = indexSpecs;
-                _soupIndexedData[soupName] = {};
+                if (indexSpecs == null) throw new Error("No indexSpecs provided");
+                this._soups[soupName] = {};
+                this._soupIndexSpecs[soupName] = indexSpecs;
+                this._soupSpecs[soupName] = soupSpec;
+                this._soupIndexedData[soupName] = {};
             }
             return soupName;
         },
 
         removeSoup: function(soupName) {
-            delete _soups[soupName];
-            delete _soupIndexSpecs[soupName];
-            delete _nextSoupEltIds[soupName];
+            delete this._soups[soupName];
+            delete this._soupIndexSpecs[soupName];
+            delete this._soupSpecs[soupName];
+            delete this._nextSoupEltIds[soupName];
         },
 
         getSoupIndexSpecs: function(soupName) {
-            this.checkSoup(soupName); 
-            return _soupIndexSpecs[soupName];
+            this.checkSoup(soupName);
+            return this._soupIndexSpecs[soupName];
         },
 
-        alterSoup: function(soupName, indexSpecs, reIndexData) {
-            this.checkSoup(soupName); 
+        getSoupSpec: function(soupName) {
+            this.checkSoup(soupName);
+            return this._soupSpecs[soupName];
+        },
+
+        alterSoup: function(soupName, soupSpec, indexSpecs, reIndexData) {
+            this.checkSoup(soupName);
 
             // Gather path---type of old index specs
             var oldPathTypes = [];
-            var oldIndexSpecs = _soupIndexSpecs[soupName];
+            var oldIndexSpecs = this._soupIndexSpecs[soupName];
             for (var i=0; i<oldIndexSpecs.length; i++) {
                 var indexSpec = oldIndexSpecs[i];
                 oldPathTypes.push(indexSpec.path + "---" + indexSpec.type);
             }
 
-            // Update _soupIndexSpecs
-            _soupIndexSpecs[soupName] = indexSpecs;
+            // Update this._soupIndexSpecs
+            this._soupIndexSpecs[soupName] = indexSpecs;
+
+            // Update this._soupSpecs
+            this._soupSpecs[soupName] = soupSpec;
 
             // Update soupIndexedData
-            var soup = _soups[soupName];
-            _soupIndexedData[soupName] = {};
-            var soupIndexedData = _soupIndexedData[soupName];
+            var soup = this._soups[soupName];
+            this._soupIndexedData[soupName] = {};
+            var soupIndexedData = this._soupIndexedData[soupName];
             for (var soupEntryId in soup) {
                 soupIndexedData[soupEntryId] = {};
                 var soupElt = soup[soupEntryId];
@@ -180,9 +195,9 @@ var MockSmartStore = (function(window) {
         reIndexSoup: function(soupName, paths) {
             this.checkSoup(soupName);
 
-            var soup = _soups[soupName];
-            var indexSpecs = _soupIndexSpecs[soupName];
-            var soupIndexedData = _soupIndexedData[soupName];
+            var soup = this._soups[soupName];
+            var indexSpecs = this._soupIndexSpecs[soupName];
+            var soupIndexedData = this._soupIndexedData[soupName];
             for (var soupEntryId in soup) {
                 var soupElt = soup[soupEntryId];
 
@@ -199,20 +214,20 @@ var MockSmartStore = (function(window) {
 
         clearSoup: function(soupName) {
             this.checkSoup(soupName);
-            _soups[soupName] = {};
-            _soupIndexedData[soupName] = {};
+            this._soups[soupName] = {};
+            this._soupIndexedData[soupName] = {};
         },
 
         upsertSoupEntries: function(soupName, entries, externalIdPath) {
-            this.checkSoup(soupName); 
-            if (externalIdPath != "_soupEntryId" && !this.indexExists(soupName, externalIdPath)) 
-                throw new Error(soupName + " does not have an index on " + externalIdPath); 
+            this.checkSoup(soupName);
+            if (externalIdPath != "_soupEntryId" && !this.indexExists(soupName, externalIdPath))
+                throw new Error(soupName + " does not have an index on " + externalIdPath);
 
-            var soup = _soups[soupName];
-            var soupIndexedData = _soupIndexedData[soupName];
-            var indexSpecs = _soupIndexSpecs[soupName];
+            var soup = this._soups[soupName];
+            var soupIndexedData = this._soupIndexedData[soupName];
+            var indexSpecs = this._soupIndexSpecs[soupName];
             var upsertedEntries = [];
-            
+
             for (var i=0; i<entries.length; i++) {
                 var entry = JSON.parse(JSON.stringify(entries[i])); // clone
                 var isNew = true;
@@ -236,16 +251,19 @@ var MockSmartStore = (function(window) {
                 }
 
                 // create
-                if (!("_soupEntryId" in entry)) { 
-                    _nextSoupEltIds[soupName] = (soupName in _nextSoupEltIds ? _nextSoupEltIds[soupName]+1 : 1);
-                    entry._soupEntryId = _nextSoupEltIds[soupName];
+                if (!("_soupEntryId" in entry)) {
+                    this._nextSoupEltIds[soupName] = (soupName in this._nextSoupEltIds ? this._nextSoupEltIds[soupName]+1 : 1);
+                    entry._soupEntryId = this._nextSoupEltIds[soupName];
                 }
-                
+
+                // last modified date
+                entry._soupLastModifiedDate = (new Date()).getTime();
+
                 // update/insert into soup
                 soup[entry._soupEntryId] = entry;
                 upsertedEntries.push(entry);
 
-                // update _soupIndexedData
+                // update this._soupIndexedData
                 var indexedData = {};
                 for (var j=0; j<indexSpecs.length; j++) {
                     var path = indexSpecs[j].path;
@@ -257,8 +275,8 @@ var MockSmartStore = (function(window) {
         },
 
         retrieveSoupEntries: function(soupName, entryIds) {
-            this.checkSoup(soupName); 
-            var soup = _soups[soupName];
+            this.checkSoup(soupName);
+            var soup = this._soups[soupName];
             var entries = [];
             for (var i=0; i<entryIds.length; i++) {
                 var entryId = entryIds[i];
@@ -267,85 +285,175 @@ var MockSmartStore = (function(window) {
             return entries;
         },
 
-        removeFromSoup: function(soupName, entryIds) {
-            this.checkSoup(soupName); 
-            var soup = _soups[soupName];
-            var soupIndexedData = _soupIndexedData[soupName];
-            for (var i=0; i<entryIds.length; i++) {
-                var entryId = entryIds[i];
-                delete soup[entryId];
-                delete soupIndexedData[entryId];
+        removeFromSoup: function(soupName, entryIdsOrQuerySpec) {
+            this.checkSoup(soupName);
+            var soup = this._soups[soupName];
+            var soupIndexedData = this._soupIndexedData[soupName];
+            if (entryIdsOrQuerySpec instanceof Array) {
+                var entryIds = entryIdsOrQuerySpec;
+                for (var i=0; i<entryIds.length; i++) {
+                    var entryId = entryIds[i];
+                    delete soup[entryId];
+                    delete soupIndexedData[entryId];
+                }
+            }
+            else {
+                var querySpec = entryIdsOrQuerySpec;
+                var results = this.querySoup(soupName, querySpec).currentPageOrderedEntries;
+                for (var i=0; i<results.length; i++) {
+                    var entryId = results[i]["_soupEntryId"];
+                    delete soup[entryId];
+                    delete soupIndexedData[entryId];
+                }
             }
         },
 
         project: function(soupElt, path) {
-            var pathElements = path.split(".");
-            var o = soupElt;
-            for (var i = 0; i<pathElements.length; i++) {
-                var pathElement = pathElements[i];
-                o = o[pathElement];
+            if (soupElt == null) {
+                return null;
             }
-            return o;
+            if (path == null || path.length == 0) {
+                return soupElt;
+            }
+            var pathElements = path.split(".");
+		    return this.projectHelper(soupElt, pathElements, 0);
         },
 
-        smartQuerySoupFull: function(querySpec) {
+        projectHelper: function(jsonObj, pathElements, index) {
+		    var result = null;
+
+		    if (index == pathElements.length) {
+			    return jsonObj;
+		    }
+
+		    if (null != jsonObj) {
+			    var pathElement = pathElements[index];
+
+			    if (jsonObj instanceof Array) {
+				    result = [];
+				    for (var i=0; i<jsonObj.length; i++) {
+					    var resultPart = this.projectHelper(jsonObj[i], pathElements, index);
+					    if (resultPart != null) {
+                            result.push(resultPart)
+					    }
+				    }
+				    if (result.length == 0) {
+					    result = null;
+				    }
+			    }
+			    else {
+				    result = this.projectHelper(jsonObj[pathElement], pathElements, index+1);
+			    }
+		    }
+
+		    return result;
+	    },
+
+        supportedQueries : function() {
             // NB we don't have full support evidently
+            return [
+                {
+                    name: "Query with variable select fields and where clause {soup:field} IN list of values",
+                    example: "SELECT {soupName:selectField1}, {soupName:selectField2} FROM {soupName} WHERE {soupName:whereField} IN (values)",
+                    pattern: /SELECT (.*) FROM {(.*)} WHERE {(.*):(.*)} IN \((.*)\)/i,
+                    processor: this.smartQuerySoupIn
+                },
+                {
+                    name: "Query with where clause {soup:field} like 'value' with optional order by",
+                    example: "SELECT {soupName:_soup} FROM {soupName} WHERE {soupName:whereField} LIKE 'value' ORDER BY LOWER({soupName:orderByField})",
+                    pattern: /SELECT {(.*):_soup} FROM {(.*)} WHERE {(.*):(.*)} LIKE '(.*)'(?: ORDER BY LOWER\({(.*):(.*)}\))?/i,
+                    processor: this.smartQuerySoupLikeOrdered
+                },
+                {
+                    name: "Count of soup items",
+                    example: "SELECT count(*) FROM {soupName}",
+                    pattern: /SELECT count\(\*\) FROM {(.*)}/i,
+                    processor: this.smartQuerySoupCount
+                },
+                {
+                    name: "Comparing soup item to integer with optional order by",
+                    example: "SELECT {soupName:_soup} FROM {soupName} WHERE {soupName:whereField} > 123456 ORDER BY LOWER({soupName:orderByField})",
+                    pattern: /SELECT {(.*):_soup} FROM {(.*)} WHERE {(.*):(.*)} ([!=<>]+) ([0-9]+)(?: ORDER BY LOWER\({(.*):(.*)}\))?/i,
+                    processor: this.smartQuerySoupCompare
+                }
 
-            var smartSql = querySpec.smartSql;
+            ];
+        },
 
-            // SELECT {soupName:selectField} FROM {soupName} WHERE {soupName:whereField} IN (values)
-            var m = smartSql.match(/SELECT {(.*):(.*)} FROM {(.*)} WHERE {(.*):(.*)} IN \((.*)\)/i);
-            if (m != null && m[1] == m[3] && m[1] == m[4]) {
-                var soupName = m[1];
-                var selectField = m[2]
-                var whereField = m[5];
+        smartQuerySoupIn : function(queryDesc, matches, smartSql) {
+            var soupName = matches[2];
+            var selectFields = this.getSelectFields(soupName, matches[1]);
+            var whereField = matches[4];
+            var values = matches[5].split(",");
 
-                var values = m[6].split(",");
-                for (var i=0; i<values.length; i++) {
+            if (selectFields != null) {
+                var i;
+                for (i = 0; i < values.length; i++) {
                     values[i] = values[i].split("'")[1]; // getting rid of surrounding '
                 }
 
-                this.checkSoup(soupName); 
-                this.checkIndex(soupName, selectField);
+                // Make sure the soup has all the appropriate fields.
+                this.checkSoup(soupName);
+                for (i = 0; i < selectFields.length; i++) {
+                    this.checkIndex(soupName, selectFields[i]);
+                }
                 this.checkIndex(soupName, whereField);
-                var soup = _soups[soupName];
-                var soupIndexedData = _soupIndexedData[soupName];
 
+                var soup = this._soups[soupName];
+
+                // Pull results out from soup iteratively.
                 var results = [];
                 for (var soupEntryId in soup) {
                     var soupElt = soup[soupEntryId];
-                    var value = (whereField == "_soupEntryId" ? soupEntryId : soupIndexedData[soupEntryId][whereField]);
+                    var value = (whereField === "_soupEntryId" ? soupEntryId : this.getTypedIndexedData(soupName, whereField, soupEntryId));
                     if (values.indexOf(value) >= 0) {
+                        var self = this;
                         var row = [];
-                        row.push(selectField == "_soup" ? soupElt : (selectField == "_soupEntryId" ? soupEntryId : soupIndexedData[soupEntryId][selectField]));
+                        selectFields.forEach(function(selectField) {
+                            row.push(selectField === "_soup" ? soupElt : (selectField === "_soupEntryId" ? soupEntryId : self.getTypedIndexedData(soupName, selectField, soupEntryId)));
+                        })
                         results.push(row);
                     }
                 }
 
                 return results;
             }
+        },
 
-            // Query with where clause {soup:field} like 'value'
-            // SELECT {soupName:_soup} FROM {soupName} WHERE {soupName:whereField} LIKE 'value'
-            // Case-insensitive sorted like query
-            // SELECT {soupName:_soup} FROM {soupName} WHERE {soupName:whereField} LIKE 'value' ORDER BY LOWER({soupName:orderByField})
-            var m = smartSql.match(/SELECT {(.*):_soup} FROM {(.*)} WHERE {(.*):(.*)} LIKE '(.*)'(?: ORDER BY LOWER\({(.*):(.*)}\))?/i);
-            if (m != null && m[1] == m[2] && m[1] == m[3] && (!m[6] || m[1] == m[6])) {
-                var soupName = m[1];
-                var whereField = m[4];
-                var likeRegexp = new RegExp("^" + m[5].replace(/%/g, ".*"), "i");
-                var orderField = m[6] ? m[7] : null;
+        // Expect comma separated of {soupName:y}, return array with the values of y
+        getSelectFields: function(soupName, s) {
+            var fields = [];
+            var fieldPattern = /{(.*):(.*)}/;
+            var soupFields = s.split(",");
+            for (var i=0; i<soupFields.length; i++) {
+                var soupField = soupFields[i].trim();
+                var matches = soupField.match(fieldPattern);
+                if (matches == null || matches[1] !== soupName) {
+                    return null;
+                }
+                else {
+                    fields.push(matches[2]);
+                }
+            }
+            return fields;
+        },
 
-                this.checkSoup(soupName); 
+        smartQuerySoupLikeOrdered : function(queryDesc, matches, smartSql) {
+            if (matches[1] === matches[2] && matches[1] === matches[3] && (!matches[6] || matches[1] === matches[6])) {
+                var soupName = matches[1];
+                var whereField = matches[4];
+                var likeRegexp = new RegExp("^" + matches[5].replace(/%/g, ".*"), "i");
+                var orderField = matches[6] ? matches[7] : null;
+
+                this.checkSoup(soupName);
                 this.checkIndex(soupName, whereField);
                 if (orderField) this.checkIndex(soupName, orderField);
-                var soup = _soups[soupName];
-                var soupIndexedData = _soupIndexedData[soupName];
+                var soup = this._soups[soupName];
 
                 var results = [];
                 for (var soupEntryId in soup) {
                     var soupElt = soup[soupEntryId];
-                    var projection = soupIndexedData[soupEntryId][whereField];
+                    var projection = this.getTypedIndexedData(soupName, whereField, soupEntryId) || "";
                     if (projection.match(likeRegexp)) {
                         var row = [];
                         row.push(soupElt);
@@ -357,28 +465,248 @@ var MockSmartStore = (function(window) {
                     results = results.sort(function(row1, row2) {
                         var p1 = row1[0][orderField].toLowerCase();
                         var p2 = row2[0][orderField].toLowerCase();
-                        return ( p1 > p2 ? 1 : (p1 == p2 ? 0 : -1));
+                        return ( p1 > p2 ? 1 : (p1 === p2 ? 0 : -1));
                     });
                 }
 
                 return results;
             }
+        },
 
-            // SELECT count(*) FROM {soupName}
-            var m = smartSql.match(/SELECT count\(\*\) FROM {(.*)}/i);
-            if (m != null) {
-                var soupName = m[1];
-                this.checkSoup(soupName); 
-                var soup = _soups[soupName];
-                var count = 0;
+        smartQuerySoupCount : function(queryDesc, matches, smartSql) {
+            var soupName = matches[1];
+            this.checkSoup(soupName);
+            var soup = this._soups[soupName];
+            var count = 0;
+            for (var soupEntryId in soup) {
+                count++;
+            }
+            return [[count]];
+        },
+
+        smartQuerySoupCompare : function(queryDesc, matches, smartSql) {
+            if (matches[1] === matches[2] && matches[1] === matches[3] && (!matches[7] || matches[1] === matches[7])) {
+                // Gather the parameters.
+                var soupName = matches[2];
+                var whereField = matches[4];
+                var comparator = matches[5];
+                var compareTo = parseInt(matches[6], 10);
+                var orderField = matches[7] ? matches[8] : null;
+
+                // Make sure the soup has all the appropriate fields.
+                this.checkSoup(soupName);
+                this.checkIndex(soupName, whereField);
+
+                var soup = this._soups[soupName];
+
+                // Pull results out from soup iteratively.
+                var results = [];
                 for (var soupEntryId in soup) {
-                    count++;
+                    var soupElt = soup[soupEntryId];
+                    var projection = this.getTypedIndexedData(soupName, whereField, soupEntryId) || 0;
+                    if((comparator == "!=" && projection != compareTo)
+                       || (comparator == "=" && projection == compareTo)
+                       || (comparator == "<" && projection < compareTo)
+                       || (comparator == "<=" && projection <= compareTo)
+                       || (comparator == ">=" && projection >= compareTo)
+                       || (comparator == ">" && projection > compareTo))
+                    {
+                        var row = [];
+                        row.push(soupElt);
+                        results.push(row);
+                    }
                 }
-                return [[count]];
+
+                if (orderField) {
+                    results = results.sort(function(row1, row2) {
+                        var p1 = row1[0][orderField].toLowerCase();
+                        var p2 = row2[0][orderField].toLowerCase();
+                        return ( p1 > p2 ? 1 : (p1 === p2 ? 0 : -1));
+                    });
+                }
+
+                return results;
+            }
+        },
+
+        smartQuerySoupFull: function(querySpec) {
+            // Match the query against the supported queries in test and then execute.
+
+            var smartSql = querySpec.smartSql;
+            var supportedQueries = this.supportedQueries();
+
+            for (var i = 0; i < supportedQueries.length; i++) {
+                queryDesc = supportedQueries[i];
+                var matches = smartSql.match(queryDesc.pattern);
+                if (matches !== null) {
+                    var results = queryDesc.processor.call(this, queryDesc, matches, smartSql);
+                    if (results == null) {
+                        throw new Error("SmartQuery for \"" + queryDesc.name + "\" (Example: " +
+                                        queryDesc.example + ") had an error executing: " + smartSql);
+                    }
+                    else {
+                        return results;
+                    }
+                }
             }
 
-            // If we get here, it means we don't support that query in the mock smartstore
             throw new Error("SmartQuery not supported by MockSmartStore:" + smartSql);
+        },
+
+        // Support some full-text queries (see doesFullTextMatch for details)
+        querySoupFullTextSearch: function(soupName, querySpec) {
+            this.checkSoup(soupName);
+            var soup = this._soups[soupName];
+            var results = [];
+
+            for (var soupEntryId in soup) {
+                var soupElt = soup[soupEntryId];
+
+                var text = "";
+                if (querySpec.indexPath) {
+                    text = this.getTypedIndexedData(soupName, querySpec.indexPath, soupEntryId);
+                }
+                else {
+                    // No indexPath provided, match against all full-text fields
+                    var indexSpecs = this._soupIndexSpecs[soupName];
+                    for (var i=0; i<indexSpecs.length; i++) {
+                        var indexSpec = indexSpecs[i];
+                        if (indexSpec.type === "full_text") {
+                            text += this.getTypedIndexedData(soupName, indexSpec.path, soupEntryId) + " ";
+                        }
+                    }
+                }
+                if (this.doesFullTextMatch(text, querySpec.matchKey)) {
+                    results.push(soupElt);
+                }
+            }
+
+            return this.applySelectPaths(this.sortResults(results, querySpec), querySpec.selectPaths);
+        },
+
+        applySelectPaths: function(soupElts, selectPaths) {
+            if (selectPaths == null) {
+                return soupElts;
+            }
+            else {
+                var results = [];
+                for (var i=0; i<soupElts.length; i++) {
+                    var soupElt = soupElts[i];
+                    var result = [];
+                    for (var j=0; j<selectPaths.length; j++) {
+                        result.push(soupElt[selectPaths[j]]);
+                    }
+                    results.push(result);
+                }
+                return results;
+            }
+        },
+
+        typeForPath: function(soupName, path) {
+            var indexSpecs = this._soupIndexSpecs[soupName];
+            if (indexSpecs != null) {
+                for (var i=0; i<indexSpecs.length; i++) {
+                    var indexSpec = indexSpecs[i];
+                    if (indexSpec.path == path) {
+                        return indexSpec.type;
+                    }
+                }
+            }
+            return null;
+        },
+
+        asType: function(type, value) {
+            switch(type) {
+            case "string":
+            case "full_text":
+                // e.g. non-leaf nodes
+                if (typeof value !== "string") {
+                    return JSON.stringify(value);
+                }
+                break;
+            case "integer":
+            case "floating":
+                if (typeof value === "string") {
+                    return (type === "integer" ? parseInt(value, 10) : parseFloat(value));
+                }
+                break;
+            }
+            // XXX might not get a number back if a number is expected
+            return value;
+        },
+
+        getTypedIndexedData: function(soupName, path, soupEntryId) {
+            this.checkIndex(soupName, path);
+            var soupIndexedData = this._soupIndexedData[soupName];
+            var dataRaw = soupIndexedData[soupEntryId][path];
+            var type = this.typeForPath(soupName, path);
+            return this.asType(type, dataRaw);
+        },
+
+        // query: space separated terms that all need to be in text
+        // A term can be prefixed by - to indicate it should not be present.
+        // A term can be suffixed by * to indicate to match any words starting with that term
+        //
+        // Example for the text: "the fox jumped over the dog"
+        // query "fox dog" will return true
+        // query "fox NOT dog" will return false
+        // query "f* dog" will return true
+        doesFullTextMatch: function(text, query) {
+            var queryWithMinusForNots = query.replace(/ NOT /g, " -"); // code was originally written for standard syntax, turning "abc NOT def" into "abc -def"
+            var wordsOfQuery = queryWithMinusForNots.toLowerCase().split(/[^a-zA-Z0-9*-]/);
+            wordsOfQuery.sort(); // to move the "-" words first
+            var wordsOfElt = text.toLowerCase().split(/\W/);
+            wordsOfElt.sort(); // to speed up matches
+            for (var j=0; j<wordsOfQuery.length; j++) {
+                var wordOfQuery = wordsOfQuery[j].trim();
+                if (wordOfQuery == "") {
+                    continue;
+                }
+
+                // Negative keyword (keyword to exclude)
+                if (wordOfQuery.indexOf("-") == 0) {
+                    wordOfQuery = wordOfQuery.substring(1);
+
+                    for (var i=0; i<wordsOfElt.length; i++) {
+                        var wordOfElt = wordsOfElt[i].trim();
+                        if (wordOfElt == "") {
+                            continue;
+                        }
+                        if (wordOfElt.indexOf(wordOfQuery) == 0) {
+                            // A query word to exclude was found
+                            return false;
+                        }
+                    }
+                }
+                // Regular keyword
+                else {
+                    var foundQueryWord = false;
+                    for (var i=0; i<wordsOfElt.length; i++) {
+                        var wordOfElt = wordsOfElt[i].trim();
+                        if (wordOfElt == "") {
+                            continue;
+                        }
+
+                        if (wordOfQuery.endsWith("*")) {
+                            if (wordOfElt.indexOf(wordOfQuery.substring(0, wordOfQuery.length - 1)) == 0) {
+                                foundQueryWord = true;
+                                // all the "-" tests have already been conducted, we don't need to test further
+                                break;
+                            }
+                        }
+                        else if (wordOfQuery == wordOfElt) {
+                            foundQueryWord = true;
+                            // all the "-" tests have already been conducted, we don't need to test further
+                            break;
+                        }
+                    }
+                    // This query word was not found
+                    if (!foundQueryWord) {
+                        return false;
+                    }
+                }
+            }
+            return true;
         },
 
         querySoupFull: function(soupName, querySpec) {
@@ -386,25 +714,34 @@ var MockSmartStore = (function(window) {
                 return this.smartQuerySoupFull(querySpec);
             }
 
-            // other query type
-            this.checkSoup(soupName); 
-            this.checkIndex(soupName, querySpec.indexPath);
+            if (querySpec.queryType == "match") {
+                return this.querySoupFullTextSearch(soupName, querySpec);
+            }
 
-            var soup = _soups[soupName];
-            var soupIndexedData = _soupIndexedData[soupName];
+            // other query type
+            this.checkSoup(soupName);
+
+            // other query type (but not all query)
+            if (!(querySpec.queryType == "range" && querySpec.beginKey == null && querySpec.endKey == null)) {
+                this.checkIndex(soupName, querySpec.indexPath);
+            }
+
+            var soup = this._soups[soupName];
             var results = [];
             var likeRegexp = (querySpec.likeKey ? new RegExp("^" + querySpec.likeKey.replace(/%/g, ".*"), "i") : null);
             for (var soupEntryId in soup) {
                 var soupElt = soup[soupEntryId];
-                var projection = soupIndexedData[soupEntryId][querySpec.indexPath];
+                var projection = querySpec.indexPath == null ? null : this.getTypedIndexedData(soupName, querySpec.indexPath, soupEntryId);
+                var type = this.typeForPath(soupName, querySpec.indexPath);
+
                 if (querySpec.queryType === "exact") {
-                    if (projection == querySpec.matchKey) {
+                    if (projection == this.asType(type, querySpec.matchKey)) {
                         results.push(soupElt);
                     }
                 }
                 else if (querySpec.queryType === "range") {
-                    if ((querySpec.beginKey == null || projection >= querySpec.beginKey)
-                        && (querySpec.endKey == null || projection <= querySpec.endKey)) {
+                    if ((querySpec.beginKey == null || projection >= this.asType(type, querySpec.beginKey))
+                        && (querySpec.endKey == null || projection <= this.asType(type, querySpec.endKey))) {
                         results.push(soupElt);
                     }
                 }
@@ -415,155 +752,309 @@ var MockSmartStore = (function(window) {
                 }
             }
 
-            results = results.sort(function(soupElt1,soupElt2) {
-                var p1 = soupElt1[querySpec.indexPath];
-                var p2 = soupElt2[querySpec.indexPath];
+            return this.applySelectPaths(this.sortResults(results, querySpec), querySpec.selectPaths);
+        },
+
+        sortResults: function(results, querySpec) {
+            var resultsSorted = results.sort(function(soupElt1,soupElt2) {
+                var p1 = soupElt1[querySpec.orderPath];
+                var p2 = soupElt2[querySpec.orderPath];
                 var compare = ( p1 > p2 ? 1 : (p1 == p2 ? 0 : -1));
                 return (querySpec.order == "ascending" ? compare : -compare);
             });
 
-            return results;
+            return resultsSorted;
         },
-
 
         querySoup: function(soupName, querySpec) {
             var results = this.querySoupFull(soupName, querySpec);
-            var cursorId = _nextCursorId++;
+            var cursorId = this._nextCursorId++;
             var cursor = {
-                cursorId: cursorId, 
-                soupName: soupName, 
-                querySpec: querySpec, 
+                cursorId: cursorId,
                 pageSize: querySpec.pageSize,
+                soupName: soupName,
+                querySpec: querySpec,
                 currentPageIndex: 0,
                 currentPageOrderedEntries: results.slice(0, querySpec.pageSize),
                 totalPages: Math.ceil(results.length / querySpec.pageSize),
                 totalEntries: results.length
             };
 
-            _cursors[cursorId] = cursor;
-            return cursor;
+            this._cursors[cursorId] = cursor;
+            // Since original cursor from smarstore doesn't contain querySpec and soupName,
+            // remove them here too before returning cursor to the user.
+            return this.omit(cursor, 'soupName', 'querySpec');
         },
 
         moveCursorToPage: function(cursorId, pageIndex) {
-            var cursor = _cursors[cursorId];
+            var cursor = this._cursors[cursorId];
             var querySpec = cursor.querySpec;
             var results = this.querySoupFull(cursor.soupName, querySpec);
 
             cursor.currentPageIndex = pageIndex;
             cursor.currentPageOrderedEntries = results.slice(pageIndex*querySpec.pageSize, (pageIndex+1)*querySpec.pageSize);
 
-            return cursor;
+            // Since original cursor from smarstore doesn't contain querySpec and soupName,
+            // remove them here too before returning cursor to the user.
+            return this.omit(cursor, 'soupName', 'querySpec');
+        },
+
+        omit: function(obj, varNames) {
+            var ret = {};
+            for(var i in obj) {
+                if(varNames.indexOf(i) < 0) {
+                    ret[i] = obj[i];
+                }
+            }
+            return ret;
         },
 
         closeCursor: function(cursorId) {
-            delete _cursors[cursorId];
+            delete this._cursors[cursorId];
         },
-
-        hookToCordova: function(cordova) {
-            var SMARTSTORE_SERVICE = "com.salesforce.smartstore";
-            var self = this;
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgGetDatabaseSize", function (successCB, errorCB, args) {
-                successCB(self.toJSON().length);
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgRegisterSoup", function (successCB, errorCB, args) {
-                var soupName = args[0].soupName;
-                var indexSpecs = args[0].indexes;
-                if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
-                if (indexSpecs !== undefined && indexSpecs.length == 0) {errorCB("No indexSpecs specified for soup: " + soupName); return;}
-                successCB(self.registerSoup(soupName, indexSpecs));
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgRemoveSoup", function (successCB, errorCB, args) {
-                var soupName = args[0].soupName;
-                self.removeSoup(soupName);
-                successCB("OK");
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgClearSoup", function (successCB, errorCB, args) {
-                var soupName = args[0].soupName;
-                self.clearSoup(soupName);
-                successCB("OK");
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgGetSoupIndexSpecs", function (successCB, errorCB, args) {
-                var soupName = args[0].soupName;
-                if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
-                successCB(self.getSoupIndexSpecs(soupName));
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgAlterSoup", function (successCB, errorCB, args) {
-                var soupName = args[0].soupName;
-                var indexSpecs = args[0].indexes;
-                var reIndexData = args[0].reIndexData;
-                if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
-                successCB(self.alterSoup(soupName, indexSpecs, reIndexData));
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgReIndexSoup", function (successCB, errorCB, args) {
-                var soupName = args[0].soupName;
-                var paths = args[0].paths;
-                if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
-                successCB(self.reIndexSoup(soupName, paths));
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgSoupExists", function (successCB, errorCB, args) {
-                var soupName = args[0].soupName;
-                successCB(self.soupExists(soupName));
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgQuerySoup", function (successCB, errorCB, args) {
-                var soupName = args[0].soupName;
-                var querySpec = args[0].querySpec;
-                successCB(self.querySoup(soupName, querySpec));
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgRunSmartQuery", function (successCB, errorCB, args) {
-                var querySpec = args[0].querySpec;
-                successCB(self.querySoup(null, querySpec));
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgRetrieveSoupEntries", function (successCB, errorCB, args) {
-                var soupName = args[0].soupName;
-                var entryIds = args[0].entryIds;
-                successCB(self.retrieveSoupEntries(soupName, entryIds));
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgUpsertSoupEntries", function (successCB, errorCB, args) {
-                var soupName = args[0].soupName;
-                var entries = args[0].entries;
-                var externalIdPath = args[0].externalIdPath;
-                successCB(self.upsertSoupEntries(soupName, entries, externalIdPath));
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgRemoveFromSoup", function (successCB, errorCB, args) {
-                var soupName = args[0].soupName;
-                var entryIds = args[0].entryIds;
-                self.removeFromSoup(soupName, entryIds);
-                successCB("OK");
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgMoveCursorToPageIndex", function (successCB, errorCB, args) {
-                var cursorId = args[0].cursorId;
-                var index = args[0].index;
-                successCB(self.moveCursorToPage(cursorId, index));
-            });
-
-            cordova.interceptExec(SMARTSTORE_SERVICE, "pgCloseCursor", function (successCB, errorCB, args) {
-                var cursorId = args[0].cursorId;
-                self.closeCursor(cursorId);
-                if (successCB) {
-                    successCB("OK");
-                }
-            });
-        }
-
     };
 
     // Return module
     return module;
 })(window);
 
-var mockStore = new MockSmartStore();
-mockStore.hookToCordova(cordova);
+// Store functions
+var StoreMap = (function() {
+  // Constructor
+  var module = function() {
+      this.globalStores = {};
+      this.userStores = {};
+  };
+
+  // Prototype
+  module.prototype = {
+      constructor: module,
+
+      getStore: function (args) {
+         var isGlobal = args[0].isGlobalStore;
+         var storeName = (args[0].storeName==='undefined' || args[0].storeName == null)?"defaultStore":args[0].storeName;
+         var store;
+
+         if(storeName == null)
+            storeName = "defaultStore";
+
+        if(isGlobal == null)
+               isGlobal = false;
+
+         store = isGlobal?this.globalStores[storeName]:this.userStores[storeName];
+
+         if(store == null) {
+            store = new MockSmartStore(isGlobal);
+            if(isGlobal == true)
+               this.globalStores[storeName] = store;
+            else
+               this.userStores[storeName] = store;
+         }
+         return store;
+      },
+
+      getAllStores: function() {
+          var stores = new Array();
+          var self = this;
+          if(this.userStores) {
+            Object.keys(this.userStores).forEach(function(key, index) {
+                stores.push({'storeName':key,'isGlobalStore':false});
+              });
+          }
+          return stores;
+      },
+
+      getAllGlobalStores: function() {
+          var stores = new Array();
+          var self = this;
+          if(this.globalStores) {
+            Object.keys(this.globalStores).forEach(function(key, index) {
+                   stores.push({'storeName':key,'isGlobalStore':true});
+                });
+          }
+          return stores;
+      },
+
+      removeStore: function(args) {
+          var newStoreList = [];
+          var oldStoreList;
+          if(args[0].isGlobalStore == true) {
+              oldStoreList = this.globalStores;
+          }else {
+              oldStoreList = this.userStores;
+          }
+          Object.keys(oldStoreList).forEach(function(key, index) {
+                if(key.toLowerCase()!=args[0].storeName.toLowerCase())
+                     newStoreList[key] = oldStoreList[key];
+               });
+
+          if(args[0].isGlobalStore == true) {
+              this.globalStores = newStoreList;
+          }else {
+              this.userStores = newStoreList;
+          }
+          return newStoreList;
+      },
+
+      removeAllStores: function() {
+          var storeNames = new Array();
+          this.userStores = [];
+          return;
+      },
+
+      removeAllGlobalStores: function() {
+          var storeNames = new Array();
+          this.globalStores = [];
+          return;
+      }
+    };
+    return module;
+  })();
+
+var storeMap = new StoreMap();
+
+(function (cordova) {
+
+    var SMARTSTORE_SERVICE = "com.salesforce.smartstore";
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgGetDatabaseSize", function (successCB, errorCB, args) {
+        var targetStore = storeMap.getStore(args);
+        successCB(targetStore.toJSON().length);
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgRegisterSoup", function (successCB, errorCB, args) {
+        var targetStore = storeMap.getStore(args);
+        var soupSpec = args[0].soupSpec == null ? {name: args[0].soupName, features: []} : args[0].soupSpec;
+        var soupName = args[0].soupName == null ? soupSpec.name : args[0].soupName;
+        var indexSpecs = args[0].indexes;
+        if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
+        if (indexSpecs !== undefined && indexSpecs.length == 0) {errorCB("No indexSpecs specified for soup: " + soupName); return;}
+        successCB(targetStore.registerSoup(soupName, soupSpec, indexSpecs));
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgRemoveSoup", function (successCB, errorCB, args) {
+        var targetStore = storeMap.getStore(args);
+        var soupName = args[0].soupName;
+        targetStore.removeSoup(soupName);
+        successCB("OK");
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgClearSoup", function (successCB, errorCB, args) {
+        var targetStore = storeMap.getStore(args);
+        var soupName = args[0].soupName;
+        targetStore.clearSoup(soupName);
+        successCB("OK");
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgGetSoupIndexSpecs", function (successCB, errorCB, args) {
+        var targetStore = storeMap.getStore(args);
+        var soupName = args[0].soupName;
+        if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
+        successCB(targetStore.getSoupIndexSpecs(soupName));
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgAlterSoup", function (successCB, errorCB, args) {
+        var targetStore = storeMap.getStore(args);
+        var soupSpec = args[0].soupSpec == null ? {name: args[0].soupName, features: []} : args[0].soupSpec;
+        var soupName = args[0].soupName == null ? soupSpec.name : args[0].soupName;
+        var indexSpecs = args[0].indexes;
+        var reIndexData = args[0].reIndexData;
+        if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
+        successCB(targetStore.alterSoup(soupName, soupSpec, indexSpecs, reIndexData));
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgReIndexSoup", function (successCB, errorCB, args) {
+        var targetStore = storeMap.getStore(args);
+        var soupName = args[0].soupName;
+        var paths = args[0].paths;
+        if (soupName == null) {errorCB("Bogus soup name: " + soupName); return;}
+        successCB(targetStore.reIndexSoup(soupName, paths));
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgSoupExists", function (successCB, errorCB, args) {
+        var targetStore = storeMap.getStore(args);
+        var soupName = args[0].soupName;
+        successCB(targetStore.soupExists(soupName));
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgQuerySoup", function (successCB, errorCB, args) {
+        var targetStore = storeMap.getStore(args);
+        var soupName = args[0].soupName;
+        var querySpec = args[0].querySpec;
+        successCB(targetStore.querySoup(soupName, querySpec));
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgRunSmartQuery", function (successCB, errorCB, args) {
+        var targetStore = storeMap.getStore(args);
+        var querySpec = args[0].querySpec;
+        successCB(targetStore.querySoup(null, querySpec));
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgRetrieveSoupEntries", function (successCB, errorCB, args) {
+        var targetStore = storeMap.getStore(args);
+        var soupName = args[0].soupName;
+        var entryIds = args[0].entryIds;
+        successCB(targetStore.retrieveSoupEntries(soupName, entryIds));
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgUpsertSoupEntries", function (successCB, errorCB, args) {
+        var targetStore = storeMap.getStore(args);
+        var soupName = args[0].soupName;
+        var entries = args[0].entries;
+        var externalIdPath = args[0].externalIdPath;
+        successCB(targetStore.upsertSoupEntries(soupName, entries, externalIdPath));
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgRemoveFromSoup", function (successCB, errorCB, args) {
+        var targetStore = storeMap.getStore(args);
+        var soupName = args[0].soupName;
+        var entryIds = args[0].entryIds;
+        var querySpec = args[0].querySpec;
+        targetStore.removeFromSoup(soupName, entryIds || querySpec);
+        successCB("OK");
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgMoveCursorToPageIndex", function (successCB, errorCB, args) {
+        var targetStore = storeMap.getStore(args);
+        var cursorId = args[0].cursorId;
+        var index = args[0].index;
+        successCB(targetStore.moveCursorToPage(cursorId, index));
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgCloseCursor", function (successCB, errorCB, args) {
+        var targetStore = storeMap.getStore(args);
+        var cursorId = args[0].cursorId;
+        targetStore.closeCursor(cursorId);
+        if (successCB) {
+            successCB("OK");
+        }
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgGetSoupSpec", function (successCB, errorCB, args) {
+        var targetStore = storeMap.getStore(args);
+        var soupName = args[0].soupName;
+        successCB(targetStore.getSoupSpec(soupName));
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgGetAllStores", function (successCB, errorCB, args) {
+        successCB(storeMap.getAllStores());
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgGetAllGlobalStores", function (successCB, errorCB, args) {
+        successCB(storeMap.getAllGlobalStores());
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgRemoveAllGlobalStores", function (successCB, errorCB, args) {
+        successCB(storeMap.removeAllGlobalStores());
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgRemoveAllStores", function (successCB, errorCB, args) {
+        successCB(storeMap.removeAllStores());
+    });
+
+    cordova.interceptExec(SMARTSTORE_SERVICE, "pgRemoveStore", function (successCB, errorCB, args) {
+        successCB(storeMap.removeStore(args));
+    });
+
+
+})(cordova);

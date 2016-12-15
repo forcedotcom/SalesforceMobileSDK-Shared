@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-14, salesforce.com, inc.
+ * Copyright (c) 2012-present, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "2.3.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "5.0.0";
 
 /**
  * Utilify functions for logging
@@ -81,10 +81,10 @@ cordova.define("com.salesforce.util.logger", function(require, exports, module) 
         var trimmedOrigUrl = origUrl.trim();
         if (trimmedOrigUrl === '')
             return trimmedOrigUrl;
-        
+
         if ((typeof sanitizeParamArray !== "object") || (sanitizeParamArray.length === 0))
             return trimmedOrigUrl;
-        
+
         var redactedUrl = trimmedOrigUrl;
         for (var i = 0; i < sanitizeParamArray.length; i++) {
             var paramRedactRegexString = "^(.*[\\?&]" + sanitizeParamArray[i] + "=)([^&]+)(.*)$";
@@ -92,7 +92,7 @@ cordova.define("com.salesforce.util.logger", function(require, exports, module) 
             if (paramRedactRegex.test(redactedUrl))
                 redactedUrl = redactedUrl.replace(paramRedactRegex, "$1[redacted]$3");
         }
-        
+
         return redactedUrl;
     };
 
@@ -118,7 +118,7 @@ cordova.define("com.salesforce.util.event", function(require, exports, module) {
         STARTING: {code: 1, description: "Loading application", isError: false},
         OFFLINE: {code: 2, description: "Your device is offline. Can't continue.", isError: true}
     };
-           
+
     /**
      * Dispatches event with current status text and success indicator.
      */
@@ -141,7 +141,7 @@ cordova.define("com.salesforce.util.event", function(require, exports, module) {
 });
 
 /**
- * Utility functions used at startup 
+ * Utility functions used at startup
  */
 cordova.define("com.salesforce.util.bootstrap", function(require, exports, module) {
 
@@ -158,8 +158,9 @@ cordova.define("com.salesforce.util.bootstrap", function(require, exports, modul
         } else {
             logger.logToConsole("deviceIsOnline connType is undefined.");
         }
-        
-        if (typeof connType !== 'undefined') {
+
+        // Android Chrome has navigator.connection but not window.Connection, which is cordova object.
+        if (typeof connType !== 'undefined' && window.Connection) {
             // Cordova's connection object.  May be more accurate?
             return (connType && connType != Connection.NONE && connType != Connection.UNKNOWN);
         } else {
@@ -181,17 +182,23 @@ cordova.define("com.salesforce.util.bootstrap", function(require, exports, modul
  */
 cordova.define("com.salesforce.util.exec", function(require, exports, module) {
     var exec = function(pluginVersion, successCB, errorCB, service, action, args) {
-        var defaultSuccessCB = function() {
-            console.log(service + ":" + action + " succeeded");
-        };
-        var defaultErrorCB = function() {
-            console.error(service + ":" + action + " failed");
-        };
-        successCB = typeof successCB !== "function" ? defaultSuccessCB : successCB;
-        errorCB = typeof errorCB !== "function" ? defaultErrorCB : errorCB;
+        var tag = "TIMING " + service + ":" + action;
+        console.time(tag);
         args.unshift("pluginSDKVersion:" + pluginVersion);
         var cordovaExec = require('cordova/exec');
-        return cordovaExec(successCB, errorCB, service, action, args);                  
+        return cordovaExec(
+            function() {
+                console.timeEnd(tag);
+                if (typeof successCB === "function")
+                    successCB.apply(null, arguments);
+            },
+            function() {
+                console.timeEnd(tag);
+                console.error(tag + " failed");
+                if (typeof errorCB === "function")
+                    errorCB.apply(null, arguments);
+            },
+            service, action, args);
     };
 
     /**
@@ -201,6 +208,52 @@ cordova.define("com.salesforce.util.exec", function(require, exports, module) {
         exec: exec
     };
 });
+
+/**
+ * Helper function to turn function taking callbacks into a promise
+ */
+cordova.define("com.salesforce.util.promiser", function(require, exports, module) {
+
+    var promiser = function(object, methodName, objectName) {
+        var retfn = function () {
+            var args = Array.prototype.slice.call(arguments);
+
+            return new Promise(function(resolve, reject) {
+                args.push(function() {
+                    console.debug("------> Calling successCB for " + objectName + ":" + methodName);
+                    try {
+                        resolve.apply(null, arguments);
+                    }
+                    catch (err) {
+                        console.error("------> Error when calling successCB for " + objectName + ":" + methodName);
+                        console.error(err.stack);
+                    }
+                });
+                args.push(function() {
+                    console.debug("------> Calling errorCB for " + objectName + ":" + methodName);
+                    try {
+                        reject.apply(null, arguments);
+                    }
+                    catch (err) {
+                        console.error("------> Error when calling errorCB for " + objectName + ":" + methodName);
+                        console.error(err.stack);
+                    }
+                });
+                console.debug("-----> Calling " + objectName + ":" + methodName);
+                object[methodName].apply(object, args);
+            });
+        };
+        return retfn;
+    };
+
+    /**
+     * Part of the module that is public
+     */
+    module.exports = {
+        promiser: promiser,
+    };
+});
+
 
 cordova.define("com.salesforce.plugin.sdkinfo", function(require, exports, module) {
     var SERVICE = "com.salesforce.sdkinfo";
@@ -225,12 +278,31 @@ cordova.define("com.salesforce.plugin.sdkinfo", function(require, exports, modul
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE, "getInfo", []);
     };
 
+    /**
+     * Registers App Feature code
+     */
+    var registerAppFeature = function(feature) {
+      if(feature){
+        exec(SALESFORCE_MOBILE_SDK_VERSION, null, null, SERVICE, "registerAppFeature", [{feature:feature}]);
+      }
+    };
+
+    /**
+     * Unregisters App Feature code
+     */
+    var unregisterAppFeature = function(feature) {
+      if(feature){
+        exec(SALESFORCE_MOBILE_SDK_VERSION, null, null, SERVICE, "unregisterAppFeature", [{feature:feature}]);
+      }
+    };
 
     /**
      * Part of the module that is public
      */
     module.exports = {
         getInfo: getInfo,
+        registerAppFeature: registerAppFeature,
+        unregisterAppFeature: unregisterAppFeature,
 
         // Constructor
         SDKInfo: SDKInfo
@@ -253,7 +325,7 @@ cordova.define("com.salesforce.plugin.oauth", function (require, exports, module
      * per page load.
      */
     var logoutInitiated = false;
- 
+
     /**
      * Obtain authentication credentials, calling 'authenticate' only if necessary.
      * Most index.html authors can simply use this method to obtain auth credentials
@@ -261,19 +333,21 @@ cordova.define("com.salesforce.plugin.oauth", function (require, exports, module
      *   success - The success callback function to use.
      *   fail    - The failure/error callback function to use.
      * cordova returns a dictionary with:
-     *     accessToken
-     *     refreshToken
-     *  clientId
-     *     userId
-     *     orgId
-     *  loginUrl
-     *     instanceUrl
-     *     userAgent
+     *   accessToken
+     *   refreshToken
+     *   clientId
+     *   userId
+     *   orgId
+     *   loginUrl
+     *   instanceUrl
+     *   userAgent
+     *   community id
+     *   community url
      */
     var getAuthCredentials = function (success, fail) {
         exec(SALESFORCE_MOBILE_SDK_VERSION, success, fail, SERVICE, "getAuthCredentials", []);
     };
- 
+
     /**
      * Initiates the authentication process, with the given app configuration.
      *   success         - The success callback function to use.
@@ -287,6 +361,8 @@ cordova.define("com.salesforce.plugin.oauth", function (require, exports, module
      *   loginUrl
      *   instanceUrl
      *   userAgent
+     *   community id
+     *   community url
      */
     var authenticate = function (success, fail) {
         exec(SALESFORCE_MOBILE_SDK_VERSION, success, fail, SERVICE, "authenticate", []);
@@ -295,7 +371,7 @@ cordova.define("com.salesforce.plugin.oauth", function (require, exports, module
     /**
      * Logout the current authenticated user. This removes any current valid session token
      * as well as any OAuth refresh token.  The user is forced to login again.
-     * This method does not call back with a success or failure callback, as 
+     * This method does not call back with a success or failure callback, as
      * (1) this method must not fail and (2) in the success case, the current user
      * will be logged out and asked to re-authenticate.  Note also that this method can only
      * be called once per page load.  Initiating logout will ultimately redirect away from
@@ -308,7 +384,7 @@ cordova.define("com.salesforce.plugin.oauth", function (require, exports, module
             exec(SALESFORCE_MOBILE_SDK_VERSION, null, null, SERVICE, "logoutCurrentUser", []);
         }
     };
- 
+
     /**
      * Gets the app's homepage as an absolute URL.  Used for attempting to load any cached
      * content that the developer may have built into the app (via HTML5 caching).
@@ -321,34 +397,47 @@ cordova.define("com.salesforce.plugin.oauth", function (require, exports, module
     };
 
     /**
-     * Goes through the refresh flow, and sets the new session token in the supplied forcetkClient.
-     */
-    var forcetkRefresh = function (forcetkClient, success, fail) {
-        authenticate(function(oauthResponse) {
-            var oauthResponseData = oauthResponse;
-            if (oauthResponse.data)  {
-                oauthResponseData = oauthResponse.data;
-            }
-            forcetkClient.setSessionToken(oauthResponseData.accessToken, null, oauthResponseData.instanceUrl);
-            success();
-        },
-        fail);
-    };
-
-    /**
      * Part of the module that is public
      */
     module.exports = {
         getAuthCredentials: getAuthCredentials,
         authenticate: authenticate,
         logout: logout,
-        getAppHomeUrl: getAppHomeUrl,
-        forcetkRefresh: forcetkRefresh
+        getAppHomeUrl: getAppHomeUrl
     };
 });
 
 // For backward compatibility
 var SalesforceOAuthPlugin = cordova.require("com.salesforce.plugin.oauth");
+
+cordova.define("com.salesforce.plugin.network", function(require, exports, module) {
+    var SERVICE = "com.salesforce.network";
+    var exec = require("com.salesforce.util.exec").exec;
+
+    /**
+     * Sends a network request using the native network stack.
+     */
+    var sendRequest = function(endPoint, path, successCB, errorCB, method, payload, headerParams, fileParams) {
+        method = method || "GET";
+        payload = payload || {};
+        headerParams = headerParams || {};
+
+        /*
+         * File params expected to be of the form:
+         * {<fileParamNameInPost>: {fileMimeType:<someMimeType>, fileUrl:<fileUrl>, fileName:<fileNameForPost>}}.
+         */
+        fileParams = fileParams || {};
+        var args = {endPoint: endPoint, path:path, method:method, queryParams:payload, headerParams:headerParams, fileParams: fileParams};
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE, "pgSendRequest", [args]);
+    };
+
+    /**
+     * Part of the module that is public.
+     */
+    module.exports = {
+        sendRequest: sendRequest
+    };
+});
 
 cordova.define("com.salesforce.plugin.sfaccountmanager", function (require, exports, module) {
     var SERVICE = "com.salesforce.sfaccountmanager";
@@ -375,7 +464,7 @@ cordova.define("com.salesforce.plugin.sfaccountmanager", function (require, expo
      * Can only be initiated once per page load.
      */
     var logoutInitiated = false;
- 
+
     /**
      * Obtains the list of user accounts already logged in.
      *   success - The success callback function to use.
@@ -418,7 +507,7 @@ cordova.define("com.salesforce.plugin.sfaccountmanager", function (require, expo
      * Logs out the specified user, or the current user if not specified.
      * This removes any current valid session token as well as any OAuth
      * refresh token.  The user is forced to login again.
-     * This method does not call back with a success or failure callback, as 
+     * This method does not call back with a success or failure callback, as
      * (1) this method must not fail and (2) in the success case, the current user
      * will be logged out and asked to re-authenticate. Note also that this method can only
      * be called once per page load. Initiating logout will ultimately redirect away from
@@ -462,6 +551,23 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
 
     var exec = require("com.salesforce.util.exec").exec;
 
+    var defaultStoreConfig = {'isGlobalStore':false};
+    /**
+     * SoupSpec constructor
+     */
+    var SoupSpec = function (soupName, features) {
+        this.name = soupName;
+        this.features = features;
+    };
+
+    /**
+     * StoreConfig constructor
+     */
+    var StoreConfig = function (storeName, isGlobalStore) {
+        this.storeName = storeName;
+        this.isGlobalStore = isGlobalStore;
+    };
+
 
     /**
      * SoupIndexSpec consturctor
@@ -482,12 +588,12 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         //path for the original IndexSpec you wish to use for search: may be a compound path eg Account.Owner.Name
         this.indexPath = path;
 
-        //for queryType "exact"
+        //for queryType "exact" and "match"
         this.matchKey = null;
 
         //for queryType "like"
         this.likeKey = null;
-        
+
         //for queryType "range"
         //the value at which query results may begin
         this.beginKey = null;
@@ -497,20 +603,26 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         // for queryType "smart"
         this.smartSql = null;
 
+        //path to sort by : optional
+        this.orderPath = null
+
         //"ascending" or "descending" : optional
         this.order = "ascending";
 
         //the number of entries to copy from native to javascript per each cursor page
         this.pageSize = 10;
+
+        //selectPaths - null means return soup elements
+        this.selectPaths = null;
     };
-    
+
     /**
      * StoreCursor constructor
      */
     var StoreCursor = function () {
         //a unique identifier for this cursor, used by plugin
         this.cursorId = null;
-        //the maximum number of entries returned per page 
+        //the maximum number of entries returned per page
         this.pageSize = 0;
         // the total number of results
         this.totalEntries = 0;
@@ -521,55 +633,87 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         //the list of current page entries, ordered as requested in the querySpec
         this.currentPageOrderedEntries = null;
     };
-    
+
     // ====== Logging support ======
-    var logLevel = 0;
-    var setLogLevel = function (l) {
-        logLevel = l;
+    var logLevel;
+    var storeConsole = {};
+
+    var setLogLevel = function(level) {
+        logLevel = level;
+        var methods = ["error", "info", "warn", "debug"];
+        var levelAsInt = methods.indexOf(level.toLowerCase());
+        for (var i=0; i<methods.length; i++) {
+            storeConsole[methods[i]] = (i <= levelAsInt ? console[methods[i]].bind(console) : function() {});
+        }
     };
+
+    // Showing info and above (i.e. error) by default.
+    setLogLevel("info");
 
     var getLogLevel = function () {
         return logLevel;
     };
 
-
     // ====== querySpec factory methods
     // Returns a query spec that will page through all soup entries in order by the given path value
     // Internally it simply does a range query with null begin and end keys
-    var buildAllQuerySpec = function (path, order, pageSize) {
+    var buildAllQuerySpec = function (path, order, pageSize, selectPaths) {
         var inst = new QuerySpec(path);
         inst.queryType = "range";
+        inst.orderPath = path;
         if (order) { inst.order = order; } // override default only if a value was specified
         if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+        if (selectPaths) { inst.selectPaths = selectPaths; }
         return inst;
     };
 
     // Returns a query spec that will page all entries exactly matching the matchKey value for path
-    var buildExactQuerySpec = function (path, matchKey, pageSize) {
+    var buildExactQuerySpec = function (path, matchKey, pageSize, order, orderPath, selectPaths) {
         var inst = new QuerySpec(path);
         inst.matchKey = matchKey;
         if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+        if (order) { inst.order = order; } // override default only if a value was specified
+        inst.orderPath = orderPath ? orderPath : path;
+        if (selectPaths) { inst.selectPaths = selectPaths; }
         return inst;
     };
 
     // Returns a query spec that will page all entries in the range beginKey ...endKey for path
-    var buildRangeQuerySpec = function (path, beginKey, endKey, order, pageSize) {
+    var buildRangeQuerySpec = function (path, beginKey, endKey, order, pageSize, orderPath, selectPaths) {
         var inst = new QuerySpec(path);
         inst.queryType = "range";
         inst.beginKey = beginKey;
         inst.endKey = endKey;
         if (order) { inst.order = order; } // override default only if a value was specified
         if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+        inst.orderPath = orderPath ? orderPath : path;
+        if (selectPaths) { inst.selectPaths = selectPaths; }
         return inst;
     };
 
     // Returns a query spec that will page all entries matching the given likeKey value for path
-    var buildLikeQuerySpec = function (path, likeKey, order, pageSize) {
+    var buildLikeQuerySpec = function (path, likeKey, order, pageSize, orderPath, selectPaths) {
         var inst = new QuerySpec(path);
         inst.queryType = "like";
         inst.likeKey = likeKey;
         if (order) { inst.order = order; } // override default only if a value was specified
         if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+        inst.orderPath = orderPath ? orderPath : path;
+        if (selectPaths) { inst.selectPaths = selectPaths; }
+        return inst;
+    };
+
+    // Returns a query spec that will page all entries matching the given full-text search matchKey value for path
+    // Pass null for path to match matchKey across all full-text indexed fields
+    var buildMatchQuerySpec = function (path, matchKey, order, pageSize, orderPath, selectPaths) {
+        var inst = new QuerySpec(path);
+        inst.queryType = "match";
+        inst.matchKey = matchKey;
+        inst.orderPath = orderPath;
+        if (order) { inst.order = order; } // override default only if a value was specified
+        if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
+        inst.orderPath = orderPath ? orderPath : path;
+        if (selectPaths) { inst.selectPaths = selectPaths; }
         return inst;
     };
 
@@ -581,158 +725,261 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         if (pageSize) { inst.pageSize = pageSize; } // override default only if a value was specified
         return inst;
     };
-    
-    // ====== Soup manipulation ======
-    var getDatabaseSize = function(successCB, errorCB) {
-        console.log("SmartStore.getDatabaseSize");
-        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE, "pgGetDatabaseSize", []);
+
+    // Helper function to handle calls that don't specify storeConfig as first argument
+    // If missing, the caller is re-invoked with false prepended to the arguments list and true is returned
+    // Otherwise, false is returned
+    var checkFirstArg = function(argumentsOfCaller) {
+        // Turning arguments into array
+        var args = Array.prototype.slice.call(argumentsOfCaller);
+
+        // If first argument is a store config
+        if (typeof(args[0]) === "object" && args[0].hasOwnProperty("isGlobalStore")) {
+             return false;
+        }
+
+        var isGlobalStore =  false;
+
+        if (typeof(args[0]) === "boolean") {
+           isGlobalStore = args.shift() || false;
+        }
+        args.unshift({'isGlobalStore': isGlobalStore});
+        argumentsOfCaller.callee.apply(null, args);
+        return true;
     };
 
-    var registerSoup = function (soupName, indexSpecs, successCB, errorCB) {
-        console.log("SmartStore.registerSoup: '" + soupName + "' indexSpecs: " + JSON.stringify(indexSpecs));
+
+    // ====== Soup manipulation ======
+    var getDatabaseSize = function (storeConfig, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        storeConsole.debug("SmartStore.getDatabaseSize:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName);
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE, "pgGetDatabaseSize", [{"isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]);
+    };
+
+    var registerSoup = function (storeConfig, soupName, indexSpecs, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        storeConsole.debug("SmartStore.registerSoup:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",soupName=" + soupName + ",indexSpecs=" + JSON.stringify(indexSpecs));
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgRegisterSoup",
-             [{"soupName": soupName, "indexes": indexSpecs}]
+             [{"soupName": soupName, "indexes": indexSpecs, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
             );
     };
 
-    var removeSoup = function (soupName, successCB, errorCB) {
-        console.log("SmartStore.removeSoup: " + soupName);
+    var registerSoupWithSpec = function (storeConfig, soupSpec, indexSpecs, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        storeConsole.debug("SmartStore.registerSoupWithSpec:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",soupSpec="+ JSON.stringify(soupSpec) + ",indexSpecs=" + JSON.stringify(indexSpecs));
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgRegisterSoup",
+             [{"soupSpec": soupSpec, "indexes": indexSpecs, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
+            );
+    };
+
+    var removeSoup = function (storeConfig, soupName, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        storeConsole.debug("SmartStore.removeSoup:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",soupName=" + soupName);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgRemoveSoup",
-             [{"soupName": soupName}]
+             [{"soupName": soupName, "isGlobalStore": storeConfig.isGlobalStore,"storeName": storeConfig.storeName}]
             );
     };
 
-    var getSoupIndexSpecs = function(soupName, successCB, errorCB) {
-        console.log("SmartStore.getSoupIndexSpecs: " + soupName);
+    var getSoupIndexSpecs = function(storeConfig, soupName, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        storeConsole.debug("SmartStore.getSoupIndexSpecs:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",soupName=" + soupName);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgGetSoupIndexSpecs",
-             [{"soupName": soupName}]
+             [{"soupName": soupName, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
             );
     };
 
-    var alterSoup = function (soupName, indexSpecs, reIndexData, successCB, errorCB) {
-        console.log("SmartStore.alterSoup: '" + soupName + "' indexSpecs: " + JSON.stringify(indexSpecs));
+    var getSoupSpec = function(storeConfig, soupName, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        storeConsole.debug("SmartStore.getSoupSpec:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",soupName=" + soupName);
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgGetSoupSpec",
+             [{"soupName": soupName, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
+            );
+    };
+
+    var alterSoup = function (storeConfig, soupName, indexSpecs, reIndexData, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        storeConsole.debug("SmartStore.alterSoup:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",soupName=" + soupName + ",indexSpecs=" + JSON.stringify(indexSpecs) + ",reIndexData=" + reIndexData);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgAlterSoup",
-             [{"soupName": soupName, "indexes": indexSpecs, "reIndexData": reIndexData}]
+             [{"soupName": soupName, "indexes": indexSpecs, "reIndexData": reIndexData, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
             );
     };
 
-    var reIndexSoup = function (soupName, paths, successCB, errorCB) {
-        console.log("SmartStore.reIndexSoup: '" + soupName + "' paths: " + JSON.stringify(paths));
+    var alterSoupWithSpec = function (storeConfig, soupName, soupSpec, indexSpecs, reIndexData, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        storeConsole.debug("SmartStore.alterSoupWithSpec:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",soupName=" + soupName + ",soupSpec=" + JSON.stringify(soupSpec) + ",indexSpecs=" + JSON.stringify(indexSpecs) + ",reIndexData=" + reIndexData);
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgAlterSoup",
+             [{"soupName": soupName, "soupSpec": soupSpec, "indexes": indexSpecs, "reIndexData": reIndexData, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
+            );
+    };
+
+    var reIndexSoup = function (storeConfig, soupName, paths, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        storeConsole.debug("SmartStore.reIndexSoup:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",soupName=" + soupName + ",paths=" + JSON.stringify(paths));
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgReIndexSoup",
-             [{"soupName": soupName, "paths": paths}]
+             [{"soupName": soupName, "paths": paths, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
             );
     };
 
-    var clearSoup = function (soupName, successCB, errorCB) {
-        console.log("SmartStore.clearSoup: '" + soupName + "'");
+    var clearSoup = function (storeConfig, soupName, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        storeConsole.debug("SmartStore.clearSoup:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",soupName=" + soupName);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgClearSoup",
-             [{"soupName": soupName}]
+             [{"soupName": soupName, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
             );
     };
 
-    var showInspector = function() {
-        console.log("SmartStore.showInspector");
-        exec(SALESFORCE_MOBILE_SDK_VERSION, null, null, SERVICE, "pgShowInspector", []);
+    var showInspector = function(storeConfig) {
+        if(storeConfig == null )
+		        storeConfig = defaultStoreConfig;
+        storeConsole.debug("SmartStore.showInspector");
+          exec(SALESFORCE_MOBILE_SDK_VERSION, null, null, SERVICE, "pgShowInspector", [{"isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]);
     };
 
-    var soupExists = function (soupName, successCB, errorCB) {
-        console.log("SmartStore.soupExists: " + soupName);
+    var soupExists = function (storeConfig, soupName, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        storeConsole.debug("SmartStore.soupExists:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",soupName=" + soupName);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgSoupExists",
-             [{"soupName": soupName}]
+             [{"soupName": soupName, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
             );
     };
 
-    var querySoup = function (soupName, querySpec, successCB, errorCB) {
+    var querySoup = function (storeConfig, soupName, querySpec, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
         if (querySpec.queryType == "smart") throw new Error("Smart queries can only be run using runSmartQuery");
-        console.log("SmartStore.querySoup: '" + soupName + "' indexPath: " + querySpec.indexPath);
+        if (querySpec.order != null && querySpec.orderPath == null) querySpec.orderPath = querySpec.indexPath; // for backward compatibility with pre-3.3 code
+        storeConsole.debug("SmartStore.querySoup:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",soupName=" + soupName + ",indexPath=" + querySpec.indexPath);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgQuerySoup",
-             [{"soupName": soupName, "querySpec": querySpec}]
+             [{"soupName": soupName, "querySpec": querySpec, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
             );
     };
 
-    var runSmartQuery = function (querySpec, successCB, errorCB) {
+    var runSmartQuery = function (storeConfig, querySpec, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
         if (querySpec.queryType != "smart") throw new Error("runSmartQuery can only run smart queries");
-        console.log("SmartStore.runSmartQuery: smartSql: " + querySpec.smartSql);
+        storeConsole.debug("SmartStore.runSmartQuery:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",smartSql=" + querySpec.smartSql);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgRunSmartQuery",
-             [{"querySpec": querySpec}]
+             [{"querySpec": querySpec, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
             );
     };
 
-    var retrieveSoupEntries = function (soupName, entryIds, successCB, errorCB) {
-        if (logLevel > 0) {
-            console.log("SmartStore.retrieveSoupEntry: '" + soupName + "' entryIds: " + entryIds);
-        }
+    var retrieveSoupEntries = function (storeConfig, soupName, entryIds, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        storeConsole.debug("SmartStore.retrieveSoupEntries:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",soupName=" + soupName + ",entryIds=" + entryIds);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgRetrieveSoupEntries",
-             [{"soupName": soupName, "entryIds": entryIds}]
+             [{"soupName": soupName, "entryIds": entryIds, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
             );
     };
 
-    var upsertSoupEntries = function (soupName, entries, successCB, errorCB) {
-        upsertSoupEntriesWithExternalId(soupName, entries, "_soupEntryId", successCB, errorCB);
+    var upsertSoupEntries = function (storeConfig, soupName, entries, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        upsertSoupEntriesWithExternalId(storeConfig, soupName, entries, "_soupEntryId", successCB, errorCB);
     };
 
-    var upsertSoupEntriesWithExternalId = function (soupName, entries, externalIdPath, successCB, errorCB) {
-        if (logLevel > 0) { 
-            console.log("SmartStore.upsertSoupEntries: '" + soupName + "' entries.length: " + entries.length);
-        }
+    var upsertSoupEntriesWithExternalId = function (storeConfig, soupName, entries, externalIdPath, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        storeConsole.debug("SmartStore.upsertSoupEntries:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",soupName=" + soupName + ",entries=" + entries.length + ",externalIdPath=" + externalIdPath);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
-             "pgUpsertSoupEntries", 
-             [{"soupName": soupName, "entries": entries, "externalIdPath": externalIdPath}]
+             "pgUpsertSoupEntries",
+             [{"soupName": soupName, "entries": entries, "externalIdPath": externalIdPath, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
             );
     };
 
-    var removeFromSoup = function (soupName, entryIds, successCB, errorCB) {
-        console.log("SmartStore.removeFromSoup: '" + soupName + "' entryIds: " + entryIds);
+    var getAllStores = function (successCB, errorCB) {
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgGetAllStores",
+             [{}]
+            );
+    };
+
+    var getAllGlobalStores = function (successCB, errorCB) {
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgGetAllGlobalStores",
+             [{}]
+            );
+    };
+
+    var removeStore = function (storeConfig,successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgRemoveStore",
+             [{"isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
+            );
+    };
+
+    var removeAllGlobalStores = function (successCB, errorCB) {
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgRemoveAllGlobalStores",
+             [{}]
+            );
+    };
+
+    var removeAllStores = function (successCB, errorCB) {
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "pgRemoveAllStores",
+             [{}]
+            );
+    };
+
+    var removeFromSoup = function (storeConfig, soupName, entryIdsOrQuerySpec, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        storeConsole.debug("SmartStore.removeFromSoup:isGlobalStore="  + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",soupName=" + soupName + ",entryIdsOrQuerySpec=" + entryIdsOrQuerySpec);
+        var execArgs = {"soupName": soupName, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName};
+        execArgs[entryIdsOrQuerySpec instanceof Array ? "entryIds":"querySpec"] = entryIdsOrQuerySpec;
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgRemoveFromSoup",
-             [{"soupName": soupName, "entryIds": entryIds}]
+             [execArgs]
             );
     };
 
     //====== Cursor manipulation ======
-    var moveCursorToPageIndex = function (cursor, newPageIndex, successCB, errorCB) {
-        console.log("moveCursorToPageIndex: " + cursor.cursorId + "  newPageIndex: " + newPageIndex);
+    var moveCursorToPageIndex = function (storeConfig, cursor, newPageIndex, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        storeConsole.debug("moveCursorToPageIndex:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",cursorId=" + cursor.cursorId + ",newPageIndex=" + newPageIndex);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgMoveCursorToPageIndex",
-             [{"cursorId": cursor.cursorId, "index": newPageIndex}]
+             [{"cursorId": cursor.cursorId, "index": newPageIndex, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
             );
     };
 
-    var moveCursorToNextPage = function (cursor, successCB, errorCB) {
+    var moveCursorToNextPage = function (storeConfig, cursor, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
         var newPageIndex = cursor.currentPageIndex + 1;
         if (newPageIndex >= cursor.totalPages) {
-            errorCB(cursor, new Error("moveCursorToNextPage called while on last page"));
-        }
-        else {
-            moveCursorToPageIndex(cursor, newPageIndex, successCB, errorCB);
+            errorCB(new Error("moveCursorToNextPage called while on last page"));
+        } else {
+            moveCursorToPageIndex(storeConfig, cursor, newPageIndex, successCB, errorCB);
         }
     };
 
-    var moveCursorToPreviousPage = function (cursor, successCB, errorCB) {
+    var moveCursorToPreviousPage = function (storeConfig, cursor, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
         var newPageIndex = cursor.currentPageIndex - 1;
         if (newPageIndex < 0) {
-            errorCB(cursor, new Error("moveCursorToPreviousPage called while on first page"));
-        }
-        else {
-            moveCursorToPageIndex(cursor, newPageIndex, successCB, errorCB);
+            errorCB(new Error("moveCursorToPreviousPage called while on first page"));
+        } else {
+            moveCursorToPageIndex(storeConfig, cursor, newPageIndex, successCB, errorCB);
         }
     };
 
-    var closeCursor = function (cursor, successCB, errorCB) {
-        console.log("closeCursor: " + cursor.cursorId);
+    var closeCursor = function (storeConfig, cursor, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        storeConsole.debug("closeCursor:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",cursorId=" + cursor.cursorId);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgCloseCursor",
-             [{"cursorId": cursor.cursorId}]
+             [{"cursorId": cursor.cursorId, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
             );
     };
 
@@ -741,22 +988,26 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
      */
     module.exports = {
         alterSoup: alterSoup,
+        alterSoupWithSpec: alterSoupWithSpec,
         buildAllQuerySpec: buildAllQuerySpec,
         buildExactQuerySpec: buildExactQuerySpec,
         buildLikeQuerySpec: buildLikeQuerySpec,
         buildRangeQuerySpec: buildRangeQuerySpec,
         buildSmartQuerySpec: buildSmartQuerySpec,
+        buildMatchQuerySpec: buildMatchQuerySpec,
         clearSoup: clearSoup,
         closeCursor: closeCursor,
         getDatabaseSize: getDatabaseSize,
         getLogLevel: getLogLevel,
         getSoupIndexSpecs: getSoupIndexSpecs,
+        getSoupSpec: getSoupSpec,
         moveCursorToNextPage: moveCursorToNextPage,
         moveCursorToPageIndex: moveCursorToPageIndex,
         moveCursorToPreviousPage: moveCursorToPreviousPage,
         querySoup: querySoup,
         reIndexSoup: reIndexSoup,
         registerSoup: registerSoup,
+        registerSoupWithSpec: registerSoupWithSpec,
         removeFromSoup: removeFromSoup,
         removeSoup: removeSoup,
         retrieveSoupEntries: retrieveSoupEntries,
@@ -766,10 +1017,16 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         soupExists: soupExists,
         upsertSoupEntries: upsertSoupEntries,
         upsertSoupEntriesWithExternalId: upsertSoupEntriesWithExternalId,
-
+        getAllStores: getAllStores,
+        getAllGlobalStores: getAllGlobalStores,
+        removeStore: removeStore,
+        removeAllGlobalStores: removeAllGlobalStores,
+        removeAllStores: removeAllStores,
         // Constructors
+        SoupSpec: SoupSpec,
         QuerySpec: QuerySpec,
         SoupIndexSpec: SoupIndexSpec,
+        StoreConfig: StoreConfig,
         StoreCursor: StoreCursor
     };
 });
@@ -780,67 +1037,204 @@ var SoupIndexSpec = navigator.smartstore.SoupIndexSpec;
 var QuerySpec = navigator.smartstore.QuerySpec;
 var StoreCursor = navigator.smartstore.StoreCursor;
 
+/**
+ * SmartStore client with promise-based APIs
+ */
+cordova.define("com.salesforce.plugin.smartstore.client", function(require, exports, module) {
+
+    var smartstore = require("com.salesforce.plugin.smartstore");
+    var promiser = require("com.salesforce.util.promiser").promiser;
+
+    // Promise-based APIs
+    var client = new Object();
+    client.alterSoup = promiser(smartstore, "alterSoup", "smartstore.client");
+    client.alterSoupWithSpec = promiser(smartstore, "alterSoupWithSpec", "smartstore.client");
+    client.clearSoup = promiser(smartstore, "clearSoup", "smartstore.client");
+    client.closeCursor = promiser(smartstore, "closeCursor", "smartstore.client");
+    client.getDatabaseSize = promiser(smartstore, "getDatabaseSize", "smartstore.client");
+    client.getSoupIndexSpecs = promiser(smartstore, "getSoupIndexSpecs", "smartstore.client");
+    client.getSoupSpec = promiser(smartstore, "getSoupSpec", "smartstore.client");
+    client.moveCursorToNextPage = promiser(smartstore, "moveCursorToNextPage", "smartstore.client");
+    client.moveCursorToPageIndex = promiser(smartstore, "moveCursorToPageIndex", "smartstore.client");
+    client.moveCursorToPreviousPage = promiser(smartstore, "moveCursorToPreviousPage", "smartstore.client");
+    client.querySoup = promiser(smartstore, "querySoup", "smartstore.client");
+    client.reIndexSoup = promiser(smartstore, "reIndexSoup", "smartstore.client");
+    client.registerSoup = promiser(smartstore, "registerSoup", "smartstore.client");
+    client.registerSoupWithSpec = promiser(smartstore, "registerSoupWithSpec", "smartstore.client");
+    client.removeFromSoup = promiser(smartstore, "removeFromSoup", "smartstore.client");
+    client.removeSoup = promiser(smartstore, "removeSoup", "smartstore.client");
+    client.retrieveSoupEntries = promiser(smartstore, "retrieveSoupEntries", "smartstore.client");
+    client.runSmartQuery = promiser(smartstore, "runSmartQuery", "smartstore.client");
+    client.soupExists = promiser(smartstore, "soupExists", "smartstore.client");
+    client.upsertSoupEntries = promiser(smartstore, "upsertSoupEntries", "smartstore.client");
+    client.upsertSoupEntriesWithExternalId = promiser(smartstore, "upsertSoupEntriesWithExternalId", "smartstore.client");
+    client.getAllStores = promiser(smartstore, "getAllStores", "smartstore.client");
+    client.getAllGlobalStores = promiser(smartstore, "getAllGlobalStores", "smartstore.client");
+    client.removeAllGlobalStores = promiser(smartstore, "removeAllGlobalStores", "smartstore.client");
+    client.removeAllStores = promiser(smartstore, "removeAllStores", "smartstore.client");
+    client.removeStore = promiser(smartstore, "removeStore", "smartstore.client");
+
+    /**
+     * Part of the module that is public
+     */
+    module.exports = client;
+});
+
+// For backward compatibility
+navigator.smartstoreClient = cordova.require("com.salesforce.plugin.smartstore.client");
+
+cordova.define("com.salesforce.plugin.smartsync", function (require, exports, module) {
+    var SERVICE = "com.salesforce.smartsync";
+
+    var exec = require("com.salesforce.util.exec").exec;
+    var defaultStoreConfig = {'isGlobalStore':false};
+
+    // Helper function to handle calls that don't specify storeConfig as first argument
+    // If missing, the caller is re-invoked with false prepended to the arguments list and true is returned
+    // Otherwise, false is returned
+    var checkFirstArg = function(argumentsOfCaller) {
+        // Turning arguments into array
+        var args = Array.prototype.slice.call(argumentsOfCaller);
+
+        // If first argument is a store config
+        if (typeof(args[0]) === "object" && args[0].hasOwnProperty("isGlobalStore")) {
+             return false;
+        }
+
+        var isGlobalStore =  false;
+        if (typeof(args[0]) === "boolean") {
+           isGlobalStore = args.shift() || false;
+        }
+        args.unshift({'isGlobalStore': isGlobalStore});
+        argumentsOfCaller.callee.apply(null, args);
+        return true;
+    };
+
+
+
+    var syncDown = function(storeConfig, target, soupName, options, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "syncDown",
+             [{"target": target, "soupName": soupName, "options": options, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
+            );
+    };
+
+    var reSync = function(storeConfig, syncId, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "reSync",
+             [{"syncId": syncId, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
+            );
+    };
+
+    var cleanResyncGhosts = function(storeConfig, syncId, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "cleanResyncGhosts",
+             [{"syncId": syncId,  "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
+            );
+    };
+
+    var syncUp = function(storeConfig, target, soupName, options, successCB, errorCB) {
+        if (checkFirstArg(arguments)) return;
+        var args = Array.prototype.slice.call(arguments);
+        // We accept syncUp(soupName, options, successCB, errorCB)
+        if (typeof(args[1]) === "string") {
+            target = {};
+            soupName = args[1];
+            options = args[2];
+            successCB = args[3];
+            errorCB = args[4];
+        }
+        // We accept syncUp(target, soupName, options, successCB, errorCB)
+        if (typeof(args[1]) === "object") {
+            target = args[1];
+            soupName = args[2];
+            options = args[3];
+            successCB = args[4];
+            errorCB = args[5];
+        }
+        target = target || {};
+
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "syncUp",
+             [{"target": target, "soupName": soupName, "options": options,  "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
+            );
+    };
+
+    var getSyncStatus = function(storeConfig, syncId, successCB, errorCB) {
+        if (checkFirstArg(arguments, "boolean", false)) return;
+        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+             "getSyncStatus",
+             [{"syncId": syncId, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
+            );
+    };
+
+    var MERGE_MODE = {
+        OVERWRITE: "OVERWRITE",
+        LEAVE_IF_CHANGED: "LEAVE_IF_CHANGED"
+    };
+
+
+    /**
+     * Part of the module that is public
+     */
+    module.exports = {
+        MERGE_MODE: MERGE_MODE,
+        syncDown: syncDown,
+        syncUp: syncUp,
+        getSyncStatus: getSyncStatus,
+        reSync: reSync,
+        cleanResyncGhosts: cleanResyncGhosts
+    };
+});
+
 cordova.define("com.salesforce.util.push", function(require, exports, module) {
 
     /**
      * Register push notification handler
      */
     var registerPushNotificationHandler = function(notificationHandler, fail) {
-        if (window.plugins && window.plugins.pushNotification) {
-            console.err("PushPlugin not found");
+        if (!window.PushNotification) {
+            console.error("PushPlugin not found");
             fail("PushPlugin not found");
             return;
         }
 
-        var isAndroid  = device.platform == 'android' || device.platform == 'Android' || device.platform == "amazon-fireos";
+        cordova.require("com.salesforce.plugin.sdkinfo").getInfo(function(info) {
+            var bootconfig = info.bootConfig;
 
-        var notificationHandlerName = "onNotification" + (Math.round(Math.random()*100000));
-        window[notificationHandlerName] = function(message) {
-            console.log("Received notification " + JSON.stringify(message));
-            if (message.event == "message" || !isAndroid) {
-                notificationHandler(message);
-            }
-        };
-        
-        var registrationSuccess = function(result) {
-            console.log("Registration successful " + JSON.stringify(result));
-        };
-
-        var registrationFail = function(err) {
-            console.err("Registration failed " + JSON.stringify(err));
-            fail(err);
-        };
-
-        // Android
-        if (isAndroid)
-        {
-            console.log("Registering for Android");
-            cordova.require("com.salesforce.plugin.sdkinfo").getInfo(function(info) {
-                var bootconfig = info.bootConfig;
-                window.plugins.pushNotification.register(
-                    registrationSuccess,
-                    registrationFail,
-                    {
-                        "senderID": bootconfig.androidPushNotificationClientId,
-                        "ecb":notificationHandlerName
-                    });
-            });
-        } 
-
-        // iOS
-        else 
-        {
-            console.log("Registering for ios");
-            window.plugins.pushNotification.register(
-                registrationSuccess,
-                registrationFail,
-                {
-                    "badge":"true",
-                    "sound":"true",
-                    "alert":"true",
-                    "ecb":notificationHandlerName
+            var push = PushNotification.init({
+                    "android": {
+                        "senderID": bootconfig.androidPushNotificationClientId
+                    },
+                    "ios": {"alert": "true", "badge": "true", "sound": "true"},
+                    "windows": {}
                 });
-        }
+
+            push.on('registration', function(data) {
+                console.log("registration event " + JSON.stringify(data));
+                console.log(JSON.stringify(data));
+            });
+
+            push.on('notification', function(data) {
+              console.log("notification event");
+              console.log(JSON.stringify(data));
+              if (data.event == "message") {
+                notificationHandler(message);
+              }
+              push.finish(function () {
+                  console.log('finish successfully called');
+              });
+            });
+
+            push.on('error', function(e) {
+                console.log("push error");
+                console.error("push error " + JSON.stringify(e));
+                fail(err);
+            });
+        });
     };
 
     /**
@@ -850,5 +1244,3 @@ cordova.define("com.salesforce.util.push", function(require, exports, module) {
         registerPushNotificationHandler: registerPushNotificationHandler
     };
 });
-
-

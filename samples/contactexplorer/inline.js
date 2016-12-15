@@ -16,12 +16,12 @@ function regLinkClickHandlers() {
     
     $j('#link_fetch_sfdc_contacts').click(function() {
                                          logToConsole("link_fetch_sfdc_contacts clicked");
-                                         forcetkClient.query("SELECT Name FROM Contact LIMIT 25", onSuccessSfdcContacts, onErrorSfdc); 
+                                         force.query("SELECT Name FROM Contact LIMIT 25", onSuccessSfdcContacts, onErrorSfdc); 
                                          });
     
     $j('#link_fetch_sfdc_accounts').click(function() {
                                          logToConsole("link_fetch_sfdc_accounts clicked");
-                                         forcetkClient.query("SELECT Name FROM Account LIMIT 25", onSuccessSfdcAccounts, onErrorSfdc); 
+                                         force.query("SELECT Name FROM Account LIMIT 25", onSuccessSfdcAccounts, onErrorSfdc); 
                                          });
     
     $j('#link_reset').click(function() {

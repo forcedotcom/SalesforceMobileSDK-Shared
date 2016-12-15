@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Users</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
+<link rel="stylesheet" href="css/ratchet.css"/>
+<link rel="stylesheet" href="css/ratchet-theme-ios.css"/> <!-- TODO import ratchet-theme.css instead and have ratchet-theme.css point to the theme for the platform -->
+<link rel="stylesheet" href="css/styles.css"/>
+</head>
+
+<body>
+
+<div id="content"></div>
+
+<script src="js/jquery.min.js"></script>
+<script src="js/underscore-min.js"></script>
+<script src="js/backbone-min.js"></script>
+<script src="js/react.js"></script>
+<script src="js/JSXTransformer.js"></script>
+
+<!-- Local Testing -/->
+<script src="js/MockCordova.js"></script>
+<script src="js/cordova.force.js"></script>
+<script src="js/MockSmartStore.js"></script>
+<script src="js/MockSmartSyncPlugin.js"></script>
+<!-- End Local Testing -->
+
+<!-- Container -->
+<script src="cordova.js"></script>
+<!-- End Container -->
+
+<script src="js/force.js"></script>
+<script src="js/force+promise.js"></script>
+<script src="js/smartsync.js"></script>
+<script src="js/fastclick.js"></script>
+<script src="js/stackrouter.js"></script>
+<script src="js/auth.js"></script>
+
+
+<script type="text/jsx">
+// -------------------------------------------------- The Models ---------------------------------------------------- //
+// The User Model
+app.models.User = Force.SObject.extend({
+    sobjectType: "User",
+    fieldlist: ["Id", "FirstName", "LastName", "Title", "CompanyName", "Email", "MobilePhone","City"],
+    cache: function() { return app.cache;},
+    cacheMode: Force.CACHE_MODE.CACHE_ONLY
+});
+
+// The UserCollection Model
+app.models.UserCollection = Force.SObjectCollection.extend({
+    model: app.models.User,
+    cache: function() { return app.cache;},
+
+    getCriteria: function() {
+        return this.key;
+    },
+
+    setCriteria: function(key) {
+        this.key = key;
+        this.config = {type:"cache", 
+                       cacheQuery:{queryType:"smart", 
+                                   smartSql:"SELECT {users:_soup}"
+                                   + " FROM {users}"
+                                   + " WHERE {users:FirstName} like '" + key + "%'"
+                                   + " ORDER BY {users:LastName} "
+                                   + " LIMIT 25 ", 
+                                   pageSize:25}
+                      };
+    }
+});
+
+// -------------------------------------------------- REACT components ---------------------------------------------------- //
+
+var SearchPageReact = React.createClass({
+    componentDidMount: function() {
+        document.addEventListener("sync", (function(event)  { this.handleSyncUpdate(event.detail); }).bind(this));;
+    },
+
+    render: function() {
+        console.log("Rendering SearchPageReact");
+        this.fieldlist = app.models.User.prototype.fieldlist;
+        var model = this.props.model;
+        return (
+            <div>
+                <header className="bar bar-nav">
+                  <h1 className="title">Users</h1>
+                </header>
+                <footer className="bar bar-footer">
+                  <a ref="syncdownmru"  className="btn btn-nav btn-positive pull-left" onClick={this.syncDownMru}>Sync mru</a>
+                  <a ref="syncdownsoql" className="btn btn-nav btn-positive pull-left" onClick={this.syncDownSoql}>Sync soql</a>
+                  <a ref="syncdownsosl" className="btn btn-nav btn-positive pull-left" onClick={this.syncDownSosl}>Sync sosl</a>
+                  <a ref="syncup"       className="btn btn-nav btn-positive pull-left" onClick={this.syncUp}>Sync Up</a>
+                  <a className="btn btn-nav pull-right cachesize"   onClick={this.cacheSize}>Cache Size</a>
+                  <a className="btn btn-nav pull-right inspect"     onClick={this.inspect}>DB</a>
+                </footer>
+              
+                <div className="bar bar-standard bar-header-secondary">
+                  <input type="search" ref="search" placeholder="Search" onChange={this.search} value={this.props.criteria}/>
+                </div>
+              
+                <div className="content">
+                  <UserListViewReact model={model}/>
+                </div>
+            </div>
+        );
+    },
+
+    handleSyncUpdate: function(sync) {
+        var progress =  (typeof sync.progress === "number" && sync.progress < 100) ? " (" + Math.round(sync.progress) + "%)" : "";
+
+        if (sync.type === "syncDown") {
+            var syncType = sync.target.type.toLowerCase();
+            $(this.refs["syncdown" + syncType].getDOMNode()).html("Sync " + syncType + progress);
+        }
+        if (sync.type === "syncUp") {
+            $(this.refs["syncup"].getDOMNode()).html("Sync Up" + progress);
+        }
+        if (sync.status === "DONE") { this.search(); }
+    },
+
+    syncDown: function(target) {
+        cordova.require("com.salesforce.plugin.smartsync").syncDown(target, "users", {}, this.handleSyncUpdate.bind(this));
+    },
+
+    syncDownMru: function(event) {
+        this.syncDown({type:"mru", sobjectType: "User", fieldlist: this.fieldlist});
+    },
+
+    syncDownSoql: function(event) {
+        this.syncDown({type:"soql", query:"SELECT " + this.fieldlist.join(",") + " FROM User WHERE CompanyName = 'salesforce.com' LIMIT 10000"});
+    },
+
+    syncDownSosl: function(event) {
+        this.syncDown({type:"sosl", query:"FIND {salesforce.com} RETURNING User (" + this.fieldlist.join(",") + ")"});
+    },
+
+    syncUp: function(event) {
+        cordova.require("com.salesforce.plugin.smartsync").syncUp("users", {fieldlist: this.fieldlist}, this.handleSyncUpdate.bind(this));
+    },
+
+    cacheSize: function() {
+        Force.smartstoreClient.runSmartQuery({queryType:"smart", smartSql:"SELECT count(*) from {users}", pageSize:1})
+            .done(function(result) {
+                alert("Number of entries in cache: " + result.currentPageOrderedEntries[0][0]);
+            });
+    },
+
+    inspect: function() {
+        cordova.require("com.salesforce.plugin.smartstore").showInspector();
+    },
+
+    search: function(event) {
+        var newCriteria = $(this.refs.search.getDOMNode()).val();
+        this.props.model.setCriteria(newCriteria);
+        this.setProps({"criteria": newCriteria});
+        this.props.model.fetch();
+    }
+
+});
+
+var UserListViewReact = React.createClass({
+    componentDidMount: function() {
+        this.props.model.on("reset", function() { this.forceUpdate();}, this);
+    },
+
+    componentWillUnmount: function() {
+        this.props.model.off();
+    },
+
+    render: function() {
+        console.log("Rendering UserListViewReact");
+
+        var userListItems = this.props.model.models.map(function(model) {
+            return (
+                <UserListItemViewReact key={model.id} model={model} />
+            );
+        });
+        return (
+                <ul className="table-view">
+                  {userListItems}
+                </ul>            
+        );
+    }
+});
+
+var UserListItemViewReact = React.createClass({
+    render: function() {
+        console.log("Rendering UserListItemViewReact");
+        var attrs = this.props.model.attributes;
+        var updated = attrs.__locally_updated__ 
+            ? <span><span className="pull-right btn btn-negative">modified</span><br/></span>
+            : <span></span>;
+
+        return (
+            <li className="table-view-cell">
+              <a href={"#users/" + attrs.Id}>
+                <span className="important">{attrs.FirstName} {attrs.LastName}</span><br/>
+                {attrs.Title} {attrs.CompanyName}
+                {updated}
+              </a>
+            </li>
+        );
+    }
+});
+
+var UserPageReact = React.createClass({
+    render: function() {
+        console.log("Rendering UserPageReact");
+        var attrs = this.props.model.attributes;
+        var updated = attrs.__locally_updated__ 
+            ? <span className="btn btn-negative btn-block">Locally Modified</span> 
+            : <span></span>;
+
+        return (
+            <div>
+                <header className="bar bar-nav">
+                    <a href="#" className="btn btn-nav pull-left back">Back</a>
+                    <a className="btn btn-nav btn-positive pull-right save" onClick={this.save}>Save</a>
+                    <h1 className="title">{attrs.FirstName} {attrs.LastName}</h1>
+                </header>
+                <div className="content">
+                    <div className="content-padded">
+                        <div className="details">
+                            <input onChange={this.change} placeholder="Title" type="text" name="Title" value={attrs.Title} /><br/>
+                            <input onChange={this.change} placeholder="CompanyName" type="text" name="CompanyName" value={attrs.CompanyName} /><br/>
+                            <input onChange={this.change} placeholder="City" type="text" name="City" value={attrs.City} /><br/>
+                            <input onChange={this.change} placeholder="Phone" type="text" name="MobilePhone" value={attrs.MobilePhone} /><br/>
+                            <input onChange={this.change} placeholder="Email" type="text" name="Email" value={attrs.Email} />
+                            {updated}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            );
+    },
+
+    change: function(event) {
+        // apply change to model
+        var target = event.target;
+        this.props.model.set(target.name, target.value);
+        this.setProps({"model": this.props.model});
+    },
+
+    save: function() {
+        this.props.model.save(null, {
+            success: function() {
+                app.router.navigate("#", {trigger:true});
+            }
+        });
+    }
+
+});  
+
+// -------------------------------------------------- The Views ---------------------------------------------------- //
+app.views.SearchPage = Backbone.View.extend({
+    render: function(eventName) {
+        var model = this.model;
+        React.render(<SearchPageReact model={model} criteria={model.getCriteria()}/>, this.el);
+        return this;
+    }
+});
+
+
+
+app.views.UserPage = Backbone.View.extend({
+    render: function(eventName) {
+        var model = this.model;
+        React.render(<UserPageReact model={model}/>, this.el);
+        return this;
+    }
+});
+
+// ----------------------------------------------- The Application Router ------------------------------------------ //
+
+app.Router = Backbone.StackRouter.extend({
+
+    routes: {
+        "": "list",
+        "list": "list",
+        "users/:id": "viewUser"
+    },
+
+    setupCaches: function() {
+        // Cache for offline support
+        app.cache = new Force.StoreCache("users", [ {path:"FirstName", type:"string"}, {path:"LastName", type:"string"} ]);
+        app.cache.init();
+    },
+
+    initialize: function() {
+        // Init router
+        Backbone.Router.prototype.initialize.call(this);
+
+        // Setup caches
+        this.setupCaches();
+
+        // Collection behind search screen
+        app.searchResults = new app.models.UserCollection();
+
+        // We keep a single instance of SearchPage and UserPage
+        app.searchPage = new app.views.SearchPage({model: app.searchResults});
+        app.userPage = new app.views.UserPage();
+    },
+
+    list: function() {
+        app.searchResults.fetch();
+        // Show page right away - list will redraw when data comes in
+        this.slidePage(app.searchPage);
+    },
+
+    viewUser: function(id) {
+        var that = this;
+        var user = new app.models.User({Id: id});
+        user.fetch({
+            success: function() {
+                app.userPage.model = user;
+                that.slidePage(app.userPage);
+            }
+        });
+    }
+});
+</script>
+</body>
+</html>

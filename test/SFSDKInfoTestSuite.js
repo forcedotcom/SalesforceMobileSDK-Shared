@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, salesforce.com, inc.
+ * Copyright (c) 2012-present, salesforce.com, inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -45,6 +45,7 @@ SDKInfoTestSuite.prototype.constructor = SDKInfoTestSuite;
 /**
  * Helper method to do sdk info operations using promises
  */
+var promiser = cordova.require("com.salesforce.util.promiser").promiser;
 SDKInfoTestSuite.prototype.getInfo = promiser(cordova.require("com.salesforce.plugin.sdkinfo"), "getInfo");
 
 /** 
@@ -56,21 +57,23 @@ SDKInfoTestSuite.prototype.testGetInfo = function()  {
     var self = this;
 
     self.getInfo()
-        .done(function(sdkInfo) {
+        .then(function(sdkInfo) {
             // sdkVersion
-        	QUnit.ok(sdkInfo.sdkVersion.indexOf("2.3") == 0, "expected different sdk version");
+        	QUnit.ok(sdkInfo.sdkVersion.indexOf("5.0") == 0, "expected different sdk version");
             // appName
-            QUnit.ok(sdkInfo.appName == "HybridPluginTestApp" || sdkInfo.appName == "ForcePluginsTest", "expected different app name");
+            QUnit.ok(sdkInfo.appName == "SalesforceHybridSDKTestApp" || sdkInfo.appName == "SalesforceHybridTest", "expected different app name");
             // appVersion
-            QUnit.equal(sdkInfo.appVersion, "1.0", "expected different app version");
+            QUnit.ok((cordova.platformId == "ios" && sdkInfo.appVersion == "1.0(1.0)") || (sdkInfo.appVersion == "1.0"), "expected different app version");
             // forcePluginsAvailable
-            QUnit.equal(sdkInfo.forcePluginsAvailable.length, 5, "wrong force plugins");
+            QUnit.equal(sdkInfo.forcePluginsAvailable.length, 7, "wrong force plugins");
             sdkInfo.forcePluginsAvailable.sort();
-            QUnit.equal(sdkInfo.forcePluginsAvailable[0], "com.salesforce.oauth", "wrong force plugins");
-            QUnit.equal(sdkInfo.forcePluginsAvailable[1], "com.salesforce.sdkinfo", "wrong force plugins");
-            QUnit.equal(sdkInfo.forcePluginsAvailable[2], "com.salesforce.sfaccountmanager", "wrong force plugins");
-            QUnit.equal(sdkInfo.forcePluginsAvailable[3], "com.salesforce.smartstore", "wrong force plugins");
-            QUnit.equal(sdkInfo.forcePluginsAvailable[4], "com.salesforce.testrunner", "wrong force plugins");
+            QUnit.equal(sdkInfo.forcePluginsAvailable[0], "com.salesforce.network", "wrong force plugins");
+            QUnit.equal(sdkInfo.forcePluginsAvailable[1], "com.salesforce.oauth", "wrong force plugins");
+            QUnit.equal(sdkInfo.forcePluginsAvailable[2], "com.salesforce.sdkinfo", "wrong force plugins");
+            QUnit.equal(sdkInfo.forcePluginsAvailable[3], "com.salesforce.sfaccountmanager", "wrong force plugins");
+            QUnit.equal(sdkInfo.forcePluginsAvailable[4], "com.salesforce.smartstore", "wrong force plugins");
+            QUnit.equal(sdkInfo.forcePluginsAvailable[5], "com.salesforce.smartsync", "wrong force plugins");
+            QUnit.equal(sdkInfo.forcePluginsAvailable[6], "com.salesforce.testrunner", "wrong force plugins");
             // bootConfig
             QUnit.ok(sdkInfo.bootConfig.isLocal, "wrong bootConfig.isLocal");
             QUnit.ok(sdkInfo.bootConfig.shouldAuthenticate, "wrong bootConfig.shouldAuthenticate");

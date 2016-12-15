@@ -9,17 +9,24 @@
     <script src="js/jquery.min.js"></script>
     <script src="js/jquery.mobile.min.js"></script>
         
-    <!-- Include cordova. -->
-	<script src="cordova.js"></script>
+   <!-- Local Testing -/->
+   <script src="js/MockCordova.js"></script>
+   <script src="js/cordova.force.js"></script>
+   <script src="js/MockSmartStore.js"></script>
+   <!-- End Local Testing -->
 
-    <!-- include forcetk.mobilesdk for REST transaction support -->
-    <script src="js/forcetk.mobilesdk.js"></script>
+   <!-- Container -->
+   <script src="cordova.js"></script>
+   <!-- End Container -->
+
+    <!-- include force.js for REST transaction support -->
+    <script src="js/force.js"></script>
     
     <script>
 
     
-    // The version of the REST API you wish to use in your app.
-    var apiVersion = "v31.0";
+  // The version of the REST API you wish to use in your app.
+  var apiVersion = "v36.0";
 
 	// If you want to prevent dragging, uncomment this section
 	/*
@@ -44,47 +51,26 @@
     var debugMode = true;
 
     $(function() {
-        //Add event listeners and so forth here
-		document.addEventListener("deviceready", onDeviceReady,false);
+        // Browser
+        if (cordova.interceptExec) {
+            force.init({loginURL: "https://test.salesforce.com/",
+                        appId: "3MVG98dostKihXN53TYStBIiS8BTFb20jwWfFcShqfABb3c.HH3CkmA00FuCmc0aM3v4LZOGR5QBnEi77fotN",
+                        oauthCallbackURL: "http://localhost:8200/test/oauthcallback.html",
+                        useCordova: false /* running in browser with mock cordova - so do oauth through browser and network through xhr */
+                       });
+        }
+        
+        force.login(
+            function() {
+                console.log("Auth succeeded"); 
+                regLinkClickHandlers();
+                $("#div_soup_status_line").html("Soup name: " + SAMPLE_SOUP_NAME);
+            },
+            function(error) {
+                console.log("Auth failed: " + error); 
+            }
+        );
     });
-
-        
-    // When this function is called, Cordova has been initialized and is ready to roll 
-    function onDeviceReady() {
-        cordova.require("com.salesforce.util.logger").logToConsole("onDeviceReady: Cordova ready");
-        //Call getAuthCredentials to get the initial session credentials
-        cordova.require("com.salesforce.plugin.oauth").getAuthCredentials(salesforceSessionRefreshed, getAuthCredentialsError);
-        
-        //register to receive notifications when autoRefreshOnForeground refreshes the sfdc session
-        document.addEventListener("salesforceSessionRefresh",salesforceSessionRefreshed,false);
-        
-        //enable buttons
-        regLinkClickHandlers();
-        
-        $("#div_soup_status_line").html("Soup name: " + SAMPLE_SOUP_NAME);
-
-    }
-
-    function salesforceSessionRefreshed(creds) {
-        cordova.require("com.salesforce.util.logger").logToConsole("salesforceSessionRefreshed");
-		
-        // Depending on how we come into this method, `creds` may be callback data from the auth
-        // plugin, or an event fired from the plugin.  The data is different between the two.
-        var credsData = creds;
-        if (creds.data)  // Event sets the `data` object with the auth data.
-            credsData = creds.data;
-        
-        forcetkClient = new forcetk.Client(credsData.clientId, credsData.loginUrl, null,
-            cordova.require("com.salesforce.plugin.oauth").forcetkRefresh);
-        forcetkClient.setSessionToken(credsData.accessToken, apiVersion, credsData.instanceUrl);
-        forcetkClient.setRefreshToken(credsData.refreshToken);
-        forcetkClient.setUserAgentString(credsData.userAgent);
-    }
-
-    function getAuthCredentialsError(error) {
-        cordova.require("com.salesforce.util.logger").logToConsole("getAuthCredentialsError: " + error);
-    }
-        
     </script>
         
 	<!-- Bind js to index.html -->
@@ -101,9 +87,17 @@
                  <div id="div_soup_status_line"></div>
               <p>
 				<a href="#" id="link_reg_soup" data-role="button" data-inline="true">Reg soup</a>
-				<a href="#" id="link_remove_soup" data-role="button" data-inline="true">Remove soup</a>
-                <a href="#" id="link_soup_exists" data-role="button" data-inline="true">Soup exists?</a>
-			  </p>              
+                 <p>
+                     <label for="select_soup_spec">soupSpec</label>
+                     <select id="select_soup_spec" multiple>
+                         <option value="externalStorage" selected>external storage</option>
+                     </select>
+                     <a href="#" id="link_reg_soup_with_spec" data-role="button" data-inline="true">Reg soup with spec</a>
+                 </p>
+                 <a href="#" id="link_remove_soup" data-role="button" data-inline="true">Remove soup</a>
+                 <a href="#" id="link_soup_exists" data-role="button" data-inline="true">Soup exists?</a>
+                 <a href="#" id="link_soup_spec" data-role="button" data-inline="true">Soup spec</a>
+			  </p>
               <p><a href="#" id="link_stuff_soup" data-role="button" data-inline="true">Stuff soup</a>
                  <input id="input_stuff_soup_count" data-role="input" value="36" type="number" min="1" max="2048" size="6"/>
                  </p>

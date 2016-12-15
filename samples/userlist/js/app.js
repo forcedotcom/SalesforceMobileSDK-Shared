@@ -12,39 +12,30 @@
     }
     document.querySelector('head').appendChild(platformStyle);
 
-
-    /* Wait until cordova is ready to initiate the use of cordova plugins and app launch */
-    document.addEventListener("deviceready", function() {
-        authenticateUser(showUsersList);
-    }, false);
-
-    /* Method to authenticate user with Salesforce Mobile SDK's OAuth Plugin */
-    var authenticateUser = function(successHandler, errorHandler) {
-
-        // Get salesforce mobile sdk OAuth plugin
-        var oauthPlugin = cordova.require("com.salesforce.plugin.oauth");
-
-        // Call getAuthCredentials to get the initial session credentials
-        oauthPlugin.getAuthCredentials(
-            // Callback method when authentication succeeds.
-            function (creds) {
-                // Create forcetk client instance for rest API calls
-                var forceClient = new forcetk.Client();
-                forceClient.setSessionToken(creds.accessToken, "v31.0", creds.instanceUrl);
-
-                // Call success handler and handover the forcetkClient
-                successHandler(forceClient);
-            },
-            function (error) {
-                alert('Failed to authenticate user: ' + error);
-            }
-        );
+    /* This will only be true when testing in a browser with MockCordova */
+    if (cordova.interceptExec) {
+        force.init({loginURL: "https://test.salesforce.com/",
+                    appId: "3MVG98dostKihXN53TYStBIiS8BTFb20jwWfFcShqfABb3c.HH3CkmA00FuCmc0aM3v4LZOGR5QBnEi77fotN",
+                    oauthCallbackURL: "http://localhost:8200/test/oauthcallback.html",
+                    useCordova: false /* running in browser with mock cordova - so do oauth through browser and network through xhr */
+                   });
     }
+       
+    /* Do login */
+    force.login(
+        function() {
+            console.log("Auth succeeded"); 
+            showUsersList();
+        },
+        function(error) {
+            console.log("Auth failed: " + error); 
+        }
+    );
 
     /* This method will render a list of users from current salesforce org */
-    var showUsersList = function(forceClient) {
+    var showUsersList = function() {
 
-        fetchRecords(forceClient, function(data) {
+        fetchRecords(function(data) {
             var users = data.records;
 
             var listItemsHtml = '';
@@ -58,9 +49,9 @@
 
     /* This method will fetch a list of user records from salesforce. 
     Just change the soql query to fetch another sobject. */
-    var fetchRecords = function (forceClient, successHandler) {
+    var fetchRecords = function (successHandler) {
         var soql = 'SELECT Id, Name FROM User LIMIT 10';
-        forceClient.query(soql, successHandler, function(error) {
+        force.query(soql, successHandler, function(error) {
             alert('Failed to fetch users: ' + error);
         });
     };

@@ -1,1 +1,0 @@
-../../common/auth_local.js
