@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "5.0.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "5.0.1";
 var appStartTime = (new Date()).getTime();  // Used for debug timing measurements.
 
 /**
