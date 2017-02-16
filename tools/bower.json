@@ -1,6 +1,6 @@
 {
     "name": "salesforcemobilesdk-shared",
-    "version": "5.0.0",
+    "version": "5.0.1",
     "dependencies": {
         "jquery": "2.0.3",
         "underscore": "1.5.2",
