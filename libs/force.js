@@ -42,7 +42,7 @@ var force = (function () {
 
     // The force.com API version to use.
     // To override default, pass apiVersion in init(props)
-        apiVersion = 'v36.0',
+        apiVersion = 'v39.0',
 
     // Keep track of OAuth data (access_token, refresh_token, and instance_url)
         oauth,
