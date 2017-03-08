@@ -1106,8 +1106,8 @@
         var serverSosl = function(sosl) {
             return forceJsClient.search(sosl).then(function(resp) {
                 return {
-                    records: resp,
-                    totalSize: resp.length,
+                    records: resp.searchRecords,
+                    totalSize: resp.searchRecords.length,
                     hasMore: function() { return false; },
                     getMore: function() { return null; }
                 }
