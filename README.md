@@ -11,9 +11,17 @@ Contains all the SalesforceMobileSDK JavaScript libraries.
 Contains all the Cordova plugins for the SalesforceMobileSDK (oauth / smartstore / sdkinfo).
 Includes this library after cordova.js in your HTML application.
 
-**forcetk.mobilesdk.js**
+**force.js**
 
 Library to do REST API calls from JavaScript.
+
+**force+files.js**
+
+Library to do file related REST API calls from JavaScript.
+
+**force+promise.js**
+
+Library to do REST API calls from JavaScript using promises instead of callbacks.
 
 **smartsync.js**
 
