@@ -215,7 +215,7 @@ app.views.SearchPage = Backbone.View.extend({
 
     cacheSize: function() {
         Force.smartstoreClient.runSmartQuery({queryType:"smart", smartSql:"SELECT count(*) from {contacts}", pageSize:1})
-            .done(function(result) {
+            .then(function(result) {
                 alert("Number of entries in cache: " + result.currentPageOrderedEntries[0][0]);
             });
     },
