@@ -45,7 +45,7 @@ var MockSDKInfo = (function(window) {
             var self = this;
 
             cordova.interceptExec(SDKINFO_SERVICE, "getInfo", function (successCB, errorCB, args) {
-                successCB(new SDKInfo("5.0.1", 
+                successCB(new SDKInfo("5.1.0", 
                                       ["com.salesforce.oauth", "com.salesforce.sdkinfo", "com.salesforce.sfaccountmanager", "com.salesforce.network", "com.salesforce.testrunner", "com.salesforce.smartstore", "com.salesforce.smartsync"], 
                                       "SalesforceHybridSDKTestApp", "1.0",
                                       {

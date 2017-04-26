@@ -5,13 +5,12 @@ function regLinkClickHandlers() {
     var logToConsole = cordova.require("com.salesforce.util.logger").logToConsole;
     $j('#link_fetch_device_contacts').click(function() {
                                            logToConsole("link_fetch_device_contacts clicked");
-                                           var contactOptionsType = cordova.require("org.apache.cordova.contacts.ContactFindOptions");
-                                           var options = new contactOptionsType();
-                                           options.filter = ""; // empty search string returns all contacts
+                                           var options      = new ContactFindOptions();
+                                           options.filter   = ""; // empty search string returns all contacts
                                            options.multiple = true;
-                                           var fields = ["name"];
-                                           var contactsObj = cordova.require("org.apache.cordova.contacts.contacts");
-                                           contactsObj.find(fields, onSuccessDevice, onErrorDevice, options);
+                                           options.hasPhoneNumber = true;
+                                           var fields       = [navigator.contacts.fieldType.displayName, navigator.contacts.fieldType.name];
+                                           navigator.contacts.find(fields, onSuccessDevice, onErrorDevice, options);
                                            });
     
     $j('#link_fetch_sfdc_contacts').click(function() {
