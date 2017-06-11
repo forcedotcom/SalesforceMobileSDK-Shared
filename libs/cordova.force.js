@@ -1221,9 +1221,7 @@ cordova.define("com.salesforce.util.push", function(require, exports, module) {
             push.on('notification', function(data) {
               console.log("notification event");
               console.log(JSON.stringify(data));
-              if (data.event == "message") {
-                notificationHandler(message);
-              }
+              notificationHandler(data);
               push.finish(function () {
                   console.log('finish successfully called');
               });
