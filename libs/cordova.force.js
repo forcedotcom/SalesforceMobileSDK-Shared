@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "5.1.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "5.2.0";
 
 /**
  * Utilify functions for logging
@@ -1221,9 +1221,7 @@ cordova.define("com.salesforce.util.push", function(require, exports, module) {
             push.on('notification', function(data) {
               console.log("notification event");
               console.log(JSON.stringify(data));
-              if (data.event == "message") {
-                notificationHandler(message);
-              }
+              notificationHandler(data);
               push.finish(function () {
                   console.log('finish successfully called');
               });
