@@ -37,9 +37,7 @@ var exec = require("com.salesforce.util.exec").exec;
 var logoutInitiated = false;
 
 /**
- * Obtain authentication credentials, calling 'authenticate' only if necessary.
- * Most index.html authors can simply use this method to obtain auth credentials
- * after onDeviceReady.
+ * Obtain authentication credentials. Return the error "Not authenticated" if not authenticated.
  *   success - The success callback function to use.
  *   fail    - The failure/error callback function to use.
  * cordova returns a dictionary with:
