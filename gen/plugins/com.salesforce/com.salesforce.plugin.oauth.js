@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "6.0.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "5.3.0";
 var SERVICE = "com.salesforce.oauth";
 
 var exec = require("com.salesforce.util.exec").exec;
@@ -37,7 +37,9 @@ var exec = require("com.salesforce.util.exec").exec;
 var logoutInitiated = false;
 
 /**
- * Obtain authentication credentials. Return the error "Not authenticated" if not authenticated.
+ * Obtain authentication credentials, calling 'authenticate' only if necessary.
+ * Most index.html authors can simply use this method to obtain auth credentials
+ * after onDeviceReady.
  *   success - The success callback function to use.
  *   fail    - The failure/error callback function to use.
  * cordova returns a dictionary with:
