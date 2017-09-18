@@ -214,7 +214,7 @@ ForceJSTestSuite.prototype.testDeleteFileShare = function()  {
  */
 ForceJSTestSuite.prototype.tryUserAgent = function(expectedPlatform, expectedPlatformVersion, expectedModel, userAgent) {
     var webAppSdkAgent = force.computeWebAppSdkAgent(userAgent);
-    var match = /SalesforceMobileSDK\/5.2.0 ([^\/]*)\/([^\ ]*) \(([^\)]*)\) ([^\/]*)\/1.0 Web (.*)/.exec(webAppSdkAgent);
+    var match = /SalesforceMobileSDK\/5.3.0 ([^\/]*)\/([^\ ]*) \(([^\)]*)\) ([^\/]*)\/1.0 Web (.*)/.exec(webAppSdkAgent);
     if (match != null && match.length == 6) {
         QUnit.equals(match[1], expectedPlatform, "Wrong platform for user agent [" + userAgent + "]");
         QUnit.equals(match[2], expectedPlatformVersion, "Wrong platformVersion for user agent [" + userAgent + "]");
