@@ -37,7 +37,7 @@ var SmartSyncTestSuite = function () {
     this.defaultGlobalStoreConfig = {"isGlobalStore" : true};
 
     // To run specific tests
-    this.testsToRun = ["testGetSyncDeleteById"];
+    // this.testsToRun = ["testGetSyncDeleteById"];
 };
 
 // We are sub-classing SFTestSuite
