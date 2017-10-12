@@ -63,17 +63,17 @@ var MockSmartSyncPlugin = (function(window) {
             successCB(this.syncs[syncId]);
         },
 
-        getIdByName: function(name) {
+        getSyncIdFromName: function(syncName) {
             for (var syncId in this.syncs) {
-                if (this.syncs[syncId].name === name) {
+                if (this.syncs[syncId].name === syncName) {
                     return syncId;
                 }
             }
             return null;
         },
 
-        getSyncStatusByName: function(name, successCB, errorCB) {
-            var syncId = this.getIdByName(name);
+        getSyncStatusByName: function(syncName, successCB, errorCB) {
+            var syncId = this.getSyncIdFromName(syncName);
             successCB(syncId != null ? this.syncs[syncId] : null);
         },
 
@@ -82,8 +82,8 @@ var MockSmartSyncPlugin = (function(window) {
             successCB();;
         },
 
-        deleteSyncByName: function(name, successCB, errorCB) {
-            var syncId = this.getIdByName(name);
+        deleteSyncByName: function(syncName, successCB, errorCB) {
+            var syncId = this.getSyncIdFromName(syncName);
 
             if (syncId != null) {
                 delete this.syncs[syncId];
@@ -353,7 +353,7 @@ var syncManagerMap = new SyncManagerMap();
 
     cordova.interceptExec(SMARTSYNC_SERVICE, "getSyncStatusByName", function (successCB, errorCB, args) {
         var mgr = syncManagerMap.getSyncManager(args);
-        mgr.getSyncStatusByName(args[0].name, successCB, errorCB);
+        mgr.getSyncStatusByName(args[0].syncName, successCB, errorCB);
     });
 
     cordova.interceptExec(SMARTSYNC_SERVICE, "reSync", function (successCB, errorCB, args) {
@@ -373,7 +373,7 @@ var syncManagerMap = new SyncManagerMap();
 
     cordova.interceptExec(SMARTSYNC_SERVICE, "deleteSyncByName", function (successCB, errorCB, args) {
         var mgr = syncManagerMap.getSyncManager(args);
-        mgr.deleteSyncByName(args[0].syncId, successCB, errorCB);
+        mgr.deleteSyncByName(args[0].syncName, successCB, errorCB);
     });
 
 })(cordova, syncManagerMap);

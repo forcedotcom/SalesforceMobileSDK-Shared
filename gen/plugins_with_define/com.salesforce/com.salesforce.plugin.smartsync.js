@@ -114,11 +114,11 @@ var getSyncStatus = function(storeConfig, syncId, successCB, errorCB) {
         );
 };
 
-var getSyncStatusByName = function(storeConfig, name, successCB, errorCB) {
+var getSyncStatusByName = function(storeConfig, syncName, successCB, errorCB) {
     if (checkFirstArg(arguments, "boolean", false)) return;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "getSyncStatusByName",
-         [{"name": name, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
+         [{"syncName": syncName, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
         );
 };
 
@@ -130,11 +130,11 @@ var deleteSyncById = function(storeConfig, syncId, successCB, errorCB) {
         );
 };
 
-var deleteSyncByName = function(storeConfig, name, successCB, errorCB) {
+var deleteSyncByName = function(storeConfig, syncName, successCB, errorCB) {
     if (checkFirstArg(arguments, "boolean", false)) return;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "deleteSyncByName",
-         [{"name": name, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
+         [{"syncName": syncName, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
         );
 };
 

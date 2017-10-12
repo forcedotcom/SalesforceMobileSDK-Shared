@@ -1169,11 +1169,11 @@ cordova.define("com.salesforce.plugin.smartsync", function (require, exports, mo
             );
     };
 
-    var getSyncStatusByName = function(storeConfig, name, successCB, errorCB) {
+    var getSyncStatusByName = function(storeConfig, syncName, successCB, errorCB) {
         if (checkFirstArg(arguments, "boolean", false)) return;
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "getSyncStatusByName",
-             [{"name": name, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
+             [{"syncName": syncName, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
             );
     };
 
@@ -1185,11 +1185,11 @@ cordova.define("com.salesforce.plugin.smartsync", function (require, exports, mo
             );
     };
 
-    var deleteSyncByName = function(storeConfig, name, successCB, errorCB) {
+    var deleteSyncByName = function(storeConfig, syncName, successCB, errorCB) {
         if (checkFirstArg(arguments, "boolean", false)) return;
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "deleteSyncByName",
-             [{"name": name, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
+             [{"syncName": syncName, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
             );
     };
 
