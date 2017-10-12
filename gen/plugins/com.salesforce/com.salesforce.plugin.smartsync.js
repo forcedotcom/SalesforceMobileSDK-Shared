@@ -113,6 +113,30 @@ var getSyncStatus = function(storeConfig, syncId, successCB, errorCB) {
         );
 };
 
+var getSyncStatusByName = function(storeConfig, name, successCB, errorCB) {
+    if (checkFirstArg(arguments, "boolean", false)) return;
+    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+         "getSyncStatusByName",
+         [{"name": name, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
+        );
+};
+
+var deleteSyncById = function(storeConfig, syncId, successCB, errorCB) {
+    if (checkFirstArg(arguments, "boolean", false)) return;
+    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+         "deleteSyncById",
+         [{"syncId": syncId, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
+        );
+};
+
+var deleteSyncByName = function(storeConfig, name, successCB, errorCB) {
+    if (checkFirstArg(arguments, "boolean", false)) return;
+    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+         "deleteSyncByName",
+         [{"name": name, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
+        );
+};
+
 var MERGE_MODE = {
     OVERWRITE: "OVERWRITE",
     LEAVE_IF_CHANGED: "LEAVE_IF_CHANGED"
@@ -127,6 +151,9 @@ module.exports = {
     syncDown: syncDown,
     syncUp: syncUp,
     getSyncStatus: getSyncStatus,
+    getSyncStatusByName: getSyncStatusByName,
     reSync: reSync,
-    cleanResyncGhosts: cleanResyncGhosts
+    cleanResyncGhosts: cleanResyncGhosts,
+    deleteSyncById: deleteSyncById,
+    deleteSyncByName:  deleteSyncByName
 };
