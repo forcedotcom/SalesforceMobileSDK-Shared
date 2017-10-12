@@ -37,7 +37,7 @@ var SmartSyncTestSuite = function () {
     this.defaultGlobalStoreConfig = {"isGlobalStore" : true};
 
     // To run specific tests
-    //this.testsToRun = ["testSyncDownToGlobalStoreNamed"];
+    this.testsToRun = ["testGetSyncDeleteById"];
 };
 
 // We are sub-classing SFTestSuite
@@ -52,6 +52,10 @@ SmartSyncTestSuite.prototype.reSync = promiser(cordova.require("com.salesforce.p
 SmartSyncTestSuite.prototype.syncDown = promiser(cordova.require("com.salesforce.plugin.smartsync"), "syncDown");
 SmartSyncTestSuite.prototype.syncUp = promiser(cordova.require("com.salesforce.plugin.smartsync"), "syncUp");
 SmartSyncTestSuite.prototype.getSyncStatus = promiser(cordova.require("com.salesforce.plugin.smartsync"), "getSyncStatus");
+SmartSyncTestSuite.prototype.getSyncStatusByName = promiser(cordova.require("com.salesforce.plugin.smartsync"), "getSyncStatusByName");
+SmartSyncTestSuite.prototype.deleteSyncById = promiser(cordova.require("com.salesforce.plugin.smartsync"), "deleteSyncById");
+SmartSyncTestSuite.prototype.deleteSyncByName = promiser(cordova.require("com.salesforce.plugin.smartsync"), "deleteSyncByName");
+
 
 //-------------------------------------------------------------------------------------------------------
 //
@@ -3580,7 +3584,52 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyCreated = function() {
         });
 };
 
+/**
+ * TEST smartsyncplugin getSyncStatus + deleteSyncById
+ */
+SmartSyncTestSuite.prototype.testGetSyncDeleteById = function() {
+    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+    var self = this;
+    var idToName = {};
+    var soupName = "soupFor_" + this.module.currentTestName; 
+    var cache;
+    var syncDownId;
 
+    Force.smartstoreClient.removeSoup(self.defaultStoreConfig,soupName)
+        .then(function() {
+            QUnit.ok(1, "Passed");
+            console.log("## Initialization of StoreCache's");
+            cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ],"Id",self.defaultStoreConfig.isGlobalStore,self.defaultStoreConfig.storeName);
+            return cache.init();
+        })
+        .then(function() {
+            console.log("## Direct creation against server");
+            return createRecords(idToName, "testSyncDown", 3);
+        })
+        .then(function() {
+            console.log("## Calling sync down");
+            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
+        })
+        .then(function(syncId) {
+            syncDownId = syncId;
+            return self.getSyncStatus(self.defaultStoreConfig, syncDownId);
+        })
+        .then(function(sync) {
+            assertContains(sync, {_soupEntryId: syncDownId, type:"syncDown", progress:100, soupName: soupName});
+            return self.deleteSyncById(self.defaultStoreConfig, syncDownId);
+        })
+        .then(function() {
+            return self.getSyncStatus(self.defaultStoreConfig, syncDownId);
+        })
+        .then(function(sync) {
+            QUnit.ok(sync == null, "Sync should no longer exist");
+            return Promise.all([deleteRecords(idToName), Force.smartstoreClient.removeSoup(self.defaultStoreConfig,soupName)]);
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+                                                                                                            
 //-------------------------------------------------------------------------------------------------------
 //
 // Helper methods
@@ -3837,7 +3886,7 @@ var tryConflictDetection = function(message, cache, cacheForOriginals, theirs, y
 /**
  Helper function to run sync down and consume all status updates until done
  */
-SmartSyncTestSuite.prototype.trySyncDown = function(storeConfig,cache, soupName, idToName, mergeMode, target) {
+SmartSyncTestSuite.prototype.trySyncDown = function(storeConfig, cache, soupName, idToName, mergeMode, target) {
     var isGlobalStore = storeConfig.isGlobalStore;
     var options = {mergeMode: mergeMode};
     target = target || {type:"soql", query:"SELECT Id, Name, LastModifiedDate FROM Account WHERE Id IN ('" +  _.keys(idToName).join("','") + "') ORDER BY Name"};

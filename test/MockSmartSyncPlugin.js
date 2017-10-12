@@ -63,6 +63,35 @@ var MockSmartSyncPlugin = (function(window) {
             successCB(this.syncs[syncId]);
         },
 
+        getIdByName: function(name) {
+            for (var syncId in this.syncs) {
+                if (this.syncs[syncId].name === name) {
+                    return syncId;
+                }
+            }
+            return null;
+        },
+
+        getSyncStatusByName: function(name, successCB, errorCB) {
+            var syncId = this.getIdByName(name);
+            successCB(syncId != null ? this.syncs[syncId] : null);
+        },
+
+        deleteSyncById: function(syncId, successCB, errorCB) {
+            delete this.syncs[syncId];
+            successCB();;
+        },
+
+        deleteSyncByName: function(name, successCB, errorCB) {
+            var syncId = this.getIdByName(name);
+
+            if (syncId != null) {
+                delete this.syncs[syncId];
+            }
+
+            successCB();;
+        },
+
         syncDown: function(target, soupName, options, successCB, errorCB) {
             if (target.type === "cache") {
                 errorCB("Wrong target type: " + target.type);
@@ -322,6 +351,11 @@ var syncManagerMap = new SyncManagerMap();
         mgr.getSyncStatus(args[0].syncId, successCB, errorCB);
     });
 
+    cordova.interceptExec(SMARTSYNC_SERVICE, "getSyncStatusByName", function (successCB, errorCB, args) {
+        var mgr = syncManagerMap.getSyncManager(args);
+        mgr.getSyncStatusByName(args[0].name, successCB, errorCB);
+    });
+
     cordova.interceptExec(SMARTSYNC_SERVICE, "reSync", function (successCB, errorCB, args) {
         var mgr = syncManagerMap.getSyncManager(args);
         mgr.reSync(args[0].syncId, successCB, errorCB);
@@ -332,5 +366,14 @@ var syncManagerMap = new SyncManagerMap();
         mgr.cleanResyncGhosts(args[0].syncId, successCB, errorCB);
     });
 
+    cordova.interceptExec(SMARTSYNC_SERVICE, "deleteSyncById", function (successCB, errorCB, args) {
+        var mgr = syncManagerMap.getSyncManager(args);
+        mgr.deleteSyncById(args[0].syncId, successCB, errorCB);
+    });
+
+    cordova.interceptExec(SMARTSYNC_SERVICE, "deleteSyncByName", function (successCB, errorCB, args) {
+        var mgr = syncManagerMap.getSyncManager(args);
+        mgr.deleteSyncByName(args[0].syncId, successCB, errorCB);
+    });
 
 })(cordova, syncManagerMap);
