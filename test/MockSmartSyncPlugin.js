@@ -42,9 +42,9 @@ var MockSmartSyncPlugin = (function(window) {
     module.prototype = {
         constructor: module,
 
-        recordSync: function(type, target, soupName, options) {
+        recordSync: function(type, target, soupName, options, syncName) {
             var syncId = this.lastSyncId++;
-            var sync = {_soupEntryId: syncId, type:type, target:target, soupName:soupName, options: options, status: "RUNNING", progress: 0};
+            var sync = {_soupEntryId: syncId, type:type, target:target, soupName:soupName, options: options, status: "RUNNING", progress: 0, name: syncName};
             this.syncs[syncId] = sync;
             return syncId;
         },
@@ -92,12 +92,12 @@ var MockSmartSyncPlugin = (function(window) {
             successCB();;
         },
 
-        syncDown: function(target, soupName, options, successCB, errorCB) {
+        syncDown: function(target, soupName, options, syncName, successCB, errorCB) {
             if (target.type === "cache") {
                 errorCB("Wrong target type: " + target.type);
                 return;
             }
-            var syncId = this.recordSync("syncDown", target, soupName, options);
+            var syncId = this.recordSync("syncDown", target, soupName, options, syncName);
             this.actualSyncDown(syncId, successCB, errorCB);
         },
 
@@ -206,9 +206,9 @@ var MockSmartSyncPlugin = (function(window) {
             return modifiedQuery;
         },
 
-        syncUp: function(target, soupName, options, successCB, errorCB) {
+        syncUp: function(target, soupName, options, syncName, successCB, errorCB) {
             var self = this;
-            var syncId = self.recordSync("syncUp", target, soupName, options);
+            var syncId = self.recordSync("syncUp", target, soupName, options, syncName);
             var cache = new Force.StoreCache(soupName,  null, null, self.storeConfig.isGlobalStore,self.storeConfig.storeName);
             var collection = new Force.SObjectCollection();
             var numberRecords;
@@ -338,12 +338,12 @@ var syncManagerMap = new SyncManagerMap();
 
     cordova.interceptExec(SMARTSYNC_SERVICE, "syncUp", function (successCB, errorCB, args) {
         var mgr = syncManagerMap.getSyncManager(args);
-        mgr.syncUp(args[0].target, args[0].soupName, args[0].options, successCB, errorCB);
+        mgr.syncUp(args[0].target, args[0].soupName, args[0].options, args[0].syncName, successCB, errorCB);
     });
 
     cordova.interceptExec(SMARTSYNC_SERVICE, "syncDown", function (successCB, errorCB, args) {
         var mgr = syncManagerMap.getSyncManager(args);
-        mgr.syncDown(args[0].target, args[0].soupName, args[0].options, successCB, errorCB);
+        mgr.syncDown(args[0].target, args[0].soupName, args[0].options, args[0].syncName, successCB, errorCB);
     });
 
     cordova.interceptExec(SMARTSYNC_SERVICE, "getSyncStatus", function (successCB, errorCB, args) {

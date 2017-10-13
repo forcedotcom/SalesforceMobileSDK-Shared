@@ -37,7 +37,7 @@ var SmartSyncTestSuite = function () {
     this.defaultGlobalStoreConfig = {"isGlobalStore" : true};
 
     // To run specific tests
-    // this.testsToRun = ["testGetSyncDeleteById"];
+    this.testsToRun = ["testSyncDownGetSyncDeleteSyncById", "testSyncDownGetSyncDeleteSyncByName", "testSyncUpGetSyncDeleteSyncById", "testSyncUpGetSyncDeleteSyncByName"];
 };
 
 // We are sub-classing SFTestSuite
@@ -3107,6 +3107,103 @@ SmartSyncTestSuite.prototype.testCleanResyncGhosts = function() {
         });
 };
 
+/**
+ * TEST smartsyncplugin syncDown + getSyncStatus + deleteSyncById
+ */
+SmartSyncTestSuite.prototype.testSyncDownGetSyncDeleteSyncById = function() {
+    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+    var self = this;
+    var idToName = {};
+    var soupName = "soupFor_" + this.module.currentTestName; 
+    var cache;
+    var syncDownId;
+
+    Force.smartstoreClient.removeSoup(self.defaultStoreConfig,soupName)
+        .then(function() {
+            QUnit.ok(1, "Passed");
+            console.log("## Initialization of StoreCache's");
+            cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ],"Id",self.defaultStoreConfig.isGlobalStore,self.defaultStoreConfig.storeName);
+            return cache.init();
+        })
+        .then(function() {
+            console.log("## Direct creation against server");
+            return createRecords(idToName, "testSyncDown", 3);
+        })
+        .then(function() {
+            console.log("## Calling sync down");
+            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
+        })
+        .then(function(syncId) {
+            syncDownId = syncId;
+            return self.getSyncStatus(self.defaultStoreConfig, syncDownId);
+        })
+        .then(function(sync) {
+            assertContains(sync, {_soupEntryId: syncDownId, type:"syncDown", progress:100, soupName: soupName});
+            return self.deleteSyncById(self.defaultStoreConfig, syncDownId);
+        })
+        .then(function() {
+            return self.getSyncStatus(self.defaultStoreConfig, syncDownId);
+        })
+        .then(function(sync) {
+            QUnit.ok(sync == null, "Sync should no longer exist");
+            return Promise.all([deleteRecords(idToName), Force.smartstoreClient.removeSoup(self.defaultStoreConfig,soupName)]);
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
+/**
+ * TEST smartsyncplugin syncDown + getSyncStatusByName + deleteSyncByName
+ */
+SmartSyncTestSuite.prototype.testSyncDownGetSyncDeleteSyncByName = function() {
+    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+    var self = this;
+    var idToName = {};
+    var soupName = "soupFor_" + this.module.currentTestName;
+    var syncName = "syncFor_" + this.module.currentTestName;
+    var cache;
+    var syncDownId;
+
+    Force.smartstoreClient.removeSoup(self.defaultStoreConfig,soupName)
+        .then(function() {
+            QUnit.ok(1, "Passed");
+            console.log("## Initialization of StoreCache's");
+            cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ],"Id",self.defaultStoreConfig.isGlobalStore,self.defaultStoreConfig.storeName);
+            return cache.init();
+        })
+        .then(function() {
+            console.log("## Direct creation against server");
+            return createRecords(idToName, "testSyncDown", 3);
+        })
+        .then(function() {
+            console.log("## Calling sync down");
+            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE, null, syncName);
+        })
+        .then(function(syncId) {
+            syncDownId = syncId;
+            return self.getSyncStatusByName(self.defaultStoreConfig, syncName);
+        })
+        .then(function(sync) {
+            assertContains(sync, {_soupEntryId: syncDownId, type:"syncDown", progress:100, soupName: soupName, name: syncName});
+            return self.deleteSyncByName(self.defaultStoreConfig, syncName);
+        })
+        .then(function() {
+            return self.getSyncStatusByName(self.defaultStoreConfig, syncName);
+        })
+        .then(function(sync) {
+            QUnit.ok(sync == null, "Sync should no longer exist");
+            return self.getSyncStatus(self.defaultStoreConfig, syncDownId);
+        })
+        .then(function(sync) {
+            QUnit.ok(sync == null, "Sync should no longer exist");
+            return Promise.all([deleteRecords(idToName), Force.smartstoreClient.removeSoup(self.defaultStoreConfig,soupName)]);
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
 //-------------------------------------------------------------------------------------------------------
 //
 // Tests for sync up
@@ -3584,16 +3681,19 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyCreated = function() {
         });
 };
 
+
 /**
- * TEST smartsyncplugin getSyncStatus + deleteSyncById
+ * TEST smartsyncplugin syncUp + getSyncStatus + deleteSyncById
  */
-SmartSyncTestSuite.prototype.testGetSyncDeleteById = function() {
+SmartSyncTestSuite.prototype.testSyncUpGetSyncDeleteSyncById = function() {
     console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var idToName = {};
+    var createdRecords;
+    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE};
     var soupName = "soupFor_" + this.module.currentTestName; 
     var cache;
-    var syncDownId;
+    var syncUpId;
 
     Force.smartstoreClient.removeSoup(self.defaultStoreConfig,soupName)
         .then(function() {
@@ -3603,33 +3703,95 @@ SmartSyncTestSuite.prototype.testGetSyncDeleteById = function() {
             return cache.init();
         })
         .then(function() {
-            console.log("## Direct creation against server");
-            return createRecords(idToName, "testSyncDown", 3);
+            console.log("## Local creation");
+            createdRecords = [];
+            for (var i = 0; i < 3; i++) {
+                createdRecords.push({Id:"local_" + i, Name:"testSyncUpLocallyCreated" + i, __locally_created__:true, attributes:{type:"Account"}});
+            }
+            return cache.saveAll(createdRecords);
         })
         .then(function() {
-            console.log("## Calling sync down");
-            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
+            console.log("## Calling sync up");
+            return self.trySyncUp(self.defaultStoreConfig, soupName, options);
         })
         .then(function(syncId) {
-            syncDownId = syncId;
-            return self.getSyncStatus(self.defaultStoreConfig, syncDownId);
+            syncUpId = syncId;
+            return self.getSyncStatus(self.defaultStoreConfig, syncUpId);
         })
         .then(function(sync) {
-            assertContains(sync, {_soupEntryId: syncDownId, type:"syncDown", progress:100, soupName: soupName});
-            return self.deleteSyncById(self.defaultStoreConfig, syncDownId);
+            assertContains(sync, {_soupEntryId: syncUpId, type:"syncUp", progress:100, soupName: soupName});
+            return self.deleteSyncById(self.defaultStoreConfig, syncUpId);
         })
         .then(function() {
-            return self.getSyncStatus(self.defaultStoreConfig, syncDownId);
+            return self.getSyncStatus(self.defaultStoreConfig, syncUpId);
         })
         .then(function(sync) {
             QUnit.ok(sync == null, "Sync should no longer exist");
-            return Promise.all([deleteRecords(idToName), Force.smartstoreClient.removeSoup(self.defaultStoreConfig,soupName)]);
+            return Promise.all([deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName)]);
         })
         .then(function() {
             self.finalizeTest();
         });
 };
-                                                                                                            
+
+/**
+ * TEST smartsyncplugin syncUp + getSyncStatusByName + deleteSyncByName
+ */
+SmartSyncTestSuite.prototype.testSyncUpGetSyncDeleteSyncByName = function() {
+    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+    var self = this;
+    var idToName = {};
+    var createdRecords;
+    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE};
+    var soupName = "soupFor_" + this.module.currentTestName; 
+    var syncName = "syncFor_" + this.module.currentTestName;
+    var cache;
+    var syncUpId;
+
+    Force.smartstoreClient.removeSoup(self.defaultStoreConfig,soupName)
+        .then(function() {
+            QUnit.ok(1, "Passed");
+            console.log("## Initialization of StoreCache's");
+            cache = new Force.StoreCache(soupName, [ {path:"Name", type:"string"} ],"Id",self.defaultStoreConfig.isGlobalStore,self.defaultStoreConfig.storeName);
+            return cache.init();
+        })
+        .then(function() {
+            console.log("## Local creation");
+            createdRecords = [];
+            for (var i = 0; i < 3; i++) {
+                createdRecords.push({Id:"local_" + i, Name:"testSyncUpLocallyCreated" + i, __locally_created__:true, attributes:{type:"Account"}});
+            }
+            return cache.saveAll(createdRecords);
+        })
+        .then(function() {
+            console.log("## Calling sync up");
+            return self.trySyncUp(self.defaultStoreConfig, soupName, options, syncName);
+        })
+        .then(function(syncId) {
+            syncUpId = syncId;
+            return self.getSyncStatusByName(self.defaultStoreConfig, syncName);
+        })
+        .then(function(sync) {
+            assertContains(sync, {_soupEntryId: syncUpId, type:"syncUp", progress:100, soupName: soupName, name: syncName});
+            return self.deleteSyncByName(self.defaultStoreConfig, syncName);
+        })
+        .then(function() {
+            return self.getSyncStatusByName(self.defaultStoreConfig, syncName);
+        })
+        .then(function(sync) {
+            QUnit.ok(sync == null, "Sync should no longer exist");
+            return self.getSyncStatus(self.defaultStoreConfig, syncUpId);
+        })
+        .then(function(sync) {
+            QUnit.ok(sync == null, "Sync should no longer exist");
+            return Promise.all([deleteRecords(idToName), Force.smartstoreClient.removeSoup(soupName)]);
+        })
+        .then(function() {
+            self.finalizeTest();
+        });
+};
+
+
 //-------------------------------------------------------------------------------------------------------
 //
 // Helper methods
@@ -3886,13 +4048,13 @@ var tryConflictDetection = function(message, cache, cacheForOriginals, theirs, y
 /**
  Helper function to run sync down and consume all status updates until done
  */
-SmartSyncTestSuite.prototype.trySyncDown = function(storeConfig, cache, soupName, idToName, mergeMode, target) {
+SmartSyncTestSuite.prototype.trySyncDown = function(storeConfig, cache, soupName, idToName, mergeMode, target, syncName) {
     var isGlobalStore = storeConfig.isGlobalStore;
     var options = {mergeMode: mergeMode};
     target = target || {type:"soql", query:"SELECT Id, Name, LastModifiedDate FROM Account WHERE Id IN ('" +  _.keys(idToName).join("','") + "') ORDER BY Name"};
     var numberRecords = _.keys(idToName).length;
     var syncDownId;
-    return this.syncDown(storeConfig, target, soupName, options)
+    return this.syncDown(storeConfig, target, soupName, options, syncName)
         .then(function(sync) {
             console.log("## Checking sync");
             syncDownId = sync._soupEntryId;
@@ -3943,16 +4105,19 @@ SmartSyncTestSuite.prototype.tryReSync = function(cache, soupName, idToName, syn
 /**
  Helper function to run sync up and consume all status updates until done
  */
-SmartSyncTestSuite.prototype.trySyncUp = function(storeConfig, soupName, options) {
+SmartSyncTestSuite.prototype.trySyncUp = function(storeConfig, soupName, options, syncName) {
     var target = null;
-    return this.syncUp(storeConfig, target, soupName, options)
+    var syncUpId;
+    return this.syncUp(storeConfig, target, soupName, options, syncName)
         .then(function(sync) {
             console.log("## Checking sync");
+            syncUpId = sync._soupEntryId;
             assertContains(sync, {type:"syncUp", options: options, status:"RUNNING", progress:0, soupName: soupName});
             return eventPromiser(document, "sync", function(event) { return event.detail.status == "DONE";});
         })
         .then(function(event) {
             console.log("## Checking event");
             assertContains(event.detail, {type:"syncUp", options: options, status:"DONE", progress:100, soupName: soupName, isGlobalStore: storeConfig.isGlobalStore});
+            return syncUpId;
         });
 };
