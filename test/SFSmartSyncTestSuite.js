@@ -37,7 +37,7 @@ var SmartSyncTestSuite = function () {
     this.defaultGlobalStoreConfig = {"isGlobalStore" : true};
 
     // To run specific tests
-    this.testsToRun = ["testSyncDownGetSyncDeleteSyncById", "testSyncDownGetSyncDeleteSyncByName", "testSyncUpGetSyncDeleteSyncById", "testSyncUpGetSyncDeleteSyncByName"];
+    // this.testsToRun = ["testSyncDownGetSyncDeleteSyncById", "testSyncDownGetSyncDeleteSyncByName", "testSyncUpGetSyncDeleteSyncById", "testSyncUpGetSyncDeleteSyncByName"];
 };
 
 // We are sub-classing SFTestSuite
