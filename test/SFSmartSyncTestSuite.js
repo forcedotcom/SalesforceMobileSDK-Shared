@@ -3405,7 +3405,8 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithGlobalStoreNamed = func
         })
         .then(function() {
             return Promise.all([deleteRecords(idToName),
-              Force.smartstoreClient.removeSoup(self.defaultGlobalStoreConfig, soupName)]);
+              Force.smartstoreClient.removeSoup(globalStoreConfigWithName, soupName),
+            ]);
         })
         .then(function() {
             self.finalizeTest();
