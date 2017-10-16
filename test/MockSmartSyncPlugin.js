@@ -60,7 +60,9 @@ var MockSmartSyncPlugin = (function(window) {
         },
 
         getSyncStatus: function(syncId, successCB, errorCB) {
-            successCB(this.syncs[syncId]);
+            // cordova can't send back a null, so it sends a {} instead
+            var sync = this.syncs[syncId];
+            successCB(sync == null ? {} : sync);
         },
 
         getSyncIdFromName: function(syncName) {
@@ -74,7 +76,8 @@ var MockSmartSyncPlugin = (function(window) {
 
         getSyncStatusByName: function(syncName, successCB, errorCB) {
             var syncId = this.getSyncIdFromName(syncName);
-            successCB(syncId != null ? this.syncs[syncId] : null);
+            // cordova can't send back a null, so it sends a {} instead            
+            successCB(syncId != null && this.syncs[syncId] != null ? this.syncs[syncId] : {});
         },
 
         deleteSyncById: function(syncId, successCB, errorCB) {
