@@ -2950,7 +2950,7 @@ SmartSyncTestSuite.prototype.testRefreshSyncDown = function() {
         })
         .then(function() {
             console.log("## Direct creation against server");
-            return createRecords(idToName, "testSyncDown", 3);
+            return createRecords(idToName, "testRefreshSyncDown", 3);
         })
         .then(function() {
             console.log("## Calling sync down");
@@ -3127,7 +3127,7 @@ SmartSyncTestSuite.prototype.testSyncDownGetSyncDeleteSyncById = function() {
         })
         .then(function() {
             console.log("## Direct creation against server");
-            return createRecords(idToName, "testSyncDown", 3);
+            return createRecords(idToName, "testSyncDownGetSyncDeleteSyncById", 3);
         })
         .then(function() {
             console.log("## Calling sync down");
@@ -3174,7 +3174,7 @@ SmartSyncTestSuite.prototype.testSyncDownGetSyncDeleteSyncByName = function() {
         })
         .then(function() {
             console.log("## Direct creation against server");
-            return createRecords(idToName, "testSyncDown", 3);
+            return createRecords(idToName, "testSyncDownGetSyncDeleteSyncByName", 3);
         })
         .then(function() {
             console.log("## Calling sync down");
