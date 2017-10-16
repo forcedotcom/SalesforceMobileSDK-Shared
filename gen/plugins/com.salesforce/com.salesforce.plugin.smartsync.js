@@ -146,7 +146,13 @@ var syncUp = function(storeConfig, target, soupName, options, syncName, successC
 // Backwards compatibility: storeConfig is optional or could just be a boolean (isGlobalStore)
 var getSyncStatus = function(storeConfig, syncId, successCB, errorCB) {
     if (checkFirstArg(arguments, "boolean", false)) return;
-    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+    // cordova can't return null, so {} is returned when sync is not found
+    var wrappedSuccessCB = function(sync) {
+        if(typeof successCB === "function") {
+            successCB(sync._soupEntryId === undefined ? null : sync);
+        }
+    };
+    exec(SALESFORCE_MOBILE_SDK_VERSION, wrappedSuccessCB, errorCB, SERVICE,
          "getSyncStatus",
          [{"syncId": syncId, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
         );
@@ -155,7 +161,14 @@ var getSyncStatus = function(storeConfig, syncId, successCB, errorCB) {
 // Backwards compatibility: storeConfig is optional or could just be a boolean (isGlobalStore)
 var getSyncStatusByName = function(storeConfig, syncName, successCB, errorCB) {
     if (checkFirstArg(arguments, "boolean", false)) return;
-    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
+    // cordova can't return null, so {} is returned when sync is not found
+    var wrappedSuccessCB = function(sync) {
+        if(typeof successCB === "function") {
+            successCB(sync._soupEntryId === undefined ? null : sync);
+        }
+    };
+    exec(SALESFORCE_MOBILE_SDK_VERSION, wrappedSuccessCB
+         , errorCB, SERVICE,
          "getSyncStatusByName",
          [{"syncName": syncName, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
         );
