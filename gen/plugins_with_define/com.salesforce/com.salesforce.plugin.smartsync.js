@@ -147,7 +147,7 @@ var syncUp = function(storeConfig, target, soupName, options, syncName, successC
 };
 
 // Backwards compatibility: storeConfig is optional or could just be a boolean (isGlobalStore)
-var getSyncStatus = function(storeConfig, syncId, successCB, errorCB) {
+var getSyncStatus = function(storeConfig, syncIdOrName, successCB, errorCB) {
     if (checkFirstArg(arguments, "boolean", false)) return;
     // cordova can't return null, so {} is returned when sync is not found
     var wrappedSuccessCB = function(sync) {
@@ -157,41 +157,20 @@ var getSyncStatus = function(storeConfig, syncId, successCB, errorCB) {
     };
     exec(SALESFORCE_MOBILE_SDK_VERSION, wrappedSuccessCB, errorCB, SERVICE,
          "getSyncStatus",
-         [{"syncId": syncId, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
+         [{"syncId": typeof syncIdOrName === "string" ? null : syncIdOrName,
+           "syncName": typeof syncIdOrName === "string" ? syncIdOrName : null,
+           "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
         );
 };
 
 // Backwards compatibility: storeConfig is optional or could just be a boolean (isGlobalStore)
-var getSyncStatusByName = function(storeConfig, syncName, successCB, errorCB) {
-    if (checkFirstArg(arguments, "boolean", false)) return;
-    // cordova can't return null, so {} is returned when sync is not found
-    var wrappedSuccessCB = function(sync) {
-        if(typeof successCB === "function") {
-            successCB(sync._soupEntryId === undefined ? null : sync);
-        }
-    };
-    exec(SALESFORCE_MOBILE_SDK_VERSION, wrappedSuccessCB
-         , errorCB, SERVICE,
-         "getSyncStatusByName",
-         [{"syncName": syncName, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
-        );
-};
-
-// Backwards compatibility: storeConfig is optional or could just be a boolean (isGlobalStore)
-var deleteSyncById = function(storeConfig, syncId, successCB, errorCB) {
+var deleteSync = function(storeConfig, syncIdOrName, successCB, errorCB) {
     if (checkFirstArg(arguments, "boolean", false)) return;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
-         "deleteSyncById",
-         [{"syncId": syncId, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
-        );
-};
-
-// Backwards compatibility: storeConfig is optional or could just be a boolean (isGlobalStore)
-var deleteSyncByName = function(storeConfig, syncName, successCB, errorCB) {
-    if (checkFirstArg(arguments, "boolean", false)) return;
-    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
-         "deleteSyncByName",
-         [{"syncName": syncName, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
+         "deleteSync",
+         [{"syncId": typeof syncIdOrName === "string" ? null : syncIdOrName,
+           "syncName": typeof syncIdOrName === "string" ? syncIdOrName : null,
+           "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
         );
 };
 
@@ -209,10 +188,8 @@ module.exports = {
     syncDown: syncDown,
     syncUp: syncUp,
     getSyncStatus: getSyncStatus,
-    getSyncStatusByName: getSyncStatusByName,
     reSync: reSync,
     cleanResyncGhosts: cleanResyncGhosts,
-    deleteSyncById: deleteSyncById,
-    deleteSyncByName:  deleteSyncByName
+    deleteSync: deleteSync
 };
 });

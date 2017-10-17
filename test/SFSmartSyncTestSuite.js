@@ -52,9 +52,7 @@ SmartSyncTestSuite.prototype.reSync = promiser(cordova.require("com.salesforce.p
 SmartSyncTestSuite.prototype.syncDown = promiser(cordova.require("com.salesforce.plugin.smartsync"), "syncDown");
 SmartSyncTestSuite.prototype.syncUp = promiser(cordova.require("com.salesforce.plugin.smartsync"), "syncUp");
 SmartSyncTestSuite.prototype.getSyncStatus = promiser(cordova.require("com.salesforce.plugin.smartsync"), "getSyncStatus");
-SmartSyncTestSuite.prototype.getSyncStatusByName = promiser(cordova.require("com.salesforce.plugin.smartsync"), "getSyncStatusByName");
-SmartSyncTestSuite.prototype.deleteSyncById = promiser(cordova.require("com.salesforce.plugin.smartsync"), "deleteSyncById");
-SmartSyncTestSuite.prototype.deleteSyncByName = promiser(cordova.require("com.salesforce.plugin.smartsync"), "deleteSyncByName");
+SmartSyncTestSuite.prototype.deleteSync = promiser(cordova.require("com.salesforce.plugin.smartsync"), "deleteSync");
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -3108,7 +3106,7 @@ SmartSyncTestSuite.prototype.testCleanResyncGhosts = function() {
 };
 
 /**
- * TEST smartsyncplugin syncDown + getSyncStatus + deleteSyncById
+ * TEST smartsyncplugin syncDown + getSyncStatus + deleteSync by id
  */
 SmartSyncTestSuite.prototype.testSyncDownGetSyncDeleteSyncById = function() {
     console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
@@ -3139,7 +3137,7 @@ SmartSyncTestSuite.prototype.testSyncDownGetSyncDeleteSyncById = function() {
         })
         .then(function(sync) {
             assertContains(sync, {_soupEntryId: syncDownId, type:"syncDown", progress:100, soupName: soupName});
-            return self.deleteSyncById(self.defaultStoreConfig, syncDownId);
+            return self.deleteSync(self.defaultStoreConfig, syncDownId);
         })
         .then(function() {
             return self.getSyncStatus(self.defaultStoreConfig, syncDownId);
@@ -3154,7 +3152,7 @@ SmartSyncTestSuite.prototype.testSyncDownGetSyncDeleteSyncById = function() {
 };
 
 /**
- * TEST smartsyncplugin syncDown + getSyncStatusByName + deleteSyncByName
+ * TEST smartsyncplugin syncDown + getSyncStatus + deleteSync by name
  */
 SmartSyncTestSuite.prototype.testSyncDownGetSyncDeleteSyncByName = function() {
     console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
@@ -3182,14 +3180,14 @@ SmartSyncTestSuite.prototype.testSyncDownGetSyncDeleteSyncByName = function() {
         })
         .then(function(syncId) {
             syncDownId = syncId;
-            return self.getSyncStatusByName(self.defaultStoreConfig, syncName);
+            return self.getSyncStatus(self.defaultStoreConfig, syncName);
         })
         .then(function(sync) {
             assertContains(sync, {_soupEntryId: syncDownId, type:"syncDown", progress:100, soupName: soupName, name: syncName});
-            return self.deleteSyncByName(self.defaultStoreConfig, syncName);
+            return self.deleteSync(self.defaultStoreConfig, syncName);
         })
         .then(function() {
-            return self.getSyncStatusByName(self.defaultStoreConfig, syncName);
+            return self.getSyncStatus(self.defaultStoreConfig, syncName);
         })
         .then(function(sync) {
             QUnit.ok(sync == null, "Sync should no longer exist");
@@ -3684,7 +3682,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyCreated = function() {
 
 
 /**
- * TEST smartsyncplugin syncUp + getSyncStatus + deleteSyncById
+ * TEST smartsyncplugin syncUp + getSyncStatus + deleteSync by id
  */
 SmartSyncTestSuite.prototype.testSyncUpGetSyncDeleteSyncById = function() {
     console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
@@ -3721,7 +3719,7 @@ SmartSyncTestSuite.prototype.testSyncUpGetSyncDeleteSyncById = function() {
         })
         .then(function(sync) {
             assertContains(sync, {_soupEntryId: syncUpId, type:"syncUp", progress:100, soupName: soupName});
-            return self.deleteSyncById(self.defaultStoreConfig, syncUpId);
+            return self.deleteSync(self.defaultStoreConfig, syncUpId);
         })
         .then(function() {
             return self.getSyncStatus(self.defaultStoreConfig, syncUpId);
@@ -3736,7 +3734,7 @@ SmartSyncTestSuite.prototype.testSyncUpGetSyncDeleteSyncById = function() {
 };
 
 /**
- * TEST smartsyncplugin syncUp + getSyncStatusByName + deleteSyncByName
+ * TEST smartsyncplugin syncUp + getSyncStatus + deleteSync by name
  */
 SmartSyncTestSuite.prototype.testSyncUpGetSyncDeleteSyncByName = function() {
     console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
@@ -3770,14 +3768,14 @@ SmartSyncTestSuite.prototype.testSyncUpGetSyncDeleteSyncByName = function() {
         })
         .then(function(syncId) {
             syncUpId = syncId;
-            return self.getSyncStatusByName(self.defaultStoreConfig, syncName);
+            return self.getSyncStatus(self.defaultStoreConfig, syncName);
         })
         .then(function(sync) {
             assertContains(sync, {_soupEntryId: syncUpId, type:"syncUp", progress:100, soupName: soupName, name: syncName});
-            return self.deleteSyncByName(self.defaultStoreConfig, syncName);
+            return self.deleteSync(self.defaultStoreConfig, syncName);
         })
         .then(function() {
-            return self.getSyncStatusByName(self.defaultStoreConfig, syncName);
+            return self.getSyncStatus(self.defaultStoreConfig, syncName);
         })
         .then(function(sync) {
             QUnit.ok(sync == null, "Sync should no longer exist");

@@ -177,7 +177,7 @@ app.views.SearchPage = Backbone.View.extend({
 
     syncDown: function() {
         var syncName = "smartSyncExplorerSyncDown";
-        if (cordova.require("com.salesforce.plugin.smartsync").getSyncByName(syncName) == null) {
+        if (cordova.require("com.salesforce.plugin.smartsync").getSync(syncName) == null) {
             // First time
             var target = {type:"soql", query:"SELECT " + this.fieldlist.join(",") + " FROM Contact  LIMIT 10000"};
             cordova.require("com.salesforce.plugin.smartsync").syncDown(target, "contacts", {mergeMode:Force.MERGE_MODE_DOWNLOAD.OVERWRITE}, syncName, this.handleSyncUpdate.bind(this));
