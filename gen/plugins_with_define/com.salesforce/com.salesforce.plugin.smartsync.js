@@ -113,11 +113,13 @@ var syncDown = function(storeConfig, target, soupName, options, syncName, succes
 };
 
 // Backwards compatibility: storeConfig is optional or could just be a boolean (isGlobalStore)
-var reSync = function(storeConfig, syncId, successCB, errorCB) {
+var reSync = function(storeConfig, syncIdOrName, successCB, errorCB) {
     if (checkFirstArg(arguments)) return;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "reSync",
-         [{"syncId": syncId, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
+         [{"syncId": typeof syncIdOrName === "string" ? null : syncIdOrName,
+           "syncName": typeof syncIdOrName === "string" ? syncIdOrName : null,
+           "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
         );
 };
 

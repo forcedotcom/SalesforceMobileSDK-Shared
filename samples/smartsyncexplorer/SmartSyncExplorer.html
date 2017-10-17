@@ -160,10 +160,6 @@ app.views.SearchPage = Backbone.View.extend({
     handleSyncUpdate: function(sync) {
         if (sync.status !== "DONE") {
             $(".sync").html("Sync - " + sync.type + " " + Math.round(sync.progress) + "%");
-
-            if (sync.type === "syncDown") {
-                this.lastSyncDownId = sync._soupEntryId;
-            }
         }
         else {
             $(".sync").html("Sync");
@@ -180,14 +176,15 @@ app.views.SearchPage = Backbone.View.extend({
     },
 
     syncDown: function() {
-        if (!_.isNumber(this.lastSyncDownId)) {
+        var syncName = "smartSyncExplorerSyncDown";
+        if (cordova.require("com.salesforce.plugin.smartsync").getSyncByName(syncName) == null) {
             // First time
             var target = {type:"soql", query:"SELECT " + this.fieldlist.join(",") + " FROM Contact  LIMIT 10000"};
-            cordova.require("com.salesforce.plugin.smartsync").syncDown(target, "contacts", {mergeMode:Force.MERGE_MODE_DOWNLOAD.OVERWRITE}, this.handleSyncUpdate.bind(this));
+            cordova.require("com.salesforce.plugin.smartsync").syncDown(target, "contacts", {mergeMode:Force.MERGE_MODE_DOWNLOAD.OVERWRITE}, syncName, this.handleSyncUpdate.bind(this));
         }
         else {
             // Subsequent times
-            cordova.require("com.salesforce.plugin.smartsync").reSync(this.lastSyncDownId, this.handleSyncUpdate.bind(this));
+            cordova.require("com.salesforce.plugin.smartsync").reSync(syncName, this.handleSyncUpdate.bind(this));
         }
     },
 

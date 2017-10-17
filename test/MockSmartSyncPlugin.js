@@ -171,7 +171,8 @@ var MockSmartSyncPlugin = (function(window) {
             });
         },
 
-        reSync: function(syncId, successCB, errorCB) {
+        reSync: function(syncIdOrName, successCB, errorCB) {
+            var syncId = typeof syncIdOrName === "string" ? this.getSyncIdFromName(syncIdOrName) : syncIdOrName;
             this.actualSyncDown(syncId, successCB, errorCB);
         },
 
