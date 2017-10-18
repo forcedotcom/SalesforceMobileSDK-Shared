@@ -2538,7 +2538,10 @@ SmartSyncTestSuite.prototype.testFetchSObjects = function() {
             console.log("## Checking data returned from fetch call");
             QUnit.equals(result.totalSize, 3, "Expected 3 results");
             QUnit.deepEqual(_.values(idToName).sort(), _.pluck(result.records, "Name"), "Wrong names");
-
+            // Wait a bit before doing a sosl call
+            return timeoutPromiser(1000);
+        })
+        .then(function() {
             console.log("## Trying fetch with sosl with no cache parameter");
             return Force.fetchSObjects({type:"sosl", query:"FIND {testFetchSObjects*} IN ALL FIELDS RETURNING Account(Id, Name) LIMIT 10"});
         })
