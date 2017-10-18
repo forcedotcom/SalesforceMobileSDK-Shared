@@ -1142,12 +1142,15 @@ cordova.define("com.salesforce.plugin.smartsync", function (require, exports, mo
         // if (storeConfig, target, soupName, options, successCB, errorCB)
         // change to (storeConfig, target, soupName, options, syncName, successCB, errorCB) with syncName = null
         if (typeof(args[4]) === "function") {
-            var errorCB = args.pop();
-            var successCB = args.pop();
-            args.push(null);
-            args.push(successCB);
-            args.push(errorCB);
-            console.log("args is now --->" + JSON.stringify(args));
+            var storeConfig = args.shift();
+            var target = args.shift();
+            var soupName = args.shift();
+            var options = args.shift();
+            args.unshift(null);
+            args.unshift(options);
+            args.unshift(soupName);
+            args.unshift(target);
+            args.unshift(storeConfig);
             argumentsOfCaller.callee.apply(null, args);            
             return true;
         }
