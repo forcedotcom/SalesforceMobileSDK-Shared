@@ -65,7 +65,7 @@ var registerPushNotificationHandler = function(notificationHandler, fail) {
         push.on('error', function(e) {
             console.log("push error");
             console.error("push error " + JSON.stringify(e));
-            fail(err);
+            fail(e);
         });
     });
 };

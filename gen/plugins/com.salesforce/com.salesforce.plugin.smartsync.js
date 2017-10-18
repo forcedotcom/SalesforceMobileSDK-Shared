@@ -42,34 +42,90 @@ var checkFirstArg = function(argumentsOfCaller) {
     if (typeof(args[0]) === "object" && args[0].hasOwnProperty("isGlobalStore")) {
          return false;
     }
-
-    var isGlobalStore =  false;
-    if (typeof(args[0]) === "boolean") {
-       isGlobalStore = args.shift() || false;
+    // Else pre-pend store config and re-invoke caller
+    else {
+        var isGlobalStore =  false;
+        // If first argument is just a boolean
+        if (typeof(args[0]) === "boolean") {
+            isGlobalStore = args.shift() || false;
+        }
+        // Pre-prending store config
+        args.unshift({'isGlobalStore': isGlobalStore});
+        argumentsOfCaller.callee.apply(null, args);
+        return true;
     }
-    args.unshift({'isGlobalStore': isGlobalStore});
-    argumentsOfCaller.callee.apply(null, args);
-    return true;
 };
 
+// Helper function to handle syncUp calls that don't specify a target as second argument
+// If missing, the caller is re-invoked with target {} inserted as second argument and true is returned
+// Otherwise, false is returned
+var checkTargetArg = function(argumentsOfCaller) {
+    // Turning arguments into array
+    var args = Array.prototype.slice.call(argumentsOfCaller);
 
+    // if (storeConfig, soupName, ...) change to (storeConfig, target, soupName, ...) with target = {}
+    if (typeof(args[1]) === "string") {
+        var arg0 = args.shift();
+        args.unshift({});
+        args.unshift(arg0);
+        argumentsOfCaller.callee.apply(null, args);
+        return true;
+    }
+    else {
+        return false;
+    }
+}
 
-var syncDown = function(storeConfig, target, soupName, options, successCB, errorCB) {
-    if (checkFirstArg(arguments)) return;
+// Helper function to handle syncUp/syncDown calls that don't specifiy a syncName argument
+// If missing, the caller is re-invoked with syncName null inserted as last argument before callbacks and true is returned
+// Otherwise, false is returned
+var checkSyncNameArg = function(argumentsOfCaller) {
+    // Turning arguments into array
+    var args = Array.prototype.slice.call(argumentsOfCaller);
+
+    // if (storeConfig, target, soupName, options, successCB, errorCB)
+    // change to (storeConfig, target, soupName, options, syncName, successCB, errorCB) with syncName = null
+    if (typeof(args[4]) === "function") {
+        var storeConfig = args.shift();
+        var target = args.shift();
+        var soupName = args.shift();
+        var options = args.shift();
+        args.unshift(null);
+        args.unshift(options);
+        args.unshift(soupName);
+        args.unshift(target);
+        args.unshift(storeConfig);
+        argumentsOfCaller.callee.apply(null, args);            
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+// Backwards compatibility: storeConfig is optional or could just be a boolean (isGlobalStore), syncName is optional
+var syncDown = function(storeConfig, target, soupName, options, syncName, successCB, errorCB) {
+    if (checkFirstArg(arguments)) return;    
+    if (checkSyncNameArg(arguments)) return; 
+    
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "syncDown",
-         [{"target": target, "soupName": soupName, "options": options, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
+         [{"syncName": syncName, "target": target, "soupName": soupName, "options": options, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
         );
 };
 
-var reSync = function(storeConfig, syncId, successCB, errorCB) {
+// Backwards compatibility: storeConfig is optional or could just be a boolean (isGlobalStore)
+var reSync = function(storeConfig, syncIdOrName, successCB, errorCB) {
     if (checkFirstArg(arguments)) return;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "reSync",
-         [{"syncId": syncId, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
+         [{"syncId": typeof syncIdOrName === "string" ? null : syncIdOrName,
+           "syncName": typeof syncIdOrName === "string" ? syncIdOrName : null,
+           "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
         );
 };
 
+// Backwards compatibility: storeConfig is optional or could just be a boolean (isGlobalStore)
 var cleanResyncGhosts = function(storeConfig, syncId, successCB, errorCB) {
     if (checkFirstArg(arguments)) return;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
@@ -78,38 +134,45 @@ var cleanResyncGhosts = function(storeConfig, syncId, successCB, errorCB) {
         );
 };
 
-var syncUp = function(storeConfig, target, soupName, options, successCB, errorCB) {
-    if (checkFirstArg(arguments)) return;
-    var args = Array.prototype.slice.call(arguments);
-    // We accept syncUp(soupName, options, successCB, errorCB)
-    if (typeof(args[1]) === "string") {
-        target = {};
-        soupName = args[1];
-        options = args[2];
-        successCB = args[3];
-        errorCB = args[4];
-    }
-    // We accept syncUp(target, soupName, options, successCB, errorCB)
-    if (typeof(args[1]) === "object") {
-        target = args[1];
-        soupName = args[2];
-        options = args[3];
-        successCB = args[4];
-        errorCB = args[5];
-    }
+// Backwards compatibility: storeConfig is optional or could just be a boolean (isGlobalStore), target is optional, syncName is optional
+var syncUp = function(storeConfig, target, soupName, options, syncName, successCB, errorCB) {
+    if (checkFirstArg(arguments)) return;    
+    if (checkTargetArg(arguments)) return;   
+    if (checkSyncNameArg(arguments)) return; 
+    
     target = target || {};
 
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "syncUp",
-         [{"target": target, "soupName": soupName, "options": options,  "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
+         [{"syncName": syncName, "target": target, "soupName": soupName, "options": options,  "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
         );
 };
 
-var getSyncStatus = function(storeConfig, syncId, successCB, errorCB) {
+// Backwards compatibility: storeConfig is optional or could just be a boolean (isGlobalStore)
+var getSyncStatus = function(storeConfig, syncIdOrName, successCB, errorCB) {
+    if (checkFirstArg(arguments, "boolean", false)) return;
+    // cordova can't return null, so {} is returned when sync is not found
+    var wrappedSuccessCB = function(sync) {
+        if(typeof successCB === "function") {
+            successCB(sync._soupEntryId === undefined ? null : sync);
+        }
+    };
+    exec(SALESFORCE_MOBILE_SDK_VERSION, wrappedSuccessCB, errorCB, SERVICE,
+         "getSyncStatus",
+         [{"syncId": typeof syncIdOrName === "string" ? null : syncIdOrName,
+           "syncName": typeof syncIdOrName === "string" ? syncIdOrName : null,
+           "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
+        );
+};
+
+// Backwards compatibility: storeConfig is optional or could just be a boolean (isGlobalStore)
+var deleteSync = function(storeConfig, syncIdOrName, successCB, errorCB) {
     if (checkFirstArg(arguments, "boolean", false)) return;
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
-         "getSyncStatus",
-         [{"syncId": syncId, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
+         "deleteSync",
+         [{"syncId": typeof syncIdOrName === "string" ? null : syncIdOrName,
+           "syncName": typeof syncIdOrName === "string" ? syncIdOrName : null,
+           "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
         );
 };
 
@@ -128,5 +191,6 @@ module.exports = {
     syncUp: syncUp,
     getSyncStatus: getSyncStatus,
     reSync: reSync,
-    cleanResyncGhosts: cleanResyncGhosts
+    cleanResyncGhosts: cleanResyncGhosts,
+    deleteSync: deleteSync
 };
