@@ -59,9 +59,10 @@ var MockSmartSyncPlugin = (function(window) {
             console.log("Sync type:" + sync.type + " id:" + syncId + " status:" + status + " progress:" + progress);
         },
 
-        getSyncStatus: function(syncId, successCB, errorCB) {
+        getSyncStatus: function(syncIdOrName, successCB, errorCB) {
+            var syncId = typeof syncIdOrName === "string" ? this.getSyncIdFromName(syncIdOrName) : syncIdOrName;
             // cordova can't send back a null, so it sends a {} instead
-            var sync = this.syncs[syncId];
+            var sync = syncId != null ? this.syncs[syncId] : null;
             successCB(sync == null ? {} : sync);
         },
 
@@ -74,24 +75,11 @@ var MockSmartSyncPlugin = (function(window) {
             return null;
         },
 
-        getSyncStatusByName: function(syncName, successCB, errorCB) {
-            var syncId = this.getSyncIdFromName(syncName);
-            // cordova can't send back a null, so it sends a {} instead            
-            successCB(syncId != null && this.syncs[syncId] != null ? this.syncs[syncId] : {});
-        },
-
-        deleteSyncById: function(syncId, successCB, errorCB) {
-            delete this.syncs[syncId];
-            successCB();;
-        },
-
-        deleteSyncByName: function(syncName, successCB, errorCB) {
-            var syncId = this.getSyncIdFromName(syncName);
-
+        deleteSync: function(syncIdOrName, successCB, errorCB) {
+            var syncId = typeof syncIdOrName === "string" ? this.getSyncIdFromName(syncIdOrName) : syncIdOrName;
             if (syncId != null) {
                 delete this.syncs[syncId];
             }
-
             successCB();;
         },
 
