@@ -103,10 +103,13 @@ var MockSmartSyncPlugin = (function(window) {
             var progress = 0;
             collection.cache = cache;
 
-            // Resync?
-            var maxTimeStamp = sync.maxTimeStamp;
-            if (target.type == "soql" && _.isNumber(maxTimeStamp) && maxTimeStamp > 0) {
-                collection.config = {type:"soql", query: self.addFilterForReSync(target.query, maxTimeStamp)};
+            if (target.type == "soql") {
+                // Missing Id or LastModifiedDate
+                var query = self.addSelectFieldIfMissing(self.addSelectFieldIfMissing(target.query, "Id"), "LastModifiedDate");
+                // Resync?
+                var maxTimeStamp = sync.maxTimeStamp;
+                if (_.isNumber(maxTimeStamp) && maxTimeStamp > 0) query = self.addFilterForReSync(query, maxTimeStamp);
+                collection.config = {type:"soql", query: query};
             }
             else {
                 collection.config = target;
@@ -196,6 +199,13 @@ var MockSmartSyncPlugin = (function(window) {
                 });
         },
 
+        addSelectFieldIfMissing: function(soql, field) {
+            if (soql.indexOf(field) == -1) {
+                return soql.replace(/[sS][eE][lL][eE][cC][tT][ ]/, "select " + field + ", ")
+            }
+            return soql;
+        },
+        
         addFilterForReSync: function(query, maxTimeStamp) {
             var extraPredicate = "LastModifiedDate > " + (new Date(maxTimeStamp)).toISOString();
             var modifiedQuery = query.toLowerCase().indexOf(" where ") > 0
