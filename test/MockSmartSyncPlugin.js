@@ -103,10 +103,13 @@ var MockSmartSyncPlugin = (function(window) {
             var progress = 0;
             collection.cache = cache;
 
-            // Resync?
-            var maxTimeStamp = sync.maxTimeStamp;
-            if (target.type == "soql" && _.isNumber(maxTimeStamp) && maxTimeStamp > 0) {
-                collection.config = {type:"soql", query: self.addFilterForReSync(target.query, maxTimeStamp)};
+            if (target.type == "soql") {
+                // Missing Id or LastModifiedDate
+                var query = self.addSelectFieldIfMissing(self.addSelectFieldIfMissing(target.query, "Id"), "LastModifiedDate");
+                // Resync?
+                var maxTimeStamp = sync.maxTimeStamp;
+                if (_.isNumber(maxTimeStamp) && maxTimeStamp > 0) query = self.addFilterForReSync(query, maxTimeStamp);
+                collection.config = {type:"soql", query: query};
             }
             else {
                 collection.config = target;
@@ -161,7 +164,13 @@ var MockSmartSyncPlugin = (function(window) {
 
         reSync: function(syncIdOrName, successCB, errorCB) {
             var syncId = typeof syncIdOrName === "string" ? this.getSyncIdFromName(syncIdOrName) : syncIdOrName;
-            this.actualSyncDown(syncId, successCB, errorCB);
+            var sync = this.syncs[syncId];
+            if (sync.type == "syncDown") {
+                this.actualSyncDown(syncId, successCB, errorCB);
+            }
+            else {
+                this.actualSyncUp(syncId, successCB, errorCB);
+            }
         },
 
         cleanResyncGhosts: function(syncId, successCB, errorCB) {
@@ -190,6 +199,13 @@ var MockSmartSyncPlugin = (function(window) {
                 });
         },
 
+        addSelectFieldIfMissing: function(soql, field) {
+            if (soql.indexOf(field) == -1) {
+                return soql.replace(/[sS][eE][lL][eE][cC][tT][ ]/, "select " + field + ", ")
+            }
+            return soql;
+        },
+        
         addFilterForReSync: function(query, maxTimeStamp) {
             var extraPredicate = "LastModifiedDate > " + (new Date(maxTimeStamp)).toISOString();
             var modifiedQuery = query.toLowerCase().indexOf(" where ") > 0
@@ -199,8 +215,16 @@ var MockSmartSyncPlugin = (function(window) {
         },
 
         syncUp: function(target, soupName, options, syncName, successCB, errorCB) {
+            var syncId = this.recordSync("syncUp", target, soupName, options, syncName);
+            this.actualSyncUp(syncId, successCB, errorCB);
+        },
+
+        actualSyncUp: function(syncId, successCB, errorCB) {
             var self = this;
-            var syncId = self.recordSync("syncUp", target, soupName, options, syncName);
+            var sync = self.syncs[syncId];
+            var target = sync.target;
+            var soupName = sync.soupName;
+            var options = sync.options;
             var cache = new Force.StoreCache(soupName,  null, null, self.storeConfig.isGlobalStore,self.storeConfig.storeName);
             var collection = new Force.SObjectCollection();
             var numberRecords;
@@ -316,8 +340,34 @@ var SyncManagerMap = (function() {
       reset: function (){
         this.globalSyncManagers = {};
         this.userSyncManagers = {};
-      }
+      },
 
+      setupUserSyncsFromDefaultConfig: function(callback) {
+          this.setupSyncsFromConfig(this.getSyncManager([false]), 'usersyncs.json', callback);
+      },
+
+      setupGlobalSyncsFromDefaultConfig: function(callback) {
+          this.setupSyncsFromConfig(this.getSyncManager([true]), 'globalsyncs.json', callback);
+      },
+
+      setupSyncsFromConfig: function(syncMgr, configFilePath, callback) {
+          fetch(configFilePath)
+              .then(resp => resp.json())
+              .then(config => {
+                  if (!config.error) {
+                      console.log("Setting up syncs using config: " + configFilePath);
+                      var syncConfigs = config.syncs;
+                      for (i=0; i<syncConfigs.length;i++) {
+                          var syncConfig = syncConfigs[i];
+                          if (syncMgr.getSyncIdFromName(syncConfig.syncName)) {
+                              continue;
+                          }
+                          syncMgr.recordSync(syncConfig.syncType, syncConfig.target, syncConfig.soupName, syncConfig.options, syncConfig.syncName);
+                      }
+                  }
+              })
+              .then(() => callback());
+      }
     };
     return module;
   })();
