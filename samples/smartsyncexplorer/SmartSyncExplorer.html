@@ -142,7 +142,6 @@ app.views.SearchPage = Backbone.View.extend({
     initialize: function() {
         var that = this;
         this.fieldlist = app.models.Contact.prototype.fieldlist;
-        this.fieldlistForSyncUp = _.without(app.models.Contact.prototype.fieldlist, "Id", "LastModifiedDate");
         this.listView = new app.views.ContactListView({model: this.model});
         document.addEventListener("sync", function() { 
             that.handleSyncUpdate(event.detail);
@@ -176,23 +175,11 @@ app.views.SearchPage = Backbone.View.extend({
     },
 
     syncDown: function() {
-        var self = this;
-        var syncName = "smartSyncExplorerSyncDown";
-        cordova.require("com.salesforce.plugin.smartsync").getSyncStatus(syncName, function(sync) {
-            if (sync == null) {
-                // First time
-                var target = {type:"soql", query:"SELECT " + self.fieldlist.join(",") + " FROM Contact  LIMIT 10000"};
-                cordova.require("com.salesforce.plugin.smartsync").syncDown(target, "contacts", {mergeMode:Force.MERGE_MODE_DOWNLOAD.OVERWRITE}, syncName, self.handleSyncUpdate.bind(self));
-            }
-            else {
-                // Subsequent times
-                cordova.require("com.salesforce.plugin.smartsync").reSync(syncName, self.handleSyncUpdate.bind(self));
-            }
-        });
+        cordova.require("com.salesforce.plugin.smartsync").reSync("syncDownContacts" /* see usersyncs.json */, this.handleSyncUpdate.bind(this));
     },
 
     syncUp: function() {
-        cordova.require("com.salesforce.plugin.smartsync").syncUp("contacts", {fieldlist: this.fieldlistForSyncUp}, this.handleSyncUpdate.bind(this));
+        cordova.require("com.salesforce.plugin.smartsync").reSync("syncUpContacts" /* see usersyncs.json */, this.handleSyncUpdate.bind(this));
     },
 
     sync: function() {
@@ -360,8 +347,7 @@ app.Router = Backbone.StackRouter.extend({
 
     setupCaches: function() {
         // Cache for offline support
-        app.cache = new Force.StoreCache("contacts", [ {path:"FirstName", type:"full_text"}, {path:"LastName", type:"full_text"}]);
-        app.cache.init();
+        app.cache = new Force.StoreCache("contacts" /* see userstore.json */);
     },
 
     initialize: function() {
