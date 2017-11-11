@@ -161,7 +161,13 @@ var MockSmartSyncPlugin = (function(window) {
 
         reSync: function(syncIdOrName, successCB, errorCB) {
             var syncId = typeof syncIdOrName === "string" ? this.getSyncIdFromName(syncIdOrName) : syncIdOrName;
-            this.actualSyncDown(syncId, successCB, errorCB);
+            var sync = this.syncs[syncId];
+            if (sync.type == "syncDown") {
+                this.actualSyncDown(syncId, successCB, errorCB);
+            }
+            else {
+                this.actualSyncUp(syncId, successCB, errorCB);
+            }
         },
 
         cleanResyncGhosts: function(syncId, successCB, errorCB) {
@@ -199,8 +205,16 @@ var MockSmartSyncPlugin = (function(window) {
         },
 
         syncUp: function(target, soupName, options, syncName, successCB, errorCB) {
+            var syncId = this.recordSync("syncUp", target, soupName, options, syncName);
+            this.actualSyncUp(syncId, successCB, errorCB);
+        },
+
+        actualSyncUp: function(syncId, successCB, errorCB) {
             var self = this;
-            var syncId = self.recordSync("syncUp", target, soupName, options, syncName);
+            var sync = self.syncs[syncId];
+            var target = sync.target;
+            var soupName = sync.soupName;
+            var options = sync.options;
             var cache = new Force.StoreCache(soupName,  null, null, self.storeConfig.isGlobalStore,self.storeConfig.storeName);
             var collection = new Force.SObjectCollection();
             var numberRecords;
