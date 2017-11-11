@@ -26,7 +26,11 @@ jQuery(document).ready(function() {
             console.log("Auth succeeded");
 
             if (inBrowser) {
-                storeMap.setupUserStoreFromDefaultConfig(() => syncManagerMap.setupUserSyncsFromDefaultConfig(() => appStart()))
+                storeMap.setupUserStoreFromDefaultConfig(function() {
+                    syncManagerMap.setupUserSyncsFromDefaultConfig(function() {
+                        appStart();
+                    });
+                });
             }
             else {
                 appStart();
