@@ -316,8 +316,34 @@ var SyncManagerMap = (function() {
       reset: function (){
         this.globalSyncManagers = {};
         this.userSyncManagers = {};
-      }
+      },
 
+      setupUserSyncsFromDefaultConfig: function(callback) {
+          this.setupSyncsFromConfig(this.getSyncManager([false]), 'usersyncs.json', callback);
+      },
+
+      setupGlobalSyncsFromDefaultConfig: function(callback) {
+          this.setupSyncsFromConfig(this.getSyncManager([true]), 'globalsyncs.json', callback);
+      },
+
+      setupSyncsFromConfig: function(syncMgr, configFilePath, callback) {
+          fetch(configFilePath)
+              .then(resp => resp.json())
+              .then(config => {
+                  if (!config.error) {
+                      console.log("Setting up syncs using config: " + configFilePath);
+                      var syncConfigs = config.syncs;
+                      for (i=0; i<syncConfigs.length;i++) {
+                          var syncConfig = syncConfigs[i];
+                          if (syncMgr.getSyncIdFromName(syncConfig.syncName)) {
+                              continue;
+                          }
+                          syncMgr.recordSync(syncConfig.syncType, syncConfig.target, syncConfig.soupName, syncConfig.options, syncConfig.syncName);
+                      }
+                  }
+              })
+              .then(() => callback());
+      }
     };
     return module;
   })();
