@@ -40,11 +40,10 @@ var sendRequest = function(endPoint, path, successCB, errorCB, method, payload, 
 
     /* 
      * When requesting binary, the native code will send us {encodedBody: "base-64-encoded-body", contentType: "mime-type"}
-     * We base 64 decode and create a blob
+     * We base-64 decode the body and create a blob from it using the specified contentType
      */
     if (returnResponseAsBlob) {
         responseHandler = function(response) {
-            // We expect response of the form 
             var byteCharacters = window.atob(response.encodedBody);
             var byteNumbers = new Array(byteCharacters.length);
 
