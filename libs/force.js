@@ -411,18 +411,18 @@ var force = (function () {
      *  headerParams: parameters to send as header values for POST/PATCH etc - Optional
      * @param successHandler - function to call back when request succeeds - Optional
      * @param errorHandler - function to call back when request fails - Optional
-     * @param returnBinary - if true, successHandler is passed a Block - if false, successHandler is passed a JSON object - Optional
+     * @param returnResponseAsBlob - if true, successHandler is passed a Blob - if false, successHandler is passed a JSON object - Optional
      */
-    function request(obj, successHandler, errorHandler, returnBinary) {
+    function request(obj, successHandler, errorHandler, returnResponseAsBlob) {
         if (typeof requestHandler === "function") {
             return requestHandler(obj);
         }
         
         // NB: networkPlugin will be defined only if login was done through plugin and container is using Mobile SDK 5.0 or above
         if (networkPlugin) { 
-            requestWithPlugin(obj, successHandler, errorHandler, returnBinary);
+            requestWithPlugin(obj, successHandler, errorHandler, returnResponseAsBlob);
         } else {
-            requestWithBrowser(obj, successHandler, errorHandler, returnBinary);
+            requestWithBrowser(obj, successHandler, errorHandler, returnResponseAsBlob);
         }
     }        
 
@@ -450,17 +450,12 @@ var force = (function () {
         }
     }
 
-    function requestWithPlugin(obj, successHandler, errorHandler, returnBinary) {
+    function requestWithPlugin(obj, successHandler, errorHandler, returnResponseAsBlob) {
         var obj2 = computeEndPointIfMissing(obj.endPoint, obj.path);
-        if (returnBinary) {
-            networkPlugin.requestBinary(obj2.endPoint, obj2.path, successHandler, errorHandler, obj.method, obj.data || obj.params, obj.headerParams);
-        }
-        else {
-            networkPlugin.sendRequest(obj2.endPoint, obj2.path, successHandler, errorHandler, obj.method, obj.data || obj.params, obj.headerParams);
-        }
+        networkPlugin.sendRequest(obj2.endPoint, obj2.path, successHandler, errorHandler, obj.method, obj.data || obj.params, obj.headerParams, null /* file params */, returnResponseAsBlob);
     }
 
-    function requestWithBrowser(obj, successHandler, errorHandler, returnBinary) {
+    function requestWithBrowser(obj, successHandler, errorHandler, returnResponseAsBlob) {
         if (!oauth || (!oauth.access_token && !oauth.refresh_token)) {
             if (typeof errorHandler === "function") {
                 errorHandler('No access token. Login and try again.');
@@ -487,7 +482,7 @@ var force = (function () {
             if (xhr.readyState === 4) {
                 if (xhr.status > 199 && xhr.status < 300) {
                     if (typeof successHandler === "function") {
-                        if (returnBinary) {
+                        if (returnResponseAsBlob) {
                             successHandler(xhr.response);
                         } else {
                             successHandler(xhr.responseText ? JSON.parse(xhr.responseText) : undefined);
@@ -536,7 +531,7 @@ var force = (function () {
         if (useProxy) {
             xhr.setRequestHeader("Target-URL", oauth.instance_url);
         }
-        if (returnBinary) {
+        if (returnResponseAsBlob) {
             xhr.responseType = "blob";
         }
         xhr.send(obj.data ? JSON.stringify(obj.data) : undefined);

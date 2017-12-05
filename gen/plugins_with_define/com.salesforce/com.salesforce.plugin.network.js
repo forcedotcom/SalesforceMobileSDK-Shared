@@ -33,48 +33,43 @@ var exec = require("com.salesforce.util.exec").exec;
 /**
  * Sends a network request using the native network stack.
  */
-var sendRequest = function(endPoint, path, successCB, errorCB, method, payload, headerParams, fileParams) {
+var sendRequest = function(endPoint, path, successCB, errorCB, method, payload, headerParams, fileParams, returnResponseAsBlob) {
     method = method || "GET";
     payload = payload || {};
     headerParams = headerParams || {};
+    var responseHandler = successCB;
+
+    /* 
+     * When requesting binary, the native code will send us {encodedBody: "base-64-encoded-body", contentType: "mime-type"}
+     * We base 64 decode and create a blob
+     */
+    if (returnResponseAsBlob) {
+        responseHandler = function(response) {
+            // We expect response of the form 
+            var byteCharacters = window.atob(response.encodedBody);
+            var byteNumbers = new Array(byteCharacters.length);
+
+            for (var i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            var byteArray = new Uint8Array(byteNumbers);
+            successCB(new Blob([byteArray], {type: response.contentType}));
+        };
+    }
 
     /*
      * File params expected to be of the form:
      * {<fileParamNameInPost>: {fileMimeType:<someMimeType>, fileUrl:<fileUrl>, fileName:<fileNameForPost>}}.
      */
     fileParams = fileParams || {};
-    var args = {endPoint: endPoint, path:path, method:method, queryParams:payload, headerParams:headerParams, fileParams: fileParams};
+    var args = {endPoint: endPoint, path:path, method:method, queryParams:payload, headerParams:headerParams, fileParams: fileParams, returnResponseAsBlob: returnResponseAsBlob};
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE, "pgSendRequest", [args]);
 };
-
-
-var requestBinary = function(endPoint, path, successCB, errorCB, payload, headerParams) {
-    var responseHandler = function(response) {
-        // We expect response of the form {encodedBody: "base-64-encoded-body", contentType: "mime-type"}
-        var byteCharacters = window.atob(response.encodedBody);
-        var byteNumbers = new Array(byteCharacters.length);
-
-        for (var i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        var byteArray = new Uint8Array(byteNumbers);
-        successCB(new Blob([byteArray], {type: response.contentType}));
-    };
-
-    method = "GET";
-    payload = payload || {};
-    headerParams = headerParams || {};
-
-    var args = {endPoint: endPoint, path:path, method:method, queryParams:payload, headerParams:headerParams};
-    exec(SALESFORCE_MOBILE_SDK_VERSION, responseHandler, errorCB, SERVICE, "pgRequestBinary", [args]);
-};
-
 
 /**
  * Part of the module that is public.
  */
 module.exports = {
-    sendRequest: sendRequest,
-    requestBinary: requestBinary
+    sendRequest: sendRequest
 };
 });
