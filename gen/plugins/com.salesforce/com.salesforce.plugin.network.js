@@ -46,9 +46,33 @@ var sendRequest = function(endPoint, path, successCB, errorCB, method, payload, 
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE, "pgSendRequest", [args]);
 };
 
+
+var requestBinary = function(endPoint, path, successCB, errorCB, payload, headerParams) {
+    var responseHandler = function(response) {
+        // We expect response of the form {encodedBody: "base-64-encoded-body", contentType: "mime-type"}
+        var byteCharacters = window.atob(response.encodedBody);
+        var byteNumbers = new Array(byteCharacters.length);
+
+        for (var i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        var byteArray = new Uint8Array(byteNumbers);
+        successCB(new Blob([byteArray], {type: response.contentType}));
+    };
+
+    method = "GET";
+    payload = payload || {};
+    headerParams = headerParams || {};
+
+    var args = {endPoint: endPoint, path:path, method:method, queryParams:payload, headerParams:headerParams};
+    exec(SALESFORCE_MOBILE_SDK_VERSION, responseHandler, errorCB, SERVICE, "pgRequestBinary", [args]);
+};
+
+
 /**
  * Part of the module that is public.
  */
 module.exports = {
-    sendRequest: sendRequest
+    sendRequest: sendRequest,
+    requestBinary: requestBinary
 };
