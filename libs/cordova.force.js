@@ -445,7 +445,7 @@ cordova.define("com.salesforce.plugin.network", function(require, exports, modul
          */
         fileParams = fileParams || {};
         var args = {endPoint: endPoint, path:path, method:method, queryParams:payload, headerParams:headerParams, fileParams: fileParams, returnResponseAsBlob: returnResponseAsBlob};
-        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE, "pgSendRequest", [args]);
+        exec(SALESFORCE_MOBILE_SDK_VERSION, responseHandler, errorCB, SERVICE, "pgSendRequest", [args]);
     };
 
     /**
