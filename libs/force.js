@@ -488,7 +488,7 @@ var force = (function () {
                 if (xhr.status > 199 && xhr.status < 300) {
                     if (typeof successHandler === "function") {
                         if (returnBinary) {
-                            successHandler(new Blob([xhr.response], {type: this.getResponseHeader("content-type")}));
+                            successHandler(xhr.response);
                         } else {
                             successHandler(xhr.responseText ? JSON.parse(xhr.responseText) : undefined);
                         }
@@ -535,6 +535,9 @@ var force = (function () {
         }
         if (useProxy) {
             xhr.setRequestHeader("Target-URL", oauth.instance_url);
+        }
+        if (returnBinary) {
+            xhr.responseType = "blob";
         }
         xhr.send(obj.data ? JSON.stringify(obj.data) : undefined);
     }
