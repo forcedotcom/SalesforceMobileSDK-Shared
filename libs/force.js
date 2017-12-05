@@ -411,17 +411,18 @@ var force = (function () {
      *  headerParams: parameters to send as header values for POST/PATCH etc - Optional
      * @param successHandler - function to call back when request succeeds - Optional
      * @param errorHandler - function to call back when request fails - Optional
+     * @param returnBinary - if true, successHandler is passed a Block - if false, successHandler is passed a JSON object - Optional
      */
-    function request(obj, successHandler, errorHandler) {
+    function request(obj, successHandler, errorHandler, returnBinary) {
         if (typeof requestHandler === "function") {
             return requestHandler(obj);
         }
         
         // NB: networkPlugin will be defined only if login was done through plugin and container is using Mobile SDK 5.0 or above
         if (networkPlugin) { 
-            requestWithPlugin(obj, successHandler, errorHandler);
+            requestWithPlugin(obj, successHandler, errorHandler, returnBinary);
         } else {
-            requestWithBrowser(obj, successHandler, errorHandler);
+            requestWithBrowser(obj, successHandler, errorHandler, returnBinary);
         }
     }        
 
@@ -449,12 +450,17 @@ var force = (function () {
         }
     }
 
-    function requestWithPlugin(obj, successHandler, errorHandler) {
+    function requestWithPlugin(obj, successHandler, errorHandler, returnBinary) {
         var obj2 = computeEndPointIfMissing(obj.endPoint, obj.path);
-        networkPlugin.sendRequest(obj2.endPoint, obj2.path, successHandler, errorHandler, obj.method, obj.data || obj.params, obj.headerParams);        
+        if (returnBinary) {
+            networkPlugin.requestBinary(obj2.endPoint, obj2.path, successHandler, errorHandler, obj.method, obj.data || obj.params, obj.headerParams);
+        }
+        else {
+            networkPlugin.sendRequest(obj2.endPoint, obj2.path, successHandler, errorHandler, obj.method, obj.data || obj.params, obj.headerParams);
+        }
     }
 
-    function requestWithBrowser(obj, successHandler, errorHandler) {
+    function requestWithBrowser(obj, successHandler, errorHandler, returnBinary) {
         if (!oauth || (!oauth.access_token && !oauth.refresh_token)) {
             if (typeof errorHandler === "function") {
                 errorHandler('No access token. Login and try again.');
@@ -481,7 +487,11 @@ var force = (function () {
             if (xhr.readyState === 4) {
                 if (xhr.status > 199 && xhr.status < 300) {
                     if (typeof successHandler === "function") {
-                        successHandler(xhr.responseText ? JSON.parse(xhr.responseText) : undefined);
+                        if (returnBinary) {
+                            successHandler(new Blob([xhr.response], {type: this.getResponseHeader("content-type")}));
+                        } else {
+                            successHandler(xhr.responseText ? JSON.parse(xhr.responseText) : undefined);
+                        }
                     }
                 } else if (xhr.status === 401 && oauth.refresh_token) {
                     refreshToken(
@@ -715,12 +725,13 @@ var force = (function () {
      * @param errorHandler
      */
     function getAttachment(id, successHandler, errorHandler){
-        requestBinary(
+        request(
             {
                 path: '/services/data/' + apiVersion + '/sobjects/Attachment/' + id + '/Body'
             },
             successHandler,
-            errorHandler
+            errorHandler,
+            true /* return binary */
         );
     }
 
