@@ -40,7 +40,7 @@ var sendRequest = function(endPoint, path, successCB, errorCB, method, payload, 
     returnBinary = !!returnBinary; // when true response returned as {encodedBody:"base64-encoded-response", contentType:"content-type"}
 
     var args = {endPoint: endPoint, path:path, method:method, queryParams:payload, headerParams:headerParams, fileParams: fileParams, returnBinary: returnBinary};
-    exec(SALESFORCE_MOBILE_SDK_VERSION, responseHandler, errorCB, SERVICE, "pgSendRequest", [args]);
+    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE, "pgSendRequest", [args]);
 };
 
 /**
