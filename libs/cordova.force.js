@@ -415,35 +415,18 @@ cordova.define("com.salesforce.plugin.network", function(require, exports, modul
     /**
      * Sends a network request using the native network stack.
      */
-    var sendRequest = function(endPoint, path, successCB, errorCB, method, payload, headerParams, fileParams, returnResponseAsBlob) {
+    var sendRequest = function(endPoint, path, successCB, errorCB, method, payload, headerParams, fileParams, returnBinary) {
         method = method || "GET";
         payload = payload || {};
         headerParams = headerParams || {};
-        var responseHandler = successCB;
-
-        /* 
-         * When requesting binary, the native code will send us {encodedBody: "base-64-encoded-body", contentType: "mime-type"}
-         * We base-64 decode the body and create a blob from it using the specified contentType
-         */
-        if (returnResponseAsBlob) {
-            responseHandler = function(response) {
-                var byteCharacters = window.atob(response.encodedBody);
-                var byteNumbers = new Array(byteCharacters.length);
-
-                for (var i = 0; i < byteCharacters.length; i++) {
-                    byteNumbers[i] = byteCharacters.charCodeAt(i);
-                }
-                var byteArray = new Uint8Array(byteNumbers);
-                successCB(new Blob([byteArray], {type: response.contentType}));
-            };
-        }
+        returnBinary = !!returnBinary;
 
         /*
          * File params expected to be of the form:
          * {<fileParamNameInPost>: {fileMimeType:<someMimeType>, fileUrl:<fileUrl>, fileName:<fileNameForPost>}}.
          */
         fileParams = fileParams || {};
-        var args = {endPoint: endPoint, path:path, method:method, queryParams:payload, headerParams:headerParams, fileParams: fileParams, returnResponseAsBlob: returnResponseAsBlob};
+        var args = {endPoint: endPoint, path:path, method:method, queryParams:payload, headerParams:headerParams, fileParams: fileParams, returnBinary: returnBinary};
         exec(SALESFORCE_MOBILE_SDK_VERSION, responseHandler, errorCB, SERVICE, "pgSendRequest", [args]);
     };
 
