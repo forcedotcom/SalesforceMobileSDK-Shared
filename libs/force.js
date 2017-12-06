@@ -729,7 +729,7 @@ var force = (function () {
     /**
      * Convenience function to retrieve an attachment
      * @param id 
-     * @param successHandler
+     * @param successHandler - attachment returned as {encodedBody:"base64-encoded-response", contentType:"content-type"}
      * @param errorHandler
      */
     function getAttachment(id, successHandler, errorHandler){
