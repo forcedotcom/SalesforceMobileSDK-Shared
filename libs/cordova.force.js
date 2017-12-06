@@ -419,13 +419,9 @@ cordova.define("com.salesforce.plugin.network", function(require, exports, modul
         method = method || "GET";
         payload = payload || {};
         headerParams = headerParams || {};
-        returnBinary = !!returnBinary;
+        fileParams = fileParams || {}; // File params expected to be of the form: {<fileParamNameInPost>: {fileMimeType:<someMimeType>, fileUrl:<fileUrl>, fileName:<fileNameForPost>}}
+        returnBinary = !!returnBinary; // when true response returned as {encodedBody:"base64-encoded-response", contentType:"content-type"}
 
-        /*
-         * File params expected to be of the form:
-         * {<fileParamNameInPost>: {fileMimeType:<someMimeType>, fileUrl:<fileUrl>, fileName:<fileNameForPost>}}.
-         */
-        fileParams = fileParams || {};
         var args = {endPoint: endPoint, path:path, method:method, queryParams:payload, headerParams:headerParams, fileParams: fileParams, returnBinary: returnBinary};
         exec(SALESFORCE_MOBILE_SDK_VERSION, responseHandler, errorCB, SERVICE, "pgSendRequest", [args]);
     };
