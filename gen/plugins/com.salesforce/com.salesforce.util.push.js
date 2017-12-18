@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "5.3.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "6.0.0";
 
 /**
  * Register push notification handler
@@ -65,7 +65,7 @@ var registerPushNotificationHandler = function(notificationHandler, fail) {
         push.on('error', function(e) {
             console.log("push error");
             console.error("push error " + JSON.stringify(e));
-            fail(err);
+            fail(e);
         });
     });
 };

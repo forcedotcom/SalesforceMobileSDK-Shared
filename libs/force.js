@@ -42,7 +42,7 @@ var force = (function () {
 
     // The force.com API version to use.
     // To override default, pass apiVersion in init(props)
-        apiVersion = 'v39.0',
+        apiVersion = 'v41.0',
 
     // Keep track of OAuth data (access_token, refresh_token, instance_url and user_id)
         oauth,
@@ -349,17 +349,28 @@ var force = (function () {
                 errorHandler('Salesforce Mobile SDK OAuth plugin not available');
                 return;
             }
+
+            var authSuccess = function(creds) {
+                // Initialize ForceJS
+                init({accessToken: creds.accessToken, instanceURL: creds.instanceUrl, refreshToken: creds.refreshToken});
+                if (typeof successHandler === "function") successHandler();
+            };
+
+            var authFailure = function(error) {
+                console.log(error);
+                if (typeof errorHandler === "function") errorHandler(error);
+            };
+
             oauthPlugin.getAuthCredentials(
-                function (creds) {
-                    // Initialize ForceJS
-                    init({accessToken: creds.accessToken, instanceURL: creds.instanceUrl, refreshToken: creds.refreshToken});
-                    if (typeof successHandler === "function") successHandler();
-                },
-                function (error) {
-                    console.log(error);
-                    if (typeof errorHandler === "function") errorHandler(error);
+                authSuccess,
+                function() {
+                    oauthPlugin.authenticate(
+                        authSuccess,
+                        authFailure
+                    );
                 }
             );
+            
         }, false);
     }
 
@@ -400,17 +411,18 @@ var force = (function () {
      *  headerParams: parameters to send as header values for POST/PATCH etc - Optional
      * @param successHandler - function to call back when request succeeds - Optional
      * @param errorHandler - function to call back when request fails - Optional
+     * @param returnBinary - if true, response is encoded and returned as {encodedBody:"base64-encoded-response", contentType:"content-type"} - optional
      */
-    function request(obj, successHandler, errorHandler) {
+    function request(obj, successHandler, errorHandler, returnBinary) {
         if (typeof requestHandler === "function") {
             return requestHandler(obj);
         }
         
         // NB: networkPlugin will be defined only if login was done through plugin and container is using Mobile SDK 5.0 or above
         if (networkPlugin) { 
-            requestWithPlugin(obj, successHandler, errorHandler);
+            requestWithPlugin(obj, successHandler, errorHandler, returnBinary);
         } else {
-            requestWithBrowser(obj, successHandler, errorHandler);
+            requestWithBrowser(obj, successHandler, errorHandler, returnBinary);
         }
     }        
 
@@ -438,12 +450,12 @@ var force = (function () {
         }
     }
 
-    function requestWithPlugin(obj, successHandler, errorHandler) {
+    function requestWithPlugin(obj, successHandler, errorHandler, returnBinary) {
         var obj2 = computeEndPointIfMissing(obj.endPoint, obj.path);
-        networkPlugin.sendRequest(obj2.endPoint, obj2.path, successHandler, errorHandler, obj.method, obj.data || obj.params, obj.headerParams);        
+        networkPlugin.sendRequest(obj2.endPoint, obj2.path, successHandler, errorHandler, obj.method, obj.data || obj.params, obj.headerParams, null /* file params */, returnBinary);
     }
 
-    function requestWithBrowser(obj, successHandler, errorHandler) {
+    function requestWithBrowser(obj, successHandler, errorHandler, returnBinary) {
         if (!oauth || (!oauth.access_token && !oauth.refresh_token)) {
             if (typeof errorHandler === "function") {
                 errorHandler('No access token. Login and try again.');
@@ -470,7 +482,11 @@ var force = (function () {
             if (xhr.readyState === 4) {
                 if (xhr.status > 199 && xhr.status < 300) {
                     if (typeof successHandler === "function") {
-                        successHandler(xhr.responseText ? JSON.parse(xhr.responseText) : undefined);
+                        if (returnBinary) {
+                            successHandler({encodedBody: arrayBufferToBase64(xhr.response), contentType: xhr.getResponseHeader('content-type')});
+                        } else {
+                            successHandler(xhr.responseText ? JSON.parse(xhr.responseText) : undefined);
+                        }
                     }
                 } else if (xhr.status === 401 && oauth.refresh_token) {
                     refreshToken(
@@ -515,7 +531,20 @@ var force = (function () {
         if (useProxy) {
             xhr.setRequestHeader("Target-URL", oauth.instance_url);
         }
+        if (returnBinary) {
+            xhr.responseType = "arraybuffer";
+        }
         xhr.send(obj.data ? JSON.stringify(obj.data) : undefined);
+    }
+
+    function arrayBufferToBase64( buffer ) {
+        var binary = '';
+        var bytes = new Uint8Array( buffer );
+        var len = bytes.byteLength;
+        for (var i = 0; i < len; i++) {
+            binary += String.fromCharCode( bytes[ i ] );
+        }
+        return window.btoa( binary );
     }
 
     /*
@@ -700,16 +729,17 @@ var force = (function () {
     /**
      * Convenience function to retrieve an attachment
      * @param id 
-     * @param successHandler
+     * @param successHandler - attachment returned as {encodedBody:"base64-encoded-response", contentType:"content-type"}
      * @param errorHandler
      */
     function getAttachment(id, successHandler, errorHandler){
-        requestBinary(
+        request(
             {
                 path: '/services/data/' + apiVersion + '/sobjects/Attachment/' + id + '/Body'
             },
             successHandler,
-            errorHandler
+            errorHandler,
+            true /* return binary */
         );
     }
 

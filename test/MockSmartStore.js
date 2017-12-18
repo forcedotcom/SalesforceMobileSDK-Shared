@@ -906,7 +906,37 @@ var StoreMap = (function() {
           var storeNames = new Array();
           this.globalStores = [];
           return;
+      },
+
+
+      setupUserStoreFromDefaultConfig: function(callback) {
+          this.setupStoreFromConfig(this.getStore([false]), 'userstore.json', callback);
+      },
+
+      setupGlobalStoreFromDefaultConfig: function(callback) {
+          this.setupStoreFromConfig(this.getStore([true]), 'globalstore.json', callback);
+      },
+
+      setupStoreFromConfig: function(store, configFilePath, callback) {
+          fetch(configFilePath)
+              .then(resp => resp.json())
+              .then(config => {
+                  if (!config.error) {
+                      console.log("Setting up store using config: " + configFilePath);
+                      var soupConfigs = config.soups;
+                      for (i=0; i<soupConfigs.length;i++) {
+                          var soupConfig = soupConfigs[i];
+                          if (store.soupExists(soupConfig.soupName)) {
+                              continue;
+                          }
+                          store.registerSoup(soupConfig.soupName, {name:soupConfig.soupName, features:[]}, soupConfig.indexes);
+                      }
+                  }
+              })
+              .then(() => callback());
       }
+
+      
     };
     return module;
   })();

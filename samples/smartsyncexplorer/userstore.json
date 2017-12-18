@@ -1,0 +1,16 @@
+{
+  "soups": [
+    {
+      "soupName": "contacts",
+      "indexes": [
+        { "path": "Id", "type": "string"},
+        { "path": "FirstName", "type": "full_text"},
+        { "path": "LastName", "type": "full_text"},
+        { "path": "__local__", "type": "string"},
+        { "path": "__locally_created__", "type": "string"},
+        { "path": "__locally_updated__", "type": "string"},
+        { "path": "__locally_deleted__", "type": "string"}
+      ]
+    }
+  ]
+}

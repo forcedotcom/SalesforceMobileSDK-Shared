@@ -142,7 +142,6 @@ app.views.SearchPage = Backbone.View.extend({
     initialize: function() {
         var that = this;
         this.fieldlist = app.models.Contact.prototype.fieldlist;
-        this.fieldlistForSyncUp = _.without(app.models.Contact.prototype.fieldlist, "Id", "LastModifiedDate");
         this.listView = new app.views.ContactListView({model: this.model});
         document.addEventListener("sync", function() { 
             that.handleSyncUpdate(event.detail);
@@ -160,10 +159,6 @@ app.views.SearchPage = Backbone.View.extend({
     handleSyncUpdate: function(sync) {
         if (sync.status !== "DONE") {
             $(".sync").html("Sync - " + sync.type + " " + Math.round(sync.progress) + "%");
-
-            if (sync.type === "syncDown") {
-                this.lastSyncDownId = sync._soupEntryId;
-            }
         }
         else {
             $(".sync").html("Sync");
@@ -180,19 +175,11 @@ app.views.SearchPage = Backbone.View.extend({
     },
 
     syncDown: function() {
-        if (!_.isNumber(this.lastSyncDownId)) {
-            // First time
-            var target = {type:"soql", query:"SELECT " + this.fieldlist.join(",") + " FROM Contact  LIMIT 10000"};
-            cordova.require("com.salesforce.plugin.smartsync").syncDown(target, "contacts", {mergeMode:Force.MERGE_MODE_DOWNLOAD.OVERWRITE}, this.handleSyncUpdate.bind(this));
-        }
-        else {
-            // Subsequent times
-            cordova.require("com.salesforce.plugin.smartsync").reSync(this.lastSyncDownId, this.handleSyncUpdate.bind(this));
-        }
+        cordova.require("com.salesforce.plugin.smartsync").reSync("syncDownContacts" /* see usersyncs.json */, this.handleSyncUpdate.bind(this));
     },
 
     syncUp: function() {
-        cordova.require("com.salesforce.plugin.smartsync").syncUp("contacts", {fieldlist: this.fieldlistForSyncUp}, this.handleSyncUpdate.bind(this));
+        cordova.require("com.salesforce.plugin.smartsync").reSync("syncUpContacts" /* see usersyncs.json */, this.handleSyncUpdate.bind(this));
     },
 
     sync: function() {
@@ -360,8 +347,7 @@ app.Router = Backbone.StackRouter.extend({
 
     setupCaches: function() {
         // Cache for offline support
-        app.cache = new Force.StoreCache("contacts", [ {path:"FirstName", type:"full_text"}, {path:"LastName", type:"full_text"}]);
-        app.cache.init();
+        app.cache = new Force.StoreCache("contacts" /* see userstore.json */);
     },
 
     initialize: function() {

@@ -42,9 +42,9 @@ var MockSmartSyncPlugin = (function(window) {
     module.prototype = {
         constructor: module,
 
-        recordSync: function(type, target, soupName, options) {
+        recordSync: function(type, target, soupName, options, syncName) {
             var syncId = this.lastSyncId++;
-            var sync = {_soupEntryId: syncId, type:type, target:target, soupName:soupName, options: options, status: "RUNNING", progress: 0};
+            var sync = {_soupEntryId: syncId, type:type, target:target, soupName:soupName, options: options, status: "RUNNING", progress: 0, name: syncName};
             this.syncs[syncId] = sync;
             return syncId;
         },
@@ -59,16 +59,36 @@ var MockSmartSyncPlugin = (function(window) {
             console.log("Sync type:" + sync.type + " id:" + syncId + " status:" + status + " progress:" + progress);
         },
 
-        getSyncStatus: function(syncId, successCB, errorCB) {
-            successCB(this.syncs[syncId]);
+        getSyncStatus: function(syncIdOrName, successCB, errorCB) {
+            var syncId = typeof syncIdOrName === "string" ? this.getSyncIdFromName(syncIdOrName) : syncIdOrName;
+            // cordova can't send back a null, so it sends a {} instead
+            var sync = syncId != null ? this.syncs[syncId] : null;
+            successCB(sync == null ? {} : sync);
         },
 
-        syncDown: function(target, soupName, options, successCB, errorCB) {
+        getSyncIdFromName: function(syncName) {
+            for (var syncId in this.syncs) {
+                if (this.syncs[syncId].name === syncName) {
+                    return syncId;
+                }
+            }
+            return null;
+        },
+
+        deleteSync: function(syncIdOrName, successCB, errorCB) {
+            var syncId = typeof syncIdOrName === "string" ? this.getSyncIdFromName(syncIdOrName) : syncIdOrName;
+            if (syncId != null) {
+                delete this.syncs[syncId];
+            }
+            successCB();;
+        },
+
+        syncDown: function(target, soupName, options, syncName, successCB, errorCB) {
             if (target.type === "cache") {
                 errorCB("Wrong target type: " + target.type);
                 return;
             }
-            var syncId = this.recordSync("syncDown", target, soupName, options);
+            var syncId = this.recordSync("syncDown", target, soupName, options, syncName);
             this.actualSyncDown(syncId, successCB, errorCB);
         },
 
@@ -83,10 +103,13 @@ var MockSmartSyncPlugin = (function(window) {
             var progress = 0;
             collection.cache = cache;
 
-            // Resync?
-            var maxTimeStamp = sync.maxTimeStamp;
-            if (target.type == "soql" && _.isNumber(maxTimeStamp) && maxTimeStamp > 0) {
-                collection.config = {type:"soql", query: self.addFilterForReSync(target.query, maxTimeStamp)};
+            if (target.type == "soql") {
+                // Missing Id or LastModifiedDate
+                var query = self.addSelectFieldIfMissing(self.addSelectFieldIfMissing(target.query, "Id"), "LastModifiedDate");
+                // Resync?
+                var maxTimeStamp = sync.maxTimeStamp;
+                if (_.isNumber(maxTimeStamp) && maxTimeStamp > 0) query = self.addFilterForReSync(query, maxTimeStamp);
+                collection.config = {type:"soql", query: query};
             }
             else {
                 collection.config = target;
@@ -139,8 +162,15 @@ var MockSmartSyncPlugin = (function(window) {
             });
         },
 
-        reSync: function(syncId, successCB, errorCB) {
-            this.actualSyncDown(syncId, successCB, errorCB);
+        reSync: function(syncIdOrName, successCB, errorCB) {
+            var syncId = typeof syncIdOrName === "string" ? this.getSyncIdFromName(syncIdOrName) : syncIdOrName;
+            var sync = this.syncs[syncId];
+            if (sync.type == "syncDown") {
+                this.actualSyncDown(syncId, successCB, errorCB);
+            }
+            else {
+                this.actualSyncUp(syncId, successCB, errorCB);
+            }
         },
 
         cleanResyncGhosts: function(syncId, successCB, errorCB) {
@@ -169,6 +199,13 @@ var MockSmartSyncPlugin = (function(window) {
                 });
         },
 
+        addSelectFieldIfMissing: function(soql, field) {
+            if (soql.indexOf(field) == -1) {
+                return soql.replace(/[sS][eE][lL][eE][cC][tT][ ]/, "select " + field + ", ")
+            }
+            return soql;
+        },
+        
         addFilterForReSync: function(query, maxTimeStamp) {
             var extraPredicate = "LastModifiedDate > " + (new Date(maxTimeStamp)).toISOString();
             var modifiedQuery = query.toLowerCase().indexOf(" where ") > 0
@@ -177,9 +214,17 @@ var MockSmartSyncPlugin = (function(window) {
             return modifiedQuery;
         },
 
-        syncUp: function(target, soupName, options, successCB, errorCB) {
+        syncUp: function(target, soupName, options, syncName, successCB, errorCB) {
+            var syncId = this.recordSync("syncUp", target, soupName, options, syncName);
+            this.actualSyncUp(syncId, successCB, errorCB);
+        },
+
+        actualSyncUp: function(syncId, successCB, errorCB) {
             var self = this;
-            var syncId = self.recordSync("syncUp", target, soupName, options);
+            var sync = self.syncs[syncId];
+            var target = sync.target;
+            var soupName = sync.soupName;
+            var options = sync.options;
             var cache = new Force.StoreCache(soupName,  null, null, self.storeConfig.isGlobalStore,self.storeConfig.storeName);
             var collection = new Force.SObjectCollection();
             var numberRecords;
@@ -295,8 +340,34 @@ var SyncManagerMap = (function() {
       reset: function (){
         this.globalSyncManagers = {};
         this.userSyncManagers = {};
-      }
+      },
 
+      setupUserSyncsFromDefaultConfig: function(callback) {
+          this.setupSyncsFromConfig(this.getSyncManager([false]), 'usersyncs.json', callback);
+      },
+
+      setupGlobalSyncsFromDefaultConfig: function(callback) {
+          this.setupSyncsFromConfig(this.getSyncManager([true]), 'globalsyncs.json', callback);
+      },
+
+      setupSyncsFromConfig: function(syncMgr, configFilePath, callback) {
+          fetch(configFilePath)
+              .then(resp => resp.json())
+              .then(config => {
+                  if (!config.error) {
+                      console.log("Setting up syncs using config: " + configFilePath);
+                      var syncConfigs = config.syncs;
+                      for (i=0; i<syncConfigs.length;i++) {
+                          var syncConfig = syncConfigs[i];
+                          if (syncMgr.getSyncIdFromName(syncConfig.syncName)) {
+                              continue;
+                          }
+                          syncMgr.recordSync(syncConfig.syncType, syncConfig.target, syncConfig.soupName, syncConfig.options, syncConfig.syncName);
+                      }
+                  }
+              })
+              .then(() => callback());
+      }
     };
     return module;
   })();
@@ -309,22 +380,22 @@ var syncManagerMap = new SyncManagerMap();
 
     cordova.interceptExec(SMARTSYNC_SERVICE, "syncUp", function (successCB, errorCB, args) {
         var mgr = syncManagerMap.getSyncManager(args);
-        mgr.syncUp(args[0].target, args[0].soupName, args[0].options, successCB, errorCB);
+        mgr.syncUp(args[0].target, args[0].soupName, args[0].options, args[0].syncName, successCB, errorCB);
     });
 
     cordova.interceptExec(SMARTSYNC_SERVICE, "syncDown", function (successCB, errorCB, args) {
         var mgr = syncManagerMap.getSyncManager(args);
-        mgr.syncDown(args[0].target, args[0].soupName, args[0].options, successCB, errorCB);
+        mgr.syncDown(args[0].target, args[0].soupName, args[0].options, args[0].syncName, successCB, errorCB);
     });
 
     cordova.interceptExec(SMARTSYNC_SERVICE, "getSyncStatus", function (successCB, errorCB, args) {
         var mgr = syncManagerMap.getSyncManager(args);
-        mgr.getSyncStatus(args[0].syncId, successCB, errorCB);
+        mgr.getSyncStatus(args[0].syncId || args[0].syncName, successCB, errorCB);
     });
 
     cordova.interceptExec(SMARTSYNC_SERVICE, "reSync", function (successCB, errorCB, args) {
         var mgr = syncManagerMap.getSyncManager(args);
-        mgr.reSync(args[0].syncId, successCB, errorCB);
+        mgr.reSync(args[0].syncId || args[0].syncName, successCB, errorCB);
     });
 
     cordova.interceptExec(SMARTSYNC_SERVICE, "cleanResyncGhosts", function (successCB, errorCB, args) {
@@ -332,5 +403,9 @@ var syncManagerMap = new SyncManagerMap();
         mgr.cleanResyncGhosts(args[0].syncId, successCB, errorCB);
     });
 
+    cordova.interceptExec(SMARTSYNC_SERVICE, "deleteSync", function (successCB, errorCB, args) {
+        var mgr = syncManagerMap.getSyncManager(args);
+        mgr.deleteSync(args[0].syncId || args[0].syncName, successCB, errorCB);
+    });
 
 })(cordova, syncManagerMap);
