@@ -840,9 +840,9 @@ var force = (function () {
 
         return request(
             {
-                method: 'PATCH',
+                method: externalId ? 'PATCH':'POST',
                 contentType: 'application/json',
-                path: '/services/data/' + apiVersion + '/sobjects/' + objectName + '/' + externalIdField + '/' + externalId,
+                path: '/services/data/' + apiVersion + '/sobjects/' + objectName + '/' + externalIdField + '/' + (externalId ? externalId :''),
                 data: data
             },
             successHandler,
