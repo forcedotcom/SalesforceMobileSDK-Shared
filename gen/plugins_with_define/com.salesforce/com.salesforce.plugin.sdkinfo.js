@@ -26,7 +26,7 @@ cordova.define("com.salesforce.plugin.sdkinfo", function(require, exports, modul
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "6.1.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "6.2.0";
 var SERVICE = "com.salesforce.sdkinfo";
 
 var exec = require("com.salesforce.util.exec").exec;
