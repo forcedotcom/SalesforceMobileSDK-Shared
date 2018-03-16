@@ -36,7 +36,7 @@ if (typeof ForceJSTestSuite === 'undefined') {
  */
 var ForceJSTestSuite = function () {
     SFTestSuite.call(this, "forcejs");
-    this.apiVersion = "v41.0";
+    this.apiVersion = "v42.0";
 };
 
 // We are sub-classing SFTestSuite
@@ -82,10 +82,10 @@ ForceJSTestSuite.prototype.testParseUrl = function() {
                     {"protocol":"https:","host":"server.com:1234","hostname":"server.com","port":"1234","path":"/path1/path2","params":{a:"b",c:" d"},"hash":"#hashhash"})
 
     // Real life examples
-    QUnit.deepEqual(force.parseUrl("https://cs1.salesforce.com/services/data/v41.0/query?q=select%20Id%2CName%20from%20Account%20where%20Id%20%3D%20'001S000000p8dcrIAA'"),
-                    {"protocol":"https:","host":"cs1.salesforce.com","hostname":"cs1.salesforce.com","port":undefined,"path":"/services/data/v41.0/query","params":{"q":"select Id,Name from Account where Id = '001S000000p8dcrIAA'"},"hash":""});
-    QUnit.deepEqual(force.parseUrl("https://cs1.salesforce.com/services/data/v41.0/sobjects/Account/001S000000p8dccIAA?fields=Id%2CName"),
-                    {"protocol":"https:","host":"cs1.salesforce.com","hostname":"cs1.salesforce.com","port":undefined,"path":"/services/data/v41.0/sobjects/Account/001S000000p8dccIAA","params":{"fields":"Id,Name"},"hash":""});
+    QUnit.deepEqual(force.parseUrl("https://cs1.salesforce.com/services/data/v42.0/query?q=select%20Id%2CName%20from%20Account%20where%20Id%20%3D%20'001S000000p8dcrIAA'"),
+                    {"protocol":"https:","host":"cs1.salesforce.com","hostname":"cs1.salesforce.com","port":undefined,"path":"/services/data/v42.0/query","params":{"q":"select Id,Name from Account where Id = '001S000000p8dcrIAA'"},"hash":""});
+    QUnit.deepEqual(force.parseUrl("https://cs1.salesforce.com/services/data/v42.0/sobjects/Account/001S000000p8dccIAA?fields=Id%2CName"),
+                    {"protocol":"https:","host":"cs1.salesforce.com","hostname":"cs1.salesforce.com","port":undefined,"path":"/services/data/v42.0/sobjects/Account/001S000000p8dccIAA","params":{"fields":"Id,Name"},"hash":""});
 
     this.finalizeTest();
 };
@@ -214,7 +214,7 @@ ForceJSTestSuite.prototype.testDeleteFileShare = function()  {
  */
 ForceJSTestSuite.prototype.tryUserAgent = function(expectedPlatform, expectedPlatformVersion, expectedModel, userAgent) {
     var webAppSdkAgent = force.computeWebAppSdkAgent(userAgent);
-    var match = /SalesforceMobileSDK\/6.0.0 ([^\/]*)\/([^\ ]*) \(([^\)]*)\) ([^\/]*)\/1.0 Web (.*)/.exec(webAppSdkAgent);
+    var match = /SalesforceMobileSDK\/6.1.0 ([^\/]*)\/([^\ ]*) \(([^\)]*)\) ([^\/]*)\/1.0 Web (.*)/.exec(webAppSdkAgent);
     if (match != null && match.length == 6) {
         QUnit.equals(match[1], expectedPlatform, "Wrong platform for user agent [" + userAgent + "]");
         QUnit.equals(match[2], expectedPlatformVersion, "Wrong platformVersion for user agent [" + userAgent + "]");

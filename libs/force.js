@@ -42,7 +42,7 @@ var force = (function () {
 
     // The force.com API version to use.
     // To override default, pass apiVersion in init(props)
-        apiVersion = 'v41.0',
+        apiVersion = 'v42.0',
 
     // Keep track of OAuth data (access_token, refresh_token, instance_url and user_id)
         oauth,
@@ -840,9 +840,9 @@ var force = (function () {
 
         return request(
             {
-                method: 'PATCH',
+                method: externalId ? 'PATCH':'POST',
                 contentType: 'application/json',
-                path: '/services/data/' + apiVersion + '/sobjects/' + objectName + '/' + externalIdField + '/' + externalId,
+                path: '/services/data/' + apiVersion + '/sobjects/' + objectName + '/' + externalIdField + '/' + (externalId ? externalId :''),
                 data: data
             },
             successHandler,

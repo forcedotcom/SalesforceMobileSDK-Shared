@@ -26,7 +26,7 @@ cordova.define("com.salesforce.plugin.smartstore", function(require, exports, mo
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "6.0.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "6.1.0";
 var SERVICE = "com.salesforce.smartstore";
 
 var exec = require("com.salesforce.util.exec").exec;

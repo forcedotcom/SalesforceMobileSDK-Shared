@@ -3075,8 +3075,7 @@ SmartSyncTestSuite.prototype.testCleanResyncGhosts = function() {
         })
         .then(function() {
             console.log("## Calling cleanResyncGhosts");
-            self.cleanResyncGhosts(self.defaultStoreConfig, syncDownId);
-            return timeoutPromiser(5000);
+            return self.cleanResyncGhosts(self.defaultStoreConfig, syncDownId);
         })
         .then(function() {
             console.log("## Fetching records from SmartStore");
