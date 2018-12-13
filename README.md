@@ -1,6 +1,6 @@
 # Salesforce.com Mobile SDK Shared 
 This repository contains JavaScript artifacts that are shared between the different Salesforce Mobile SDK repositories. 
-For more information, please check out the [Salesforce Mobile SDK for Android](https://github.com/forcedotcom/SalesforceMobileSDK-Android/), or the [Salesforce Mobile SDK for iOS](https://github.com/forcedotcom/SalesforceMobileSDK-iOS).
+For more information, please check out the [Salesforce Mobile SDK for Android](https://github.com/forcedotcom/SalesforceMobileSDK-Android/), or the [Salesforce Mobile SDK for iOS Hybrid](https://github.com/forcedotcom/SalesforceMobileSDK-iOS-Hybrid).
 
 # /libs
 
@@ -25,8 +25,8 @@ Library to do REST API calls from JavaScript using promises instead of callbacks
 
 **smartsync.js**
 
-Contains the new SDK 2.0 SmartSync data library. 
-This library depends on forcetk.mobilesdk.js and cordova.force.js. It also requires jquery, underscore and backbone.
+Contains the SmartSync data library. 
+This library depends on force.js and cordova.force.js. It also requires underscore and backbone.
 
 # /test
 
@@ -36,7 +36,7 @@ Contains all the tests for the SalesforceMobileSDK JavaScript libraries.
 
 HTML page to run the tests outside the container.
 
-**MockCordova.js, MockSDKInfo.js, MockSmartStore.js**
+**MockCordova.js, MockSDKInfo.js, MockSmartStore.js, MockSmartSyncPlugin.js**
 
 Libraries used to mock the container when running tests directly in a browser.
 
@@ -50,4 +50,4 @@ Test suites for SmartStore.
 
 **SFSmartSyncTestSuite.js**
 
-Test suite for the new SDK 2.0 SmartSync library.
+Test suite for SmartSync library.
