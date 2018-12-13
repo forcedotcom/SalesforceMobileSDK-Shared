@@ -23,5 +23,5 @@ Where:
 - once everything is built, right-click on the $appname project and choose run as Android application
 
 ## To run the ios application:
-- start xcode and pick $appname/platforms/ios/$appname.xcodeproj
+- start xcode and pick $appname/platforms/ios/$appname.xcworkspace
 - build and run
