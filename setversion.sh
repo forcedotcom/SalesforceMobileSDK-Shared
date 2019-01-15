@@ -3,47 +3,32 @@
 #set -x
 
 OPT_VERSION=""
+RED='\033[0;31m'
 YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
 usage ()
 {
     echo "Use this script to set Mobile SDK version number in source files"
-    echo "Usage: $0 -v <versionName e.g. 7.1.0>"
-
+    echo "Usage: $0 -v <version>"
+    echo "  where: version is the version e.g. 7.1.0"
 }
 
 parse_opts ()
 {
-    while getopts v: command_line_opt
+    while getopts v:d: command_line_opt
     do
         case ${command_line_opt} in
-            v)
-                OPT_VERSION=${OPTARG};;
-            ?)
-                echo "Unknown option '-${OPTARG}'."
-                usage
-                exit 1;;
+            v)  OPT_VERSION=${OPTARG};;
         esac
     done
 
     if [ "${OPT_VERSION}" == "" ]
     then
-        echo "You must specify a value for the version."
+        echo -e "${RED}You must specify a value for the version.${NC}"
         usage
         exit 1
     fi
-
-    valid_version_regex='^[0-9]+\.[0-9]+\.[0-9]+$'
-    if [[ "${OPT_VERSION}" =~ $valid_version_regex ]]
-     then
-         # No action
-            :
-     else
-        echo "${OPT_VERSION} is not a valid version name.  Should be in the format <integer.integer.interger>"
-        exit 2
-    fi
-
 }
 
 # Helper functions
