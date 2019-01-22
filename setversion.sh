@@ -39,11 +39,18 @@ update_package_json ()
     sed -i "s/\"version\":.*\"[^\"]*\"/\"version\": \"${version}\"/g" ${file}
 }
 
-update_mocksdkinfo_test ()
+update_mock_sdk_info ()
 {
     local file=$1
     local version=$2
     sed -i "s/new\ SDKInfo(\"[^\"]*\"/new SDKInfo(\"${version}\"/g" ${file}
+}
+
+update_sdk_info_test_suite ()
+{
+    local file=$1
+    local version=$2
+    sed -i "s/sdkInfo\.sdkVersion\.indexOf(\"[^\"]*\")/sdkInfo.sdkVersion.indexOf(\"${version}\")/g" ${file}
 }
 
 update_salesforce_mobile_sdk_version ()
@@ -60,11 +67,14 @@ echo "*** Updating package.json ***"
 update_package_json "./package.json" "${OPT_VERSION}"
 
 echo "*** Updating MockSDKInfo test ***"
-update_mocksdkinfo_test "./test/MockSDKInfo.js" "${OPT_VERSION}"
+update_mock_sdk_info "./test/MockSDKInfo.js" "${OPT_VERSION}"
+
+echo "*** Updating SFSDKInfoTestSuite.js ***"
+update_sdk_info_test_suite "./test/SFSDKInfoTestSuite.js" "${OPT_VERSION}"
 
 echo "*** Updating SALESFORCE_MOBILE_SDK_VERSION ***"
 update_salesforce_mobile_sdk_version "./test/SFTestRunnerPlugin.js" "${OPT_VERSION}"
 update_salesforce_mobile_sdk_version "./libs/cordova.force.js" "${OPT_VERSION}"
 
 echo "*** Updating generated plugin files ***"
-./tools/update.sh
+# ./tools/update.sh
