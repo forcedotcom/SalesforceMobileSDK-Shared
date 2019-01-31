@@ -233,7 +233,7 @@ ForceJSTestSuite.prototype.tryUserAgent = function(expectedPlatform, expectedPla
 ForceJSTestSuite.prototype.testRestEndpoint = function()  {
     console.log("In SFForceJSTestSuite.testRestEndpoint");
     var self = this;
-    forceJsClient.rest('https://api.ipify.org?format=json',false,true,{ contentType:"application/json" })
+    forceJsClient.anyrest('https://api.ipify.org?format=json',false,true,{ contentType:"application/json" })
     .then((response) => {
         QUnit.ok(response.ip!= null,"Response should not be nil");
         self.finalizeTest();

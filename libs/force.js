@@ -916,10 +916,11 @@ var force = (function () {
      * @param fullUrlPath A complete  url starting
      * @param returnsBinary if this binary data
      * @param doesNotRequireAuthentication true if unauthenticated call
+     * @param params params
      * @param successHandler
      * @param errorHandler
      */
-    function rest(fullUrlPath, returnsBinary, doesNotRequireAuthentication, params, successHandler, errorHandler) {
+    function anyrest(fullUrlPath, returnsBinary, doesNotRequireAuthentication, params, successHandler, errorHandler) {
 
         var obj = params;
 
@@ -954,7 +955,7 @@ var force = (function () {
         upsert: upsert,
         retrieve: retrieve,
         apexrest: apexrest,
-        rest: rest,
+        anyrest: anyrest,
         chatter: chatter,
         discardToken: discardToken,
         oauthCallback: oauthCallback,
