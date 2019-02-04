@@ -412,19 +412,20 @@ var force = (function () {
      * @param successHandler - function to call back when request succeeds - Optional
      * @param errorHandler - function to call back when request fails - Optional
      * @param returnBinary - if true, response is encoded and returned as {encodedBody:"base64-encoded-response", contentType:"content-type"} - optional
+     * @param doesNotRequireAuthentication - if true user context will not be used to make api call.
      */
-    function request(obj, successHandler, errorHandler, returnBinary) {
+    function request(obj, successHandler, errorHandler, returnBinary,doesNotRequireAuthentication) {
         if (typeof requestHandler === "function") {
             return requestHandler(obj);
         }
-        
+
         // NB: networkPlugin will be defined only if login was done through plugin and container is using Mobile SDK 5.0 or above
-        if (networkPlugin) { 
-            requestWithPlugin(obj, successHandler, errorHandler, returnBinary);
+        if (networkPlugin) {
+            requestWithPlugin(obj, successHandler, errorHandler, returnBinary,doesNotRequireAuthentication);
         } else {
-            requestWithBrowser(obj, successHandler, errorHandler, returnBinary);
+            requestWithBrowser(obj, successHandler, errorHandler, returnBinary,doesNotRequireAuthentication);
         }
-    }        
+    }
 
     /**
      * @param path: full path or path relative to end point - required
@@ -436,7 +437,7 @@ var force = (function () {
      *                  '/services/data, '/versions'    => {endPoint:'/services/data', path:'/versions'}
      */
     function computeEndPointIfMissing(endPoint, path) {
-        if (endPoint !== undefined) {
+        if (endPoint !== undefined || path.startsWith("https://")) {
             return {endPoint:endPoint, path:path};
         }
         else {
@@ -450,12 +451,13 @@ var force = (function () {
         }
     }
 
-    function requestWithPlugin(obj, successHandler, errorHandler, returnBinary) {
-        var obj2 = computeEndPointIfMissing(obj.endPoint, obj.path);
-        networkPlugin.sendRequest(obj2.endPoint, obj2.path, successHandler, errorHandler, obj.method, obj.data || obj.params, obj.headerParams, null /* file params */, returnBinary);
+    function requestWithPlugin(obj, successHandler, errorHandler, returnBinary,doesNotRequireAuthentication) {
+        var obj2 =  computeEndPointIfMissing(obj.endPoint, obj.path);
+        networkPlugin.sendRequest(obj2.endPoint, obj2.path, successHandler, errorHandler, obj.method, obj.data || obj.params, obj.headerParams, null /* file params */, returnBinary,doesNotRequireAuthentication);
     }
 
-    function requestWithBrowser(obj, successHandler, errorHandler, returnBinary) {
+    function requestWithBrowser(obj, successHandler, errorHandler, returnBinary,doesNotRequireAuthentication) {
+        var obj2 =  computeEndPointIfMissing(obj.endPoint, obj.path);
         if (!oauth || (!oauth.access_token && !oauth.refresh_token)) {
             if (typeof errorHandler === "function") {
                 errorHandler('No access token. Login and try again.');
@@ -467,13 +469,16 @@ var force = (function () {
             xhr = new XMLHttpRequest(),
             url = getRequestBaseURL();
 
+       if (doesNotRequireAuthentication) {
+          url = obj.path;
+       } else {
+           if (obj.path.charAt(0) !== '/') {
+               obj.path = '/' + obj.path;
+           }
+           url =  url + obj.path;
+       }
+
         // dev friendly API: Add leading '/' if missing so url + path concat always works
-        if (obj.path.charAt(0) !== '/') {
-            obj.path = '/' + obj.path;
-        }
-
-        url = url + obj.path;
-
         if (obj.params) {
             url += '?' + toQueryString(obj.params);
         }
@@ -905,7 +910,28 @@ var force = (function () {
         return request(params, successHandler, errorHandler);
 
     }
-    
+
+    /**
+     * Convenience function to invoke any REST endpoints
+     * @param fullUrlPath A complete  url starting
+     * @param returnsBinary if this binary data
+     * @param doesNotRequireAuthentication true if unauthenticated call
+     * @param params params
+     * @param successHandler
+     * @param errorHandler
+     */
+    function anyrest(fullUrlPath, returnsBinary, doesNotRequireAuthentication, params, successHandler, errorHandler) {
+
+        var obj = params;
+
+        if (!obj.contentType) {
+            obj.contentType = 'application/json';
+        }
+        obj.path = fullUrlPath;
+        obj.endpoint = '';
+        return request(obj, successHandler, errorHandler, returnsBinary, doesNotRequireAuthentication);
+    }
+
     // The public API
     return {
         apiVersion: apiVersion,
@@ -929,6 +955,7 @@ var force = (function () {
         upsert: upsert,
         retrieve: retrieve,
         apexrest: apexrest,
+        anyrest: anyrest,
         chatter: chatter,
         discardToken: discardToken,
         oauthCallback: oauthCallback,

@@ -93,7 +93,7 @@ var forceJsClient = (function(force) {
     client.chatter = promiser("chatter");
     client.getPickListValues = promiser("getPickListValues");
     client.getAttachment = promiser("getAttachment");
-
+    client.anyrest = promiser("anyrest")
     //Files
     client.ownedFilesList = promiser("ownedFilesList");
     client.filesInUsersGroups = promiser("filesInUsersGroups");

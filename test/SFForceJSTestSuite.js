@@ -228,6 +228,23 @@ ForceJSTestSuite.prototype.tryUserAgent = function(expectedPlatform, expectedPla
 };
 
 /**
+ * TEST deleteFileShare
+ */
+ForceJSTestSuite.prototype.testRestEndpoint = function()  {
+    console.log("In SFForceJSTestSuite.testRestEndpoint");
+    var self = this;
+    forceJsClient.anyrest('https://api.ipify.org?format=json',false,true,{ contentType:"application/json" })
+    .then((response) => {
+        QUnit.ok(response.ip!= null,"Response should not be nil");
+        self.finalizeTest();
+    })
+    .catch((error) => {
+         QUnit.ok(error == null, "Error occurred");
+         self.finalizeTest();
+     });
+};
+
+/**
  * Helper function to setup window.force for testing
  */
 ForceJSTestSuite.prototype.setupTestForce = function() {
