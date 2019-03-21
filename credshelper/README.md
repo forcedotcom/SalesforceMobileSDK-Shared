@@ -8,5 +8,5 @@ $ npm start
 
 ```
 In a browser, open `http://localhost:8080`, enter credentials.
-Copy the test credentials to your test_credentials.json file!
+Copy the test credentials to your `test_credentials.json` file!
 
