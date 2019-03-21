@@ -1,13 +1,19 @@
 <!DOCTYPE html>
 <html>
+<body>
+
+<input type="text" size=50 name="loginURL" value="https://login.salesforce.com" />
+<button type="button" onclick="startLogin()">Start login flow</button>
+
 <script>
-var config = {loginURL: "https://test.salesforce.com",
-              appId: "3MVG9SemV5D80oBcXZ2EUzbcJw4mki18E239BH7SpZ93aRcD0OFlXgtOk6ms.8Zm_87aB4.zsD9R1PON7Tn2g",
-              oauthCallbackURL: "http://localhost:8080/oauthcallback.html",
-             };
+    var config = {
+        appId: "3MVG9SemV5D80oBcXZ2EUzbcJw4mki18E239BH7SpZ93aRcD0OFlXgtOk6ms.8Zm_87aB4.zsD9R1PON7Tn2g",
+        oauthCallbackURL: "http://localhost:8080/oauthcallback.html",
+    };
 
 // Start login flow
 function startLogin() {
+    config.loginURL = document.getElementsByName("loginURL")[0].value;
     var loginWindowURL = config.loginURL + '/services/oauth2/authorize?client_id=' + config.appId + '&redirect_uri=' + config.oauthCallbackURL + '&response_type=token';
     window.open(loginWindowURL, '_blank', 'location=no');
 }
@@ -59,9 +65,6 @@ function createTestCredentials(auth) {
 function writeJson(obj) {
     document.write("<pre>"+JSON.stringify(obj, null, 4)+"</pre>");
 }
-
-// Go !!
-startLogin();
 
 </script>
 </body>
