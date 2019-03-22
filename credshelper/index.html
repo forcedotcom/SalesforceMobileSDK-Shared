@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<input type="text" size=50 name="loginURL" value="https://login.salesforce.com" />
+<button type="button" onclick="startLogin()">Start login flow</button>
+
+<script>
+    var config = {
+        appId: "3MVG9SemV5D80oBcXZ2EUzbcJw4mki18E239BH7SpZ93aRcD0OFlXgtOk6ms.8Zm_87aB4.zsD9R1PON7Tn2g",
+        oauthCallbackURL: "http://localhost:8080/oauthcallback.html",
+    };
+
+// Start login flow
+function startLogin() {
+    config.loginURL = document.getElementsByName("loginURL")[0].value;
+    var loginWindowURL = config.loginURL + '/services/oauth2/authorize?client_id=' + config.appId + '&redirect_uri=' + config.oauthCallbackURL + '&response_type=token';
+    window.open(loginWindowURL, '_blank', 'location=no');
+}
+
+// Called from oauth window when login completes
+function oauthCallback(url) {
+
+    var queryString = url.substr(url.indexOf('#') + 1);
+    var auth = parseQueryString(queryString);
+    createTestCredentials(auth);
+}
+
+// Helper to extract fields encoded on callback url
+function parseQueryString(queryString) {
+    if ((queryString || '') === '') {
+        return {};
+    }
+
+    var qs = queryString.charAt(0) === '?' ? queryString.substring(1) : queryString;
+    var obj = {};
+    var params = qs.split('&');
+    params.forEach(function (param) {
+        var splitter = param.split('=');
+        if (splitter.length == 2) {
+            obj[decodeURIComponent(splitter[0])] = decodeURIComponent(splitter[1]);
+        }
+    });
+    return obj;
+}
+
+// Build json for test_credentials.json and display it
+function createTestCredentials(auth) {
+
+    var testCredentials =
+    {
+        "test_redirect_uri" : config.oauthCallbackURL,
+        "access_token" : "__NOT_REQUIRED__",
+        "instance_url" : auth.instance_url,
+        "identity_url" : auth.id,
+        "refresh_token" : auth.refresh_token,
+        "test_client_id" : config.appId,
+        "test_login_domain" : config.loginURL
+    };
+
+    writeJson(testCredentials);
+}        
+
+// Helper to write to html document
+function writeJson(obj) {
+    document.write("<pre>"+JSON.stringify(obj, null, 4)+"</pre>");
+}
+
+</script>
+</body>
+</html>
