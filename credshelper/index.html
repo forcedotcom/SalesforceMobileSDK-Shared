@@ -44,21 +44,51 @@ function parseQueryString(queryString) {
     return obj;
 }
 
+// Get identity data
+function getIdentityData(identityUrl, accessToken, callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', identityUrl, true);
+    xhr.setRequestHeader("Accept", "application/json");
+    xhr.setRequestHeader("Authorization", "Bearer " + accessToken);
+    xhr.setRequestHeader('Cache-Control', 'no-store');
+
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            if (xhr.status > 199 && xhr.status < 300) {
+                callback(JSON.parse(xhr.responseText));
+            } else {
+                console.error("Failed to get identity data");
+                callback({});
+            }
+        }
+    };
+
+    xhr.send();
+}
+
 // Build json for test_credentials.json and display it
 function createTestCredentials(auth) {
 
-    var testCredentials =
-    {
-        "test_redirect_uri" : config.oauthCallbackURL,
-        "access_token" : "__NOT_REQUIRED__",
-        "instance_url" : auth.instance_url,
-        "identity_url" : auth.id,
-        "refresh_token" : auth.refresh_token,
-        "test_client_id" : config.appId,
-        "test_login_domain" : config.loginURL
-    };
+    getIdentityData(auth.id, auth.access_token, function(identityData) {
 
-    writeJson(testCredentials);
+        var testCredentials =
+            {
+                "test_redirect_uri" : config.oauthCallbackURL,
+                "access_token" : "__NOT_REQUIRED__",
+                "instance_url" : auth.instance_url,
+                "identity_url" : auth.id,
+                "refresh_token" : auth.refresh_token,
+                "test_client_id" : config.appId,
+                "test_login_domain" : config.loginURL,
+                "organization_id": identityData.organization_id,
+                "username": identityData.username,
+                "user_id": identityData.user_id,
+                "display_name": identityData.display_name,
+                "photo_url": identityData.photos? identityData.photos.picture : undefined
+            };
+
+        writeJson(testCredentials);
+    });
 }        
 
 // Helper to write to html document
