@@ -70,13 +70,13 @@ function getIdentityData(identityUrl, accessToken, callback) {
 function createTestCredentials(auth) {
 
     getIdentityData(auth.id, auth.access_token, function(identityData) {
-
         var testCredentials =
             {
                 "test_redirect_uri" : config.oauthCallbackURL,
                 "access_token" : "__NOT_REQUIRED__",
                 "instance_url" : auth.instance_url,
                 "identity_url" : auth.id,
+                "community_url": auth.sfdc_community_url,
                 "refresh_token" : auth.refresh_token,
                 "test_client_id" : config.appId,
                 "test_login_domain" : config.loginURL,
