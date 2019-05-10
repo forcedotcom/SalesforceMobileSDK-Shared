@@ -437,7 +437,7 @@ var force = (function () {
      *                  '/services/data, '/versions'    => {endPoint:'/services/data', path:'/versions'}
      */
     function computeEndPointIfMissing(endPoint, path) {
-        if (endPoint !== undefined || path.startsWith("https://")) {
+        if (endPoint !== undefined || path.indexOf("https://") == 0) {
             return {endPoint:endPoint, path:path};
         }
         else {
