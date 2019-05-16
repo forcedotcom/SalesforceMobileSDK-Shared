@@ -234,11 +234,11 @@ ForceJSTestSuite.prototype.testRestEndpoint = function()  {
     console.log("In SFForceJSTestSuite.testRestEndpoint");
     var self = this;
     forceJsClient.anyrest('https://api.ipify.org?format=json',false,true,{ contentType:"application/json" })
-    .then((response) => {
+    .then(function(response) {
         QUnit.ok(response.ip!= null,"Response should not be nil");
         self.finalizeTest();
     })
-    .catch((error) => {
+    .catch(function(error) {
          QUnit.ok(error == null, "Error occurred");
          self.finalizeTest();
      });
