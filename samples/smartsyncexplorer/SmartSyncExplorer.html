@@ -66,8 +66,8 @@
       <div class="initials"><%= initials %></div>
     </div>
     <div style="padding-top:4px">
-      <span class="important"><%= FirstName %> <%= LastName %></span><br/>
-      <% if (Title) { %><%= Title %><% } %> <% if (Department) { %><%= Department %><% } %>
+      <span class="important"><%= _.escape(FirstName) %> <%= _.escape(LastName) %></span><br/>
+      <% if (Title) { %><%= _.escape(Title) %><% } %> <% if (Department) { %><%= _.escape(Department) %><% } %>
       </div>
     <% if (__local__) { %><span class="pull-right btn btn-negative"><%= (__locally_deleted__ ? "deleted" : (__locally_created__ ? "created" : "modified")) %></span><% } %>
   </a>
@@ -84,13 +84,13 @@
   <div class="content">
     <div class="content-padded">
       <div class="details">
-        <input placeholder="FirstName" type="text" name="FirstName" value="<%= FirstName %>" /><br/>
-        <input placeholder="LastName" type="text" name="LastName" value="<%= LastName %>" /><br/>
-        <input placeholder="Title" type="text" name="Title" value="<%= Title %>" /><br/>
-        <input placeholder="Mobile Phone" type="text" name="MobilePhone" value="<%= MobilePhone %>" /><br/>
-        <input placeholder="Email address" type="text" name="Email" value="<%= Email %>" />
-        <input placeholder="Department" type="text" name="Department" value="<%= Department %>" /><br/>
-        <input placeholder="Home Phone" type="text" name="HomePhone" value="<%= HomePhone %>" /><br/>
+        <input placeholder="FirstName" type="text" name="FirstName" value="<%= _.escape(FirstName) %>" /><br/>
+        <input placeholder="LastName" type="text" name="LastName" value="<%= _.escape(LastName) %>" /><br/>
+        <input placeholder="Title" type="text" name="Title" value="<%= _.escape(Title) %>" /><br/>
+        <input placeholder="Mobile Phone" type="text" name="MobilePhone" value="<%= _.escape(MobilePhone) %>" /><br/>
+        <input placeholder="Email address" type="text" name="Email" value="<%= _.escape(Email) %>" />
+        <input placeholder="Department" type="text" name="Department" value="<%= _.escape(Department) %>" /><br/>
+        <input placeholder="Home Phone" type="text" name="HomePhone" value="<%= _.escape(HomePhone) %>" /><br/>
       </div>
     </div>
   </div>
