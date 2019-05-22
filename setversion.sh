@@ -36,28 +36,28 @@ update_package_json ()
 {
     local file=$1
     local version=$2
-    sed -i "s/\"version\":.*\"[^\"]*\"/\"version\": \"${version}\"/g" ${file}
+    gsed -i "s/\"version\":.*\"[^\"]*\"/\"version\": \"${version}\"/g" ${file}
 }
 
 update_mock_sdk_info ()
 {
     local file=$1
     local version=$2
-    sed -i "s/new\ SDKInfo(\"[^\"]*\"/new SDKInfo(\"${version}\"/g" ${file}
+    gsed -i "s/new\ SDKInfo(\"[^\"]*\"/new SDKInfo(\"${version}\"/g" ${file}
 }
 
 update_sdk_info_test_suite ()
 {
     local file=$1
     local version=$2
-    sed -i "s/sdkInfo\.sdkVersion\.indexOf(\"[^\"]*\")/sdkInfo.sdkVersion.indexOf(\"${version}\")/g" ${file}
+    gsed -i "s/sdkInfo\.sdkVersion\.indexOf(\"[^\"]*\")/sdkInfo.sdkVersion.indexOf(\"${version}\")/g" ${file}
 }
 
 update_salesforce_mobile_sdk_version ()
 {
     local file=$1
     local version=$2
-    sed -i "s/var\ SALESFORCE_MOBILE_SDK_VERSION = \"[^\"]*\"/var SALESFORCE_MOBILE_SDK_VERSION = \"${version}\"/g" ${file}
+    gsed -i "s/var\ SALESFORCE_MOBILE_SDK_VERSION = \"[^\"]*\"/var SALESFORCE_MOBILE_SDK_VERSION = \"${version}\"/g" ${file}
 }
 
 parse_opts "$@"
