@@ -11,7 +11,7 @@ usage ()
 {
     echo "Use this script to set Mobile SDK version number in source files"
     echo "Usage: $0 -v <version>"
-    echo "  where: version is the version e.g. 7.1.0"
+    echo "  where: version is the version e.g. 7.2.0"
 }
 
 parse_opts ()
