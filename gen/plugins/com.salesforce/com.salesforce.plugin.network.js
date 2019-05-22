@@ -25,21 +25,21 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "7.0.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "7.1.0";
 var SERVICE = "com.salesforce.network";
 var exec = require("com.salesforce.util.exec").exec;
 
 /**
  * Sends a network request using the native network stack.
  */
-var sendRequest = function(endPoint, path, successCB, errorCB, method, payload, headerParams, fileParams, returnBinary) {
+var sendRequest = function(endPoint, path, successCB, errorCB, method, payload, headerParams, fileParams, returnBinary, doesNotRequireAuthentication) {
     method = method || "GET";
     payload = payload || {};
     headerParams = headerParams || {};
     fileParams = fileParams || {}; // File params expected to be of the form: {<fileParamNameInPost>: {fileMimeType:<someMimeType>, fileUrl:<fileUrl>, fileName:<fileNameForPost>}}
     returnBinary = !!returnBinary; // when true response returned as {encodedBody:"base64-encoded-response", contentType:"content-type"}
-
-    var args = {endPoint: endPoint, path:path, method:method, queryParams:payload, headerParams:headerParams, fileParams: fileParams, returnBinary: returnBinary};
+    doesNotRequireAuthentication = !!doesNotRequireAuthentication;
+    var args = {endPoint: endPoint, path:path, method:method, queryParams:payload, headerParams:headerParams, fileParams: fileParams, returnBinary: returnBinary, doesNotRequireAuthentication: doesNotRequireAuthentication};
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE, "pgSendRequest", [args]);
 };
 

@@ -26,7 +26,7 @@ cordova.define("com.salesforce.plugin.smartsync", function(require, exports, mod
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "7.0.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "7.1.0";
 var SERVICE = "com.salesforce.smartsync";
 
 var exec = require("com.salesforce.util.exec").exec;
