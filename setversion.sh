@@ -77,4 +77,4 @@ update_salesforce_mobile_sdk_version "./test/SFTestRunnerPlugin.js" "${OPT_VERSI
 update_salesforce_mobile_sdk_version "./libs/cordova.force.js" "${OPT_VERSION}"
 
 echo "*** Updating generated plugin files ***"
-# ./tools/update.sh
+./tools/update.sh
