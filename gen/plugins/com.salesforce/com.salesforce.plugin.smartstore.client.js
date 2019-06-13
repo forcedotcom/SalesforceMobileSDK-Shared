@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "7.2.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "7.1.2";
 
 var smartstore = require("com.salesforce.plugin.smartstore");
 var promiser = require("com.salesforce.util.promiser").promiser;
