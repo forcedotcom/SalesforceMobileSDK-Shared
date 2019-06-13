@@ -62,7 +62,7 @@ module.exports = [
 module.exports.metadata = 
 // TOP OF METADATA
 {
-    "com.salesforce": "7.1.0"
+    "com.salesforce": "7.2.0"
 }
 // BOTTOM OF METADATA
 });

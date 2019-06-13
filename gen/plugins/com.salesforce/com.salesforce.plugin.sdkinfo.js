@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "7.1.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "7.2.0";
 var SERVICE = "com.salesforce.sdkinfo";
 
 var exec = require("com.salesforce.util.exec").exec;
