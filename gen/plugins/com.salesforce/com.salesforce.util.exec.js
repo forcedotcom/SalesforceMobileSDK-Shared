@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "7.1.2";
+var SALESFORCE_MOBILE_SDK_VERSION = "7.2.0";
 var exec = function(pluginVersion, successCB, errorCB, service, action, args) {
     var tag = "TIMING " + service + ":" + action;
     console.time(tag);
