@@ -60,6 +60,13 @@ update_salesforce_mobile_sdk_version ()
     gsed -i "s/var\ SALESFORCE_MOBILE_SDK_VERSION = \"[^\"]*\"/var SALESFORCE_MOBILE_SDK_VERSION = \"${version}\"/g" ${file}
 }
 
+update_cordova_plugins_version ()
+{
+    local file=$1
+    local version=$2
+    gsed -i "s/\"com.salesforce\": \"[^\"]*\"/\"com.salesforce\": \"${version}\"/g" ${file}
+}
+
 parse_opts "$@"
 
 echo -e "${YELLOW}*** SETTING VERSION TO ${OPT_VERSION} ***${NC}"
@@ -75,6 +82,9 @@ update_sdk_info_test_suite "./test/SFSDKInfoTestSuite.js" "${OPT_VERSION}"
 echo "*** Updating SALESFORCE_MOBILE_SDK_VERSION ***"
 update_salesforce_mobile_sdk_version "./test/SFTestRunnerPlugin.js" "${OPT_VERSION}"
 update_salesforce_mobile_sdk_version "./libs/cordova.force.js" "${OPT_VERSION}"
+
+echo "*** Updating cordova_plugins.js ***"
+update_cordova_plugins_version "./gen/cordova_plugins.js" "${OPT_VERSION}"
 
 echo "*** Updating generated plugin files ***"
 ./tools/update.sh
