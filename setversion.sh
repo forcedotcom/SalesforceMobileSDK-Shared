@@ -73,6 +73,9 @@ echo -e "${YELLOW}*** SETTING VERSION TO ${OPT_VERSION} ***${NC}"
 echo "*** Updating package.json ***"
 update_package_json "./package.json" "${OPT_VERSION}"
 
+echo "*** Updating bower.json ***"
+update_package_json "./tools/bower.json" "${OPT_VERSION}"
+
 echo "*** Updating cordova_plugins.js ***"
 update_cordova_plugins "./gen/cordova_plugins.js" "${OPT_VERSION}"
 
