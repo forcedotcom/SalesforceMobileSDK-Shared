@@ -39,6 +39,13 @@ update_package_json ()
     gsed -i "s/\"version\":.*\"[^\"]*\"/\"version\": \"${version}\"/g" ${file}
 }
 
+update_cordova_plugins ()
+{
+    local file=$1
+    local version=$2
+    gsed -i "s/\"com.salesforce\":.*\"[^\"]*\"/\"com.salesforce\": \"${version}\"/g" ${file}
+}
+
 update_mock_sdk_info ()
 {
     local file=$1
@@ -65,6 +72,9 @@ parse_opts "$@"
 echo -e "${YELLOW}*** SETTING VERSION TO ${OPT_VERSION} ***${NC}"
 echo "*** Updating package.json ***"
 update_package_json "./package.json" "${OPT_VERSION}"
+
+echo "*** Updating cordova_plugins.js ***"
+update_cordova_plugins "./gen/cordova_plugins.js" "${OPT_VERSION}"
 
 echo "*** Updating MockSDKInfo test ***"
 update_mock_sdk_info "./test/MockSDKInfo.js" "${OPT_VERSION}"

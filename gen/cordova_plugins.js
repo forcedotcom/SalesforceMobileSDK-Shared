@@ -27,8 +27,8 @@ module.exports = [
         ]
     },
     {
-        "file": "plugins/com.salesforce/com.salesforce.plugin.smartsync.js",
-        "id": "com.salesforce.plugin.smartsync",
+        "file": "plugins/com.salesforce/com.salesforce.plugin.mobilesync.js",
+        "id": "com.salesforce.plugin.mobilesync",
     },
     {
         "file": "plugins/com.salesforce/com.salesforce.util.bootstrap.js",
@@ -62,7 +62,7 @@ module.exports = [
 module.exports.metadata = 
 // TOP OF METADATA
 {
-    "com.salesforce": "7.2.0"
+    "com.salesforce": "8.0.0"
 }
 // BOTTOM OF METADATA
 });

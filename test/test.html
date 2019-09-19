@@ -15,11 +15,11 @@
     <script src="../libs/force+files.js"></script>
     <script src="../libs/force+promise.js"></script>
     <script src="../libs/cordova.force.js"></script>
-    <script src="../libs/smartsync.js"></script> 
+    <script src="../libs/mobilesync.js"></script> 
 
     <!-- mock for native implementations -->
     <script src="MockSmartStore.js"></script>
-    <script src="MockSmartSyncPlugin.js"></script>
+    <script src="MockMobileSyncPlugin.js"></script>
     <script src="MockSDKInfo.js"></script>
 
 	<!-- load qunit -->
@@ -33,7 +33,7 @@
     <script src="SFAbstractSmartStoreTestSuite.js"></script>
     <script src="SFSmartStoreTestSuite.js"></script>
     <script src="SFSmartStoreLoadTestSuite.js"></script>
-    <script src="SFSmartSyncTestSuite.js"></script>
+    <script src="SFMobileSyncTestSuite.js"></script>
 
     <script charset="utf-8">
     var debugMode = true;
@@ -69,7 +69,7 @@
         document.getElementById("link_smartstore_load_test_suite")
             .addEventListener("click", function() {new SmartStoreLoadTestSuite().startTests();});
         document.getElementById("link_smart_sync_test_suite")
-            .addEventListener("click", function() {new SmartSyncTestSuite().startTests();});
+            .addEventListener("click", function() {new MobileSyncTestSuite().startTests();});
     });
     </script>
   </head>
@@ -83,7 +83,7 @@
           <p><a href="#" id="link_forcejs_test_suite" data-role="button" data-inline="true">Run ForceJS Tests</a></p>
           <p><a href="#" id="link_smartstore_test_suite" data-role="button" data-inline="true">Run SmartStore Tests</a></p>
           <p><a href="#" id="link_smartstore_load_test_suite" data-role="button" data-inline="true">Run SmartStore Load Tests</a></p>
-          <p><a href="#" id="link_smart_sync_test_suite" data-role="button" data-inline="true">Run SmartSync Tests</a></p>
+          <p><a href="#" id="link_smart_sync_test_suite" data-role="button" data-inline="true">Run MobileSync Tests</a></p>
 
 		  <div id="qunit-testrunner-toolbar"></div>
 		  <h2 id="qunit-userAgent"></h2>
