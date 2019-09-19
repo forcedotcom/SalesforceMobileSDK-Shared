@@ -1078,8 +1078,8 @@ cordova.define("com.salesforce.plugin.smartstore.client", function(require, expo
 // For backward compatibility
 navigator.smartstoreClient = cordova.require("com.salesforce.plugin.smartstore.client");
 
-cordova.define("com.salesforce.plugin.smartsync", function (require, exports, module) {
-    var SERVICE = "com.salesforce.smartsync";
+cordova.define("com.salesforce.plugin.mobilesync", function (require, exports, module) {
+    var SERVICE = "com.salesforce.mobilesync";
 
     var exec = require("com.salesforce.util.exec").exec;
     var defaultStoreConfig = {'isGlobalStore':false};

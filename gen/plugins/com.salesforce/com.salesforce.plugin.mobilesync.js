@@ -26,7 +26,7 @@
 
 // Version this js was shipped with
 var SALESFORCE_MOBILE_SDK_VERSION = "8.0.0";
-var SERVICE = "com.salesforce.smartsync";
+var SERVICE = "com.salesforce.mobilesync";
 
 var exec = require("com.salesforce.util.exec").exec;
 var defaultStoreConfig = {'isGlobalStore':false};
