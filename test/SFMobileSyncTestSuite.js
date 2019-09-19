@@ -25,13 +25,13 @@
  */
 "use strict";
 
-if (typeof SmartSyncTestSuite === 'undefined') {
+if (typeof MobileSyncTestSuite === 'undefined') {
 
 /**
  * Constructor
  */
-var SmartSyncTestSuite = function () {
-    SFTestSuite.call(this, "SmartSyncTestSuite");
+var MobileSyncTestSuite = function () {
+    SFTestSuite.call(this, "MobileSyncTestSuite");
     //default store config
     this.defaultStoreConfig = {"isGlobalStore" : false};
     this.defaultGlobalStoreConfig = {"isGlobalStore" : true};
@@ -41,18 +41,18 @@ var SmartSyncTestSuite = function () {
 };
 
 // We are sub-classing SFTestSuite
-SmartSyncTestSuite.prototype = new SFTestSuite();
-SmartSyncTestSuite.prototype.constructor = SmartSyncTestSuite;
+MobileSyncTestSuite.prototype = new SFTestSuite();
+MobileSyncTestSuite.prototype.constructor = MobileSyncTestSuite;
 
 
-// SmartSyncPlugin
+// MobileSyncPlugin
 var promiser = cordova.require("com.salesforce.util.promiser").promiser;
-SmartSyncTestSuite.prototype.cleanResyncGhosts = promiser(cordova.require("com.salesforce.plugin.smartsync"), "cleanResyncGhosts");
-SmartSyncTestSuite.prototype.reSync = promiser(cordova.require("com.salesforce.plugin.smartsync"), "reSync");
-SmartSyncTestSuite.prototype.syncDown = promiser(cordova.require("com.salesforce.plugin.smartsync"), "syncDown");
-SmartSyncTestSuite.prototype.syncUp = promiser(cordova.require("com.salesforce.plugin.smartsync"), "syncUp");
-SmartSyncTestSuite.prototype.getSyncStatus = promiser(cordova.require("com.salesforce.plugin.smartsync"), "getSyncStatus");
-SmartSyncTestSuite.prototype.deleteSync = promiser(cordova.require("com.salesforce.plugin.smartsync"), "deleteSync");
+MobileSyncTestSuite.prototype.cleanResyncGhosts = promiser(cordova.require("com.salesforce.plugin.mobilesync"), "cleanResyncGhosts");
+MobileSyncTestSuite.prototype.reSync = promiser(cordova.require("com.salesforce.plugin.mobilesync"), "reSync");
+MobileSyncTestSuite.prototype.syncDown = promiser(cordova.require("com.salesforce.plugin.mobilesync"), "syncDown");
+MobileSyncTestSuite.prototype.syncUp = promiser(cordova.require("com.salesforce.plugin.mobilesync"), "syncUp");
+MobileSyncTestSuite.prototype.getSyncStatus = promiser(cordova.require("com.salesforce.plugin.mobilesync"), "getSyncStatus");
+MobileSyncTestSuite.prototype.deleteSync = promiser(cordova.require("com.salesforce.plugin.mobilesync"), "deleteSync");
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -64,8 +64,8 @@ SmartSyncTestSuite.prototype.deleteSync = promiser(cordova.require("com.salesfor
 /**
  * TEST Force.StoreCache.init
  */
-SmartSyncTestSuite.prototype.testStoreCacheInit = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testStoreCacheInit = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var soupName = "soupFor_" + this.module.currentTestName; 
     Force.smartstoreClient.soupExists(self.defaultStoreConfig,soupName)
@@ -92,8 +92,8 @@ SmartSyncTestSuite.prototype.testStoreCacheInit = function() {
 /**
  * TEST Force.StoreCache.retrieve
  */
-SmartSyncTestSuite.prototype.testStoreCacheRetrieve = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testStoreCacheRetrieve = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var cache;
     var soupName = "soupFor_" + this.module.currentTestName; 
@@ -152,8 +152,8 @@ SmartSyncTestSuite.prototype.testStoreCacheRetrieve = function() {
 /**
  * TEST Force.StoreCache.save
  */
-SmartSyncTestSuite.prototype.testStoreCacheSave = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testStoreCacheSave = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var cache;
     var soupName = "soupFor_" + this.module.currentTestName; 
@@ -188,7 +188,7 @@ SmartSyncTestSuite.prototype.testStoreCacheSave = function() {
         assertContains(records[0], {Id:"007", Name:"JamesBond", Mission:"TopSecret2", Organization:"MI6"});
 
         console.log("## Saving partial record to cache with noMerge flag");
-        return cache.save({Id:"007", Mission:"TopSecret3"}, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
+        return cache.save({Id:"007", Mission:"TopSecret3"}, cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.OVERWRITE);
     })
     .then(function(record) {
         console.log("## Direct retrieve from underlying cache");
@@ -211,8 +211,8 @@ SmartSyncTestSuite.prototype.testStoreCacheSave = function() {
 /**
  * TEST Force.StoreCache.saveAll
  */
-SmartSyncTestSuite.prototype.testStoreCacheSaveAll = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testStoreCacheSaveAll = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var cache;
     var soupName = "soupFor_" + this.module.currentTestName; 
@@ -256,7 +256,7 @@ SmartSyncTestSuite.prototype.testStoreCacheSaveAll = function() {
 
         console.log("## Saving partial records to cache with noMerge flag");
         var partialRecords = [{Id:"007", Mission:"TopSecret"},{Id:"008", Team:"Team"}, {Id:"009", Organization:"Org"}];
-        return cache.saveAll(partialRecords, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
+        return cache.saveAll(partialRecords, cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.OVERWRITE);
     })
     .then(function(records) {
         console.log("## Direct retrieve from underlying cache");
@@ -282,8 +282,8 @@ SmartSyncTestSuite.prototype.testStoreCacheSaveAll = function() {
 /**
  * TEST Force.StoreCache.remove
  */
-SmartSyncTestSuite.prototype.testStoreCacheRemove = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testStoreCacheRemove = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var cache;
     var soupName = "soupFor_" + this.module.currentTestName; 
@@ -330,8 +330,8 @@ SmartSyncTestSuite.prototype.testStoreCacheRemove = function() {
 /**
  * TEST Force.StoreCache.find
  */
-SmartSyncTestSuite.prototype.testStoreCacheFind = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testStoreCacheFind = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var cache;
     var soupName = "soupFor_" + this.module.currentTestName; 
@@ -449,8 +449,8 @@ SmartSyncTestSuite.prototype.testStoreCacheFind = function() {
 /**
  * TEST Force.StoreCache.addLocalFields
  */
-SmartSyncTestSuite.prototype.testStoreCacheAddLocalFields = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testStoreCacheAddLocalFields = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var soupName = "soupFor_" + this.module.currentTestName; 
     var cache = new Force.StoreCache(soupName,null,null,this.defaultStoreConfig.isGlobalStore,this.defaultStoreConfig.storeName);
 
@@ -472,8 +472,8 @@ SmartSyncTestSuite.prototype.testStoreCacheAddLocalFields = function() {
 /**
  * TEST Force.StoreCache backed by global store
  */
-SmartSyncTestSuite.prototype.testStoreCacheWithGlobalStore = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testStoreCacheWithGlobalStore = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var cache;
     var cacheGlobal;
@@ -539,8 +539,8 @@ SmartSyncTestSuite.prototype.testStoreCacheWithGlobalStore = function() {
 /**
  * TEST Force.StoreCache backed by global store
  */
-SmartSyncTestSuite.prototype.testStoreCacheWithGlobalStoreNamed = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testStoreCacheWithGlobalStoreNamed = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var cache;
     var cacheGlobal;
@@ -612,8 +612,8 @@ SmartSyncTestSuite.prototype.testStoreCacheWithGlobalStoreNamed = function() {
 /**
  * TEST Force.SObjectType.describe
  */
-SmartSyncTestSuite.prototype.testSObjectTypeDescribe = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSObjectTypeDescribe = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var soupName = "soupFor_" + this.module.currentTestName; 
     var cache;
@@ -651,8 +651,8 @@ SmartSyncTestSuite.prototype.testSObjectTypeDescribe = function() {
 /**
  * TEST Force.SObjectType.getMetadata
  */
-SmartSyncTestSuite.prototype.testSObjectTypeGetMetadata = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSObjectTypeGetMetadata = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var soupName = "soupFor_" + this.module.currentTestName; 
     var cache;
@@ -690,8 +690,8 @@ SmartSyncTestSuite.prototype.testSObjectTypeGetMetadata = function() {
 /**
  * TEST Force.SObjectType.describeLayout
  */
-SmartSyncTestSuite.prototype.testSObjectTypeDescribeLayout = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSObjectTypeDescribeLayout = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var soupName = "soupFor_" + this.module.currentTestName; 
     var cache;
@@ -727,8 +727,8 @@ SmartSyncTestSuite.prototype.testSObjectTypeDescribeLayout = function() {
 /**
  * TEST Force.SObjectType cache merge by multiple instances
  */
-SmartSyncTestSuite.prototype.testSObjectTypeCacheOnlyMode = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSObjectTypeCacheOnlyMode = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var soupName = "soupFor_" + this.module.currentTestName; 
     var cache, data = {
@@ -768,8 +768,8 @@ SmartSyncTestSuite.prototype.testSObjectTypeCacheOnlyMode = function() {
 /**
  * TEST Force.SObjectType cache merge by multiple instances
  */
-SmartSyncTestSuite.prototype.testSObjectTypeCacheMerge = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSObjectTypeCacheMerge = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var soupName = "soupFor_" + this.module.currentTestName; 
     var cache, describeResult, metadataResult;
@@ -811,8 +811,8 @@ SmartSyncTestSuite.prototype.testSObjectTypeCacheMerge = function() {
 /**
  * TEST Force.SObjectType multiple types
  */
-SmartSyncTestSuite.prototype.testMultiSObjectTypes = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testMultiSObjectTypes = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var soupName = "soupFor_" + this.module.currentTestName; 
     var cache, accountDescribe, contactDescribe;
@@ -853,8 +853,8 @@ SmartSyncTestSuite.prototype.testMultiSObjectTypes = function() {
 /**
  * TEST Force.SObjectType.reset
  */
-SmartSyncTestSuite.prototype.testSObjectTypeReset = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSObjectTypeReset = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var soupName = "soupFor_" + this.module.currentTestName; 
     var cache;
@@ -904,8 +904,8 @@ SmartSyncTestSuite.prototype.testSObjectTypeReset = function() {
 /**
  * TEST Force.syncRemoteObjectWithCache for create method
  */
-SmartSyncTestSuite.prototype.testSyncRemoteObjectWithCacheCreate = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncRemoteObjectWithCacheCreate = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var soupName = "soupFor_" + this.module.currentTestName; 
     var cache;
@@ -995,8 +995,8 @@ SmartSyncTestSuite.prototype.testSyncRemoteObjectWithCacheCreate = function() {
 /**
  * TEST Force.syncRemoteObjectWithCache for read method
  */
-SmartSyncTestSuite.prototype.testSyncRemoteObjectWithCacheRead = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncRemoteObjectWithCacheRead = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var soupName = "soupFor_" + this.module.currentTestName; 
     var cache;
@@ -1052,8 +1052,8 @@ SmartSyncTestSuite.prototype.testSyncRemoteObjectWithCacheRead = function() {
 /**
  * TEST Force.syncRemoteObjectWithCache for update method
  */
-SmartSyncTestSuite.prototype.testSyncRemoteObjectWithCacheUpdate = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncRemoteObjectWithCacheUpdate = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var soupName = "soupFor_" + this.module.currentTestName; 
     var cache;
@@ -1145,8 +1145,8 @@ SmartSyncTestSuite.prototype.testSyncRemoteObjectWithCacheUpdate = function() {
 /**
  * TEST Force.syncRemoteObjectWithCache for delete method
  */
-SmartSyncTestSuite.prototype.testSyncRemoteObjectWithCacheDelete = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncRemoteObjectWithCacheDelete = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var soupName = "soupFor_" + this.module.currentTestName; 
     var cache;
@@ -1216,8 +1216,8 @@ SmartSyncTestSuite.prototype.testSyncRemoteObjectWithCacheDelete = function() {
 /**
  * TEST Force.syncSObjectWithServer for create method
  */
-SmartSyncTestSuite.prototype.testSyncSObjectWithServerCreate = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncSObjectWithServerCreate = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var id;
 
@@ -1247,8 +1247,8 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithServerCreate = function() {
 /**
  * TEST Force.syncSObjectWithServer for read method
  */
-SmartSyncTestSuite.prototype.testSyncSObjectWithServerRead = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncSObjectWithServerRead = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var id;
 
@@ -1275,8 +1275,8 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithServerRead = function() {
 /**
  * TEST Force.syncSObjectWithServer for update method
  */
-SmartSyncTestSuite.prototype.testSyncSObjectWithServerUpdate = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncSObjectWithServerUpdate = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var id;
 
@@ -1310,8 +1310,8 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithServerUpdate = function() {
 /**
  * TEST Force.syncSObjectWithServer for delete method
  */
-SmartSyncTestSuite.prototype.testSyncSObjectWithServerDelete = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncSObjectWithServerDelete = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var id;
 
@@ -1342,8 +1342,8 @@ SmartSyncTestSuite.prototype.testSyncSObjectWithServerDelete = function() {
 /**
  * TEST Force.syncSObject for method create
  */
-SmartSyncTestSuite.prototype.testSyncSObjectCreate = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncSObjectCreate = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
 
     var cache;
@@ -1392,8 +1392,8 @@ SmartSyncTestSuite.prototype.testSyncSObjectCreate = function() {
 /**
  * TEST Force.syncSObject for method retrieve
  */
-SmartSyncTestSuite.prototype.testSyncSObjectRetrieve = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncSObjectRetrieve = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
 
     var cache;
@@ -1475,8 +1475,8 @@ SmartSyncTestSuite.prototype.testSyncSObjectRetrieve = function() {
 /**
  * TEST Force.syncSObject for method update
  */
-SmartSyncTestSuite.prototype.testSyncSObjectUpdate = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncSObjectUpdate = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var cache;
     var soupName = "soupFor_" + this.module.currentTestName; 
@@ -1532,8 +1532,8 @@ SmartSyncTestSuite.prototype.testSyncSObjectUpdate = function() {
 /**
  * TEST Force.syncSObject for method delete
  */
-SmartSyncTestSuite.prototype.testSyncSObjectDelete = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncSObjectDelete = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var cache;
     var soupName = "soupFor_" + this.module.currentTestName; 
@@ -1598,8 +1598,8 @@ SmartSyncTestSuite.prototype.testSyncSObjectDelete = function() {
 /**
  * TEST Force.syncSObjectDetectConflict for method create
  */
-SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictCreate = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncSObjectDetectConflictCreate = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
 
     var cache, cacheForOriginals;
@@ -1656,8 +1656,8 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictCreate = function() {
 /**
  * TEST Force.syncSObjectDetectConflict for method retrieve
  */
-SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictRetrieve = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncSObjectDetectConflictRetrieve = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
 
     var cache, cacheForOriginals;
@@ -1743,8 +1743,8 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictRetrieve = function() 
 /**
  * TEST Force.syncSObjectDetectConflict for method update
  */
-SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var cache, cacheForOriginals;
     var soupName = "soupFor_" + this.module.currentTestName; 
@@ -1922,8 +1922,8 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictUpdate = function() {
 /**
  * TEST Force.syncSObjectDetectConflict for method delete
  */
-SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var cache, cacheForOriginals;
     var soupName = "soupFor_" + this.module.currentTestName; 
@@ -2111,8 +2111,8 @@ SmartSyncTestSuite.prototype.testSyncSObjectDetectConflictDelete = function() {
 /**
  * TEST Force.SObject.fetch
  */
-SmartSyncTestSuite.prototype.testSObjectFetch = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSObjectFetch = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var soupName = "soupFor_" + this.module.currentTestName; 
     var soupNameForOriginals = "originalsFor" + soupName;
@@ -2157,8 +2157,8 @@ SmartSyncTestSuite.prototype.testSObjectFetch = function() {
 /**
  * TEST Force.SObject.save
  */
-SmartSyncTestSuite.prototype.testSObjectSave = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSObjectSave = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var soupName = "soupFor_" + this.module.currentTestName; 
     var soupNameForOriginals = "originalsFor" + soupName;
@@ -2198,8 +2198,8 @@ SmartSyncTestSuite.prototype.testSObjectSave = function() {
 /**
  * TEST Force.SObject.destroy
  */
-SmartSyncTestSuite.prototype.testSObjectDestroy = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSObjectDestroy = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var soupName = "soupFor_" + this.module.currentTestName; 
     var soupNameForOriginals = "originalsFor" + soupName;
@@ -2287,8 +2287,8 @@ SmartSyncTestSuite.prototype.testSObjectDestroy = function() {
 /**
  * TEST Force.syncApexRestObjectWithServer For create method
  */
-SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerCreate = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncApexRestObjectWithServerCreate = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var id;
 
@@ -2318,8 +2318,8 @@ SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerCreate = function()
 /**
  * TEST Force.syncApexRestObjectWithServer for read method
  */
-SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerRead = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncApexRestObjectWithServerRead = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var id;
 
@@ -2346,8 +2346,8 @@ SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerRead = function() {
 /**
  * TEST Force.syncApexRestObjectWithServer for update method
  */
-SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerUpdate = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncApexRestObjectWithServerUpdate = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var id;
 
@@ -2381,8 +2381,8 @@ SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerUpdate = function()
 /**
  * TEST Force.syncApexRestObjectWithServer for delete method
  */
-SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerDelete = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncApexRestObjectWithServerDelete = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var id;
 
@@ -2447,8 +2447,8 @@ SmartSyncTestSuite.prototype.testSyncApexRestObjectWithServerDelete = function()
 /**
  * TEST Force.fetchApexRestObjectsFromServer
  */
-SmartSyncTestSuite.prototype.testFetchApexRestObjectsFromServer = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testFetchApexRestObjectsFromServer = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var idToName = {};
     var accountNamePrefix = "testFetchApexRestObjectsFromServer" + (new Date()).getTime(); // because we query by name, we don't want to pick up records created by another test run
@@ -2482,8 +2482,8 @@ SmartSyncTestSuite.prototype.testFetchApexRestObjectsFromServer = function() {
 /**
  * TEST Force.fetchSObjectsFromServer
  */
-SmartSyncTestSuite.prototype.testFetchSObjectsFromServer = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testFetchSObjectsFromServer = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var idToName = {};
 
@@ -2510,8 +2510,8 @@ SmartSyncTestSuite.prototype.testFetchSObjectsFromServer = function() {
 /**
  * TEST Force.fetchSObjects
  */
-SmartSyncTestSuite.prototype.testFetchSObjects = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testFetchSObjects = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var idToName = {};
     var soupName = "soupFor_" + this.module.currentTestName; 
@@ -2616,8 +2616,8 @@ SmartSyncTestSuite.prototype.testFetchSObjects = function() {
 /**
  * TEST Force.SObjectCollection.fetch
  */
-SmartSyncTestSuite.prototype.testSObjectCollectionFetch = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSObjectCollectionFetch = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var idToName = {};
     var soupName = "soupFor_" + this.module.currentTestName; 
@@ -2740,10 +2740,10 @@ SmartSyncTestSuite.prototype.testSObjectCollectionFetch = function() {
 //-------------------------------------------------------------------------------------------------------
 
 /**
- * TEST smartsyncplugin sync down
+ * TEST mobilesyncplugin sync down
  */
-SmartSyncTestSuite.prototype.testSyncDown = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncDown = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var idToName = {};
     var soupName = "soupFor_" + this.module.currentTestName; 
@@ -2762,7 +2762,7 @@ SmartSyncTestSuite.prototype.testSyncDown = function() {
         })
         .then(function() {
             console.log("## Calling sync down");
-            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
+            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.OVERWRITE);
         })
         .then(function() {
             return Promise.all([deleteRecords(idToName), Force.smartstoreClient.removeSoup(self.defaultStoreConfig,soupName)]);
@@ -2773,10 +2773,10 @@ SmartSyncTestSuite.prototype.testSyncDown = function() {
 };
 
 /**
- * TEST smartsyncplugin sync down to global store soup
+ * TEST mobilesyncplugin sync down to global store soup
  */
-SmartSyncTestSuite.prototype.testSyncDownToGlobalStore = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncDownToGlobalStore = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var idToName = {};
     var soupName = "soupFor_" + this.module.currentTestName; 
@@ -2794,7 +2794,7 @@ SmartSyncTestSuite.prototype.testSyncDownToGlobalStore = function() {
         })
         .then(function() {
             console.log("## Calling sync down");
-            return self.trySyncDown(self.defaultGlobalStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
+            return self.trySyncDown(self.defaultGlobalStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.OVERWRITE);
         })
         .then(function() {
             console.log("## Check both stores");
@@ -2812,10 +2812,10 @@ SmartSyncTestSuite.prototype.testSyncDownToGlobalStore = function() {
 };
 
 /**
- * TEST smartsyncplugin sync down to global store soup
+ * TEST mobilesyncplugin sync down to global store soup
  */
-SmartSyncTestSuite.prototype.testSyncDownToGlobalStoreNamed = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncDownToGlobalStoreNamed = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var idToName = {};
     var soupName = "soupFor_" + this.module.currentTestName; 
@@ -2834,7 +2834,7 @@ SmartSyncTestSuite.prototype.testSyncDownToGlobalStoreNamed = function() {
         })
         .then(function() {
             console.log("## Calling sync down");
-            return self.trySyncDown(globalStoreConfigWithName,cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
+            return self.trySyncDown(globalStoreConfigWithName,cache, soupName, idToName, cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.OVERWRITE);
         })
         .then(function() {
             console.log("## Check both stores");
@@ -2854,10 +2854,10 @@ SmartSyncTestSuite.prototype.testSyncDownToGlobalStoreNamed = function() {
 };
 
 /**
- * TEST smartsyncplugin sync down with merge mode leave-if-changed
+ * TEST mobilesyncplugin sync down with merge mode leave-if-changed
  */
-SmartSyncTestSuite.prototype.testSyncDownWithNoOverwrite = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncDownWithNoOverwrite = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var idToName = {};
     var idToUpdatedName = {};
@@ -2878,7 +2878,7 @@ SmartSyncTestSuite.prototype.testSyncDownWithNoOverwrite = function() {
         })
         .then(function() {
             console.log("## Calling sync down");
-            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
+            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.OVERWRITE);
         })
         .then(function() {
             console.log("## Updating local records");
@@ -2891,7 +2891,7 @@ SmartSyncTestSuite.prototype.testSyncDownWithNoOverwrite = function() {
         })
         .then(function() {
             console.log("## Calling sync down with mergeMode leave-if-changed");
-            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToUpdatedName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.LEAVE_IF_CHANGED);
+            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToUpdatedName, cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.LEAVE_IF_CHANGED);
         })
         .then(function() {
             console.log("## Checking cache");
@@ -2907,7 +2907,7 @@ SmartSyncTestSuite.prototype.testSyncDownWithNoOverwrite = function() {
             });
 
             console.log("## Calling sync down with mergeMode overwrite");
-            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
+            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.OVERWRITE);
         })
         .then(function() {
             console.log("## Checking cache");
@@ -2930,10 +2930,10 @@ SmartSyncTestSuite.prototype.testSyncDownWithNoOverwrite = function() {
 };
 
 /**
- * TEST smartsyncplugin sync down with refresh-sync-down
+ * TEST mobilesyncplugin sync down with refresh-sync-down
  */
-SmartSyncTestSuite.prototype.testRefreshSyncDown = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testRefreshSyncDown = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var idToName = {};
     var idToUpdatedName = {};
@@ -2952,7 +2952,7 @@ SmartSyncTestSuite.prototype.testRefreshSyncDown = function() {
         })
         .then(function() {
             console.log("## Calling sync down");
-            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
+            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.OVERWRITE);
         })
         .then(function() {
             console.log("## Updating records on server");
@@ -2967,7 +2967,7 @@ SmartSyncTestSuite.prototype.testRefreshSyncDown = function() {
             console.log("## Calling refresh sync down");
             idToName = _.extend(idToName, idToUpdatedName);
             var target = {soupName:soupName, type:"refresh", sobjectType:"Account", fieldlist:["Id", "Name"]};
-            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE, target);
+            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.OVERWRITE, target);
         })
         .then(function() {
             return Promise.all([deleteRecords(idToName), Force.smartstoreClient.removeSoup(self.defaultStoreConfig,soupName)]);
@@ -2979,10 +2979,10 @@ SmartSyncTestSuite.prototype.testRefreshSyncDown = function() {
 
 
 /**
- * TEST smartsyncplugin reSync
+ * TEST mobilesyncplugin reSync
  */
-SmartSyncTestSuite.prototype.testReSync = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testReSync = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var idToName = {};
     var idToUpdatedName = {};
@@ -3002,7 +3002,7 @@ SmartSyncTestSuite.prototype.testReSync = function() {
         })
         .then(function() {
             console.log("## Calling sync down");
-            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
+            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.OVERWRITE);
         })
         .then(function(syncId) {
             syncDownId = syncId;
@@ -3031,10 +3031,10 @@ SmartSyncTestSuite.prototype.testReSync = function() {
 };
 
 /**
- * TEST smartsyncplugin cleanResyncGhosts
+ * TEST mobilesyncplugin cleanResyncGhosts
  */
-SmartSyncTestSuite.prototype.testCleanResyncGhosts = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testCleanResyncGhosts = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var idToName = {};
     var ids;
@@ -3057,7 +3057,7 @@ SmartSyncTestSuite.prototype.testCleanResyncGhosts = function() {
         })
         .then(function() {
             console.log("## Calling sync down");
-            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.LEAVE_IF_CHANGED);
+            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.LEAVE_IF_CHANGED);
         })
         .then(function(syncId) {
             syncDownId = syncId;
@@ -3105,10 +3105,10 @@ SmartSyncTestSuite.prototype.testCleanResyncGhosts = function() {
 };
 
 /**
- * TEST smartsyncplugin syncDown + getSyncStatus + deleteSync by id
+ * TEST mobilesyncplugin syncDown + getSyncStatus + deleteSync by id
  */
-SmartSyncTestSuite.prototype.testSyncDownGetSyncDeleteSyncById = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncDownGetSyncDeleteSyncById = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var idToName = {};
     var soupName = "soupFor_" + this.module.currentTestName; 
@@ -3128,7 +3128,7 @@ SmartSyncTestSuite.prototype.testSyncDownGetSyncDeleteSyncById = function() {
         })
         .then(function() {
             console.log("## Calling sync down");
-            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
+            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.OVERWRITE);
         })
         .then(function(syncId) {
             syncDownId = syncId;
@@ -3151,10 +3151,10 @@ SmartSyncTestSuite.prototype.testSyncDownGetSyncDeleteSyncById = function() {
 };
 
 /**
- * TEST smartsyncplugin syncDown + getSyncStatus + deleteSync by name
+ * TEST mobilesyncplugin syncDown + getSyncStatus + deleteSync by name
  */
-SmartSyncTestSuite.prototype.testSyncDownGetSyncDeleteSyncByName = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncDownGetSyncDeleteSyncByName = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var idToName = {};
     var soupName = "soupFor_" + this.module.currentTestName;
@@ -3175,7 +3175,7 @@ SmartSyncTestSuite.prototype.testSyncDownGetSyncDeleteSyncByName = function() {
         })
         .then(function() {
             console.log("## Calling sync down");
-            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE, null, syncName);
+            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.OVERWRITE, null, syncName);
         })
         .then(function(syncId) {
             syncDownId = syncId;
@@ -3208,14 +3208,14 @@ SmartSyncTestSuite.prototype.testSyncDownGetSyncDeleteSyncByName = function() {
 //-------------------------------------------------------------------------------------------------------
 
 /**
- * TEST smartsyncplugin sync up with locally updated records
+ * TEST mobilesyncplugin sync up with locally updated records
  */
-SmartSyncTestSuite.prototype.testSyncUpLocallyUpdated = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncUpLocallyUpdated = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var idToName = {};
     var updatedRecords;
-    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE};
+    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.OVERWRITE};
     var soupName = "soupFor_" + this.module.currentTestName; 
     var cache;
 
@@ -3231,7 +3231,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdated = function() {
         })
         .then(function() {
             console.log("## Calling sync down");
-            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
+            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.OVERWRITE);
         })
         .then(function() {
             console.log("## Updating local records");
@@ -3269,14 +3269,14 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdated = function() {
 };
 
 /**
- * TEST smartsyncplugin sync up with locally updated records in global store soup
+ * TEST mobilesyncplugin sync up with locally updated records in global store soup
  */
-SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithGlobalStore = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithGlobalStore = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var idToName = {};
     var updatedRecords;
-    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE};
+    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.OVERWRITE};
     var soupName = "soupFor_" + this.module.currentTestName; 
     var cache;
 
@@ -3292,7 +3292,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithGlobalStore = function(
         })
         .then(function() {
             console.log("## Calling sync down");
-            return self.trySyncDown(self.defaultGlobalStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
+            return self.trySyncDown(self.defaultGlobalStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.OVERWRITE);
         })
         .then(function() {
             console.log("## Updating local records");
@@ -3338,14 +3338,14 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithGlobalStore = function(
 
 
 /**
- * TEST smartsyncplugin sync up with locally updated records in global store soup
+ * TEST mobilesyncplugin sync up with locally updated records in global store soup
  */
-SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithGlobalStoreNamed = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithGlobalStoreNamed = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var idToName = {};
     var updatedRecords;
-    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE};
+    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.OVERWRITE};
     var soupName = "soupFor_" + this.module.currentTestName; 
     var cache;
     var storeConfigWithName =  {"isGlobalStore" : false, "storeName" : "userStoreFor_" + this.module.currentTestName};
@@ -3364,7 +3364,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithGlobalStoreNamed = func
         })
         .then(function() {
             console.log("## Calling sync down");
-            return self.trySyncDown(globalStoreConfigWithName,cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
+            return self.trySyncDown(globalStoreConfigWithName,cache, soupName, idToName, cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.OVERWRITE);
         })
         .then(function() {
             console.log("## Updating local records");
@@ -3411,15 +3411,15 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithGlobalStoreNamed = func
 };
 
 /**
- * TEST smartsyncplugin sync up with locally updated records and merge mode leave-if-changed
+ * TEST mobilesyncplugin sync up with locally updated records and merge mode leave-if-changed
  */
-SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithNoOverwrite = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithNoOverwrite = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var idToName = {};
     var idToUpdatedName = {};
     var updatedLocalRecords;
-    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.LEAVE_IF_CHANGED};
+    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.LEAVE_IF_CHANGED};
     var soupName = "soupFor_" + this.module.currentTestName; 
     var cache;
 
@@ -3435,7 +3435,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithNoOverwrite = function(
         })
         .then(function() {
             console.log("## Calling sync down");
-            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.LEAVE_IF_CHANGED);
+            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.LEAVE_IF_CHANGED);
         })
         .then(function() {
             console.log("## Updating local records");
@@ -3485,14 +3485,14 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyUpdatedWithNoOverwrite = function(
 };
 
 /**
- * TEST smartsyncplugin sync up with locally deleted records
+ * TEST mobilesyncplugin sync up with locally deleted records
  */
-SmartSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var idToName = {};
     var deletedRecords;
-    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE};
+    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.OVERWRITE};
     var soupName = "soupFor_" + this.module.currentTestName; 
     var cache;
 
@@ -3508,7 +3508,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
         })
         .then(function() {
             console.log("## Calling sync down");
-            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE);
+            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.OVERWRITE);
         })
         .then(function() {
             console.log("## Deleted local records");
@@ -3545,15 +3545,15 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeleted = function() {
 };
 
 /**
- * TEST smartsyncplugin sync up with locally deleted records and merge mode leave-if-changed
+ * TEST mobilesyncplugin sync up with locally deleted records and merge mode leave-if-changed
  */
-SmartSyncTestSuite.prototype.testSyncUpLocallyDeletedWithNoOverwrite = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncUpLocallyDeletedWithNoOverwrite = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var idToName = {};
     var idToUpdatedName = {};
     var deletedRecords;
-    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.LEAVE_IF_CHANGED};
+    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.LEAVE_IF_CHANGED};
     var soupName = "soupFor_" + this.module.currentTestName; 
     var cache;
 
@@ -3569,7 +3569,7 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeletedWithNoOverwrite = function(
         })
         .then(function() {
             console.log("## Calling sync down");
-            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.LEAVE_IF_CHANGED);
+            return self.trySyncDown(self.defaultStoreConfig,cache, soupName, idToName, cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.LEAVE_IF_CHANGED);
         })
         .then(function() {
             console.log("## Deleted local records");
@@ -3622,14 +3622,14 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyDeletedWithNoOverwrite = function(
 };
 
 /**
- * TEST smartsyncplugin sync up with locally created records
+ * TEST mobilesyncplugin sync up with locally created records
  */
-SmartSyncTestSuite.prototype.testSyncUpLocallyCreated = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncUpLocallyCreated = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var idToName = {};
     var createdRecords;
-    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE};
+    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.OVERWRITE};
     var soupName = "soupFor_" + this.module.currentTestName; 
     var cache;
 
@@ -3681,14 +3681,14 @@ SmartSyncTestSuite.prototype.testSyncUpLocallyCreated = function() {
 
 
 /**
- * TEST smartsyncplugin syncUp + getSyncStatus + deleteSync by id
+ * TEST mobilesyncplugin syncUp + getSyncStatus + deleteSync by id
  */
-SmartSyncTestSuite.prototype.testSyncUpGetSyncDeleteSyncById = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncUpGetSyncDeleteSyncById = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var idToName = {};
     var createdRecords;
-    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE};
+    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.OVERWRITE};
     var soupName = "soupFor_" + this.module.currentTestName; 
     var cache;
     var syncUpId;
@@ -3733,14 +3733,14 @@ SmartSyncTestSuite.prototype.testSyncUpGetSyncDeleteSyncById = function() {
 };
 
 /**
- * TEST smartsyncplugin syncUp + getSyncStatus + deleteSync by name
+ * TEST mobilesyncplugin syncUp + getSyncStatus + deleteSync by name
  */
-SmartSyncTestSuite.prototype.testSyncUpGetSyncDeleteSyncByName = function() {
-    console.log("# In SmartSyncTestSuite." + this.module.currentTestName);
+MobileSyncTestSuite.prototype.testSyncUpGetSyncDeleteSyncByName = function() {
+    console.log("# In MobileSyncTestSuite." + this.module.currentTestName);
     var self = this;
     var idToName = {};
     var createdRecords;
-    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.smartsync").MERGE_MODE.OVERWRITE};
+    var options = {fieldlist: ["Name"], mergeMode: cordova.require("com.salesforce.plugin.mobilesync").MERGE_MODE.OVERWRITE};
     var soupName = "soupFor_" + this.module.currentTestName; 
     var syncName = "syncFor_" + this.module.currentTestName;
     var cache;
@@ -3835,7 +3835,7 @@ var getCaller = function() {
 		throw new Error();
 	} catch ( e ) {
         var simplifiedStack = _.filter(_.map(e.stack.split("\n"),
-                                             function(line) {var m = line.match(/SmartSyncTestSuite.js:[0-9]*:[0-9]*/); return m == null ? null : m[0];}),
+                                             function(line) {var m = line.match(/MobileSyncTestSuite.js:[0-9]*:[0-9]*/); return m == null ? null : m[0];}),
                                        function(x) { return x != null; });
         return simplifiedStack[2]; // 0->getCaller, 1-->assertContains or checkLocalFlags, 2-->the caller we are interested in!
 	}
@@ -4046,7 +4046,7 @@ var tryConflictDetection = function(message, cache, cacheForOriginals, theirs, y
 /**
  Helper function to run sync down and consume all status updates until done
  */
-SmartSyncTestSuite.prototype.trySyncDown = function(storeConfig, cache, soupName, idToName, mergeMode, target, syncName) {
+MobileSyncTestSuite.prototype.trySyncDown = function(storeConfig, cache, soupName, idToName, mergeMode, target, syncName) {
     var isGlobalStore = storeConfig.isGlobalStore;
     var options = {mergeMode: mergeMode};
     target = target || {type:"soql", query:"SELECT Id, Name, LastModifiedDate FROM Account WHERE Id IN ('" +  _.keys(idToName).join("','") + "') ORDER BY Name"};
@@ -4076,7 +4076,7 @@ SmartSyncTestSuite.prototype.trySyncDown = function(storeConfig, cache, soupName
 /**
  Helper function to run reSync and consume all status updates until done
  */
-SmartSyncTestSuite.prototype.tryReSync = function(cache, soupName, idToName, syncDownId, updatedCount) {
+MobileSyncTestSuite.prototype.tryReSync = function(cache, soupName, idToName, syncDownId, updatedCount) {
     var numberRecords = _.keys(idToName).length;
     return this.reSync(syncDownId)
         .then(function(sync) {
@@ -4103,7 +4103,7 @@ SmartSyncTestSuite.prototype.tryReSync = function(cache, soupName, idToName, syn
 /**
  Helper function to run sync up and consume all status updates until done
  */
-SmartSyncTestSuite.prototype.trySyncUp = function(storeConfig, soupName, options, syncName) {
+MobileSyncTestSuite.prototype.trySyncUp = function(storeConfig, soupName, options, syncName) {
     var target = null;
     var syncUpId;
     return this.syncUp(storeConfig, target, soupName, options, syncName)
