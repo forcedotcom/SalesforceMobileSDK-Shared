@@ -72,7 +72,7 @@ SDKInfoTestSuite.prototype.testGetInfo = function()  {
             QUnit.equal(sdkInfo.forcePluginsAvailable[2], "com.salesforce.sdkinfo", "wrong force plugins");
             QUnit.equal(sdkInfo.forcePluginsAvailable[3], "com.salesforce.sfaccountmanager", "wrong force plugins");
             QUnit.equal(sdkInfo.forcePluginsAvailable[4], "com.salesforce.smartstore", "wrong force plugins");
-            QUnit.equal(sdkInfo.forcePluginsAvailable[5], "com.salesforce.smartsync", "wrong force plugins");
+            QUnit.equal(sdkInfo.forcePluginsAvailable[5], "com.salesforce.mobilesync", "wrong force plugins");
             QUnit.equal(sdkInfo.forcePluginsAvailable[6], "com.salesforce.testrunner", "wrong force plugins");
             // bootConfig
             QUnit.ok(sdkInfo.bootConfig.isLocal, "wrong bootConfig.isLocal");

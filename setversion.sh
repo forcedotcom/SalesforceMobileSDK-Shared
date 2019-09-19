@@ -11,7 +11,7 @@ usage ()
 {
     echo "Use this script to set Mobile SDK version number in source files"
     echo "Usage: $0 -v <version>"
-    echo "  where: version is the version e.g. 7.2.0"
+    echo "  where: version is the version e.g. 8.0.0"
 }
 
 parse_opts ()
@@ -72,6 +72,15 @@ parse_opts "$@"
 echo -e "${YELLOW}*** SETTING VERSION TO ${OPT_VERSION} ***${NC}"
 echo "*** Updating package.json ***"
 update_package_json "./package.json" "${OPT_VERSION}"
+
+echo "*** Updating bower.json ***"
+update_package_json "./tools/bower.json" "${OPT_VERSION}"
+
+echo "*** Updating package.json in tools ***"
+update_package_json "./tools/package.json" "${OPT_VERSION}"
+
+echo "*** Updating package-lock.json ***"
+update_package_json "./tools/package-lock.json" "${OPT_VERSION}"
 
 echo "*** Updating MockSDKInfo test ***"
 update_mock_sdk_info "./test/MockSDKInfo.js" "${OPT_VERSION}"

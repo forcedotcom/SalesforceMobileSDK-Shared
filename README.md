@@ -23,9 +23,9 @@ Library to do file related REST API calls from JavaScript.
 
 Library to do REST API calls from JavaScript using promises instead of callbacks.
 
-**smartsync.js**
+**mobilesync.js**
 
-Contains the SmartSync data library. 
+Contains the MobileSync data library. 
 This library depends on force.js and cordova.force.js. It also requires underscore and backbone.
 
 # /test
@@ -36,7 +36,7 @@ Contains all the tests for the SalesforceMobileSDK JavaScript libraries.
 
 HTML page to run the tests outside the container.
 
-**MockCordova.js, MockSDKInfo.js, MockSmartStore.js, MockSmartSyncPlugin.js**
+**MockCordova.js, MockSDKInfo.js, MockSmartStore.js, MockMobileSyncPlugin.js**
 
 Libraries used to mock the container when running tests directly in a browser.
 
@@ -48,6 +48,6 @@ Super class of test suites.
 
 Test suites for SmartStore.
 
-**SFSmartSyncTestSuite.js**
+**SFMobileSyncTestSuite.js**
 
-Test suite for SmartSync library.
+Test suite for MobileSync library.
