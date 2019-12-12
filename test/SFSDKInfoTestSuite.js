@@ -59,7 +59,7 @@ SDKInfoTestSuite.prototype.testGetInfo = function()  {
     self.getInfo()
         .then(function(sdkInfo) {
             // sdkVersion
-        	QUnit.ok(sdkInfo.sdkVersion.indexOf("7.3.0") == 0, "expected different sdk version");
+        	QUnit.ok(sdkInfo.sdkVersion.indexOf("8.0.0") == 0, "expected different sdk version");
             // appName
             QUnit.ok(sdkInfo.appName == "SalesforceHybridSDKTestApp" || sdkInfo.appName == "SalesforceHybridTest", "expected different app name");
             // appVersion
@@ -67,12 +67,12 @@ SDKInfoTestSuite.prototype.testGetInfo = function()  {
             // forcePluginsAvailable
             QUnit.equal(sdkInfo.forcePluginsAvailable.length, 7, "wrong force plugins");
             sdkInfo.forcePluginsAvailable.sort();
-            QUnit.equal(sdkInfo.forcePluginsAvailable[0], "com.salesforce.network", "wrong force plugins");
-            QUnit.equal(sdkInfo.forcePluginsAvailable[1], "com.salesforce.oauth", "wrong force plugins");
-            QUnit.equal(sdkInfo.forcePluginsAvailable[2], "com.salesforce.sdkinfo", "wrong force plugins");
-            QUnit.equal(sdkInfo.forcePluginsAvailable[3], "com.salesforce.sfaccountmanager", "wrong force plugins");
-            QUnit.equal(sdkInfo.forcePluginsAvailable[4], "com.salesforce.smartstore", "wrong force plugins");
-            QUnit.equal(sdkInfo.forcePluginsAvailable[5], "com.salesforce.smartsync", "wrong force plugins");
+            QUnit.equal(sdkInfo.forcePluginsAvailable[0], "com.salesforce.mobilesync", "wrong force plugins");
+            QUnit.equal(sdkInfo.forcePluginsAvailable[1], "com.salesforce.network", "wrong force plugins");
+            QUnit.equal(sdkInfo.forcePluginsAvailable[2], "com.salesforce.oauth", "wrong force plugins");
+            QUnit.equal(sdkInfo.forcePluginsAvailable[3], "com.salesforce.sdkinfo", "wrong force plugins");
+            QUnit.equal(sdkInfo.forcePluginsAvailable[4], "com.salesforce.sfaccountmanager", "wrong force plugins");
+            QUnit.equal(sdkInfo.forcePluginsAvailable[5], "com.salesforce.smartstore", "wrong force plugins");
             QUnit.equal(sdkInfo.forcePluginsAvailable[6], "com.salesforce.testrunner", "wrong force plugins");
             // bootConfig
             QUnit.ok(sdkInfo.bootConfig.isLocal, "wrong bootConfig.isLocal");

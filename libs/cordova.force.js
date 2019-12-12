@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "7.3.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "8.0.0";
 
 /**
  * Utilify functions for logging
@@ -182,7 +182,8 @@ cordova.define("com.salesforce.util.bootstrap", function(require, exports, modul
  */
 cordova.define("com.salesforce.util.exec", function(require, exports, module) {
     var exec = function(pluginVersion, successCB, errorCB, service, action, args) {
-        var tag = "TIMING " + service + ":" + action;
+        var uniqueNumber = new Date().valueOf() + Math.random();
+        var tag = "TIMING " + service + ":" + action + ":" + uniqueNumber;
         console.time(tag);
         args.unshift("pluginSDKVersion:" + pluginVersion);
         var cordovaExec = require('cordova/exec');
@@ -1078,8 +1079,8 @@ cordova.define("com.salesforce.plugin.smartstore.client", function(require, expo
 // For backward compatibility
 navigator.smartstoreClient = cordova.require("com.salesforce.plugin.smartstore.client");
 
-cordova.define("com.salesforce.plugin.smartsync", function (require, exports, module) {
-    var SERVICE = "com.salesforce.smartsync";
+cordova.define("com.salesforce.plugin.mobilesync", function (require, exports, module) {
+    var SERVICE = "com.salesforce.mobilesync";
 
     var exec = require("com.salesforce.util.exec").exec;
     var defaultStoreConfig = {'isGlobalStore':false};

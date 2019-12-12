@@ -25,9 +25,10 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "7.3.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "8.0.0";
 var exec = function(pluginVersion, successCB, errorCB, service, action, args) {
-    var tag = "TIMING " + service + ":" + action;
+    var uniqueNumber = new Date().valueOf() + Math.random();
+    var tag = "TIMING " + service + ":" + action + ":" + uniqueNumber;
     console.time(tag);
     args.unshift("pluginSDKVersion:" + pluginVersion);
     var cordovaExec = require('cordova/exec');

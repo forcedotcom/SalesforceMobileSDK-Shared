@@ -1,4 +1,4 @@
-cordova.define("com.salesforce.plugin.smartsync", function(require, exports, module) {
+cordova.define("com.salesforce.plugin.mobilesync", function(require, exports, module) {
 /*
  * Copyright (c) 2012-present, salesforce.com, inc.
  * All rights reserved.
@@ -26,8 +26,8 @@ cordova.define("com.salesforce.plugin.smartsync", function(require, exports, mod
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "7.3.0";
-var SERVICE = "com.salesforce.smartsync";
+var SALESFORCE_MOBILE_SDK_VERSION = "8.0.0";
+var SERVICE = "com.salesforce.mobilesync";
 
 var exec = require("com.salesforce.util.exec").exec;
 var defaultStoreConfig = {'isGlobalStore':false};

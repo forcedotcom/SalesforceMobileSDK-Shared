@@ -25,12 +25,12 @@
  */
 
 /**
- * MockSmartSyncPlugin
+ * MockMobileSyncPlugin
  * Meant for development and testing only, the data is stored in SessionStorage, queries do full scans.
  * NB: cleanResyncGhosts only works for soql sync down
  */
 
-var MockSmartSyncPlugin = (function(window) {
+var MockMobileSyncPlugin = (function(window) {
     // Constructor
     var module = function(storeConfig) {
         this.storeConfig = storeConfig;
@@ -145,7 +145,7 @@ var MockSmartSyncPlugin = (function(window) {
                 successCB(sync);
 
                 if (target.type == "refresh") {
-                    // smartsync.js doesn't have something equivalent to the (new in 5.0) refresh sync down
+                    // mobilesync.js doesn't have something equivalent to the (new in 5.0) refresh sync down
                     // So we need to get the local ids, build a soql query out of them
                     // And use that for the collection
                     cache.find({queryType:"range", orderPath:cache.keyField, pageSize:500}) // XXX not handling case with more than 500 local ids
@@ -328,7 +328,7 @@ var SyncManagerMap = (function() {
          syncManager = isGlobalStore?this.globalSyncManagers[storeName]:this.userSyncManagers[storeName];
 
          if(syncManager == null) {
-            syncManager = new MockSmartSyncPlugin({'isGlobalStore': isGlobalStore,'storeName' :storeName});
+            syncManager = new MockMobileSyncPlugin({'isGlobalStore': isGlobalStore,'storeName' :storeName});
             if(isGlobalStore == true)
                this.globalSyncManagers[storeName] = syncManager;
             else
@@ -376,34 +376,34 @@ var syncManagerMap = new SyncManagerMap();
 
 (function (cordova, syncManager, globalSyncManager) {
 
-    var SMARTSYNC_SERVICE = "com.salesforce.smartsync";
+    var MOBILESYNC_SERVICE = "com.salesforce.mobilesync";
 
-    cordova.interceptExec(SMARTSYNC_SERVICE, "syncUp", function (successCB, errorCB, args) {
+    cordova.interceptExec(MOBILESYNC_SERVICE, "syncUp", function (successCB, errorCB, args) {
         var mgr = syncManagerMap.getSyncManager(args);
         mgr.syncUp(args[0].target, args[0].soupName, args[0].options, args[0].syncName, successCB, errorCB);
     });
 
-    cordova.interceptExec(SMARTSYNC_SERVICE, "syncDown", function (successCB, errorCB, args) {
+    cordova.interceptExec(MOBILESYNC_SERVICE, "syncDown", function (successCB, errorCB, args) {
         var mgr = syncManagerMap.getSyncManager(args);
         mgr.syncDown(args[0].target, args[0].soupName, args[0].options, args[0].syncName, successCB, errorCB);
     });
 
-    cordova.interceptExec(SMARTSYNC_SERVICE, "getSyncStatus", function (successCB, errorCB, args) {
+    cordova.interceptExec(MOBILESYNC_SERVICE, "getSyncStatus", function (successCB, errorCB, args) {
         var mgr = syncManagerMap.getSyncManager(args);
         mgr.getSyncStatus(args[0].syncId || args[0].syncName, successCB, errorCB);
     });
 
-    cordova.interceptExec(SMARTSYNC_SERVICE, "reSync", function (successCB, errorCB, args) {
+    cordova.interceptExec(MOBILESYNC_SERVICE, "reSync", function (successCB, errorCB, args) {
         var mgr = syncManagerMap.getSyncManager(args);
         mgr.reSync(args[0].syncId || args[0].syncName, successCB, errorCB);
     });
 
-    cordova.interceptExec(SMARTSYNC_SERVICE, "cleanResyncGhosts", function (successCB, errorCB, args) {
+    cordova.interceptExec(MOBILESYNC_SERVICE, "cleanResyncGhosts", function (successCB, errorCB, args) {
         var mgr = syncManagerMap.getSyncManager(args);
         mgr.cleanResyncGhosts(args[0].syncId, successCB, errorCB);
     });
 
-    cordova.interceptExec(SMARTSYNC_SERVICE, "deleteSync", function (successCB, errorCB, args) {
+    cordova.interceptExec(MOBILESYNC_SERVICE, "deleteSync", function (successCB, errorCB, args) {
         var mgr = syncManagerMap.getSyncManager(args);
         mgr.deleteSync(args[0].syncId || args[0].syncName, successCB, errorCB);
     });
