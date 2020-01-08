@@ -685,7 +685,7 @@ var force = (function () {
         return request(
             {
                 path: obj.path,
-                params: obj.parans
+                params: obj.params
             },
             successHandler,
             errorHandler
