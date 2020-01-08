@@ -669,6 +669,24 @@ var force = (function () {
         );
     }
 
+    /**
+     * Convenience function to execute a SOQL queryAll
+     * Unlike query, it also returns records that have been deleted because of a merge or delete
+     * @param soql
+     * @param successHandler
+     * @param errorHandler
+     */
+    function queryAll(soql, successHandler, errorHandler) {
+        return request(
+            {
+                path: '/services/data/' + apiVersion + '/queryAll',
+                params: {q: soql}
+            },
+            successHandler,
+            errorHandler
+        );
+    }
+
     /*
      * Queries the next set of records based on pagination.
      * This should be used if performing a query that retrieves more than can be returned
@@ -947,6 +965,7 @@ var force = (function () {
         describe: describe,
         describeLayout: describeLayout,
         query: query,
+        queryAll: queryAll,
         queryMore: queryMore,
         search: search,
         create: create,
