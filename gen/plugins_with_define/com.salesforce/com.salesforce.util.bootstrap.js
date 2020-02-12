@@ -26,7 +26,7 @@ cordova.define("com.salesforce.util.bootstrap", function(require, exports, modul
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "8.0.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "8.1.0";
 
 var logger = require("com.salesforce.util.logger");
 
