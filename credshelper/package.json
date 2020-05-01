@@ -1,25 +1,29 @@
 {
-	"name": "credshelper",
-	"version": "1.0.0",
-	"description": "Simple app to create test_credentials.json",
-	"licenses": [
-		{
-			"type": "Salesforce.com Mobile SDK License",
-			"url": "https://github.com/forcedotcom/SalesforceMobileSDK-Shared/blob/master/LICENSE.md"
-		}
-	],
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/forcedotcom/SalesforceMobileSDK-Shared.git"
-	},
-	"author": {
-		"name": "Wolfgang Mathurin",
-		"email": "wmathurin@salesforce.com"
-	},
-	"scripts": {
-		"start": "node node_modules/http-server/bin/http-server"
-	},
-	"dependencies": {
-		"http-server": "^0.11.1"
-	}
+  "name": "credshelper",
+  "version": "1.0.0",
+  "description": "Simple app to create test_credentials.json",
+  "licenses": [
+    {
+      "type": "Salesforce.com Mobile SDK License",
+      "url": "https://github.com/forcedotcom/SalesforceMobileSDK-Shared/blob/master/LICENSE.md"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/forcedotcom/SalesforceMobileSDK-Shared.git"
+  },
+  "author": {
+    "name": "Wolfgang Mathurin",
+    "email": "wmathurin@salesforce.com"
+  },
+  "scripts": {
+    "start": "node node_modules/http-server/bin/http-server",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
+  },
+  "dependencies": {
+    "http-server": "^0.11.1",
+    "snyk": "^1.316.1"
+  },
+  "snyk": true
 }
