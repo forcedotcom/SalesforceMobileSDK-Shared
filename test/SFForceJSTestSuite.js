@@ -227,10 +227,10 @@ ForceJSTestSuite.prototype.testRestEndpoint = function()  {
 };
 
 /**
- * TEST restEndpointErrorIOS
+ * TEST restEndpointError
  */
-ForceJSTestSuite.prototype.testRestEndpointErrorIOS = function()  {
-    console.log("In SFForceJSTestSuite.testRestEndpointErrorIOS");
+ForceJSTestSuite.prototype.testRestEndpointError = function()  {
+    console.log("In SFForceJSTestSuite.testRestEndpointError");
     var self = this;
     // Should error because authenticated is set to not required for an authenticated endpoint
     forceJsClient.anyrest('https://mobilesdk.my.salesforce.com/services/data/' + this.apiVersion +  '/sobjects/Account', false, true, { contentType:"application/json" })
@@ -242,9 +242,6 @@ ForceJSTestSuite.prototype.testRestEndpointErrorIOS = function()  {
         QUnit.ok(error != null, "Error should not be nil");
         var errorObj = JSON.parse(error);
         QUnit.ok(errorObj != null, "Unable to parse error");
-        QUnit.ok(errorObj["error"] != null, "Missing error");
-        QUnit.ok(errorObj["response"] != null, "Missing response");
-        QUnit.ok(errorObj["urlResponse"] != null, "Missing urlResponse");
         self.finalizeTest();
     })
 };
