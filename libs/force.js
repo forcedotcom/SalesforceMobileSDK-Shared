@@ -141,16 +141,22 @@ var force = (function () {
     }
 
     function parseUrl(url) {
-        var match = url.match(/^(https?\:)\/\/(([^:\/?#]*)(?:\:([0-9]+))?)([^?#]*)(\?[^#]*|)(#.*|)$/);
-        return match && {
-            protocol: match[1],
-            host: match[2],
-            hostname: match[3],
-            port: match[4],
-            path: match[5],
-            params: parseQueryString(match[6]),
-            hash: match[7]
-        };
+        try {
+            var relativePath = url.indexOf("/") == 0;
+            var url = new URL(relativePath ? "https://x" + url : url);
+            return url && {
+                protocol: relativePath ? "" : url.protocol,
+                host: relativePath ? "" : url.host,
+                hostname: relativePath ? "" : url.hostname,
+                port: url.port,
+                path: url.pathname,
+                params: parseQueryString(url.search),
+                hash: url.hash
+            };
+        }
+        catch (error) {
+            return null;
+        }
     }
 
     function refreshTokenWithPlugin(success, error) {
