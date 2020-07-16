@@ -148,8 +148,8 @@ var force = (function () {
                 protocol: relativePath ? "" : url.protocol,
                 host: relativePath ? "" : url.host,
                 hostname: relativePath ? "" : url.hostname,
-                port: url.port,
-                path: url.pathname,
+                port: url.port == "" ? undefined : url.port,   // to work like the old implementation
+                path: url.pathname == "/" ? "" : url.pathname, // to work like the old implementation
                 params: parseQueryString(url.search),
                 hash: url.hash
             };
