@@ -36,7 +36,7 @@ if (typeof ForceJSTestSuite === 'undefined') {
  */
 var ForceJSTestSuite = function () {
     SFTestSuite.call(this, "forcejs");
-    this.apiVersion = "v46.0";
+    this.apiVersion = "v49.0";
 };
 
 // We are sub-classing SFTestSuite
@@ -82,10 +82,10 @@ ForceJSTestSuite.prototype.testParseUrl = function() {
                     {"protocol":"https:","host":"server.com:1234","hostname":"server.com","port":"1234","path":"/path1/path2","params":{a:"b",c:" d"},"hash":"#hashhash"})
 
     // Real life examples
-    QUnit.deepEqual(force.parseUrl("https://cs1.salesforce.com/services/data/v46.0/query?q=select%20Id%2CName%20from%20Account%20where%20Id%20%3D%20'001S000000p8dcrIAA'"),
-                    {"protocol":"https:","host":"cs1.salesforce.com","hostname":"cs1.salesforce.com","port":undefined,"path":"/services/data/v46.0/query","params":{"q":"select Id,Name from Account where Id = '001S000000p8dcrIAA'"},"hash":""});
-    QUnit.deepEqual(force.parseUrl("https://cs1.salesforce.com/services/data/v46.0/sobjects/Account/001S000000p8dccIAA?fields=Id%2CName"),
-                    {"protocol":"https:","host":"cs1.salesforce.com","hostname":"cs1.salesforce.com","port":undefined,"path":"/services/data/v46.0/sobjects/Account/001S000000p8dccIAA","params":{"fields":"Id,Name"},"hash":""});
+    QUnit.deepEqual(force.parseUrl("https://cs1.salesforce.com/services/data/v49.0/query?q=select%20Id%2CName%20from%20Account%20where%20Id%20%3D%20'001S000000p8dcrIAA'"),
+                    {"protocol":"https:","host":"cs1.salesforce.com","hostname":"cs1.salesforce.com","port":undefined,"path":"/services/data/v49.0/query","params":{"q":"select Id,Name from Account where Id = '001S000000p8dcrIAA'"},"hash":""});
+    QUnit.deepEqual(force.parseUrl("https://cs1.salesforce.com/services/data/v49.0/sobjects/Account/001S000000p8dccIAA?fields=Id%2CName"),
+                    {"protocol":"https:","host":"cs1.salesforce.com","hostname":"cs1.salesforce.com","port":undefined,"path":"/services/data/v49.0/sobjects/Account/001S000000p8dccIAA","params":{"fields":"Id,Name"},"hash":""});
 
     this.finalizeTest();
 };
@@ -224,6 +224,26 @@ ForceJSTestSuite.prototype.testRestEndpoint = function()  {
          QUnit.ok(error == null, "Error occurred");
          self.finalizeTest();
      });
+};
+
+/**
+ * TEST restEndpointError
+ */
+ForceJSTestSuite.prototype.testRestEndpointError = function()  {
+    console.log("In SFForceJSTestSuite.testRestEndpointError");
+    var self = this;
+    // Should error because authenticated is set to not required for an authenticated endpoint
+    forceJsClient.anyrest('https://mobilesdk.my.salesforce.com/services/data/' + this.apiVersion +  '/sobjects/Account', false, true, { contentType:"application/json" })
+    .then(function(response) {
+        QUnit.ok(response.ip == null, "Should error instead");
+        self.finalizeTest();
+    })
+    .catch(function(error) {
+        QUnit.ok(error != null, "Error should not be nil");
+        var errorObj = JSON.parse(error);
+        QUnit.ok(errorObj != null, "Unable to parse error");
+        self.finalizeTest();
+    })
 };
 
 /**

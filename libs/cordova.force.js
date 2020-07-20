@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "8.1.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "8.2.0";
 
 /**
  * Utilify functions for logging
@@ -636,7 +636,7 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
 
     var setLogLevel = function(level) {
         logLevel = level;
-        var methods = ["error", "info", "warn", "debug"];
+        var methods = ["error", "warn", "info", "debug"];
         var levelAsInt = methods.indexOf(level.toLowerCase());
         for (var i=0; i<methods.length; i++) {
             storeConsole[methods[i]] = (i <= levelAsInt ? console[methods[i]].bind(console) : function() {});
