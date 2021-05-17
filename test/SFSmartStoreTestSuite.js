@@ -657,29 +657,6 @@ if (typeof SmartStoreTestSuite === 'undefined') {
     };
 
     /**
-     * TEST querySoup with bad query spec
-     */
-    SmartStoreTestSuite.prototype.testQuerySoupBadQuerySpec = function()  {
-        console.log("In SFSmartStoreTestSuite.testQuerySoupBadQuerySpec");
-
-        var self = this;
-        self.stuffTestSoup()
-            .then(function(entries) {
-                QUnit.equal(entries.length, 3);
-
-                //query on a nonexistent index
-                var querySpec = self.smartstore.buildRangeQuerySpec("bottlesOfBeer",99,null,"descending");
-
-                return self.smartstoreClient.querySoup(self.defaultSoupName, querySpec);
-            })
-            .catch(function(param) {
-                QUnit.ok(true,"querySoup with bogus querySpec should fail");
-                self.finalizeTest();
-            });
-    };
-
-
-    /**
      * TEST querySoup  with an endKey and no beginKey
      */
     SmartStoreTestSuite.prototype.testQuerySoupEndKeyNoBeginKey = function()  {
