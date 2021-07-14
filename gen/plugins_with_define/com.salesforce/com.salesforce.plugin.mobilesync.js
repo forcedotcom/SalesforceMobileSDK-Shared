@@ -26,7 +26,7 @@ cordova.define("com.salesforce.plugin.mobilesync", function(require, exports, mo
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "9.1.1";
+var SALESFORCE_MOBILE_SDK_VERSION = "9.2.0";
 var SERVICE = "com.salesforce.mobilesync";
 
 var exec = require("com.salesforce.util.exec").exec;
