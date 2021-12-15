@@ -1,6 +1,6 @@
 {
   "name": "salesforcemobilesdk-shared",
-  "version": "9.2.0",
+  "version": "9.2.1",
   "dependencies": {},
   "devDependencies": {
     "grunt": "~0.4.5",
