@@ -1,15 +1,14 @@
-## Short Guide on using MobileSync Plugin without the mobilesync.js library, for Offline Functionality
+## Short Guide on Using the MobileSync Plugin for Offline Functionality
 
-The SalesforceMobileSDK-Shared repository and the Salesforce Mobile SDK documentation did not have any full samples of the mobilesync using only the plugin and no mobilesync.js library, so here
-is a sample of how mobilesync can be used with the plugin. Particularly a demonstration of sync up was hard to find, so here it is.
+The following example demonstrates how to use the Mobile Sync plugin without the mobilesync.js library. 
 
-You can put the segment below in a Lightning Web Component and modify as needed with respect the the Object.
-Below, the Contact object is used as is used for many sample hybrid apps.
+This sample uses the Contact object as it is used for many sample hybrid apps. You can add this code to a Lightning Web Component and modify it as needed with respect to the component.
 
-Basically first the soup is registered in the smartstore with the necessary object specifications.
-Then the soup is populated with records from the Salesforce server using sync down.
-Next a new contact is locally created, and added to the smartstore.
-Finally sync up is used to push the records to the Salesforce server.
+Here's a summary of the app's flow:
+- Register the soup in SmartStore with the necessary object specifications.
+- Call sync down to populate the soup with records from the Salesforce server.
+- Create a new contact locally and adds it to SmartStore.
+- Call sync up to push the records to the Salesforce server.
 
 ````md
 //register
