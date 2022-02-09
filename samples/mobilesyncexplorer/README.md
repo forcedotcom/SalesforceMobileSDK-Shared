@@ -7,7 +7,7 @@ This sample uses the Contact object as it is used for many sample hybrid apps. Y
 Here's a summary of the app's flow:
 - Register the soup in SmartStore with the necessary object specifications.
 - Call sync down to populate the soup with records from the Salesforce server.
-- Create a new contact locally and adds it to SmartStore.
+- Create a new contact locally and add it to SmartStore.
 - Call sync up to push the records to the Salesforce server.
 
 ````md
