@@ -59,7 +59,7 @@ SDKInfoTestSuite.prototype.testGetInfo = function()  {
     self.getInfo()
         .then(function(sdkInfo) {
             // sdkVersion
-        	QUnit.ok(sdkInfo.sdkVersion.indexOf("9.2.1") == 0, "expected different sdk version");
+        	QUnit.ok(sdkInfo.sdkVersion.indexOf("10.0.0") == 0, "expected different sdk version");
             // appName
             QUnit.ok(sdkInfo.appName == "SalesforceHybridSDKTestApp" || sdkInfo.appName == "SalesforceHybridTest", "expected different app name");
             // appVersion
