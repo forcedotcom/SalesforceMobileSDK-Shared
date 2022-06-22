@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "10.0.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "10.1.0";
 var exec = function(pluginVersion, successCB, errorCB, service, action, args) {
     var uniqueNumber = new Date().valueOf() + Math.random();
     var tag = "TIMING " + service + ":" + action + ":" + uniqueNumber;
