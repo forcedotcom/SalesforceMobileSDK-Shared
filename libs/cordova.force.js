@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "10.1.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "10.1.1";
 
 /**
  * Utilify functions for logging
