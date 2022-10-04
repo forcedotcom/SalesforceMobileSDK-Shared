@@ -4056,7 +4056,7 @@ MobileSyncTestSuite.prototype.trySyncDown = function(storeConfig, cache, soupNam
         .then(function(sync) {
             console.log("## Checking sync");
             syncDownId = sync._soupEntryId;
-            assertContains(sync, {type:"syncDown", target: target, status:"RUNNING", progress:0, soupName: soupName, options:options});
+            assertContains(sync, {type:"syncDown", target: target, status:"RUNNING", soupName: soupName, options:options});
             return eventPromiser(document, "sync", function(event) { return event.detail.status == "DONE";});
         })
         .then(function(event) {
@@ -4081,7 +4081,7 @@ MobileSyncTestSuite.prototype.tryReSync = function(cache, soupName, idToName, sy
     return this.reSync(syncDownId)
         .then(function(sync) {
             console.log("## Checking sync");
-            assertContains(sync, {_soupEntryId:syncDownId, type:"syncDown", status:"RUNNING", progress:0, soupName: soupName});
+            assertContains(sync, {_soupEntryId:syncDownId, type:"syncDown", status:"RUNNING", soupName: soupName});
             return eventPromiser(document, "sync", function(event) { return event.detail.status == "DONE";});
         })
         .then(function(event) {
@@ -4110,7 +4110,7 @@ MobileSyncTestSuite.prototype.trySyncUp = function(storeConfig, soupName, option
         .then(function(sync) {
             console.log("## Checking sync");
             syncUpId = sync._soupEntryId;
-            assertContains(sync, {type:"syncUp", options: options, status:"RUNNING", progress:0, soupName: soupName});
+            assertContains(sync, {type:"syncUp", options: options, status:"RUNNING", soupName: soupName});
             return eventPromiser(document, "sync", function(event) { return event.detail.status == "DONE";});
         })
         .then(function(event) {
