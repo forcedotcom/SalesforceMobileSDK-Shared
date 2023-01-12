@@ -1265,7 +1265,6 @@ cordova.define("com.salesforce.util.push", function(require, exports, module) {
             var bootconfig = info.bootConfig;
             var push = PushNotification.init({
                 "android": {
-                    "senderID": bootconfig.androidPushNotificationClientId
                 },
                 "ios": {
                     "alert": "true",

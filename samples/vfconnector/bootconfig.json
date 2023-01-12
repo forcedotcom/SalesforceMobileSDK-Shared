@@ -6,6 +6,5 @@
 	"startPage": "/apex/BasicVFPage",
     "errorPage": "error.html",
 	"shouldAuthenticate": true,
-	"attemptOfflineLoad": false,
-	"androidPushNotificationClientId": ""
+	"attemptOfflineLoad": false
 }

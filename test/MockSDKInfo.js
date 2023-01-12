@@ -56,8 +56,7 @@ var MockSDKInfo = (function(window) {
                                           "startPage": "index.html",
                                           "errorPage": "error.html",
                                           "shouldAuthenticate": true,
-                                          "attemptOfflineLoad": false,
-                                          "androidPushNotificationClientId": ""
+                                          "attemptOfflineLoad": false
                                       }
                                      ));
             });
