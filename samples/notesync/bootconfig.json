@@ -6,6 +6,5 @@
     "startPage": "NoteSync.html",
     "errorPage": "error.html",
     "shouldAuthenticate": true,
-    "attemptOfflineLoad": true,
-    "androidPushNotificationClientId": ""
+    "attemptOfflineLoad": true
 }

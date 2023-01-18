@@ -40,7 +40,6 @@ var registerPushNotificationHandler = function(notificationHandler, fail) {
         var bootconfig = info.bootConfig;
         var push = PushNotification.init({
             "android": {
-                "senderID": bootconfig.androidPushNotificationClientId
             },
             "ios": {
                 "alert": "true",
