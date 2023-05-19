@@ -211,50 +211,6 @@ if (typeof SmartStoreTestSuite === 'undefined') {
             });
     };
 
-    /**
-     * TEST registerSoupWithSpec / getSoupSpec / removeSoup
-     */
-    SmartStoreTestSuite.prototype.testRegisterWithSpec = function()  {
-        console.log("In SFSmartStoreTestSuite.testRegisterWithSpec");
-        var soupName = "soupForTestRegisterWithSpec";
-
-        var self = this;
-
-        // Start clean
-        self.smartstoreClient.removeSoup(soupName)
-            .then(function() {
-                // Check soup does not exist
-                return self.smartstoreClient.soupExists(soupName);
-            })
-            .then(function(exists) {
-                QUnit.equals(exists, false, "soup should not already exist");
-                // Create soup
-                return self.smartstoreClient.registerSoupWithSpec({name:soupName, features:["externalStorage"]}, self.defaultSoupIndexes);
-            })
-            .then(function(soupName2) {
-                QUnit.equals(soupName2,soupName,"registered soup OK");
-                // Check soup now exists
-                return self.smartstoreClient.soupExists(soupName);
-            }, function(err) {QUnit.ok(false,"self.smartstoreClient.registerSoupWithSpec failed " + err);})
-            .then(function(exists) {
-                QUnit.equals(exists, true, "soup should now exist");
-                // Check soup spec
-                return self.checkSoupSpec(soupName, {name:soupName, features:["externalStorage"]});
-            })
-            .then(function() {
-                // Remove soup
-                return self.smartstoreClient.removeSoup(soupName);
-            }, function(err) {QUnit.ok(false,"self.smartstoreClient.getSoupSpec failed " + err);})
-            .then(function() {
-                // Check soup no longer exists
-                return self.smartstoreClient.soupExists(soupName);
-            })
-            .then(function(exists) {
-                QUnit.equals(exists, false, "soup should no longer exist");
-                self.finalizeTest();
-            });
-    };
-
 
     /**
      * TEST registerSoup with bogus soup
@@ -1713,21 +1669,6 @@ if (typeof SmartStoreTestSuite === 'undefined') {
     };
 
     /**
-     * TEST alterSoupWithSpecNoReIndexing
-     */
-    SmartStoreTestSuite.prototype.testAlterSoupWithSpecNoReIndexing  = function() {
-        this.tryAlterSoupWithSpec(false);
-    };
-
-    /**
-     * TEST alterSoupWithSpecWithReIndexing
-     */
-    SmartStoreTestSuite.prototype.testAlterSoupWithSpecWithReIndexing  = function() {
-        this.tryAlterSoupWithSpec(true);
-    };
-
-
-    /**
      * Helper method for alterSoup tests
      */
     SmartStoreTestSuite.prototype.tryAlterSoup = function(reIndexData) {
@@ -1752,87 +1693,6 @@ if (typeof SmartStoreTestSuite === 'undefined') {
             })
             .then(function(cursor) {
                 QUnit.equal(cursor.currentPageOrderedEntries.length, reIndexData ? 3 : 0, "check number of rows returned");
-                return self.smartstoreClient.closeCursor(cursor);
-            })
-            .then(function() {
-                // Query by a previously indexed field
-                var querySpec = self.smartstore.buildExactQuerySpec("Name", "Robot", 3);
-                return self.smartstoreClient.querySoup(self.defaultSoupName, querySpec);
-            })
-            .then(function(cursor) {
-                QUnit.equal(cursor.currentPageOrderedEntries.length, 1, "check number of rows returned");
-                return self.smartstoreClient.closeCursor(cursor);
-            })
-            .then(function(param) {
-                QUnit.ok(true,"closeCursor ok");
-                self.finalizeTest();
-            });
-    };
-
-    /**
-     * Helper method for alterSoupWithSpec tests
-     * Alter the soup twice changing the storage type each time (internal -> external -> internal)
-     */
-    SmartStoreTestSuite.prototype.tryAlterSoupWithSpec = function(reIndexData) {
-        var self = this;
-        var alteredIndexes1 = [{path:"Name", type:"string"}, {path:"attributes.type", type:"string"}];
-        var alteredSoupSpec1 = {name: self.defaultSoupName, features: ["externalStorage"]};
-        var alteredIndexes2 = [{path:"Name", type:"string"}, {path:"department", type:"string"}];
-        var alteredSoupSpec2 = {name: self.defaultSoupName, features: []};
-
-        // Populate soup
-        return self.stuffTestSoup()
-            .then(function(entries) {
-                QUnit.equal(entries.length, 3,"check stuffTestSoup result");
-                // Alter soup internal -> external
-                return self.smartstoreClient.alterSoupWithSpec(self.defaultSoupName, alteredSoupSpec1, alteredIndexes1, reIndexData);
-            })
-            .then(function() {
-                // Checking altered soup indexes
-                return self.checkSoupIndexes(self.defaultSoupName, alteredIndexes1);
-            })
-            .then(function() {
-                // Checking altered soup spec
-                return self.checkSoupSpec(self.defaultSoupName, alteredSoupSpec1);
-            })
-            .then(function() {
-                // Query by a new indexed field
-                var querySpec = self.smartstore.buildExactQuerySpec("attributes.type", "Contact", 3);
-                return self.smartstoreClient.querySoup(self.defaultSoupName, querySpec);
-            })
-            .then(function(cursor) {
-                QUnit.equal(cursor.currentPageOrderedEntries.length, reIndexData ? 3 : 0, "check number of rows returned");
-                return self.smartstoreClient.closeCursor(cursor);
-            })
-            .then(function() {
-                // Query by a previously indexed field
-                var querySpec = self.smartstore.buildExactQuerySpec("Name", "Robot", 3);
-                return self.smartstoreClient.querySoup(self.defaultSoupName, querySpec);
-            })
-            .then(function(cursor) {
-                QUnit.equal(cursor.currentPageOrderedEntries.length, 1, "check number of rows returned");
-                return self.smartstoreClient.closeCursor(cursor);
-            })
-            .then(function(param) {
-                QUnit.ok(true,"closeCursor ok");
-                // Alter soup external -> internal
-                return self.smartstoreClient.alterSoupWithSpec(self.defaultSoupName, alteredSoupSpec2, alteredIndexes2, reIndexData);
-            })
-            .then(function() {
-                // Checking altered soup indexes
-                return self.checkSoupIndexes(self.defaultSoupName, alteredIndexes2);
-            })
-            .then(function() {
-                // Checking altered soup spec
-                return self.checkSoupSpec(self.defaultSoupName, alteredSoupSpec2);
-            })
-            .then(function() {
-                // Query by a new indexed field
-                var querySpec = self.smartstore.buildExactQuerySpec("department", "Engineering", 3);
-                return self.smartstoreClient.querySoup(self.defaultSoupName, querySpec);
-            })
-            .then(function(cursor) {
-                QUnit.equal(cursor.currentPageOrderedEntries.length, reIndexData ? 2 : 0, "check number of rows returned");
                 return self.smartstoreClient.closeCursor(cursor);
             })
             .then(function() {
@@ -1938,21 +1798,6 @@ if (typeof SmartStoreTestSuite === 'undefined') {
                 }
             });
     };
-
-    /**
-     * Helper method checkSoupSpec
-     */
-    SmartStoreTestSuite.prototype.checkSoupSpec = function(soupName, expectedSoupSpec) {
-        return this.smartstoreClient.getSoupSpec(soupName)
-            .then(function(soupSpec) {
-                QUnit.equals(soupSpec.name, expectedSoupSpec.name, "Check soup name in soup spec");
-                QUnit.equals(soupSpec.features.length, expectedSoupSpec.features.length, "Check features in soup spec");
-                for (i = 0; i< expectedSoupSpec.features.length; i++) {
-                    QUnit.equals(soupSpec.features[i], expectedSoupSpec.features[i], "Check feature");
-                }
-            });
-    };
-
 
 
     /**

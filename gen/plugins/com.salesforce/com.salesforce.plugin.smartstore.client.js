@@ -38,7 +38,6 @@ client.clearSoup = promiser(smartstore, "clearSoup", "smartstore.client");
 client.closeCursor = promiser(smartstore, "closeCursor", "smartstore.client");
 client.getDatabaseSize = promiser(smartstore, "getDatabaseSize", "smartstore.client");
 client.getSoupIndexSpecs = promiser(smartstore, "getSoupIndexSpecs", "smartstore.client");
-client.getSoupSpec = promiser(smartstore, "getSoupSpec", "smartstore.client");
 client.moveCursorToNextPage = promiser(smartstore, "moveCursorToNextPage", "smartstore.client");
 client.moveCursorToPageIndex = promiser(smartstore, "moveCursorToPageIndex", "smartstore.client");
 client.moveCursorToPreviousPage = promiser(smartstore, "moveCursorToPreviousPage", "smartstore.client");
