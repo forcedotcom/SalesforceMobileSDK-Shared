@@ -950,7 +950,6 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
      */
     module.exports = {
         alterSoup: alterSoup,
-        alterSoupWithSpec: alterSoupWithSpec,
         buildAllQuerySpec: buildAllQuerySpec,
         buildExactQuerySpec: buildExactQuerySpec,
         buildLikeQuerySpec: buildLikeQuerySpec,
@@ -968,7 +967,6 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         querySoup: querySoup,
         reIndexSoup: reIndexSoup,
         registerSoup: registerSoup,
-        registerSoupWithSpec: registerSoupWithSpec,
         removeFromSoup: removeFromSoup,
         removeSoup: removeSoup,
         retrieveSoupEntries: retrieveSoupEntries,
@@ -1008,7 +1006,6 @@ cordova.define("com.salesforce.plugin.smartstore.client", function(require, expo
     // Promise-based APIs
     var client = new Object();
     client.alterSoup = promiser(smartstore, "alterSoup", "smartstore.client");
-    client.alterSoupWithSpec = promiser(smartstore, "alterSoupWithSpec", "smartstore.client");
     client.clearSoup = promiser(smartstore, "clearSoup", "smartstore.client");
     client.closeCursor = promiser(smartstore, "closeCursor", "smartstore.client");
     client.getDatabaseSize = promiser(smartstore, "getDatabaseSize", "smartstore.client");
@@ -1019,7 +1016,6 @@ cordova.define("com.salesforce.plugin.smartstore.client", function(require, expo
     client.querySoup = promiser(smartstore, "querySoup", "smartstore.client");
     client.reIndexSoup = promiser(smartstore, "reIndexSoup", "smartstore.client");
     client.registerSoup = promiser(smartstore, "registerSoup", "smartstore.client");
-    client.registerSoupWithSpec = promiser(smartstore, "registerSoupWithSpec", "smartstore.client");
     client.removeFromSoup = promiser(smartstore, "removeFromSoup", "smartstore.client");
     client.removeSoup = promiser(smartstore, "removeSoup", "smartstore.client");
     client.retrieveSoupEntries = promiser(smartstore, "retrieveSoupEntries", "smartstore.client");

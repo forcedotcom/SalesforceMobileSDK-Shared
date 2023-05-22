@@ -34,7 +34,6 @@ var promiser = require("com.salesforce.util.promiser").promiser;
 // Promise-based APIs
 var client = new Object();
 client.alterSoup = promiser(smartstore, "alterSoup", "smartstore.client");
-client.alterSoupWithSpec = promiser(smartstore, "alterSoupWithSpec", "smartstore.client");
 client.clearSoup = promiser(smartstore, "clearSoup", "smartstore.client");
 client.closeCursor = promiser(smartstore, "closeCursor", "smartstore.client");
 client.getDatabaseSize = promiser(smartstore, "getDatabaseSize", "smartstore.client");
@@ -45,7 +44,6 @@ client.moveCursorToPreviousPage = promiser(smartstore, "moveCursorToPreviousPage
 client.querySoup = promiser(smartstore, "querySoup", "smartstore.client");
 client.reIndexSoup = promiser(smartstore, "reIndexSoup", "smartstore.client");
 client.registerSoup = promiser(smartstore, "registerSoup", "smartstore.client");
-client.registerSoupWithSpec = promiser(smartstore, "registerSoupWithSpec", "smartstore.client");
 client.removeFromSoup = promiser(smartstore, "removeFromSoup", "smartstore.client");
 client.removeSoup = promiser(smartstore, "removeSoup", "smartstore.client");
 client.retrieveSoupEntries = promiser(smartstore, "retrieveSoupEntries", "smartstore.client");

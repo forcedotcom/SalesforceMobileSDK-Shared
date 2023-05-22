@@ -434,7 +434,6 @@ var closeCursor = function (storeConfig, cursor, successCB, errorCB) {
  */
 module.exports = {
     alterSoup: alterSoup,
-    alterSoupWithSpec: alterSoupWithSpec,
     buildAllQuerySpec: buildAllQuerySpec,
     buildExactQuerySpec: buildExactQuerySpec,
     buildLikeQuerySpec: buildLikeQuerySpec,
@@ -452,7 +451,6 @@ module.exports = {
     querySoup: querySoup,
     reIndexSoup: reIndexSoup,
     registerSoup: registerSoup,
-    registerSoupWithSpec: registerSoupWithSpec,
     removeFromSoup: removeFromSoup,
     removeSoup: removeSoup,
     retrieveSoupEntries: retrieveSoupEntries,
