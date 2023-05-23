@@ -77,13 +77,6 @@ function regLinkClickHandlers() {
                                                                  onSoupExistsDone);
                                  });
 
-    $('#link_soup_spec').click(function() {
-                                 sfSmartstore().getSoupSpec(SAMPLE_SOUP_NAME,
-                                                                 onGetSoupSpecDone,
-                                                                 onGetSoupSpecDone);
-                                 });
-
-
     $('#link_query_soup').click(function() {
         runQuerySoup();
     });
