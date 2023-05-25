@@ -31,13 +31,6 @@ var SERVICE = "com.salesforce.smartstore";
 var exec = require("com.salesforce.util.exec").exec;
 
 var defaultStoreConfig = {'isGlobalStore':false};
-/**
- * SoupSpec constructor
- */
-var SoupSpec = function (soupName, features) {
-    this.name = soupName;
-    this.features = features;
-};
 
 /**
  * StoreConfig constructor
@@ -244,15 +237,6 @@ var registerSoup = function (storeConfig, soupName, indexSpecs, successCB, error
         );
 };
 
-var registerSoupWithSpec = function (storeConfig, soupSpec, indexSpecs, successCB, errorCB) {
-    if (checkFirstArg(arguments)) return;
-    storeConsole.debug("SmartStore.registerSoupWithSpec:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",soupSpec="+ JSON.stringify(soupSpec) + ",indexSpecs=" + JSON.stringify(indexSpecs));
-    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
-         "pgRegisterSoup",
-         [{"soupSpec": soupSpec, "indexes": indexSpecs, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
-        );
-};
-
 var removeSoup = function (storeConfig, soupName, successCB, errorCB) {
     if (checkFirstArg(arguments)) return;
     storeConsole.debug("SmartStore.removeSoup:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",soupName=" + soupName);
@@ -271,30 +255,12 @@ var getSoupIndexSpecs = function(storeConfig, soupName, successCB, errorCB) {
         );
 };
 
-var getSoupSpec = function(storeConfig, soupName, successCB, errorCB) {
-    if (checkFirstArg(arguments)) return;
-    storeConsole.debug("SmartStore.getSoupSpec:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",soupName=" + soupName);
-    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
-         "pgGetSoupSpec",
-         [{"soupName": soupName, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
-        );
-};
-
 var alterSoup = function (storeConfig, soupName, indexSpecs, reIndexData, successCB, errorCB) {
     if (checkFirstArg(arguments)) return;
     storeConsole.debug("SmartStore.alterSoup:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",soupName=" + soupName + ",indexSpecs=" + JSON.stringify(indexSpecs) + ",reIndexData=" + reIndexData);
     exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
          "pgAlterSoup",
          [{"soupName": soupName, "indexes": indexSpecs, "reIndexData": reIndexData, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
-        );
-};
-
-var alterSoupWithSpec = function (storeConfig, soupName, soupSpec, indexSpecs, reIndexData, successCB, errorCB) {
-    if (checkFirstArg(arguments)) return;
-    storeConsole.debug("SmartStore.alterSoupWithSpec:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",soupName=" + soupName + ",soupSpec=" + JSON.stringify(soupSpec) + ",indexSpecs=" + JSON.stringify(indexSpecs) + ",reIndexData=" + reIndexData);
-    exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
-         "pgAlterSoup",
-         [{"soupName": soupName, "soupSpec": soupSpec, "indexes": indexSpecs, "reIndexData": reIndexData, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
         );
 };
 
@@ -467,7 +433,6 @@ var closeCursor = function (storeConfig, cursor, successCB, errorCB) {
  */
 module.exports = {
     alterSoup: alterSoup,
-    alterSoupWithSpec: alterSoupWithSpec,
     buildAllQuerySpec: buildAllQuerySpec,
     buildExactQuerySpec: buildExactQuerySpec,
     buildLikeQuerySpec: buildLikeQuerySpec,
@@ -479,14 +444,12 @@ module.exports = {
     getDatabaseSize: getDatabaseSize,
     getLogLevel: getLogLevel,
     getSoupIndexSpecs: getSoupIndexSpecs,
-    getSoupSpec: getSoupSpec,
     moveCursorToNextPage: moveCursorToNextPage,
     moveCursorToPageIndex: moveCursorToPageIndex,
     moveCursorToPreviousPage: moveCursorToPreviousPage,
     querySoup: querySoup,
     reIndexSoup: reIndexSoup,
     registerSoup: registerSoup,
-    registerSoupWithSpec: registerSoupWithSpec,
     removeFromSoup: removeFromSoup,
     removeSoup: removeSoup,
     retrieveSoupEntries: retrieveSoupEntries,
@@ -502,7 +465,6 @@ module.exports = {
     removeAllGlobalStores: removeAllGlobalStores,
     removeAllStores: removeAllStores,
     // Constructors
-    SoupSpec: SoupSpec,
     QuerySpec: QuerySpec,
     SoupIndexSpec: SoupIndexSpec,
     StoreConfig: StoreConfig,

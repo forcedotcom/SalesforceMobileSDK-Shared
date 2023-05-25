@@ -57,30 +57,6 @@ function regLinkClickHandlers() {
       
     });
 
-    $('#link_reg_soup_with_spec').click(function() {
-      logToConsole()("link_reg_soup_with_spec clicked");
-
-      var indexes = [
-                     {path:"Name",type:"string"},
-                     {path:"Id",type:"string"}
-                     ];
-
-      var featuresSelect =  $('#select_soup_spec').val();
-
-      var soupSpec = {name:SAMPLE_SOUP_NAME};
-
-      if (featuresSelect != null) {
-        soupSpec['features'] = featuresSelect;
-      }
-
-      sfSmartstore().registerSoupWithSpec(soupSpec,
-                                        indexes,
-                                        onSuccessRegSoup,
-                                        onErrorRegSoup
-        );
-
-    });
-
     $('#link_stuff_soup').click(function() {
         logToConsole()("link_stuff_soup clicked");
         runStuffSoup();
@@ -100,13 +76,6 @@ function regLinkClickHandlers() {
                                                                  onSoupExistsDone,
                                                                  onSoupExistsDone);
                                  });
-
-    $('#link_soup_spec').click(function() {
-                                 sfSmartstore().getSoupSpec(SAMPLE_SOUP_NAME,
-                                                                 onGetSoupSpecDone,
-                                                                 onGetSoupSpecDone);
-                                 });
-
 
     $('#link_query_soup').click(function() {
         runQuerySoup();
