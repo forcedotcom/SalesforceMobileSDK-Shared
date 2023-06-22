@@ -26,7 +26,7 @@ cordova.define("com.salesforce.util.event", function(require, exports, module) {
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "10.2.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "11.0.0";
 
 var logger = require("com.salesforce.util.logger");
 

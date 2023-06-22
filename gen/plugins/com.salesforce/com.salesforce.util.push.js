@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "10.2.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "11.0.0";
 
 /**
  * Register push notification handler.
@@ -40,7 +40,6 @@ var registerPushNotificationHandler = function(notificationHandler, fail) {
         var bootconfig = info.bootConfig;
         var push = PushNotification.init({
             "android": {
-                "senderID": bootconfig.androidPushNotificationClientId
             },
             "ios": {
                 "alert": "true",

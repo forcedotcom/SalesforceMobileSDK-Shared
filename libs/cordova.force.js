@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "10.2.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "11.0.0";
 
 /**
  * Utilify functions for logging
@@ -548,13 +548,6 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
     var exec = require("com.salesforce.util.exec").exec;
 
     var defaultStoreConfig = {'isGlobalStore':false};
-    /**
-     * SoupSpec constructor
-     */
-    var SoupSpec = function (soupName, features) {
-        this.name = soupName;
-        this.features = features;
-    };
 
     /**
      * StoreConfig constructor
@@ -761,15 +754,6 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
             );
     };
 
-    var registerSoupWithSpec = function (storeConfig, soupSpec, indexSpecs, successCB, errorCB) {
-        if (checkFirstArg(arguments)) return;
-        storeConsole.debug("SmartStore.registerSoupWithSpec:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",soupSpec="+ JSON.stringify(soupSpec) + ",indexSpecs=" + JSON.stringify(indexSpecs));
-        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
-             "pgRegisterSoup",
-             [{"soupSpec": soupSpec, "indexes": indexSpecs, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
-            );
-    };
-
     var removeSoup = function (storeConfig, soupName, successCB, errorCB) {
         if (checkFirstArg(arguments)) return;
         storeConsole.debug("SmartStore.removeSoup:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",soupName=" + soupName);
@@ -788,30 +772,12 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
             );
     };
 
-    var getSoupSpec = function(storeConfig, soupName, successCB, errorCB) {
-        if (checkFirstArg(arguments)) return;
-        storeConsole.debug("SmartStore.getSoupSpec:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",soupName=" + soupName);
-        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
-             "pgGetSoupSpec",
-             [{"soupName": soupName, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
-            );
-    };
-
     var alterSoup = function (storeConfig, soupName, indexSpecs, reIndexData, successCB, errorCB) {
         if (checkFirstArg(arguments)) return;
         storeConsole.debug("SmartStore.alterSoup:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",soupName=" + soupName + ",indexSpecs=" + JSON.stringify(indexSpecs) + ",reIndexData=" + reIndexData);
         exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
              "pgAlterSoup",
              [{"soupName": soupName, "indexes": indexSpecs, "reIndexData": reIndexData, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
-            );
-    };
-
-    var alterSoupWithSpec = function (storeConfig, soupName, soupSpec, indexSpecs, reIndexData, successCB, errorCB) {
-        if (checkFirstArg(arguments)) return;
-        storeConsole.debug("SmartStore.alterSoupWithSpec:isGlobalStore=" + storeConfig.isGlobalStore + ",storeName=" + storeConfig.storeName + ",soupName=" + soupName + ",soupSpec=" + JSON.stringify(soupSpec) + ",indexSpecs=" + JSON.stringify(indexSpecs) + ",reIndexData=" + reIndexData);
-        exec(SALESFORCE_MOBILE_SDK_VERSION, successCB, errorCB, SERVICE,
-             "pgAlterSoup",
-             [{"soupName": soupName, "soupSpec": soupSpec, "indexes": indexSpecs, "reIndexData": reIndexData, "isGlobalStore": storeConfig.isGlobalStore, "storeName": storeConfig.storeName}]
             );
     };
 
@@ -984,7 +950,6 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
      */
     module.exports = {
         alterSoup: alterSoup,
-        alterSoupWithSpec: alterSoupWithSpec,
         buildAllQuerySpec: buildAllQuerySpec,
         buildExactQuerySpec: buildExactQuerySpec,
         buildLikeQuerySpec: buildLikeQuerySpec,
@@ -996,14 +961,12 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         getDatabaseSize: getDatabaseSize,
         getLogLevel: getLogLevel,
         getSoupIndexSpecs: getSoupIndexSpecs,
-        getSoupSpec: getSoupSpec,
         moveCursorToNextPage: moveCursorToNextPage,
         moveCursorToPageIndex: moveCursorToPageIndex,
         moveCursorToPreviousPage: moveCursorToPreviousPage,
         querySoup: querySoup,
         reIndexSoup: reIndexSoup,
         registerSoup: registerSoup,
-        registerSoupWithSpec: registerSoupWithSpec,
         removeFromSoup: removeFromSoup,
         removeSoup: removeSoup,
         retrieveSoupEntries: retrieveSoupEntries,
@@ -1019,7 +982,6 @@ cordova.define("com.salesforce.plugin.smartstore", function (require, exports, m
         removeAllGlobalStores: removeAllGlobalStores,
         removeAllStores: removeAllStores,
         // Constructors
-        SoupSpec: SoupSpec,
         QuerySpec: QuerySpec,
         SoupIndexSpec: SoupIndexSpec,
         StoreConfig: StoreConfig,
@@ -1044,19 +1006,16 @@ cordova.define("com.salesforce.plugin.smartstore.client", function(require, expo
     // Promise-based APIs
     var client = new Object();
     client.alterSoup = promiser(smartstore, "alterSoup", "smartstore.client");
-    client.alterSoupWithSpec = promiser(smartstore, "alterSoupWithSpec", "smartstore.client");
     client.clearSoup = promiser(smartstore, "clearSoup", "smartstore.client");
     client.closeCursor = promiser(smartstore, "closeCursor", "smartstore.client");
     client.getDatabaseSize = promiser(smartstore, "getDatabaseSize", "smartstore.client");
     client.getSoupIndexSpecs = promiser(smartstore, "getSoupIndexSpecs", "smartstore.client");
-    client.getSoupSpec = promiser(smartstore, "getSoupSpec", "smartstore.client");
     client.moveCursorToNextPage = promiser(smartstore, "moveCursorToNextPage", "smartstore.client");
     client.moveCursorToPageIndex = promiser(smartstore, "moveCursorToPageIndex", "smartstore.client");
     client.moveCursorToPreviousPage = promiser(smartstore, "moveCursorToPreviousPage", "smartstore.client");
     client.querySoup = promiser(smartstore, "querySoup", "smartstore.client");
     client.reIndexSoup = promiser(smartstore, "reIndexSoup", "smartstore.client");
     client.registerSoup = promiser(smartstore, "registerSoup", "smartstore.client");
-    client.registerSoupWithSpec = promiser(smartstore, "registerSoupWithSpec", "smartstore.client");
     client.removeFromSoup = promiser(smartstore, "removeFromSoup", "smartstore.client");
     client.removeSoup = promiser(smartstore, "removeSoup", "smartstore.client");
     client.retrieveSoupEntries = promiser(smartstore, "retrieveSoupEntries", "smartstore.client");
@@ -1265,7 +1224,6 @@ cordova.define("com.salesforce.util.push", function(require, exports, module) {
             var bootconfig = info.bootConfig;
             var push = PushNotification.init({
                 "android": {
-                    "senderID": bootconfig.androidPushNotificationClientId
                 },
                 "ios": {
                     "alert": "true",
