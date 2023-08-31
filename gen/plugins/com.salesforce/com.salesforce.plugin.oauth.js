@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "11.0.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "11.1.0";
 var SERVICE = "com.salesforce.oauth";
 
 var exec = require("com.salesforce.util.exec").exec;
