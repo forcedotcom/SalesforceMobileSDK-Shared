@@ -1,1 +1,0 @@
-../../../test/MockSmartStore.js
