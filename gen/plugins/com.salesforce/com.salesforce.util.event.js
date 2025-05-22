@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "13.0.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "13.0.1";
 
 var logger = require("com.salesforce.util.logger");
 
