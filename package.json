@@ -1,6 +1,6 @@
 {
 	"name": "SalesforceMobileSDK-Shared",
-	"version": "13.0.2",
+	"version": "13.1.0",
 	"description": "Shared javascript libraries for Salesforce Mobile SDK",
 	"keywords": [ "mobilesdk", "javascript", "salesforce", "mobile", "sdk" ],
 	"homepage": "https://github.com/forcedotcom/SalesforceMobileSDK-Shared",

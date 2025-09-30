@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "13.0.2";
+var SALESFORCE_MOBILE_SDK_VERSION = "13.1.0";
 var SERVICE = "com.salesforce.mobilesync";
 
 var exec = require("com.salesforce.util.exec").exec;

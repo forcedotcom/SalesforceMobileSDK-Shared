@@ -26,7 +26,7 @@ cordova.define("com.salesforce.util.promiser", function(require, exports, module
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "13.0.2";
+var SALESFORCE_MOBILE_SDK_VERSION = "13.1.0";
 
 var promiser = function(object, methodName, objectName) {
     var retfn = function () {
