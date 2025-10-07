@@ -1,7 +1,6 @@
 {
     "remoteAccessConsumerKey": "3MVG98dostKihXN53TYStBIiS8FC2a3tE3XhGId0hQ37iQjF0xe4fxMSb2mFaWZn9e3GiLs1q67TNlyRji.Xw",
     "oauthRedirectURI": "testsfdc:///mobilesdk/detect/oauth/done",
-    "oauthScopes": ["web", "api"],
     "isLocal": false,
     "startPage": "/apex/BasicVFPage",
     "errorPage": "error.html",
