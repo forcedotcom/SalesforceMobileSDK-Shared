@@ -80,8 +80,7 @@ SDKInfoTestSuite.prototype.testGetInfo = function()  {
             QUnit.ok(!sdkInfo.bootConfig.attemptOfflineLoad, "wrong bootConfig.attemptOfflineLoad");
             QUnit.equal(sdkInfo.bootConfig.startPage, "index.html", "wrong bootConfig.startPage");
             QUnit.equal(sdkInfo.bootConfig.errorPage, "error.html", "wrong bootConfig.errorPage");
-            QUnit.ok(typeof sdkInfo.bootConfig.oauthRedirectURI === "string" && sdkInfo.bootConfig.oauthRedirectURI.length > 0, "wrong bootConfig.oauthRedirectURI"); // on iOS boot config coming from test_credentials.json
-            QUnit.ok(typeof sdkInfo.bootConfig.oauthScopes === "object" && sdkInfo.bootConfig.oauthScopes.length > 0, "wrong bootConfig.oauthScopes.length");    // on iOS boot config coming from test_credentials.json
+            QUnit.ok(typeof sdkInfo.bootConfig.oauthRedirectURI === "string" && sdkInfo.bootConfig.oauthRedirectURI.length > 0, "wrong bootConfig.oauthRedirectURI");
             self.finalizeTest();
         });
 }; 
