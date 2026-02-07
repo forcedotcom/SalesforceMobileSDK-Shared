@@ -35,10 +35,8 @@ var force = (function () {
     // To override default, pass loginURL in init(props)
     var loginURL = 'https://login.salesforce.com',
 
-    // The Connected App client Id. Default app id provided - Not for production use.
-    // This application supports http://localhost:8200/oauthcallback.html as a valid callback URL
-    // To override default, pass appId in init(props)
-        appId = '3MVG9fMtCkV6eLheIEZplMqWfnGlf3Y.BcWdOf1qytXo9zxgbsrUbS.ExHTgUPJeb3jZeT8NYhc.hMyznKU92',
+    // The Connected App client Id. Must be passed in init(props).
+        appId,
 
     // The force.com API version to use.
     // To override default, pass apiVersion in init(props)
@@ -63,9 +61,8 @@ var force = (function () {
     // To override default, pass proxyURL in init(props)
         proxyURL = baseURL,
 
-    // if page URL is http://localhost:3000/myapp/index.html, oauthCallbackURL is http://localhost:3000/myapp/oauthcallback.html
-    // To override default, pass oauthCallbackURL in init(props)
-        oauthCallbackURL = baseURL + '/oauthcallback.html',
+    // The Connected App callback URL. Must be passed in init(props)
+        oauthCallbackURL,
 
     // Because the OAuth login spans multiple processes, we need to keep the login success and error handlers as a variables
     // inside the module instead of keeping them local within the login function.
@@ -237,10 +234,10 @@ var force = (function () {
     /**
      * Initialize ForceJS
      * @param params
-     *  appId (optional)
+     *  appId
      *  loginURL (optional)
      *  proxyURL (optional)
-     *  oauthCallbackURL (optional)
+     *  oauthCallbackURL
      *  apiVersion (optional)
      *  accessToken (optional)
      *  instanceURL (optional)
@@ -251,10 +248,10 @@ var force = (function () {
     function init(params) {
 
         if (params) {
-            appId = params.appId || appId;
+            appId = params.appId;
             apiVersion = params.apiVersion || apiVersion;
             loginURL = params.loginURL || loginURL;
-            oauthCallbackURL = params.oauthCallbackURL || oauthCallbackURL;
+            oauthCallbackURL = params.oauthCallbackURL;
             proxyURL = params.proxyURL || proxyURL;
             useProxy = params.useProxy === undefined ? useProxy : params.useProxy;
             useCordova = params.useCordova === undefined ? useCordova : params.useCordova;
