@@ -26,13 +26,21 @@ To install ForceServer, make sure Node.js is installed on your system, open a co
     sudo npm install -g force-server
     ```
     
-2. Whitelist your local server for CORS in your Org.
+2. Provide a valid Connected App consumer key for appId in the test files.
+
+Replace the placeholder `__CONSUMER_KEY__` (and `__REDIRECT_URI__` where present) with your Connected App values. The Connected App callback URL must match the `oauthCallbackURL` / `oauthRedirectURI` used in the test (e.g. `http://localhost:8200/test/oauthcallback.html` for browser tests).
+
+Test files that need to be updated:
+- test/test.html
+- test/MockSDKInfo.js
+
+3. Whitelist your local server for CORS in your Org.
 
 Go to Setup: Administer > Security Controls > CORS.
 Add http://localhost:8200
 
 
-3. Run the server.
+4. Run the server.
 
     Open a command prompt, navigate to your the root directory of your SalesforceMobileSDK-Shared directory and type the following command:
 
