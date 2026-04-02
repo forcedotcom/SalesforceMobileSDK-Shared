@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "13.2.0";
+var SALESFORCE_MOBILE_SDK_VERSION = "14.0.0";
 
 var promiser = function(object, methodName, objectName) {
     var retfn = function () {
