@@ -6,8 +6,9 @@
 <button type="button" onclick="startLogin()">Start login flow</button>
 
 <script>
+    // For browser testing: provide a valid connected app consumer key for appId; the connected app callback URL should match oauthCallbackURL.
     var config = {
-        appId: "3MVG9SemV5D80oBcXZ2EUzbcJw4mki18E239BH7SpZ93aRcD0OFlXgtOk6ms.8Zm_87aB4.zsD9R1PON7Tn2g",
+        appId: "__CONSUMER_KEY__",
         oauthCallbackURL: "http://localhost:8080/oauthcallback.html",
     };
 

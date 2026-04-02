@@ -26,7 +26,7 @@
 
     
   // The version of the REST API you wish to use in your app.
-  var apiVersion = "v63.0";
+  var apiVersion = "v66.0";
 
 	// If you want to prevent dragging, uncomment this section
 	/*
@@ -51,12 +51,12 @@
     var debugMode = true;
 
     $(function() {
-        // Browser
+        /* This will only be true when testing in a browser with MockCordova */
         if (cordova.interceptExec) {
             force.init({loginURL: "https://test.salesforce.com/",
-                        appId: "3MVG98dostKihXN53TYStBIiS8BTFb20jwWfFcShqfABb3c.HH3CkmA00FuCmc0aM3v4LZOGR5QBnEi77fotN",
+                        appId: "__CONSUMER_KEY__",
                         oauthCallbackURL: "http://localhost:8200/test/oauthcallback.html",
-                        useCordova: false /* running in browser with mock cordova - so do oauth through browser and network through xhr */
+                        useCordova: false /* running in browser with mock cordova - so do oauth through browser and network through xhr; provide a valid connected app consumer key for appId; the connected app callback URL should match oauthCallbackURL */
                        });
         }
         

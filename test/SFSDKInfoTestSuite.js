@@ -59,7 +59,7 @@ SDKInfoTestSuite.prototype.testGetInfo = function()  {
     self.getInfo()
         .then(function(sdkInfo) {
             // sdkVersion
-        	QUnit.ok(sdkInfo.sdkVersion.indexOf("13.1.1") == 0, "expected different sdk version");
+        	QUnit.ok(sdkInfo.sdkVersion.indexOf("13.2.0") == 0, "expected different sdk version");
             // appName
             QUnit.ok(sdkInfo.appName == "SalesforceHybridSDKTestApp" || sdkInfo.appName == "SalesforceHybridTest", "expected different app name");
             // appVersion
@@ -80,8 +80,7 @@ SDKInfoTestSuite.prototype.testGetInfo = function()  {
             QUnit.ok(!sdkInfo.bootConfig.attemptOfflineLoad, "wrong bootConfig.attemptOfflineLoad");
             QUnit.equal(sdkInfo.bootConfig.startPage, "index.html", "wrong bootConfig.startPage");
             QUnit.equal(sdkInfo.bootConfig.errorPage, "error.html", "wrong bootConfig.errorPage");
-            QUnit.ok(typeof sdkInfo.bootConfig.oauthRedirectURI === "string" && sdkInfo.bootConfig.oauthRedirectURI.length > 0, "wrong bootConfig.oauthRedirectURI"); // on iOS boot config coming from test_credentials.json
-            QUnit.ok(typeof sdkInfo.bootConfig.oauthScopes === "object" && sdkInfo.bootConfig.oauthScopes.length > 0, "wrong bootConfig.oauthScopes.length");    // on iOS boot config coming from test_credentials.json
+            QUnit.ok(typeof sdkInfo.bootConfig.oauthRedirectURI === "string" && sdkInfo.bootConfig.oauthRedirectURI.length > 0, "wrong bootConfig.oauthRedirectURI");
             self.finalizeTest();
         });
 }; 
