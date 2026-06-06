@@ -78,6 +78,18 @@ git commit -m "Update Shared submodule"
 3. Update the submodule reference in the Android and iOS-Hybrid repos.
 4. Run `tools/update.sh` in the CordovaPlugin repo to copy the new generated files into its `www/` directory.
 
+## Version Management
+
+`setversion.sh` updates the SDK version number in this repo:
+
+```bash
+./setversion.sh -v 14.0.0
+```
+
+This updates `SALESFORCE_MOBILE_SDK_VERSION` in `libs/cordova.force.js` and then automatically runs `./tools/update.sh` to propagate the new version into all generated files under `gen/plugins/com.salesforce/`.
+
+This script has no `-d` (isDev) flag — version bumps here are unconditional. It is run on both `dev` and `master` branches as part of the release process.
+
 ## Related Repositories
 
 | Repository | Role |
