@@ -1,0 +1,39 @@
+{
+  "docs": [
+    {
+      "doc": "README.md",
+      "scope": ".",
+      "description": "SalesforceMobileSDK-Shared - JavaScript source of truth for hybrid Cordova stack"
+    },
+    {
+      "doc": "CLAUDE.md",
+      "scope": ".",
+      "description": "CLAUDE.md — Salesforce Mobile SDK Shared JavaScript Libraries"
+    },
+    {
+      "doc": "test/README.md",
+      "scope": "test",
+      "description": "Helper files for javascript development outside the container"
+    },
+    {
+      "doc": "credshelper/README.md",
+      "scope": "credshelper",
+      "description": "Helper app to build a test_credentials.json for running tests locally"
+    },
+    {
+      "doc": "gen/readme.md",
+      "scope": "gen",
+      "description": "Generated files from ./tools/update.sh"
+    },
+    {
+      "doc": "samples/readme.md",
+      "scope": "samples",
+      "description": "To create an application for ios or android"
+    },
+    {
+      "doc": "samples/mobilesyncexplorer/README.md",
+      "scope": "samples/mobilesyncexplorer",
+      "description": "Short Guide on Using the MobileSync Plugin for Offline Functionality"
+    }
+  ]
+}
