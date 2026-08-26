@@ -13,7 +13,7 @@ cordova prepare
 </pre>
 Where:
 - $appname is whatever you want
-- $template should be vfconnector, contactexplorer, smartstoreexplorer, accounteditor, usersearch, userandgroupsearch or fileexplorer
+- $template should be vfconnector, contactexplorer, smartstoreexplorer, accounteditor, usersearch, userandgroupsearch, userlist, fileexplorer, mobilesyncexplorer or simplesyncreact
 
 ## To run the android application:
 - start eclipse and pick the $appname folder as root for your workspace

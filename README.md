@@ -1,216 +1,67 @@
-# Salesforce Mobile SDK Shared JavaScript Libraries
+# SalesforceMobileSDK-Shared
 
-This repository contains JavaScript libraries and Cordova plugin source code that are shared across the Hybrid Mobile SDK implementations for iOS and Android.
+JavaScript source of truth for the Salesforce Mobile SDK hybrid (Cordova) stack.
 
-## Overview
+This repository is included as a git submodule inside both [SalesforceMobileSDK-Android](https://github.com/forcedotcom/SalesforceMobileSDK-Android) (at `external/shared/`) and [SalesforceMobileSDK-iOS-Hybrid](https://github.com/forcedotcom/SalesforceMobileSDK-iOS-Hybrid) (at `external/shared/`). Its generated files are also copied into [SalesforceMobileSDK-CordovaPlugin](https://github.com/forcedotcom/SalesforceMobileSDK-CordovaPlugin).
 
-The Shared repository provides the **JavaScript layer** for Cordova-based hybrid applications that integrate with the Salesforce platform. It serves as a submodule dependency for both the iOS and Android hybrid implementations.
+## `libs/` -- Source JavaScript Files
 
-### Repository Role
+These are the authoritative source files for the hybrid JavaScript layer:
 
-```
-SalesforceMobileSDK-Shared (source of truth)
-              │
-       ┌──────┴──────┐
-       │             │
-       ▼             ▼
-Android (submodule)  iOS-Hybrid (submodule)
-       │             │
-       └──────┬──────┘
-              │
-              ▼
-      CordovaPlugin
-      (copies files)
-              │
-              ▼
-      Hybrid Templates
-```
+| File | Description |
+|------|-------------|
+| `cordova.force.js` | Cordova plugin bridge providing OAuth, SmartStore, MobileSync, Network, SDKInfo, and SFAccountManager plugins. These call into native code via `cordova.exec()`. |
+| `force.js` | Callback-based REST API client for Salesforce: SOQL, SOSL, CRUD operations, metadata describe, and automatic token refresh. |
+| `force+promise.js` | Promise wrapper around `force.js` for async/await usage. |
+| `force+files.js` | Salesforce Files API utilities: upload, download, and caching with base64 encoding. |
+| `mobilesync.js` | Data synchronization framework built on Backbone.js: sync down (SOQL/MRU targets), sync up, and conflict detection. |
 
-This repo is included as a git submodule in:
-- [SalesforceMobileSDK-Android](https://github.com/forcedotcom/SalesforceMobileSDK-Android) at `external/shared/`
-- [SalesforceMobileSDK-iOS-Hybrid](https://github.com/forcedotcom/SalesforceMobileSDK-iOS-Hybrid) at `external/shared/`
+## `gen/plugins/com.salesforce/` -- Generated Cordova Plugin Files
 
-## JavaScript Libraries
+These files are in Cordova plugin format and are what gets copied to `SalesforceMobileSDK-CordovaPlugin/www/` by the CordovaPlugin's `tools/update.sh` script.
 
-### `/libs` Directory
+**Do not edit these files directly.** Edit the source in `libs/` and regenerate.
 
-Contains all the Salesforce Mobile SDK JavaScript libraries:
+- `com.salesforce.plugin.mobilesync.js`
+- `com.salesforce.plugin.network.js`
+- `com.salesforce.plugin.oauth.js`
+- `com.salesforce.plugin.sdkinfo.js`
+- `com.salesforce.plugin.sfaccountmanager.js`
+- `com.salesforce.plugin.smartstore.client.js`
+- `com.salesforce.plugin.smartstore.js`
+- `com.salesforce.util.bootstrap.js`
+- `com.salesforce.util.event.js`
+- `com.salesforce.util.exec.js`
+- `com.salesforce.util.logger.js`
+- `com.salesforce.util.promiser.js`
+- `com.salesforce.util.push.js`
 
-**cordova.force.js**
-- Cordova plugins for OAuth, SmartStore, MobileSync, and SDKInfo
-- Bridges JavaScript to native iOS and Android implementations
-- Include after `cordova.js` in your HTML application
+## `samples/` -- Sample Applications
 
-**force.js**
-- Callback-based REST API client for Salesforce
-- Query, create, update, delete, and upsert operations
-- SOQL and SOSL query support
-- Automatic token refresh
+HTML/JavaScript sample apps used by hybrid sample apps in the Android and iOS-Hybrid repos (which include this repo as a submodule):
 
-**force+files.js**
-- File upload and download utilities
-- Integration with Salesforce Files (Chatter Files)
-- Base64 encoding/decoding helpers
+- `accounteditor` -- Account CRUD operations
+- `contactexplorer` -- Contact list browser with search
+- `fileexplorer` -- File upload and download
+- `mobilesyncexplorer` -- Offline data sync with MobileSync
+- `simplesyncreact` -- React-based sync sample
+- `smartstoreexplorer` -- SmartStore operations and Smart SQL
+- `userandgroupsearch` -- Combined user and group search
+- `userlist` -- User list display
+- `usersearch` -- User search
+- `vfconnector` -- Visualforce connector
 
-**force+promise.js**
-- Promise-based wrapper around force.js
-- Modern async/await compatible API
-- Preferred for new development
+To run a sample, create a hybrid app using the SDK templates, replace the app's `www/` content with the sample code, and build for iOS or Android.
 
-**mobilesync.js**
-- High-level data synchronization framework
-- Bidirectional sync between SmartStore and Salesforce
-- Conflict detection and resolution
-- Depends on force.js, cordova.force.js, underscore.js, and backbone.js
+## Submodule Usage
 
-### Usage Example
+This repository is a git submodule at `external/shared/` in both:
 
-```html
-<!DOCTYPE html>
-<html>
-<head>
-    <script src="cordova.js"></script>
-    <script src="cordova.force.js"></script>
-    <script src="force.js"></script>
-    <script src="mobilesync.js"></script>
-</head>
-<body>
-    <script>
-        // Query Salesforce
-        force.query('SELECT Id, Name FROM Account LIMIT 10',
-            function(response) {
-                console.log('Found ' + response.totalSize + ' accounts');
-            },
-            function(error) {
-                console.error('Query failed:', error);
-            }
-        );
+- [SalesforceMobileSDK-Android](https://github.com/forcedotcom/SalesforceMobileSDK-Android)
+- [SalesforceMobileSDK-iOS-Hybrid](https://github.com/forcedotcom/SalesforceMobileSDK-iOS-Hybrid)
 
-        // Or use promises
-        force.query('SELECT Id, Name FROM Contact')
-            .then(function(response) {
-                console.log('Contacts:', response.records);
-            });
-    </script>
-</body>
-</html>
-```
+Hybrid sample apps in those repos reference JavaScript directly from the submodule. When changes are merged here, both repos must update their submodule pointer:
 
-## Test Suites
-
-### `/test` Directory
-
-Contains comprehensive test suites for the JavaScript libraries:
-
-**test.html**
-- HTML test runner page
-- Can run in browser (with mocks) or Cordova WebView (with real plugins)
-
-**Test Infrastructure**:
-- `SFTestSuite.js` - Base test framework
-- `SFAbstractSmartStoreTestSuite.js` - SmartStore test base class
-- `MockCordova.js` - Mock Cordova for browser testing
-- `MockSmartStore.js` - Mock SmartStore plugin
-- `MockMobileSyncPlugin.js` - Mock MobileSync plugin
-
-**Test Suites**:
-- `SFSmartStoreTestSuite.js` - SmartStore CRUD, indexing, and Smart SQL tests
-- `SFSmartStoreLoadTestSuite.js` - SmartStore performance tests
-- `SFMobileSyncTestSuite.js` - MobileSync synchronization tests
-
-### Running Tests
-
-**In a browser** (uses mocks for Cordova plugins):
-```bash
-open test/test.html
-```
-
-**In a Cordova app** (uses real native plugins):
-1. Create a hybrid app using templates
-2. Copy `test/test.html` to the app's `www/` directory
-3. Run the app on a device or simulator
-
-## Sample Applications
-
-### `/samples` Directory
-
-Demo applications showcasing SDK features:
-
-| Sample | Description |
-|--------|-------------|
-| **mobilesyncexplorer** | Complete MobileSync demo with offline sync |
-| **smartstoreexplorer** | SmartStore operations and Smart SQL queries |
-| **accounteditor** | CRUD operations on Account records |
-| **contactexplorer** | Contact list browser with search |
-| **fileexplorer** | File upload/download operations |
-| **userlist** | User list with Salesforce data |
-| **usersearch** | User search functionality |
-| **userandgroupsearch** | Combined user and group search |
-| **simplesyncreact** | React-based sync sample |
-| **vfconnector** | Visualforce connector sample |
-
-### Running Samples
-
-Samples are designed to run in a Cordova environment:
-1. Create a hybrid app using the SDK templates
-2. Replace the `www/` directory content with sample code
-3. Build and run on iOS or Android device/simulator
-
-## Dependencies
-
-### `/dependencies` Directory
-
-Third-party JavaScript libraries used by the SDK:
-
-- **backbone** - MVC framework (required by mobilesync.js)
-- **underscore** - Utility library (required by mobilesync.js and Backbone)
-- **jquery** - DOM manipulation and AJAX
-- **promise-polyfill** - Promise support for older browsers
-- **qunit** - Unit testing framework
-- **react** - UI framework (for React samples)
-- **ratchet** - Mobile UI framework
-- **fastclick** - Touch event optimization for mobile
-
-## Development
-
-### Prerequisites
-
-- **Git**: Required for cloning and submodule management
-- **Text editor**: Any editor for JavaScript development
-- **Web browser**: For running tests with mocks
-- **Cordova environment**: For testing with real plugins (iOS/Android)
-
-### Making Changes
-
-1. **Clone the repository**:
-```bash
-git clone https://github.com/forcedotcom/SalesforceMobileSDK-Shared.git
-cd SalesforceMobileSDK-Shared
-```
-
-2. **Make changes** to JavaScript files in `libs/`
-
-3. **Test in browser**:
-```bash
-open test/test.html
-```
-
-4. **Test in iOS/Android**:
-   - Update submodule in iOS-Hybrid or Android repository
-   - Build and test in actual hybrid app
-
-5. **Commit and push**:
-```bash
-git add .
-git commit -m "Description of changes"
-git push origin dev
-```
-
-### Submodule Updates
-
-After changes are merged, dependent repositories must update their submodules:
-
-**In iOS-Hybrid or Android repos**:
 ```bash
 cd external/shared
 git checkout dev
@@ -220,57 +71,29 @@ git add external/shared
 git commit -m "Update Shared submodule"
 ```
 
-## Distribution
+## Making Changes
 
-### To CordovaPlugin Repository
+1. Edit source files in `libs/`.
+2. Regenerate the `gen/plugins/com.salesforce/` files.
+3. Update the submodule reference in the Android and iOS-Hybrid repos.
+4. Run `tools/update.sh` in the CordovaPlugin repo to copy the new generated files into its `www/` directory.
 
-The [SalesforceMobileSDK-CordovaPlugin](https://github.com/forcedotcom/SalesforceMobileSDK-CordovaPlugin) repository uses a script to copy files from this repo (and others) to create the final Cordova plugin package:
+## Version Management
+
+`setversion.sh` updates the SDK version number in this repo:
 
 ```bash
-cd SalesforceMobileSDK-CordovaPlugin
-./tools/update.sh -b dev -o all
+./setversion.sh -v 14.0.0
 ```
 
-This copies JavaScript libraries from `libs/` to the Cordova plugin's `www/` directory.
+This updates `SALESFORCE_MOBILE_SDK_VERSION` in `libs/cordova.force.js` and then automatically runs `./tools/update.sh` to propagate the new version into all generated files under `gen/plugins/com.salesforce/`.
 
-## Version Compatibility
+This script has no `-d` (isDev) flag — version bumps here are unconditional. It is run on both `dev` and `master` branches as part of the release process.
 
-| Shared SDK | iOS SDK | Android SDK | Cordova iOS | Cordova Android |
-|-----------|---------|-------------|-------------|-----------------|
-| 13.2.0    | 13.2.0  | 13.2.0      | 7.1.1       | 14.0.1          |
-| 13.1.0    | 13.1.0  | 13.1.0      | 7.1.0       | 13.0.0          |
-| 13.0.0    | 13.0.0  | 13.0.0      | 7.1.0       | 13.0.0          |
+## Related Repositories
 
-See [release notes](https://github.com/forcedotcom/SalesforceMobileSDK-Shared/releases) for detailed version history.
-
-## Documentation
-
-### Developer Resources
-- **Mobile SDK Development Guide**: https://developer.salesforce.com/docs/platform/mobile-sdk/guide
-- **Mobile SDK Trail**: https://trailhead.salesforce.com/trails/mobile_sdk_intro
-- **Cordova Documentation**: https://cordova.apache.org/docs/
-
-### Related Repositories
-- **iOS Hybrid**: https://github.com/forcedotcom/SalesforceMobileSDK-iOS-Hybrid
-- **Android**: https://github.com/forcedotcom/SalesforceMobileSDK-Android
-- **Cordova Plugin**: https://github.com/forcedotcom/SalesforceMobileSDK-CordovaPlugin
-- **Templates**: https://github.com/forcedotcom/SalesforceMobileSDK-Templates
-
-## Support
-
-- **Issues**: [GitHub Issues](https://github.com/forcedotcom/SalesforceMobileSDK-Shared/issues)
-- **Questions**: [Salesforce Stack Exchange](https://salesforce.stackexchange.com/questions/tagged/mobilesdk)
-- **Community**: [Trailblazer Community](https://trailhead.salesforce.com/trailblazer-community/groups/0F94S000000kH0HSAU)
-
-## Contributing
-
-We welcome contributions! Please:
-1. Read the [CLAUDE.md](CLAUDE.md) file for development guidelines
-2. Follow existing JavaScript code style
-3. Write or update tests for new functionality
-4. Test on both iOS and Android platforms
-5. Submit a pull request with a clear description
-
-## License
-
-Salesforce Mobile SDK License. See [LICENSE](LICENSE) file for details.
+| Repository | Role |
+|------------|------|
+| [SalesforceMobileSDK-CordovaPlugin](https://github.com/forcedotcom/SalesforceMobileSDK-CordovaPlugin) | Distribution package for the Cordova plugin; copies generated files from this repo |
+| [SalesforceMobileSDK-Android](https://github.com/forcedotcom/SalesforceMobileSDK-Android) | Native Android SDK; hosts this repo as a submodule for hybrid apps |
+| [SalesforceMobileSDK-iOS-Hybrid](https://github.com/forcedotcom/SalesforceMobileSDK-iOS-Hybrid) | Native iOS hybrid bridge; hosts this repo as a submodule for hybrid apps |
