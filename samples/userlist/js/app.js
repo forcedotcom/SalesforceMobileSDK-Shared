@@ -37,13 +37,23 @@
 
         fetchRecords(function(data) {
             var users = data.records;
+            var list = document.querySelector('#users');
 
-            var listItemsHtml = '';
-            for (var i=0; i < users.length; i++) {
-                listItemsHtml += ('<li class="table-view-cell"><div class="media-body">' + users[i].Name + '</div></li>');
+            // Clear existing content safely
+            while (list.firstChild) {
+                list.removeChild(list.firstChild);
             }
 
-            document.querySelector('#users').innerHTML = listItemsHtml;
+            for (var i=0; i < users.length; i++) {
+                var li = document.createElement('li');
+                li.className = 'table-view-cell';
+                var div = document.createElement('div');
+                div.className = 'media-body';
+                // Use textContent to prevent DOM XSS (W-23617977)
+                div.textContent = users[i].Name;
+                li.appendChild(div);
+                list.appendChild(li);
+            }
         })
     }
 
