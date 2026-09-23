@@ -25,7 +25,7 @@
  */
 
 // Version this js was shipped with
-var SALESFORCE_MOBILE_SDK_VERSION = "14.0.0-rc.1";
+var SALESFORCE_MOBILE_SDK_VERSION = "14.0.0";
 var SERVICE = "com.salesforce.smartstore";
 
 var exec = require("com.salesforce.util.exec").exec;
