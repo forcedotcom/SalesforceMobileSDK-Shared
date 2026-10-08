@@ -279,6 +279,35 @@ assert.strictEqual(app.editPage.backAction, '#list', 'returning online keeps Add
 app.editPage.goBack();
 assert.strictEqual(context.window.location.hash, '#list', 'Add Back works after returning online');
 
+router.navigate('#edit/accounts/9/false', {trigger: true});
+resolve('9');
+editorModel = app.editPage.model;
+var fetchesBeforeReentry = pending.length;
+var rendersBeforeReentry = editorRenders;
+var backBeforeReentry = app.editPage.backAction;
+router.navigate('#sync', {trigger: true});
+assert.strictEqual(context.window.location.hash, '#edit/accounts/9/false', 'empty Sync returns to Edit hash');
+assert.strictEqual(pending.length, fetchesBeforeReentry, 'same-hash Edit re-entry does not fetch again');
+assert.strictEqual(editorRenders, rendersBeforeReentry, 'same-hash Edit re-entry does not replace inputs');
+assert.strictEqual(app.editPage.model, editorModel, 'same-hash Edit re-entry keeps model');
+assert.strictEqual(app.editPage.backAction, backBeforeReentry, 'same-hash Edit re-entry keeps Back destination');
+app.editPage.goBack();
+assert.strictEqual(context.window.location.hash, '#list', 'Edit Back works after same-hash re-entry');
+
+router.navigate('#add', {trigger: true});
+draft = app.editPage.model;
+draft.set('Name', 'Forced sync draft');
+rendersBeforeReentry = editorRenders;
+backBeforeReentry = app.editPage.backAction;
+router.navigate('#sync', {trigger: true});
+assert.strictEqual(context.window.location.hash, '#add', 'empty Sync returns to Add hash');
+assert.strictEqual(editorRenders, rendersBeforeReentry, 'same-hash Add re-entry does not replace inputs');
+assert.strictEqual(app.editPage.model, draft, 'same-hash Add re-entry keeps draft identity');
+assert.strictEqual(draft.get('Name'), 'Forced sync draft', 'same-hash Add re-entry keeps unsaved value');
+assert.strictEqual(app.editPage.backAction, backBeforeReentry, 'same-hash Add re-entry keeps Back destination');
+app.editPage.goBack();
+assert.strictEqual(context.window.location.hash, '#list', 'Add Back works after same-hash re-entry');
+
 router.navigate('#add', {trigger: true});
 assert.strictEqual(app.editPage.model.get('Name'), '', 'new Add entry starts with a blank name');
 app.editPage.goBack();
