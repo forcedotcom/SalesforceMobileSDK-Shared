@@ -49,9 +49,35 @@ Account.prototype.cacheMode = function() { return 'cache'; };
 Account.prototype.fetch = function(options) { pending.push({id: this.id, account: this, success: options.success, error: options.error}); };
 Account.prototype.save = function(attrs, options) { options.success(); };
 Account.extend = extend;
+var deferCacheFetch = false;
+var cacheRequests = [];
+var cacheFetches = 0;
+var cacheRecords = [];
+function AccountCollection() { this.models = []; this.length = 0; }
+AccountCollection.prototype.fetch = function(options) {
+    cacheFetches++;
+    var collection = this;
+    var request = {
+        success: function(records) {
+            collection.reset(records === undefined ? cacheRecords : records);
+            options.success();
+        },
+        error: function() { options.error(); }
+    };
+    if (deferCacheFetch) cacheRequests.push(request);
+    else request.success();
+};
+AccountCollection.prototype.reset = function(records) {
+    this.models = records;
+    this.length = records.length;
+};
+AccountCollection.extend = function() { return AccountCollection; };
 function $(selector) {
     return {
-        html: function(value) { return value === undefined ? '' : this; },
+        html: function(value) {
+            if (value !== undefined && selector === editorElement) editorRenders++;
+            return value === undefined ? '' : this;
+        },
         setElement: function() { return this; },
         hide: function() { return this; },
         attr: function() { return this; },
@@ -60,13 +86,19 @@ function $(selector) {
     };
 }
 var Backbone = {View: Base, Router: Base, Model: Base};
+var editorElement = {};
+var editorRenders = 0;
+var deferTransitions = false;
+var pendingTransitions = [];
+var browserEntries = null;
 var context = {
     Backbone: Backbone, _: {template: function() { return function() { return ''; }; },
         extend: Object.assign, each: function(items, fn) { items.forEach(fn); }, map: function(items, fn) { return items.map(fn); }},
-    $: $, Force: {SObject: {extend: function() { return Account; }}, SObjectCollection: Base,
+    $: $, Force: {SObject: {extend: function() { return Account; }}, SObjectCollection: AccountCollection,
         CACHE_MODE: {SERVER_FIRST: 'server'}, MERGE_MODE: {MERGE_FAIL_IF_CHANGED: 'fail'}},
     app: {models: {}, views: {}, offlineTracker: offline},
-    window: {location: {hash: ''}}, console: {log: function() {}}, setTimeout: function(fn) { fn(); },
+    window: {location: {hash: ''}}, console: {log: function() {}},
+    setTimeout: function(fn) { if (deferTransitions) pendingTransitions.push(fn); else fn(); },
     alert: function(message) { alerts.push(message); }
 };
 vm.createContext(context);
@@ -74,17 +106,28 @@ vm.runInContext(fs.readFileSync(path.join(root, 'samples/common/stackrouter.js')
 vm.runInContext(script[1], context);
 var app = context.app;
 app.editPage = new app.views.EditAccountPage();
+app.editPage.el = editorElement;
 app.searchPage = {el: {}, render: function() { return this; }};
-app.searchResults = {fetch: function() {}};
+app.syncPage = {el: {}, render: function() { return this; }};
+var listFetches = 0;
+app.searchResults = {fetch: function() { listFetches++; }};
+app.localAccounts = new AccountCollection();
+app.localAccounts.config = {type: 'cache'};
 var router = Object.create(app.Router.prototype);
 router.pageHistory = [];
 router.navigate = function(hash, options) {
+    options = options || {};
     if (context.window.location.hash === hash) return;
+    if (browserEntries) {
+        if (options.replace) browserEntries[browserEntries.length - 1] = hash;
+        else browserEntries.push(hash);
+    }
     context.window.location.hash = hash;
     if (options.trigger) {
         if (hash === '#' || hash === '' || hash === '#list') this.list();
         else if (hash === '#add') this.addAccount();
         else if (hash.indexOf('#edit/accounts/') === 0) this.editAccount(hash.split('/')[2], hash.split('/')[3]);
+        else if (hash === '#sync') this.sync();
     }
 };
 app.router = router;
@@ -193,5 +236,150 @@ assert.strictEqual(onlineChanges, changesBeforeToggle + 1, 'list toggle emits on
 assert.strictEqual(context.window.location.hash, '#list', 'list offline toggle does not navigate');
 offline.set('isOnline', false);
 assert.strictEqual(onlineChanges, changesBeforeToggle + 1, 'unchanged connectivity does not rerender');
+
+var fetchesBeforeOnline = listFetches;
+app.views.OfflineToggler.prototype.toggle.call({model: offline}, {preventDefault: function() {}});
+assert.strictEqual(context.window.location.hash, '#list', 'empty sync returns to list');
+assert.strictEqual(listFetches, fetchesBeforeOnline + 1, 'returning online on list refreshes accounts');
+
+router.navigate('#edit/accounts/9/false', {trigger: true});
+resolve('9');
+var editorModel = app.editPage.model;
+var rendersBeforeToggle = editorRenders;
+browserEntries = ['#list', '#edit/accounts/9/false'];
+app.views.OfflineToggler.prototype.toggle.call({model: offline}, {preventDefault: function() {}});
+app.views.OfflineToggler.prototype.toggle.call({model: offline}, {preventDefault: function() {}});
+assert.deepStrictEqual(browserEntries, ['#list', '#edit/accounts/9/false'], 'empty sync does not add browser history');
+browserEntries = null;
+assert.strictEqual(editorRenders, rendersBeforeToggle, 'connectivity change does not replace editor inputs');
+assert.strictEqual(context.window.location.hash, '#edit/accounts/9/false', 'empty sync returns to editor');
+assert.strictEqual(pending.length, 0, 'empty sync does not refetch current editor');
+assert.strictEqual(app.editPage.model, editorModel, 'empty sync does not recreate editor model');
+assert.strictEqual(router.currentPage, app.editPage, 'empty sync leaves editor visible');
+assert.strictEqual(app.editPage.backAction, '#list', 'returning online keeps editor Back destination');
+app.editPage.goBack();
+assert.strictEqual(context.window.location.hash, '#list', 'Back works after returning online');
+
+router.navigate('#add', {trigger: true});
+var draft = app.editPage.model;
+draft.set('Name', 'Unsaved draft');
+rendersBeforeToggle = editorRenders;
+browserEntries = ['#list', '#add'];
+app.views.OfflineToggler.prototype.toggle.call({model: offline}, {preventDefault: function() {}});
+assert.strictEqual(draft.get('Name'), 'Unsaved draft', 'going offline retains unsaved Add fields');
+app.views.OfflineToggler.prototype.toggle.call({model: offline}, {preventDefault: function() {}});
+assert.deepStrictEqual(browserEntries, ['#list', '#add'], 'empty sync does not add Add browser history');
+browserEntries = null;
+assert.strictEqual(editorRenders, rendersBeforeToggle, 'connectivity change does not replace Add inputs');
+assert.strictEqual(context.window.location.hash, '#add', 'empty sync returns to Add');
+assert.strictEqual(app.editPage.model, draft, 'empty sync does not recreate Add model');
+assert.strictEqual(draft.get('Name'), 'Unsaved draft', 'offline and online rerenders keep unsaved Add fields');
+assert.strictEqual(router.currentPage, app.editPage, 'empty sync leaves Add visible');
+assert.strictEqual(app.editPage.backAction, '#list', 'returning online keeps Add Back destination');
+app.editPage.goBack();
+assert.strictEqual(context.window.location.hash, '#list', 'Add Back works after returning online');
+
+router.navigate('#add', {trigger: true});
+assert.strictEqual(app.editPage.model.get('Name'), '', 'new Add entry starts with a blank name');
+app.editPage.goBack();
+
+router.navigate('#edit/accounts/10/false', {trigger: true});
+resolve('10');
+app.views.OfflineToggler.prototype.toggle.call({model: offline}, {preventDefault: function() {}});
+cacheRecords = [{id: 'modified'}];
+var fetchesBeforeSync = cacheFetches;
+app.views.OfflineToggler.prototype.toggle.call({model: offline}, {preventDefault: function() {}});
+assert.strictEqual(context.window.location.hash, '#sync', 'non-empty sync navigates to Sync');
+assert.strictEqual(router.currentPage, app.syncPage, 'non-empty sync shows Sync page');
+assert.strictEqual(cacheFetches, fetchesBeforeSync + 1, 'non-empty sync uses a single cache fetch');
+
+cacheRecords = [];
+router.navigate('#list', {trigger: true});
+deferTransitions = true;
+router.navigate('#edit/accounts/11/false', {trigger: true});
+resolve('11');
+assert.strictEqual(router.currentPage, app.searchPage, 'edit transition has not completed');
+app.views.OfflineToggler.prototype.toggle.call({model: offline}, {preventDefault: function() {}});
+app.views.OfflineToggler.prototype.toggle.call({model: offline}, {preventDefault: function() {}});
+assert.strictEqual(context.window.location.hash, '#edit/accounts/11/false', 'empty sync returns to transitioning editor');
+assert.strictEqual(pending.length, 0, 'transitioning editor is not refetched');
+assert.strictEqual(app.editPage.backAction, '#list', 'transitioning editor keeps Back destination');
+deferTransitions = false;
+pendingTransitions.shift()();
+assert.strictEqual(router.currentPage, app.editPage, 'pending editor transition completes');
+app.editPage.goBack();
+
+deferTransitions = true;
+router.navigate('#add', {trigger: true});
+var transitioningDraft = app.editPage.model;
+transitioningDraft.set('Name', 'Pending draft');
+assert.strictEqual(router.currentPage, app.searchPage, 'Add transition has not completed');
+app.views.OfflineToggler.prototype.toggle.call({model: offline}, {preventDefault: function() {}});
+app.views.OfflineToggler.prototype.toggle.call({model: offline}, {preventDefault: function() {}});
+assert.strictEqual(app.editPage.model, transitioningDraft, 'empty sync does not recreate transitioning Add model');
+assert.strictEqual(transitioningDraft.get('Name'), 'Pending draft', 'transitioning Add keeps model-backed draft');
+assert.strictEqual(app.editPage.backAction, '#list', 'transitioning Add keeps Back destination');
+deferTransitions = false;
+pendingTransitions.shift()();
+assert.strictEqual(router.currentPage, app.editPage, 'pending Add transition completes');
+
+router.navigate('#list', {trigger: true});
+router.navigate('#edit/accounts/12/false', {trigger: true});
+var pendingEditor = pending.shift();
+assert.strictEqual(router.currentPage, app.searchPage, 'editor is not shown before fetch completes');
+fetchesBeforeOnline = listFetches;
+app.views.OfflineToggler.prototype.toggle.call({model: offline}, {preventDefault: function() {}});
+app.views.OfflineToggler.prototype.toggle.call({model: offline}, {preventDefault: function() {}});
+assert.strictEqual(context.window.location.hash, '#edit/accounts/12/false', 'empty sync keeps pending edit route');
+assert.strictEqual(listFetches, fetchesBeforeOnline, 'online toggle does not refresh list during pending edit');
+pendingEditor.success();
+assert.strictEqual(router.currentPage, app.editPage, 'pending edit finishes after empty sync');
+assert.strictEqual(app.editPage.backAction, '#list', 'pending edit retains list Back destination');
+
+router.navigate('#list', {trigger: true});
+deferCacheFetch = true;
+cacheRecords = [{id: 'modified'}];
+offline.set('isOnline', false);
+app.views.OfflineToggler.prototype.toggle.call({model: offline}, {preventDefault: function() {}});
+app.views.OfflineToggler.prototype.toggle.call({model: offline}, {preventDefault: function() {}});
+cacheRequests.shift().success([{id: 'stale-offline'}]);
+assert.strictEqual(context.window.location.hash, '#list', 'stale online fetch cannot open Sync after going offline');
+assert.strictEqual(app.localAccounts.length, 0, 'stale offline fetch does not replace Sync queue');
+
+app.views.OfflineToggler.prototype.toggle.call({model: offline}, {preventDefault: function() {}});
+router.navigate('#add', {trigger: true});
+cacheRequests.shift().success([{id: 'stale-route'}]);
+assert.strictEqual(context.window.location.hash, '#add', 'stale online fetch cannot leave a new route');
+assert.strictEqual(app.localAccounts.length, 0, 'stale route fetch does not replace Sync queue');
+
+router.navigate('#list', {trigger: true});
+offline.set('isOnline', false);
+app.views.OfflineToggler.prototype.toggle.call({model: offline}, {preventDefault: function() {}});
+app.views.OfflineToggler.prototype.toggle.call({model: offline}, {preventDefault: function() {}});
+app.views.OfflineToggler.prototype.toggle.call({model: offline}, {preventDefault: function() {}});
+cacheRequests.shift().success([{id: 'older'}]);
+assert.strictEqual(context.window.location.hash, '#list', 'older online fetch cannot navigate after a newer toggle');
+assert.strictEqual(app.localAccounts.length, 0, 'older online fetch does not replace Sync queue');
+cacheRequests.shift().success([{id: 'latest'}]);
+assert.strictEqual(context.window.location.hash, '#sync', 'latest online fetch opens Sync');
+assert.strictEqual(app.localAccounts.models[0].id, 'latest', 'Sync displays only latest cache result');
+
+router.navigate('#list', {trigger: true});
+offline.set('isOnline', false);
+app.views.OfflineToggler.prototype.toggle.call({model: offline}, {preventDefault: function() {}});
+app.views.OfflineToggler.prototype.toggle.call({model: offline}, {preventDefault: function() {}});
+app.views.OfflineToggler.prototype.toggle.call({model: offline}, {preventDefault: function() {}});
+var lateOlder = cacheRequests.shift();
+cacheRequests.shift().success([{id: 'newest'}]);
+lateOlder.success([{id: 'obsolete'}]);
+assert.strictEqual(app.localAccounts.models[0].id, 'newest', 'late obsolete result cannot replace active Sync queue');
+
+router.navigate('#list', {trigger: true});
+offline.set('isOnline', false);
+app.views.OfflineToggler.prototype.toggle.call({model: offline}, {preventDefault: function() {}});
+cacheRequests.shift().error();
+assert.strictEqual(offline.get('isOnline'), false, 'cache check failure restores offline mode');
+assert.strictEqual(context.window.location.hash, '#list', 'cache check failure leaves current page visible');
+assert.strictEqual(alerts[alerts.length - 1], 'Failed to check local records for sync', 'cache check failure is visible');
 
 console.log('AccountEditor navigation regression passed');
